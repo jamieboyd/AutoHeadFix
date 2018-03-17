@@ -81,7 +81,7 @@ class AHF_CageSet (object):
             self.ledPin = int (input ('Enter the GPIO pin connected to the blue LED for camera illumination:'))
             self.serialPort = input ('Enter serial port for tag reader(likely either /dev/ttyAMA0 or /dev/ttyUSB0):')
             self.dataPath = input ('Enter the path to the directory where the data will be saved:')
-
+            self.mouseConfigPath = input ('Enter the path to the directory where mouse configuration data is located:')
             self.show()
             doSave = input ('Enter \'e\' to re-edit the new Cage settings, or any other character to save the new settings to a file.')
             if doSave == 'e' or doSave == 'E':
@@ -130,6 +130,7 @@ class AHF_CageSet (object):
         print ('8:Brain LED Illumination Pin=' + str(self.ledPin))
         print ('9:Tag Reader serialPort=' + self.serialPort)
         print ('10:dataPath=' + self.dataPath)
+        print ('11:MouseConfigPath= ' + self.mouseConfigPath)
         print ('**************************************************************************************')
 
 
@@ -174,6 +175,8 @@ class AHF_CageSet (object):
                 self.serialPort = input ('Enter serial port for tag reader(likely either /dev/ttyAMA0 or /dev/ttyUSB0):')
             elif editNum == 10:
                 self.dataPath = input ('Enter the path to the directory where the data will be saved:')
+            elif editNum == 11:
+                self.mouseConfigPath = input ('Enter the path to the directory where mouse configuration data is located:')
             else:
                 print ('I don\'t recognize that number ' + str (editNum))
         self.show()
@@ -188,3 +191,4 @@ if __name__ == '__main__':
     print ('Cage ID:', hardWare.cageID,'\tContact Pin:', hardWare.contactPin, '\tContact PUD:', hardWare.contactPUD, '\n')
     hardWare.edit()
     hardWare.save()
+

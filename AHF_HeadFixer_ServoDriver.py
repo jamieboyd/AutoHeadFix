@@ -71,5 +71,5 @@ if __name__ == "__main__":
     hardWare.save()
     s = AHF_HeadFixer_ServoDriver(hardWare)
     s.fixMouse()
-    sleep(5)
+    sleep(2)
     s.releaseMouse()

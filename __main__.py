@@ -6,7 +6,7 @@ from AHF_Settings import AHF_Settings
 from AHF_CageSet import AHF_CageSet
 from AHF_Rewarder import AHF_Rewarder
 from AHF_Camera import AHF_Camera
-from AHF_TagReader import AHF_TagReader
+from RFIDTagReader import RFIDTagReader
 from AHF_Notifier import AHF_Notifier
 from AHF_UDPTrig import AHF_UDPTrig
 from AHF_Stimulator import AHF_Stimulator
@@ -22,7 +22,7 @@ from os import chown
 from pwd import getpwnam
 from grp import getgrnam
 from time import time, localtime,timezone, sleep
-from datetime import datetime
+from datetime import datetime, timedelta
 from random import random
 from sys import argv
 #library import - need to have RPi.GPIO installed, but should be standard on Raspbian Woody or Jessie
@@ -61,8 +61,9 @@ def main():
             configFile = argv [1]
         expSettings = AHF_Settings (configFile)
         # nextDay starts tomorrow at KDAYSTARTHOUR
-        #nextDay = (int((time() - timezone)/KSECSPERDAY) + 1) * KSECSPERDAY + timezone + (KDAYSTARTHOUR * KSECSPERHOUR)
-        nextDay = ((int((time() - timezone + localtime().tm_isdst * 3600)/KSECSPERDAY)) * KSECSPERDAY)  + timezone - (localtime().tm_isdst * 3600) + KSECSPERDAY + KDAYSTARTHOUR
+        now = datetime.fromtimestamp (int (time()))
+        startTime = datetime (now.year, now.month,now.day, KDAYSTARTHOUR,0,0)
+        nextDay = startTime + timedelta (hours=24)
         # Create folders where the files for today will be stored
         makeDayFolderPath(expSettings, cageSettings)
         # initialize mice with zero mice
@@ -98,7 +99,7 @@ def main():
         else:
             notifier = None
         # make RFID reader
-        tagReader = AHF_TagReader(cageSettings.serialPort, False, -1)
+        tagReader = RFIDTagReader(cageSettings.serialPort, False)
         # configure camera
         camera = AHF_Camera(expSettings.camParamsDict)
         # make UDP Trigger
@@ -176,7 +177,10 @@ def main():
                     writeToLogFile(expSettings.logFP, thisMouse, 'exit')
                     updateStats (expSettings.statsFP, mice, thisMouse)
                     # after each exit check for a new day
-                    if time() > nextDay:
+                    if datetime.fromtimestamp (int (time())) > nextDay:
+                        now = datetime.fromtimestamp (int (time()))
+                        startTime = datetime (now.year, now.month, now.day, KDAYSTARTHOUR,0,0)
+                        nextDay = startTime + timedelta (hours=24)
                         lickDetector.stop_logging ()
                         mice.show()
                         writeToLogFile(expSettings.logFP, None, 'SeshEnd')
@@ -187,7 +191,6 @@ def main():
                         simpleLogger.logFP = expSettings.logFP
                         makeQuickStatsFile (expSettings, cageSettings, mice)
                         stimulator.nextDay (expSettings.logFP)
-                        nextDay += KSECSPERDAY
                         mice.clear ()
                         lickDetector.start_logging ()
                     print ('Waiting for a mouse...')

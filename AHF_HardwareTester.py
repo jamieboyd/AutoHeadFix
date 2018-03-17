@@ -4,7 +4,7 @@
 
 import RPi.GPIO as GPIO
 from time import sleep
-from AHF_TagReader import AHF_TagReader
+from RFIDTagReader import RFIDTagReader
 from AHF_HeadFixer import AHF_HeadFixer
 from AHF_CageSet import AHF_CageSet
 from time import time
