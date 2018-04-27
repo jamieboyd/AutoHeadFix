@@ -12,7 +12,7 @@ two seconds without licking, it will get no water in the trial
 total trial time default = 30 seconds
 time they need to go without licking default = 2
 time by which buzzer leads reward default = 0.5
-GPIO pin for buzzer default = 18
+GPIO pin for buzzer default = 27
 length of each buzz default = 0.1
 time period between start of each buzz ( must be greater than time of each buzz) default = 0.2
 buzz length/buzz period  = duty cycle
@@ -30,8 +30,8 @@ from datetime import datetime
 
 class AHF_Stimulator_LickNoLick (AHF_Stimulator):
     headFixTime_def =30
-    lickWitholdTime_def = 2
-    buzz_pin_def = 18
+    lickWitholdTime_def = 1
+    buzz_pin_def = 27
     buzz_num_def = 2
     buzz_len_def=0.1
     buzz_period_def =0.2
@@ -41,7 +41,6 @@ class AHF_Stimulator_LickNoLick (AHF_Stimulator):
     def __init__ (self, configDict, rewarder, lickDetector,textfp):
         super().__init__(configDict, rewarder, lickDetector, textfp)
         self.headFixTime = float (self.configDict.get ('headFixTime', AHF_Stimulator_LickNoLick.headFixTime_def))
-        print (self.headFixTime)
         self.lickWitholdTime = float (self.configDict.get ('lickWitholdTime', AHF_Stimulator_LickNoLick.lickWitholdTime_def))
         self.buzz_pin = int(self.configDict.get ('buzz_pin', AHF_Stimulator_LickNoLick.buzz_pin_def))
         self.buzz_lead = float (self.configDict.get ('buzz_lead', AHF_Stimulator_LickNoLick.buzz_lead_def))
@@ -49,7 +48,7 @@ class AHF_Stimulator_LickNoLick (AHF_Stimulator):
         self.buzz_len = float (self.configDict.get ('buzz_len', AHF_Stimulator_LickNoLick.buzz_len_def))
         self.buzz_period = float (self.configDict.get ('buzz_period', AHF_Stimulator_LickNoLick.buzz_period_def))
         print (self.buzz_period, self.buzz_len, self.buzz_num)
-        self.buzzer=Train (PTSimpleGPIO.INIT_PULSES, self.buzz_len, (self.buzz_period - self.buzz_len), self.buzz_num, self.buzz_pin, PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
+        self.buzzer=Train (PTSimpleGPIO.MODE_PULSES, self.buzz_pin, 0, self.buzz_len, (self.buzz_period - self.buzz_len), self.buzz_num,PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
         self.configDict.update({'headFixTime' : self.headFixTime, 'lickWitholdTime' : self.lickWitholdTime})
         self.configDict.update({'buzz_pin' : self.buzz_pin, 'buzz_lead' : self.buzz_lead, 'buzz_num' : self.buzz_num})
         self.configDict.update({'buzz_len' : self.buzz_len, "buzz_period" : self.buzz_period})

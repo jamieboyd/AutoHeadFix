@@ -4,7 +4,7 @@
 
 import socket
 
-UDP_PORT = 2211	# special open port 
+UDP_PORT = 5007	# special open port 
 class AHF_UDPTrig:
     """
     Sends/receives UDP signals as to another pi to start/stop recording

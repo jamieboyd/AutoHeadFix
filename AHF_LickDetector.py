@@ -168,7 +168,7 @@ if __name__ == '__main__':
     from AHF_LickDetector import AHF_LickDetector
     GPIO.setmode(GPIO.BCM)
     simpleLogger = Simple_Logger (None)
-    ld = AHF_LickDetector ((0,1),21,simpleLogger )
+    ld = AHF_LickDetector ((0,1),26,simpleLogger )
     ld.start_logging ()
     print ('Licks in 5 seconds...')
     print ('=', ld.countLicks_Soft (5))

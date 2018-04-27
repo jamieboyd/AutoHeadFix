@@ -121,18 +121,19 @@ def main():
             UDPTrigger = None
         # make a lick detector
         simpleLogger = Simple_Logger (expSettings.logFP)
-        lickDetector = AHF_LickDetector ((0,1),21,simpleLogger)
+        lickDetector = AHF_LickDetector ((0,1),26,simpleLogger)
+        sleep(1)
         lickDetector.start_logging ()
         # make stimulator
         stimulator = AHF_Stimulator.get_class (expSettings.stimulator)(expSettings.stimDict, rewarder, lickDetector, expSettings.logFP)
         expSettings.stimDict = stimulator.configDict
-        # entry Beam Break
+        # Entry beam breaker
         if cageSettings.hasEntryBB==True:
             global gTubePanicTime
             global gTubeMaxTime
-            GPIO.setup (cageSettings.entryBBpin, GPIO.IN)
-            GPIO.add_event_detect (cageSettings.entryBBpin, GPIO.BOTH)
-            GPIO.add_event_callback (cageSettings.entryBBpin, entryBBCallback)
+            GPIO.setup (cageSettings.entryBBpin, GPIO.IN, GPIO.PUD_UP)
+            GPIO.add_event_detect (cageSettings.entryBBpin, GPIO.BOTH, entryBBCallback)
+            #GPIO.add_event_callback (cageSettings.entryBBpin, entryBBCallback)
             gTubePanicTime = time () + 25920000 # a month from now.
             gTubeMaxTime = expSettings.inChamberTimeLimit
     except Exception as anError:
@@ -152,6 +153,8 @@ def main():
                         tagReader.clearBuffer()
                         continue
                     entryTime = time()
+                    if cageSettings.hasEntryBB==True:
+                        GPIO.remove_event_detect(cageSettings.entryBBpin)
                     thisMouse = mice.getMouseFromTag (tag)
                     if thisMouse is None:
                         # try to open mouse config file to initialize mouse data
@@ -181,7 +184,7 @@ def main():
                         if (GPIO.input (cageSettings.contactPin)== expSettings.contactState):
                             runTrial (thisMouse, expSettings, cageSettings, camera, rewarder, headFixer, stimulator, UDPTrigger)
                             expSettings.doHeadFix = expSettings.propHeadFix > random() # set doHeadFix for next contact
-                    # either mouse left the chamber or has been in chamber too long, or another mouse has been 
+                    # either mouse left the chamber or has been in chamber too long
                     if GPIO.input (cageSettings.tirPin)== GPIO.HIGH and time () > entryTime + expSettings.inChamberTimeLimit:
                         # explictly turn off pistons, though they should be off at end of trial
                         headFixer.releaseMouse()
@@ -193,6 +196,9 @@ def main():
                         if expSettings.hasTextMsg == True:
                             notifier.notify (thisMouse.tag, (time() - entryTime), False)
                     tagReader.clearBuffer ()
+                    if cageSettings.hasEntryBB==True:
+                        #GPIO.setup (cageSettings.entryBBpin, GPIO.IN, pull_up_down = GPIO.PUD_UP)
+                        GPIO.add_event_detect (cageSettings.entryBBpin, GPIO.BOTH, entryBBCallback)
                     # after exit, update stats
                     writeToLogFile(expSettings.logFP, thisMouse, 'exit')
                     updateStats (expSettings.statsFP, mice, thisMouse)
@@ -212,11 +218,14 @@ def main():
                         makeQuickStatsFile (expSettings, cageSettings, mice)
                         stimulator.nextDay (expSettings.logFP)
                         mice.clear ()
-                        lickDetector.start_logging ()
+                        # reinitialize lick detector because it can lock up if too many licks when not logging
+                        lickDetector.__init__((0,1),26,simpleLogger)
+                        lickDetector.start_logging()
                     print ('Waiting for a mouse...')
                 else:
                     # check for entry beam break while idling between trials
-                    if time() > gTubePanicTime:
+                    if cageSettings.hasEntryBB==True and time() > gTubePanicTime:
+                        print ('Some one has been in the entrance of this tube for too long')
                         # explictly turn off pistons, though they should be off 
                         headFixer.releaseMouse()
                         if expSettings.hasTextMsg == True:
@@ -226,16 +235,26 @@ def main():
                         while time() > gTubePanicTime:
                             sleep (kTIMEOUTmS/1000)
                         if expSettings.hasTextMsg == True:
-                            notifier.notify (0 (time() - BBentryTime), False)
+                            notifier.notify (0, (time() - BBentryTime), False)
             except KeyboardInterrupt:
                 GPIO.output(cageSettings.ledPin, GPIO.LOW)
                 headFixer.releaseMouse()
                 GPIO.output(cageSettings.rewardPin, GPIO.LOW)
                 lickDetector.stop_logging ()
+                if cageSettings.hasEntryBB==True:
+                    sleep (1)
+                    GPIO.remove_event_detect (cageSettings.entryBBpin)
+                    print ('removed BB event detect')
                 while True:
                     event = input ('Enter:\nr to return to head fix trials\nq to quit\nv to run valve control\nh for hardware tester\nc for camera configuration\ne for experiment configuration\n:')
                     if event == 'r' or event == "R":
                         lickDetector.start_logging ()
+                        sleep (1)
+                        if cageSettings.hasEntryBB == True:
+                            sleep (1)
+                            print ('Restarting entry bb')
+                            GPIO.setup (cageSettings.entryBBpin, GPIO.IN, pull_up_down = GPIO.PUD_UP)
+                            GPIO.add_event_detect (cageSettings.entryBBpin, GPIO.BOTH, entryBBCallback)
                         break
                     elif event == 'q' or event == 'Q':
                         return
@@ -261,9 +280,6 @@ def main():
                             stimulator = AHF_Stimulator.get_class (expSettings.stimulator)(expSettings.stimDict, rewarder, lickDetector, expSettings.logFP)
                         if modCode & 1:
                             stimulator.change_config (expSettings.stimDict)
-            except IOError as e:
-                print(e)
-                print("Looks like we had trouble reading the tag.")
     except Exception as anError:
         print ('AutoHeadFix error:' + str (anError))
         raise anError
@@ -379,28 +395,34 @@ def makeDayFolderPath (expSettings, cageSettings):
     dateTimeStruct = localtime()
     expSettings.dateStr= str (dateTimeStruct.tm_year) + (str (dateTimeStruct.tm_mon)).zfill(2) + (str (dateTimeStruct.tm_mday)).zfill(2)
     expSettings.dayFolderPath = cageSettings.dataPath + expSettings.dateStr + '/' + cageSettings.cageID + '/'
-    if not path.exists(expSettings.dayFolderPath):
-        makedirs(expSettings.dayFolderPath, mode=0o777, exist_ok=True)
-        makedirs(expSettings.dayFolderPath + 'TextFiles/', mode=0o777, exist_ok=True)
-        makedirs(expSettings.dayFolderPath + 'Videos/', mode=0o777, exist_ok=True)
-        uid = getpwnam ('pi').pw_uid
-        gid = getgrnam ('pi').gr_gid
-        chown (expSettings.dayFolderPath, uid, gid)
-        chown (expSettings.dayFolderPath + 'TextFiles/', uid, gid)
-        chown (expSettings.dayFolderPath + 'Videos/', uid, gid)
+    try:
+        if not path.exists(expSettings.dayFolderPath):
+            makedirs(expSettings.dayFolderPath, mode=0o777, exist_ok=True)
+            makedirs(expSettings.dayFolderPath + 'TextFiles/', mode=0o777, exist_ok=True)
+            makedirs(expSettings.dayFolderPath + 'Videos/', mode=0o777, exist_ok=True)
+            uid = getpwnam ('pi').pw_uid
+            gid = getgrnam ('pi').gr_gid
+            chown (expSettings.dayFolderPath, uid, gid)
+            chown (expSettings.dayFolderPath + 'TextFiles/', uid, gid)
+            chown (expSettings.dayFolderPath + 'Videos/', uid, gid)
+    except Exception as e:
+            print ("Error making directories\n", str(e))
         
 
 def makeLogFile (expSettings, cageSettings):
     """
     open a new text log file for today, or open an exisiting text file with 'a' for append
     """
-    logFilePath = expSettings.dayFolderPath + 'TextFiles/headFix_' + cageSettings.cageID + '_' + expSettings.dateStr + '.txt'
-    expSettings.logFP = open(logFilePath, 'a')
-    uid = getpwnam ('pi').pw_uid
-    gid = getgrnam ('pi').gr_gid
-    chown (logFilePath, uid, gid)
-    writeToLogFile (expSettings.logFP, None, 'SeshStart')
-
+    try:
+        logFilePath = expSettings.dayFolderPath + 'TextFiles/headFix_' + cageSettings.cageID + '_' + expSettings.dateStr + '.txt'
+        expSettings.logFP = open(logFilePath, 'a')
+        uid = getpwnam ('pi').pw_uid
+        gid = getgrnam ('pi').gr_gid
+        chown (logFilePath, uid, gid)
+        writeToLogFile (expSettings.logFP, None, 'SeshStart')
+    except Exception as e:
+            print ("Error maing log file\n", str(e))
+            
 def writeToLogFile(logFP, mouseObj, event):
     """
     Writes the time and type of each event to a text log file, and also to the shell
@@ -412,16 +434,18 @@ def writeToLogFile(logFP, mouseObj, event):
     :param event: the type of event to be printed, entry, exit, reward, etc.
     returns: nothing
     """
-    if event == 'SeshStart' or event == 'SeshEnd' or mouseObj is None:
-        outPutStr = ''.zfill(13)
-    else:
-        outPutStr = '{:013}'.format(mouseObj.tag)
-    logOutPutStr = outPutStr + '\t' + '{:.2f}'.format (time ())  + '\t' + event +  '\t' + datetime.fromtimestamp (int (time())).isoformat (' ')
-    printOutPutStr = outPutStr + '\t' + datetime.fromtimestamp (int (time())).isoformat (' ') + '\t' + event
-    print (printOutPutStr)
-    logFP.write(logOutPutStr + '\n')
-    logFP.flush()
-
+    try:
+        if event == 'SeshStart' or event == 'SeshEnd' or mouseObj is None:
+            outPutStr = ''.zfill(13)
+        else:
+            outPutStr = '{:013}'.format(mouseObj.tag)
+        logOutPutStr = outPutStr + '\t' + '{:.2f}'.format (time ())  + '\t' + event +  '\t' + datetime.fromtimestamp (int (time())).isoformat (' ')
+        printOutPutStr = outPutStr + '\t' + datetime.fromtimestamp (int (time())).isoformat (' ') + '\t' + event
+        print (printOutPutStr)
+        logFP.write(logOutPutStr + '\n')
+        logFP.flush()
+    except Exception as e:
+        print ("Error writing to log file\n", str (e))
 
 def makeQuickStatsFile (expSettings, cageSettings, mice):
     """
@@ -432,20 +456,22 @@ def makeQuickStatsFile (expSettings, cageSettings, mice):
     :param cageSettings: settings that are expected to stay the same for each setup, including hardware pin-outs for GPIO
     :param mice: the array of mice objects for this cage
 """
-    textFilePath = expSettings.dayFolderPath + 'TextFiles/quickStats_' + cageSettings.cageID + '_' + expSettings.dateStr + '.txt'
-    if path.exists(textFilePath):
-        expSettings.statsFP = open(textFilePath, 'r+')
-        mice.addMiceFromFile(expSettings.statsFP)
-        mice.show()
-    else:
-        expSettings.statsFP = open(textFilePath, 'w')
-        expSettings.statsFP.write('Mouse_ID\tentries\tent_rew\thfixes\thf_rew\n')
-        expSettings.statsFP.close()
-        expSettings.statsFP = open(textFilePath, 'r+')
-        uid = getpwnam ('pi').pw_uid
-        gid = getgrnam ('pi').gr_gid
-        chown (textFilePath, uid, gid)
-
+    try:
+        textFilePath = expSettings.dayFolderPath + 'TextFiles/quickStats_' + cageSettings.cageID + '_' + expSettings.dateStr + '.txt'
+        if path.exists(textFilePath):
+            expSettings.statsFP = open(textFilePath, 'r+')
+            mice.addMiceFromFile(expSettings.statsFP)
+            mice.show()
+        else:
+            expSettings.statsFP = open(textFilePath, 'w')
+            expSettings.statsFP.write('Mouse_ID\tentries\tent_rew\thfixes\thf_rew\n')
+            expSettings.statsFP.close()
+            expSettings.statsFP = open(textFilePath, 'r+')
+            uid = getpwnam ('pi').pw_uid
+            gid = getgrnam ('pi').gr_gid
+            chown (textFilePath, uid, gid)
+    except Exception as e:
+        print ("Error making quickStats file\n", str (e))
 
 def updateStats (statsFP, mice, mouse):
     """ Updates the quick stats text file after every exit, mostly for the benefit of folks logged in remotely
@@ -454,16 +480,18 @@ def updateStats (statsFP, mice, mouse):
     :param mouse: the mouse which just left the chamber 
     returns:nothing
     """
-    pos = mouse.arrayPos
-    statsFP.seek (39 + 38 * pos) # calculate this mouse pos, skipping the 39 char header
-    # we are in the right place in the file and new and existing values are zero-padded to the same length, so overwriting should work
-    outPutStr = '{:013}'.format(mouse.tag) + "\t" +  '{:05}'.format(mouse.entries)
-    outPutStr += "\t" +  '{:05}'.format(mouse.entranceRewards) + "\t" + '{:05}'.format(mouse.headFixes)
-    outPutStr +=  "\t" + '{:05}'.format(mouse.headFixRewards) + "\n"
-    statsFP.write (outPutStr)
-    statsFP.flush()
-    statsFP.seek (39 + 38 * mice.nMice()) # leave file position at end of file so when we quit, nothing is truncated
-
+    try:
+        pos = mouse.arrayPos
+        statsFP.seek (39 + 38 * pos) # calculate this mouse pos, skipping the 39 char header
+        # we are in the right place in the file and new and existing values are zero-padded to the same length, so overwriting should work
+        outPutStr = '{:013}'.format(mouse.tag) + "\t" +  '{:05}'.format(mouse.entries)
+        outPutStr += "\t" +  '{:05}'.format(mouse.entranceRewards) + "\t" + '{:05}'.format(mouse.headFixes)
+        outPutStr +=  "\t" + '{:05}'.format(mouse.headFixRewards) + "\n"
+        statsFP.write (outPutStr)
+        statsFP.flush()
+        statsFP.seek (39 + 38 * mice.nMice()) # leave file position at end of file so when we quit, nothing is truncated
+    except Exception as e:
+        print ("Error writing updating stat file\n", str (e))
 
 if __name__ == '__main__':
    main()

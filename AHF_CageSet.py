@@ -57,6 +57,11 @@ class AHF_CageSet (object):
                 self.serialPort = configDict.get ('Serial Port')
                 self.dataPath =configDict.get ('Path to Save Data')
                 self.mouseConfigPath = configDict.get ('Mouse Config Path')
+                self.hasEntryBB = configDict.get ('Has Entry Beam Break')
+                if self.hasEntryBB == True:
+                    self.entryBBpin = configDict.get ('Entry Beam Break Pin')
+                else:
+                    self.entryBBpin = -1
         except (TypeError, IOError) as e:
             #we will make a file if we didn't find it, or if it was incomplete
             print ('Unable to open base configuration file, AHFconfig.jsn, let\'s make a new one.\n')
@@ -81,7 +86,9 @@ class AHF_CageSet (object):
             self.ledPin = int (input ('Enter the GPIO pin connected to the blue LED for camera illumination:'))
             self.serialPort = input ('Enter serial port for tag reader(likely either /dev/ttyAMA0 or /dev/ttyUSB0):')
             self.dataPath = input ('Enter the path to the directory where the data will be saved:')
-            self.mouseConfigPath = input ('Enter the path to the directory where mouse configuration data is located:')
+            self.hasEntryBB = bool (input('The experimental tube has a beam break at the entry, True or False:'))
+            if self.hasEntryBB == True:
+                self.entryBBpin = int (input ('Enter the GPIO pin connected to the beam break at the tube entrance:'))
             self.show()
             doSave = input ('Enter \'e\' to re-edit the new Cage settings, or any other character to save the new settings to a file.')
             if doSave == 'e' or doSave == 'E':
@@ -105,6 +112,9 @@ class AHF_CageSet (object):
         jsonDict.update ({'Reward Pin':self.rewardPin, 'Tag In Range Pin':self.tirPin, 'Contact Pin':self.contactPin})
         jsonDict.update ({'Contact Polarity':self.contactPolarity, 'Contact Pull Up Down':self.contactPUD})
         jsonDict.update ({'LED Pin' : self.ledPin, 'Serial Port' : self.serialPort, 'Path to Save Data':self.dataPath, 'Mouse Config Path':self.mouseConfigPath})
+        jsonDict.update ({'Has Entry Beam Break':self.hasEntryBB})
+        if self.hasEntryBB == True:
+            jsonDict.update ({'Entry Beam Break Pin':self.entryBBpin})
         with open ('AHFconfig.jsn', 'w') as fp:
             fp.write (json.dumps (jsonDict))
             fp.close ()
@@ -130,7 +140,9 @@ class AHF_CageSet (object):
         print ('8:Brain LED Illumination Pin=' + str(self.ledPin))
         print ('9:Tag Reader serialPort=' + self.serialPort)
         print ('10:dataPath=' + self.dataPath)
-        print ('11:MouseConfigPath= ' + self.mouseConfigPath)
+        print ('11:Has Entry Beam Break=' + str (self.hasEntryBB))
+        if self.hasEntryBB == True:
+            print ('12:Entry Beam Break Pin=' + str (self.entryBBpin))
         print ('**************************************************************************************')
 
 
@@ -176,7 +188,9 @@ class AHF_CageSet (object):
             elif editNum == 10:
                 self.dataPath = input ('Enter the path to the directory where the data will be saved:')
             elif editNum == 11:
-                self.mouseConfigPath = input ('Enter the path to the directory where mouse configuration data is located:')
+                self.hasEntryBB = bool (input('The experimental tube has a beam break at the entry, True or False:'))
+            elif editNum ==12:
+                self.entryBBpin = int (input ('Enter the GPIO pin connected to the beam break at the tube entrance:'))
             else:
                 print ('I don\'t recognize that number ' + str (editNum))
         self.show()
@@ -191,4 +205,3 @@ if __name__ == '__main__':
     print ('Cage ID:', hardWare.cageID,'\tContact Pin:', hardWare.contactPin, '\tContact PUD:', hardWare.contactPUD, '\n')
     hardWare.edit()
     hardWare.save()
-
