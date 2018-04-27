@@ -40,6 +40,17 @@ or callling sleep and maybe missing the thing we were waiting for, we loop using
 """
 kTIMEOUTmS = 50
 
+gTubePanicTime=0
+gTubeMaxTime = 1
+def entryBBCallback (channel):
+    global gTubePanicTime # the global indicates that it is the same variable declared above and also used by main loop
+    global gTubeMaxTime
+    if GPIO.input (channel) == GPIO.LOW: # mouse just entered
+        gTubePanicTime = time () + gTubeMaxTime
+    else:  # mouse just left
+        gTubePanicTime = time () + 25920000 # a month from now. 
+
+
 def main():
     """
     The main function for the AutoHeadFix program.
@@ -115,6 +126,15 @@ def main():
         # make stimulator
         stimulator = AHF_Stimulator.get_class (expSettings.stimulator)(expSettings.stimDict, rewarder, lickDetector, expSettings.logFP)
         expSettings.stimDict = stimulator.configDict
+        # entry Beam Break
+        if cageSettings.hasEntryBB==True:
+            global gTubePanicTime
+            global gTubeMaxTime
+            GPIO.setup (cageSettings.entryBBpin, GPIO.IN)
+            GPIO.add_event_detect (cageSettings.entryBBpin, GPIO.BOTH)
+            GPIO.add_event_callback (cageSettings.entryBBpin, entryBBCallback)
+            gTubePanicTime = time () + 25920000 # a month from now.
+            gTubeMaxTime = expSettings.inChamberTimeLimit
     except Exception as anError:
         print ('Unexpected error starting AutoHeadFix:', str (anError))
         raise anError
@@ -161,7 +181,7 @@ def main():
                         if (GPIO.input (cageSettings.contactPin)== expSettings.contactState):
                             runTrial (thisMouse, expSettings, cageSettings, camera, rewarder, headFixer, stimulator, UDPTrigger)
                             expSettings.doHeadFix = expSettings.propHeadFix > random() # set doHeadFix for next contact
-                    # either mouse left the chamber or has been in chamber too long
+                    # either mouse left the chamber or has been in chamber too long, or another mouse has been 
                     if GPIO.input (cageSettings.tirPin)== GPIO.HIGH and time () > entryTime + expSettings.inChamberTimeLimit:
                         # explictly turn off pistons, though they should be off at end of trial
                         headFixer.releaseMouse()
@@ -194,6 +214,19 @@ def main():
                         mice.clear ()
                         lickDetector.start_logging ()
                     print ('Waiting for a mouse...')
+                else:
+                    # check for entry beam break while idling between trials
+                    if time() > gTubePanicTime:
+                        # explictly turn off pistons, though they should be off 
+                        headFixer.releaseMouse()
+                        if expSettings.hasTextMsg == True:
+                            BBentryTime = gTubePanicTime - gTubeMaxTime
+                            notifier.notify (0, BBentryTime,  True) # we don't have an RFID for this mouse, so use 0
+                        # wait for mouse to leave chamber
+                        while time() > gTubePanicTime:
+                            sleep (kTIMEOUTmS/1000)
+                        if expSettings.hasTextMsg == True:
+                            notifier.notify (0 (time() - BBentryTime), False)
             except KeyboardInterrupt:
                 GPIO.output(cageSettings.ledPin, GPIO.LOW)
                 headFixer.releaseMouse()
