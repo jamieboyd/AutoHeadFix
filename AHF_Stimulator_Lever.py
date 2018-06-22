@@ -6,7 +6,6 @@ from array import array
 
 from AHF_Rewarder import AHF_Rewarder
 from AHF_Mouse import Mouse
-
 import time
 import json
 

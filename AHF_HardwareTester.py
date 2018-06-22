@@ -134,13 +134,13 @@ def htloop (cageSet, tagReader, headFixer):
                     print ('Contact pin already indicates contact.')
                     err=True
                 else:
-                    GPIO.wait_for_edge (cageSet.contactPin, contactEdge, timeout= 10000)
+                    GPIO.wait_for_edge (cageSet.contactPin, contactEdge, 100)
                     if GPIO.input (cageSet.contactPin)== noContactState:
                         print ('No Contact after 10 seconds.')
                         err = True
                     else:
                         print ('Contact Made.')
-                        GPIO.wait_for_edge (cageSet.contactPin, noContactEdge, timeout= 10000)
+                        GPIO.wait_for_edge (cageSet.contactPin, noContactEdge, 100)
                         if GPIO.input (cageSet.contactPin)== contactState:
                             print ('Contact maintained for 10 seconds.')
                             err = True

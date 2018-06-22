@@ -52,7 +52,7 @@ class AHF_UDPTrig:
 #for testing purposes
 if __name__ == '__main__':
     hasUDP = True
-    trigger = AHF_UDPTrig (('127.0.0.1','142.103.107.239'))
+    trigger = AHF_UDPTrig (('142.103.107.241','142.103.107.239'))
    
     if hasUDP == True:
         message = 'hello_from_AHF_UDPTrig'

@@ -40,17 +40,27 @@ or callling sleep and maybe missing the thing we were waiting for, we loop using
 """
 kTIMEOUTmS = 50
 
-gTubePanicTime=0
-gTubeMaxTime = 1
+gTubePanicTime =1
+gTubeMaxTime =1
+gMouseAtEntry =0
 def entryBBCallback (channel):
-    global gTubePanicTime # the global indicates that it is the same variable declared above and also used by main loop
+    global gTubePanicTime # the global indicates that it is the same variable declared above and also used by main
     global gTubeMaxTime
+    global gMouseAtEntry
     if GPIO.input (channel) == GPIO.LOW: # mouse just entered
+        if gMouseAtEntry == False:
+            print ('mouse at entrance')
+        gMouseAtEntry =True
         gTubePanicTime = time () + gTubeMaxTime
-    else:  # mouse just left
-        gTubePanicTime = time () + 25920000 # a month from now. 
+        
+    elif GPIO.input (channel) == GPIO.HIGH:  # mouse just left
+        if gMouseAtEntry == True:
+            print ('Mouse left entrance')
+        gMouseAtEntry =False
+        gTubePanicTime = time () + 25920000 # a month from now.
+        
 
-
+        
 def main():
     """
     The main function for the AutoHeadFix program.
@@ -131,7 +141,7 @@ def main():
         if cageSettings.hasEntryBB==True:
             global gTubePanicTime
             global gTubeMaxTime
-            GPIO.setup (cageSettings.entryBBpin, GPIO.IN, GPIO.PUD_UP)
+            GPIO.setup (cageSettings.entryBBpin, GPIO.IN, pull_up_down = GPIO.PUD_UP)
             GPIO.add_event_detect (cageSettings.entryBBpin, GPIO.BOTH, entryBBCallback)
             #GPIO.add_event_callback (cageSettings.entryBBpin, entryBBCallback)
             gTubePanicTime = time () + 25920000 # a month from now.
@@ -228,12 +238,13 @@ def main():
                         print ('Some one has been in the entrance of this tube for too long')
                         # explictly turn off pistons, though they should be off 
                         headFixer.releaseMouse()
+                        BBentryTime = gTubePanicTime - gTubeMaxTime
                         if expSettings.hasTextMsg == True:
-                            BBentryTime = gTubePanicTime - gTubeMaxTime
-                            notifier.notify (0, BBentryTime,  True) # we don't have an RFID for this mouse, so use 0
+                            notifier.notify (0, (time() - BBentryTime),  True) # we don't have an RFID for this mouse, so use 0
                         # wait for mouse to leave chamber
                         while time() > gTubePanicTime:
                             sleep (kTIMEOUTmS/1000)
+                        print ('looks like some one managed to escape the entrance of this tube')
                         if expSettings.hasTextMsg == True:
                             notifier.notify (0, (time() - BBentryTime), False)
             except KeyboardInterrupt:
