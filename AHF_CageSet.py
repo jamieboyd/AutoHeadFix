@@ -5,24 +5,25 @@ import json
 import os
 import pwd
 import grp
-from AHF_HeadFixer import AHF_HeadFixer
-
 
 class AHF_CageSet (object):
 
     """
     Manages settings for hardware GPIO pin-outs and some other cage-specific settings for the raspberry Pi used for Auto Head Fix
-
+    Most classes have their own settings
     The class AHF_CageSet defines the following settings:
        :cage ID: str - whatver name you have for this cage
-       :headFixer: str - name of class used for HeadFixing, can be pistons, or servo-motor with pi PWM or AdaFruit I2C PWM driver
-       :pistons Pin: int - connected to solenoids that drive pistons for head fixing, (only if using pistons)
-       :Servo Address: int- servo address of AdaFruit I2C PWM driver (only if using adafruit servo)
+       :headFixer: str - name of class used for HeadFixing, can be pistons, or servo-motor with pi PWM or AdaFruit I2C PWM driver,
+
+        :pistons Pin: int - connected to solenoids that drive pistons for head fixing, (only if using pistons)
+           :Servo Address: int- servo address of AdaFruit I2C PWM driver (only if using adafruit servo)
        : PWM CHannel: int- PWM channel (0 or 1) if using pi PWM 
        :servoReleased: int - position of server to release mouse, (only if using adafruit servo)
        :servoFixed: int - position of servo to fix mouse (only if using servo)
+
        :rewardPin: int - connected to solenoid for delivering water reward
        :tirPin: int - tag in-range pin for the ID tag reader
+
        :contactMode: str - BeamBreak, or ContactCheck
        :contactPin: int - GPIO connected to the head contacts, or IR beam-breaker
        :ledPin: int - output pin for the Blue LED that illuminates the brain
@@ -43,7 +44,7 @@ class AHF_CageSet (object):
         try:
             with open ('AHFconfig.jsn', 'r') as fp:
                 data = fp.read()
-                configDict = json.loads(data)
+                
                 fp.close()
                 self.cageID = configDict.get('Cage ID')
                 self.headFixer = configDict.get('Head Fixer')

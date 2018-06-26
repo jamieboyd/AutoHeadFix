@@ -28,11 +28,8 @@ from sys import argv
 #library import - need to have RPi.GPIO installed, but should be standard on Raspbian Woody or Jessie
 import RPi.GPIO as GPIO
 
-# constants used for calculating when to start a new day
-# we put each day's movies and text files in a separate folder, and keep separate stats
-KSECSPERDAY = 86400
-KSECSPERHOUR = 3600
-KDAYSTARTHOUR =7 # when we start a new day, in 24 hr format, so 7 is 7 AM and 19 is 7 PM
+# when we start a new day, in 24 hr format, so 7 is 7 AM and 19 is 7 PM
+KDAYSTARTHOUR =13
 
 """
 constant for time outs when waiting on an event - instead of waiting for ever, and missing, e.g., keyboard event,
@@ -81,17 +78,19 @@ def main():
         if argv.__len__() > 1:
             configFile = argv [1]
         expSettings = AHF_Settings (configFile)
+        #put settings into one big dictionary 
+        #allSettings = {}
+        #allSettings.update (cageSettings.asDict())
+        #allSettings.update (expSettings.asDict())
         # nextDay starts tomorrow at KDAYSTARTHOUR
         now = datetime.fromtimestamp (int (time()))
         startTime = datetime (now.year, now.month,now.day, KDAYSTARTHOUR,0,0)
         nextDay = startTime + timedelta (hours=24)
-        # Create folders where the files for today will be stored
-        makeDayFolderPath(expSettings, cageSettings)
-        # initialize mice with zero mice
-        mice = Mice()
-        # make daily Log files and quick stats file
-        makeLogFile (expSettings, cageSettings)
-        makeQuickStatsFile (expSettings, cageSettings, mice)
+        # initialize mice from mice config path, if possible
+        mice = Mice(cageSettings, expSettings)
+        # make datalogger, which will handle creating and writing events to AHF text file and updating quickStats file
+        dataLogger = AHF_DataLogger (cageSettings.cageID, cageSettings.dataPath)
+        dataLogger.makeQuickStatsFile (mice)
         # set up the GPIO pins for each for their respective functionalities.
         GPIO.setmode (GPIO.BCM)
         GPIO.setwarnings(False)
@@ -110,12 +109,13 @@ def main():
             expSettings.noContactState = GPIO.HIGH
         # make head fixer - does its own GPIO initialization from info in cageSettings
         headFixer=AHF_HeadFixer.get_class (cageSettings.headFixer) (cageSettings)
-        # make a rewarder
+        # make a rewarder -does its own GPIO initialization from info in cageSettings
         rewarder = AHF_Rewarder (30e-03, cageSettings.rewardPin)
         rewarder.addToDict('entrance', expSettings.entranceRewardTime)
         rewarder.addToDict ('task', expSettings.taskRewardTime)
         # make a notifier object
         if expSettings.hasTextMsg == True:
+            from AHF_Notifier import AHF_Notifier
             notifier = AHF_Notifier (cageSettings.cageID, expSettings.phoneList)
         else:
             notifier = None
@@ -125,15 +125,17 @@ def main():
         camera = AHF_Camera(expSettings.camParamsDict)
         # make UDP Trigger
         if expSettings.hasUDP == True:
+            from AHF_UDPTrig import AHF_UDPTrig
             UDPTrigger = AHF_UDPTrig (expSettings.UDPList)
-            print (UDPTrigger)
         else:
             UDPTrigger = None
         # make a lick detector
-        simpleLogger = Simple_Logger (expSettings.logFP)
-        lickDetector = AHF_LickDetector ((0,1),26,simpleLogger)
-        sleep(1)
-        lickDetector.start_logging ()
+        if cageSettings.lickIRQ > 0:
+            from AHF_LickDetector import AHF_LickDetector
+            lickDetector = AHF_LickDetector ((0,1), cageSettings.lickIRQ, dataLogger)
+            lickDetector.start_logging()
+        else:
+            lickDetector = None
         # make stimulator
         stimulator = AHF_Stimulator.get_class (expSettings.stimulator)(expSettings.stimDict, rewarder, lickDetector, expSettings.logFP)
         expSettings.stimDict = stimulator.configDict
@@ -169,8 +171,10 @@ def main():
                     if thisMouse is None:
                         # try to open mouse config file to initialize mouse data
                         thisMouse=Mouse(tag,1,0,0,0)
-                        mice.addMouse (thisMouse, expSettings.statsFP)
-                    writeToLogFile(expSettings.logFP, thisMouse, 'entry')
+                        mice.addMouse (thisMouse)
+                        dataLogger.addMouseToStats (thisMouse, mice.nMice())
+                    dataLogger.setMouse (thisMouse)
+                    dataLogger.writeToLogFile ('entry')
                     thisMouse.entries += 1
                     # if we have entrance reward, first wait for entrance reward or first head-fix, which countermands entry reward
                     if thisMouse.entranceRewards < expSettings.maxEntryRewards:
