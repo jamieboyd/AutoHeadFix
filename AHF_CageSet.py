@@ -5,7 +5,7 @@ import json
 import os
 import pwd
 import grp
-
+from AHF_HeadFixer import AHF_HeadFixer
 class AHF_CageSet (object):
 
     """
@@ -44,10 +44,11 @@ class AHF_CageSet (object):
         try:
             with open ('AHFconfig.jsn', 'r') as fp:
                 data = fp.read()
-                
+                data=data.replace('\n', ',')
+                configDict = json.loads(data);print (configDict)
                 fp.close()
                 self.cageID = configDict.get('Cage ID')
-                self.headFixer = configDict.get('Head Fixer')
+                self.headFixer = configDict.get('Head Fixer');print (self.headFixer)
                 AHF_HeadFixer.get_class (self.headFixer).configDict_read (self, configDict)
                 self.rewardPin = int(configDict.get('Reward Pin'))
                 self.tirPin = int(configDict.get('Tag In Range Pin'))
@@ -63,6 +64,7 @@ class AHF_CageSet (object):
                     self.entryBBpin = configDict.get ('Entry Beam Break Pin')
                 else:
                     self.entryBBpin = -1
+                self.lickIRQ = configDict.get ('lickIRQ')
         except (TypeError, IOError) as e:
             #we will make a file if we didn't find it, or if it was incomplete
             print ('Unable to open base configuration file, AHFconfig.jsn, let\'s make a new one.\n')

@@ -89,7 +89,7 @@ def main():
         # initialize mice from mice config path, if possible
         mice = Mice(cageSettings, expSettings)
         # make datalogger, which will handle creating and writing events to AHF text file and updating quickStats file
-        dataLogger = AHF_DataLogger (cageSettings.cageID, cageSettings.dataPath)
+        dataLogger = Simple_Logger (expSettings.logFP)
         dataLogger.makeQuickStatsFile (mice)
         # set up the GPIO pins for each for their respective functionalities.
         GPIO.setmode (GPIO.BCM)

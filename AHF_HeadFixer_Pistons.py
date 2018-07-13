@@ -32,9 +32,7 @@ class AHF_HeadFixer_Pistons(AHF_HeadFixer):
     @staticmethod
     def config_show(cageSet):
         return 'Pistons Solenoid Pin=' +  str (cageSet.pistonsPin)
-
     
-
     def test (self, cageSet):
         print ('Pistons Solenoid energizing for 2 sec')
         GPIO.output(cageSet.pistonsPin, 1)
