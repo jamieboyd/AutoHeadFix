@@ -6,48 +6,31 @@
 
 // ******************************************************
 // Loader for data from AutoHeadFix program running on the raspberry pi
-// Last modified 2016/01/14 by Jamie Boyd
+// Last modified 2018/07/24 by Jamie Boyd
+
+// Each line in Text file is tab separated, as follows:
+//  mouse num (or 0 for events where mouse is not known);		unix Time;  event;		human formatted time;  
+// event can be SeshStart, SeshEnd, entry, exit, check+ or check-, complete. example:
+// 0000201608423	1532156724.25	entry	2018-07-21 00:05:24
+
 
 Menu "Macros"
 	"Load Auto Head Fix Data", AHF_Loader ()
 End
 
-// Each line in Text file is tab separated, as follows:
-//  mouse num (or 0 for events seshstart and  seshend); unix GM Time;  human formatted time;  event
-// event can be SeshStart, seshEnd, entry, exit, check+ or check-, reward0..., n, complete. example:
-// 0000000000000	1448722801.83	2015-11-28 07:00:01	SeshStart
 
-// Loader makes the following sets of waves for each mouse
-// day waves are made with values for the whole day. Not every calendar day will neccessarily be represented, only test days
-	// date in seconds from Igor epoch to start of the testing day
-	// total time in cage, in seconds,  for this day from sesh start/end events
-	// total entries
-	// total entry rewards (based on time to exit or head fix being less than  entrance_reward_delay_time)
-	// total head fixes
-	// total fix rewards
+// Loader makes datetime and event waves for each mouse
 
-// entrance times waves are made based on each entry being a dat point
-	// entrance date/time in Igor time format
-	// entrance duration, in seconds
-	// was an entry reward (based on time to exit or head fix being less than  entrance_reward_delay_time) 1 for Yes, 0 for No
-	
-//	head fix time waves are made with each head fix being a data point
-	// date/time of each headFix in Igor time format
-	// head fix duration, in secs
-	// nRewards delivered during that head fix
+// Each file name should contain metadata on cageID: "headFix_" + cageID + "_" + YYYMMDD + (optionally) "_" + other meta-Data
+// e.g., headFix_AB_20161108.txt or
 
-// The loader assumes that data between each seshStart and seshEnd pair is ordered in time, but not that files are loaded in chronological order 
-
-
-// Each file name should contain metadata on cageID: "headFix_" + cageID + "_" + MMDD + (optionally) "_" + other meta-Data
-// e.g., headFix_AB_1108.txt or
-
- CONSTANT kSECSPERDAY =86400 // number of seconds in one day
- CONSTANT kSECSTODAYSTART = 25200 // we bin data by day to mouse-time where a day starts at 7 am, to cleanly divide light and dark phases
- CONSTANT kUNIXEPOCHGMOFFSET = 2082816000// the Unix epoch started on jan 01 1970, Igor time is calculated from jan 01 1904. 
+CONSTANT kSECSPERDAY = 86400 // number of seconds in one day
+CONSTANT kSECSTODAYSTART = 25200 // we bin data by day to mouse-time where a day starts at 7 am, to cleanly divide light and dark phases
+CONSTANT kUNIXEPOCHGMOFFSET = 2082816000// the Unix epoch started on jan 01 1970, Igor time is calculated from jan 01 1904. 
 // Unix time.time(), used in the acquisition code,  gives seconds in Universal (Greenwich) time, not accounting for timezone.
 //  this constant combines both the 66 year and 8 hour offset
- CONSTANT kENTRANCEREWARDDELAY = 2 // As set in the  acquisition code, if a mouse leaves the chamber before this delay is up, no entrance reward
+
+#define kDEBUG
 
 // ******************************************************
 // Utility functions to  return a  formatted text string representing a given number of seconds since 1970 (UNIX time format)
@@ -122,8 +105,33 @@ end
 Function Auto_Head_Fix_drawControls (vTop)
 	variable vTop
 	
-	WAVE/T grpList = root:AutoHeadFixData:GrpList
-	WAVE GrpListSel = root:packages:GUIP:Auto_Head_Fix:GrpListSel
+	// variables for overwriting and loading movies
+	Variable/G root:packages:GUIP:Auto_Head_Fix:loadMovies =0
+	Variable/G root:packages:GUIP:Auto_Head_Fix:Overwrite = 0
+	Variable/G root:packages:GUIP:Auto_Head_Fix:ExistingMiceOnly =0
+	SVAR optionStr = root:packages:GUIP:Auto_Head_Fix:GUIPloadOptionStr
+	optionStr = "Overwrite=no;LoadMovies=no;"
+	SVAR GUIPDataFolderStr = root:packages:GUIP:Auto_Head_Fix:GUIPDataFolderStr
+	GUIPDataFolderStr = "root:AutoHeadFixData"
+	
+	// list box with IDs and groups
+	WAVE/T/Z grpList = root:AutoHeadFixData:GrpList
+	if (!(waveExists (grpList)))
+		make/t/n = (1,2) root:AutoHeadFixData:GrpList
+		WAVE/T grpList = root:AutoHeadFixData:GrpList
+		grpList = ""
+		SetDimLabel 1,0,TagID,grpList
+		SetDimLabel 1,1,Group,grpList
+	endif
+	WAVE/Z GrpListSel = root:packages:GUIP:Auto_Head_Fix:GrpListSel
+	if (!(waveExists (GrpListSel)))
+		make/n = (1,2) root:packages:GUIP:Auto_Head_Fix:GrpListSel
+		WAVE grpListSel = root:packages:GUIP:Auto_Head_Fix:GrpListSel
+		grpListSel = 3
+	endif
+	ListBox GroupsList win = Auto_Head_FixLoader,pos={5,vTop + 22},size={285,110}
+	ListBox GroupsList win = Auto_Head_FixLoader,listWave=GrpList,selWave=GrpListSel, mode= 1
+	ListBox GroupsList win = Auto_Head_FixLoader,widths={106,161},userColumnResize= 1, proc=AHF_GrpListProc
 	CheckBox OverwriteCheck win = Auto_Head_FixLoader, pos={4,vTop + 2},size={91,15},title="Overwrite Existing Data"
 	CheckBox OverwriteCheck win = Auto_Head_FixLoader, help={"If a file for a particular day was loaded previously, delete existing data and load new data"}
 	CheckBox OverwriteCheck win = Auto_Head_FixLoader, variable= root:packages:GUIP:Auto_Head_Fix:Overwrite, proc = AHF_OptionsCheckProc
@@ -131,7 +139,7 @@ Function Auto_Head_Fix_drawControls (vTop)
 	CheckBox LoadMoviesCheck win = Auto_Head_FixLoader,help={"Try to load movies for head fixed events, using relative file path from text file folder"}
 	CheckBox LoadMoviesCheck win = Auto_Head_FixLoader,variable= root:packages:GUIP:Auto_Head_Fix:loadMovies
 	CheckBox ExistingMiceOnlyCheck win = Auto_Head_FixLoader,pos={214,57},size={74,15},proc=AHF_OptionsCheckProc,title="Existing Mice"
-	CheckBox ExistingMiceOnlyCheck win = Auto_Head_FixLoader,help={"Load data only for mice for which a TagID has been givrn a grp ID"}
+	CheckBox ExistingMiceOnlyCheck win = Auto_Head_FixLoader,help={"Load data only for mice for which a TagID has been given a grp ID"}
 	CheckBox ExistingMiceOnlyCheck win = Auto_Head_FixLoader,variable= root:packages:GUIP:Auto_Head_Fix:ExistingMiceOnly
 	ListBox GroupsList win = Auto_Head_FixLoader,pos={5,vTop + 22},size={285,110}
 	ListBox GroupsList win = Auto_Head_FixLoader,listWave=GrpList,selWave=GrpListSel, mode= 1
@@ -204,6 +212,13 @@ Function AHF_GrpListProc(lba) : ListBoxControl
 		case -1: // control being killed
 			break
 		case 1: // mouse down
+			nRows =dimsize(lba.listWave,0)
+			if ((lba.row == nRows) && ((lba.eventMod & 2)==2))
+				if ((nRows > 1) || (cmpstr (lba.listWave [0] [0], "") != 0))
+					insertPoints/M=0 nRows, 1, lba.listWave, lba.selWave
+					lba.selWave = 3
+				endif
+			endif
 			break
 		case 3: // double click
 			if (lba.row == -1)  // sort list by selected column
@@ -221,7 +236,7 @@ Function AHF_GrpListProc(lba) : ListBoxControl
 		case 4: // cell selection
 			break
 		case 5: // cell selection plus shift key
-			if (lba.row > 0) 
+			if (dimsize(lba.listWave,0) > 1) 
 				deletepoints/M=0 lba.row, 1, lba.listWave, lba.selWave
 			endif
 			break
@@ -278,6 +293,58 @@ Function AHF_GrpListProc(lba) : ListBoxControl
 					doalert 0 ,"Changed names of existing waves for this mouse in AutoHeadFixData to match new group."
 				endif
 			endif
+//			if (lba.col ==0)
+//			
+//			// if adding a new mouse, validate number and check if it is already in the list
+//			if (((lba.row ==0) && (cmpstr (lba.listWave [0] [0], "") != 0)) && (cmpstr (lba.listWave [0] [1], "") != 0))
+//				variable newID = mod (str2num (lba.listWave [lba.row] [0]), 10000)
+//				if (numtype (newID) != 0)
+//					doalert 0, "The TagID needs to be a number."
+//					lba.listWave [0] [0] = ""
+//					return 0
+//				else
+//					nRows = dimsize(lba.listWave,0)
+//					for (iRow =1; iRow < nRows; iRow +=1)
+//						if (newID == str2num (lba.listWave [iRow] [0]))
+//							doAlert 0, "The TagID \"" + lba.listWave [iRow] [0] + "\" already exists in the list of mice, in group \"" + lba.listWave [iRow] [1]
+//							return 0
+//						endif 
+//					endfor
+//					sprintf IDStr, "%04d", newID
+//					lba.listWave [0] [0]= IDStr
+//					//grp needs to be letters, whether adding a new mouse or changing grp for existing mouse
+//					SplitString /E="([[:alpha:]]*)([[:digit:]]*)" lba.listWave [0] [1], alpha, digits
+//					if ((strlen (alpha) == 0) || (strlen (digits) > 0))
+//						lba.listWave [0] [1] = alpha
+//						doalert 0, "Group names must contain only letters"
+//					endif
+//					// Insert a new row, Saving position 0 for inserting new IDs
+//					insertpoints 0,1, lba.listWave, lba.selWave
+//					lba.listWave [0] = ""
+//					lba.selWave [0][*] = 3
+//					lba.selWave [1] [0]= 0
+//					lba.selWave [1] [1]= 3
+//				endif
+//			elseif ((lba.row > 0) && (lba.col == 1))
+//				//grp needs to be letters, whether adding a new mouse or changing grp for existing mouse
+//				SplitString /E="([[:alpha:]]*)([[:digit:]]*)" lba.listWave [lba.row] [1], alpha, digits
+//				if ((strlen (alpha) == 0) || (strlen (digits) > 0))
+//					lba.listWave [lba.row] [1] = alpha
+//					doalert 0, "Group names must contain only letters"
+//				endif
+//				// change names of existing waves
+//				string aWaveName, newWaveName, mouseWaves = GUIPListObjs ("root:AutoHeadFixData", 1, "*" + lba.listWave [lba.row] [0] + "_*", 0, "")
+//				variable iWave, nWaves = itemsInlist (mouseWaves, ";")
+//				for (iWave = 0; iWave < nWaves; iWave +=1)
+//					aWaveName = stringFromList (iWave, mouseWaves, ";")
+//					WAVE aWave = $"root:AutoHeadFixData:" + aWaveName
+//					SplitString /E="([[:alpha:]]*)([[:digit:]]*)" aWaveName, alpha, digits
+//					Rename aWave, $ReplaceString(alpha, aWaveName, lba.listWave [lba.row] [1], 0)
+//				endfor
+//				if (nWaves > 0)
+//					doalert 0 ,"Changed names of existing waves for this mouse in AutoHeadFixData to match new group."
+//				endif
+//			endif
 			break
 		case 13: // checkbox clicked (Igor 6.2 or later)
 			break
@@ -512,10 +579,15 @@ Function AHF_Load (ImportPathStr, FileNameStr, OptionsStr, FileDescStr)
 #endif
 		return 1
 	endif
-	// cage name form file name is used only if group name is not already in the tag ID wave
-	string cageName = cleanUpName (StringFromList(1, fileNameStr, "_"), 0)
+	// cage name from file name is used only if group name is not already in the tag ID wave
+	string cageName = StringFromList(1, fileNameStr, "_")
 	if (CmpStr (cageName, "") ==0)
 		cageName = "noName"
+	else
+		if (numtype(str2num (cageName [0])) ==0)
+			cageName = "c" + cageName
+		endif
+		cageName = cleanUpName (cageName, 0)
 	endif
 
 	// make temp waves for mice names and numbers of events in packages folder
@@ -530,232 +602,114 @@ Function AHF_Load (ImportPathStr, FileNameStr, OptionsStr, FileDescStr)
 	variable thisTime
 	string thisEvent
 	string aLine
-	variable seshStart, seshStarted=0
-	variable entryStart
-	variable enteredMouse, thisMouse, isCheckedIn
-	string waveNameStr
-	// find first event - if it is not a session start, start the session at first event
-	FReadLine/T="\n"  fileRefNum, aLine
-	for (; strlen (aLine) > 1; )
-		aLine = removeending (removeending  (aLine, "\n"), "\r")
-		thisMouse =  mod (str2num (StringFromList(0, aLIne, "\t")), 10000)
-		thisTime = str2Num (StringFromList(1, aLIne, "\t")) + kUNIXEPOCHGMOFFSET
-		// skip lines that are not events that may arise from concatenating files together
-		if ((numtype (thisTime) == 0) && (numtype (thisMouse) == 0))
-			seshStart = thisTime
-			seshStarted =1
-			thisEvent = StringFromList(3, aLIne, "\t")
-			// if first event is seshStart, it is processed and get next line ready for main loop through events
-			if (cmpStr (thisEvent, "SeshStart") == 0)
-				FReadLine/T="\n"  fileRefNum, aLine
+	variable nData = 1000
+	make/d/FREE/n = (nData) eventTime
+	make/t/FREE/n=(nData) eventData
+	make/i/u/FREE/n=(nData) eventMouse
+	variable thisMouse =0
+	string mouseNumStr
+	// read data line at a time
+	variable iData
+	FReadLine/T="\n" fileRefNum, aLine
+	aLine = removeending (removeending  (aLine, "\n"), "\r")
+	for (iData =0; strlen (aLine) > 1; )
+		if (!((CmpStr (StringFromList(2, aLine, "\t"), "SeshStart") ==0) || (CmpStr (StringFromList(2, aLine, "\t"), "SeshEnd") ==0)))
+			eventMouse [iData] =  mod (str2num (StringFromList(0, aLIne, "\t")), 10000)
+			if (eventMouse [iData] == 0)
+				eventMouse [iData] = thisMouse
+			else
+				thisMouse = eventMouse [iData]
 			endif
-			break
+			eventTime [iData] = str2Num (StringFromList(1, aLIne, "\t")) + kUNIXEPOCHGMOFFSET
+			eventData [iData] = StringFromList(2, aLine, "\t")
+			iData +=1
+			if (iData == nData)
+				insertPoints nData, nData, eventTime, eventData, eventMouse
+				nData *=2
+			endif
 		endif
-		FReadLine/T="\n"  fileRefNum, aLine
-	endfor
-	// now loop through the rest of events
-	for (; strlen (aLine) > 1; )
+		FReadLine/T="\n" fileRefNum, aLine
 		aLine = removeending (removeending  (aLine, "\n"), "\r")
-		thisMouse =  mod (str2num (StringFromList(0, aLIne, "\t")), 10000) // scrunch carzy long mouseID to 4 digits
-		thisTime = str2Num (StringFromList(1, aLIne, "\t")) + kUNIXEPOCHGMOFFSET
-		thisEvent =StringFromList(3, aLIne, "\t")
-		// skip lines that are not events that may arise from concatenating files together
-		if (!((numtype (thisTime) == 0) && (numtype (thisMouse) == 0)))
-			continue
+	endfor
+	nData = iData
+	redimension/n = (nData) eventTime, eventData, eventMouse
+	// sort data by mouse and by time then copy into existing waves for each mouse
+	sort {eventMouse, eventTime} eventTime, eventData, eventMouse
+	WAVE/T GrpList = root:AutoHeadFixData:GrpList
+	WAVE GrpListSel = root:packages:GUIP:Auto_Head_Fix:GrpListSel
+	variable im, nm = dimsize (GrpList, 0), hasMouse
+	variable firstPos, lastPos, aMouse
+	variable insertStart, insertEnd, dataPts, insertPnts
+	
+	for (firstPos =0;firstPos < nData; firstPos = lastPos + 1)
+		// get mouse name and find end of data for this mouse
+		aMouse = eventMouse [firstPos]
+		lastPos = GUIPMathFindNum (eventMouse, eventMouse [firstPos], firstPos, nData, 1)
+		// Do we want to even bother with this mouse? or Add to existing Mice?
+		sprintf mouseNumStr "%04d", aMouse
+		//mouseNumStr = num2str (aMouse)
+		for (im =0, hasMouse = -1; im < nm; im +=1)
+			if (cmpstr (mouseNumStr, GrpList [im] [0]) ==0)
+				hasMouse = im
+				break
+			endif
+		endfor
+		if (existingMiceOnly)
+			if ((hasMouse == -1) || (cmpStr (GrpList [hasMouse] [1], "") == 0))
+				continue
+			endif
+		else // perhaps add mouse to list
+			if (hasMouse == -1)
+				InsertPoints /M=0 0, 1, GrpList, GrpListSel
+				GrpList [0] [0] = mouseNumStr
+				GrpList [0] [1] = cageName
+				GrpListSel [0,1] [1] = 3 
+			endif
 		endif
-		// process event
-		StrSwitch (thisEvent)
-			case "SeshStart":  // start of a session; there may be more than 1 start per file
-				if (seshStarted)
-					print "Session start without corresponding seshEnd: " + fileNameStr + " " + aLine
-					AHF_SeshEnd(seshStart, thisTime, cageName, overWrite, existingMiceOnly)
+		// reference waves for this mouse
+		sprintf mouseNumStr "%04d", aMouse
+		WAVE/D/Z timeWave = $"root:AutoHeadFixData:m" + mouseNumStr + "_time"
+		WAVE/T/Z eventWave = $"root:AutoHeadFixData:m" + mouseNumStr + "_event"
+		if (!((WaveExists (timeWave)) && waveExists (eventWave)))
+			duplicate/o/r= [firstPos, lastPos] eventTime $"root:AutoHeadFixData:m" + mouseNumStr + "_time"
+			duplicate/o/r= [firstPos, lastPos] eventData $"root:AutoHeadFixData:m" + mouseNumStr + "_event"
+			WAVE/D/Z timeWave = $"root:AutoHeadFixData:m" + mouseNumStr + "_time"
+			setscale d 0,0, "dat" timeWave
+			WAVE/T/Z eventWave = $"root:AutoHeadFixData:m" + mouseNumStr + "_event"
+			Note timeWave,"grp=" + cageName + "\r" 
+			Note eventWave,"grp=" + cageName + "\r"
+		else
+			dataPts = numpnts (timeWave)
+			insertStart = GUIPMathFindNum (timeWave, eventTime [firstPos], 0, dataPts, 0)
+			if (insertStart < 0)
+				insertStart *= -1;insertStart -=1
+			endif
+			insertEnd=GUIPMathFindNum (timeWave, eventTime [lastPos], 0, dataPts, 0)
+			if (insertEnd < 0)
+				insertEnd *= -1;insertEnd -=1
+			endif
+			if (insertStart != insertEnd) // data has been inserted before, so overwriting
+				if (overWrite == 0)
+					printf "Data for file %s was already loaded and will NOT be overwritten.\r", fileNameStr
+					continue
 				endif
-				seshStart = thisTime 
-				seshStarted=1
-				break
-			case "SeshEnd":
-				if (!(seshStarted))
-					print "Session end without precedng seshStart: " + fileNameStr + " " + aLine
-				endif
-				seshStarted = 0
-				AHF_SeshEnd(seshStart, thisTime, cageName, overWrite,existingMiceOnly)
-				break
-			case "entry":
-				if (!(seshStarted))
-					print "Entry without precedng seshStart: " + fileNameStr + " " + aLine
-					seshStart = thisTime 
-					seshStarted=1
-				endif
-				enteredMouse = thisMouse
-				// find mouse, or make an entry for it in temp waves
-				mousePos = GUIPMathFindNum (mice, thisMouse, 0, nMice-1, 0)
-				if (mousePos < 0) // mouse was not found
-					// account for the 1 character offset in position used to disambiguate "-0 = not found, aphabetically before pos 0" and
-					// "0 = found at position 0"
-					mousePos = -(mousePos+1) 
-					insertpoints/M=0 mousePos, 1, mice, entries, entryRewards, fixes, fixRewards
-					mice [mousePos] = thisMouse
-					entries [mousePos] =0; entryRewards[mousePos] =0;fixes[mousePos] =0; fixRewards[mousePos] =0
-					nMice +=1
-					// make temp waves for this mouse, if not already made
-					waveNameStr = "root:packages:m" + num2str (mice [mousePos])
-					if (!(WaveExists ($waveNameStr + "_entryTimes")))
-						make/o/D/n=(10) $waveNameStr + "_entryTimes"
-						make/o/n=(10) $waveNameStr + "_entryDurs"
-						make/o/b/u/n=(10) $waveNameStr + "_WasEntryReward"
-						make/o/D/n=(10) $waveNameStr + "_HeadFixTimes"
-						make/o/n=(10) $waveNameStr+ "_HeadFixDurs"
-						make/o/b/u/n=(10) $waveNameStr + "_HeadFixRewards"
-					endif
-					// reference waves for this mouse
-					WAVE entryTimes = $waveNameStr + "_entryTimes"
-					WAVE entryDurs = $waveNameStr + "_entryDurs"
-					WAVE wasEntryReward = $waveNameStr + "_WasEntryReward"
-					WAVE headFixTimes = $waveNameStr + "_HeadFixTimes"
-					WAVE headFixDurs =$waveNameStr+ "_HeadFixDurs"
-					WAVE headFixRewards= $waveNameStr + "_HeadFixRewards"
-				else
-					waveNameStr = "root:packages:m" + num2str (mice [mousePos])
-				endif
-				// add entry for this mouse
-				Wave MouseEntries =  $waveNameStr + "_entryTimes"
-				MouseEntries [entries [mousePos]] = thisTime
-				entryStart = thisTime
-				break
-			case "exit":
-				if (thisMouse !=  enteredMouse)
-					print"Entered mouse, " + num2str (enteredMouse) + " is not exited mouse " + num2str (thisMouse)
-					print FileNameStr, aline
-				else
-					Wave MouseEntries =  $waveNameStr + "_entryTimes"
-					WAVE MouseDurations = $waveNameStr+ "_entryDurs"
-					WAVE mouseWasEntryReward =  $waveNameStr + "_WasEntryReward"
-					MouseDurations[entries [mousePos]] = thisTime - MouseEntries [entries [mousePos]]
-					if (MouseDurations[entries [mousePos]] > kENTRANCEREWARDDELAY)
-						mouseWasEntryReward  [entries [mousePos]]  = 1
-						entryrewards [mousePos] +=1
-					else
-						mouseWasEntryReward  [entries [mousePos]]  = 0
-					endif
-					entries [mousePos] += 1
-					if (entries [mousePos]  >= (numPnts (MouseEntries)))
-						redimension/n=(2*entries [mousePos]) MouseEntries, MouseDurations, mouseWasEntryReward
-					endif
-				endif
-				if (isCheckedIn)
-					WAVE mouseHeadFixTimes = $waveNameStr + "_HeadFixTimes"
-					WAVE mouseHeadFixDurations = $waveNameStr+ "_HeadFixDurs"
-					mouseHeadFixDurations  [fixes [mousePos]]  = thisTime -  mouseHeadFixTimes  [fixes [mousePos]] 
-					fixes [mousePos] +=1
-					if (fixes [mousePos]  >= numPnts (mouseHeadFixTimes))
-						WAVE mouseFixRewards = $waveNameStr + "_HeadFixRewards"	
-						redimension/n=(2*fixes [mousePos]) mouseHeadFixTimes, mouseHeadFixDurations, mouseFixRewards
-					endif
-					isCheckedIn = 0
-				endif
-				break
-			case "check+":
-			case "check0+":
-				isCheckedIn = 1
-				WAVE mouseHeadFixTimes = $waveNameStr + "_HeadFixTimes"
-				mouseHeadFixTimes  [fixes [mousePos]]   = thisTime
-				WAVE mouseWasEntryReward =  $waveNameStr + "_WasEntryReward"
-				if (thisTime <  entryStart + kENTRANCEREWARDDELAY) // countermanding an entrance reward with an immediate head fix
-					mouseWasEntryReward  [entries [mousePos]]  = 0
-					entryrewards [mousePos] -=1
-				endif
-				if (loadMovie)
-					AHF_LoadMovie(ImportPathStr, thisTime -kUNIXEPOCHGMOFFSET)
-				endif
-				break
-			case "complete":
-				isCheckedIn = 0
-				WAVE mouseHeadFixTimes = $waveNameStr + "_HeadFixTimes"
-				WAVE mouseHeadFixDurations = $waveNameStr+ "_HeadFixDurs"
-				mouseHeadFixDurations  [fixes [mousePos]]  = thisTime -  mouseHeadFixTimes  [fixes [mousePos]] 
-				fixes [mousePos] +=1
-				if (fixes [mousePos]  >= numPnts (mouseHeadFixTimes))
-					WAVE mouseFixRewards = $waveNameStr + "_HeadFixRewards"	
-					redimension/n=(2*fixes [mousePos]) mouseHeadFixTimes, mouseHeadFixDurations, mouseFixRewards
-				endif
-				break
-			case "reward0":
-				WAVE mouseFixRewards = $waveNameStr + "_HeadFixRewards"	
-				 mouseFixRewards [fixes [mousePos]] = 1
-				fixRewards [mousePos]  +=1
-				break
-			case "reward1":
-			case "reward2":
-			case "reward3":
-			case "reward4":
-			case "reward5":
-			case "reward6":
-			case "reward7":
-			case "reward8":
-			case "reward9":
-			case "reward10":
-			case "reward11":
-			case "reward12":
-				 WAVE mouseFixRewards = $waveNameStr + "_HeadFixRewards"	
-				 mouseFixRewards [fixes [mousePos]] += 1
-				 fixRewards [mousePos]  +=1
-				break
-		endSwitch
-		FReadLine/T="\n"  fileRefNum, aLine
-	endfor
-	// do final seshEnd, if needed
-	if (seshStarted)
-		AHF_SeshEnd(seshStart, thisTime, cageName, overWrite,existingMiceOnly)
-	endif
-end
-
-
-
-
-function AHF_SpanEntries (mouse)
-	string mouse
-	
-	//setdatafolder
-	
-	
-	wave headFixTime = $" root:AutoHeadFixData:" + mouse	 + "_hdFXTIme"
-	Wave headFixDur = $" root:AutoHeadFixData:" + mouse + "_hdFxDurs"
-	variable iFix, iOut,  nFixes = numpnts (headFixTIme)
-	make/d/o/n= (nFixes  * 3) $mouse	 + "_hdFXSpanX"
-	make/o/n=(nFixes * 3) ,  $mouse	 + "_hdFXSpanY"
-	WAVE spanX =   $mouse	 + "_hdFXSpanX"
-	WAVE spanY =   $mouse	 + "_hdFXSpanY"
-	Setscale d 0,0, "dat", spanX
-	spanY = 0
-	for (iFIx =0, iOut =0; iFix < nFixes; iFix +=1, iOut +=3)
-		spanX [ iout] = headFixTime [iFix]
-		spanX [ iout + 1] = headFixTime [iFix] + headFixDur [iFix]
-		spanX [ iout + 2] = NaN
+				DeletePoints insertStart, (insertEnd-InsertStart + 1), timeWave , eventWave
+			endif
+			insertPnts =(lastPos - firstPos +1)
+			InsertPoints insertStart, insertPnts, timeWave, eventWave
+			timeWave [insertStart, insertStart + insertPnts-1] = eventTime [p - insertStart + firstPos]
+			eventWave [insertStart, insertStart + insertPnts-1] = eventData [p - insertStart + firstPos]
+		endif
 		
 	endfor
-	
-	wave entryTime = $" root:AutoHeadFixData:" + mouse	 + "_EntrTime"
-	Wave entryDur = $" root:AutoHeadFixData:" + mouse + "_entryDurs"
-	variable iEntr,   nEntries = numpnts (entryTime)
-	make/d/o/n= (nEntries  * 3) $mouse	 + "_EntrSpanX"
-	make/o/n=(nFixes * 3) ,  $mouse	 + "_EntrSpanY"
-	WAVE spanX =   $mouse	 + "_EntrSpanX"
-	WAVE spanY =   $mouse	 + "_EntrSpanY"
-	Setscale d 0,0, "dat", spanX
-	spanY = 0
-	for (iFIx =0, iOut =0; iFix < nFixes; iFix +=1, iOut +=3)
-		spanX [ iout] = entryTime [iFix]
-		spanX [ iout + 1] = entryTime [iFix] + entryDur [iFix]
-		spanX [ iout + 2] = NaN
-		
-	endfor
-	
 end
+
 
 // moivie size = 256 x 256, variable number of frames, r,g,b
 STATIC CONSTANT kMOVIEX = 256
 STATIC CONSTANT kMOVIEY = 256
 STATIC CONSTANT kMOVIEFRAMESIZE = 65536
+
 function AHF_LoadMovie(ImportPathStr, thisTime)
 	string ImportPathStr
 	variable thisTime
@@ -771,10 +725,11 @@ function AHF_LoadMovie(ImportPathStr, thisTime)
 	Open/R/P=videoPath/Z mref as mfile
 	if (V_flag != 0)
 #ifdef kDEBUG 
-		printf "Error opening  Auto Head Fix movie file for \"%s\".\r", mfile
+		printf "Error opening  Auto Head Fix movie file for \"%s\".\r", mPath
 #endif
 		return 1
 	endif
+	string mWaveName = RemoveEnding (StringFromList(ItemsInList(mPath, ":")-1, mPath, ":"), ".raw")
 	FStatus mref 
 	make/o/b/u/n = (V_logEOF)  root:testMovie
 	WAVE testMovie = root:testMovie
@@ -782,236 +737,6 @@ function AHF_LoadMovie(ImportPathStr, thisTime)
 	variable iFrame, nFrames  = V_logEOF/(3 * kMOVIEFRAMESIZE)
 	testMovie [0, V_logEOF/3 -1] = testMovie [1 + p * 3]
 	redimension/n = (kMOVIEX,kMOVIEY, nFrames)testMovie
-end
-
-
-
-function Dirk_removeDups ()
-	
-	WAVE animalNum = root:tagW
-	WAVE dateSecs = root:timeW
-	WAVE/T event = root:Action
-	sort {animalNum, dateSecs, event} animalNum, dateSecs, event;doupdate
-	
-	
-	variable iPt, nPts = numpnts (animalNum)
-	for (iPt =nPts -1; iPt > 0; iPt -=1)
-		if (((dateSecs [iPt] == dateSecs [iPt-1]) &&  (animalNum [iPt] == animalNum [iPt-1])) && (cmpStr (event [iPt], event  [iPt -1]) ==0))
-			DeletePoints iPt, 1, animalNum, dateSecs, event
-		endif
-	endfor
-end
-
-
-
-function DIrk_toMice ()
-	
-	WAVE animalNum = root:tagW
-	WAVE dateSecs = root:timeW
-	WAVE/T event = root:Action
-
-	WAVE/T grpList =root:AutoHeadFixData:GrpList
-		
-	variable iPt, nPts = numpnts (animalNum)
-	
-	
-	variable imouse, nMice = dimsize (grpList, 0)
-	variable mouseStartPt, mouseEndPt, mouseNum
-	string mouseNumStr, aMouse, thisEvent
-	variable nEntries =0, nHeadFixes=0
-	variable entered, fixed, tempEnterTime, tempFixTime
-	for (iMouse =1; iMouse < nMice; iMouse +=1)
-		mouseNumStr = grpList [iMouse] [0]
-		aMouse =  grpList [iMouse] [1] +  grpList [iMouse] [0]
-		mouseNum = str2num (mouseNumStr)
-		make/o/d/n=0 $"root:AutoHeadFixData_DIrk:" + aMouse + "_EntrTime"
-		make/o/n=0 $"root:AutoHeadFixData_DIrk:" + aMouse +"_entryDurs"
-		make/o/d/n=0 $"root:AutoHeadFixData_DIrk:" + aMouse +"_HdFxTime"
-		make/o/n=0 $"root:AutoHeadFixData_DIrk:" + aMouse +"_HdFxDurs"
-		WAVE entrTime = $"root:AutoHeadFixData_DIrk:" + aMouse + "_EntrTime"
-		WAVE entryDurs =  $"root:AutoHeadFixData_DIrk:" + aMouse +"_entryDurs"
-		WAVE HdFxTime = $"root:AutoHeadFixData_DIrk:" + aMouse +"_HdFxTime"
-		WAVE HdFxDurs = $"root:AutoHeadFixData_DIrk:" + aMouse +"_HdFxDurs"
-		mouseStartPt = GUIPMathFindNum (animalNum, mouseNum, 0,nPts -1, 0)
-		if (mouseStartPt < 0)
-			continue
-		endif
-		mouseEndPt =  GUIPMathFindNum (animalNum, mouseNum, mouseStartPt,nPts-1, 1)
-		entered = 0; fixed =0
-		nEntries =0; nHeadFixes=0
-		for (iPt = mouseStartPt; iPt <= mouseEndPt; iPt +=1)
-			thisEvent = event [iPt]
-			StrSwitch (thisEvent)
-				case "entry":
-					//if (!(entered))
-						tempEnterTime = dateSecs [iPt]
-						entered =1
-					//endif
-					break
-				case "exit":
-					if (entered)
-						InsertPoints nEntries, 1, entrTime, entryDurs
-						entrTime [nEntries] = tempEnterTime
-						entryDurs [nEntries] =  dateSecs [iPt] - tempEnterTime
-						nEntries +=1
-						entered =0
-					endif
-					break
-			case "check+":
-			case "check0+":
-				if (!(fixed))
-					tempFixTime =  dateSecs [iPt]
-					fixed = 1
-				endif
-				break
-			case "complete":
-				if (fixed)
-					InsertPoints nHeadFixes, 1, HdFxTime, HdFxDurs
-					HdFxTime [nHeadFixes] =  tempFixTime
-					HdFxDurs [nHeadFixes] =  dateSecs [iPt] -tempFixTime
-					nHeadFixes +=1
-					fixed =0
-				endif
-			EndSwitch
-					
-		endFor
-	endfor
-	
-end
-
-
-function combineData (inFolder, outFolder)
-	string inFolder, outFolder
-	
-	WAVE/T grpList =root:AutoHeadFixData:GrpList
-	variable imouse, nMice = dimsize ( grpList, 0)
-	variable nPin, nPout
-	string aMouse
-	
-	string dataStr, dataList = "EntrTime;entryDurs;HdfxTime;HdfxDurs;"
-	variable iDatum, nData = itemsinlist (dataList, ";")
-	for (iMouse =1; iMouse < nMice; iMouse +=1)
-		aMouse = grpList [iMouse] [1] +  grpList [iMouse] [0]
-		for (iDatum = 0; iDatum < nData; iDatum +=1)
-			dataStr = stringFromlist (iDatum, dataList)
-			WAVE inWave = $inFolder +  aMouse + "_" + dataStr
-			wave outWave = $outFolder +  aMouse + "_" + dataStr
-			nPin = numpnts (inWave)
-			nPout =  numpnts (outWave)
-			if (nPout > 0)
-				InsertPoints nPout, npin, outWave
-				outWave [nPout, (nPout + nPin)] = inWave [p-nPout]
-			endif
-		endfor
-	endfor
-end
-
-
-
-function AHF_removeDupes ()
-	
-	WAVE/T grpList =root:AutoHeadFixData:GrpList
-	variable imouse, nMice = dimsize ( grpList, 0)
-	variable iPt, nPts
-	string aMouse
-	for (iMouse =1; iMouse < nMice; iMouse +=1)
-		aMouse = grpList [iMouse] [1] +  grpList [iMouse] [0]
-		WAVE entrTIme = $"root:AutoHeadFixData:" + aMouse + "_EntrTIme"
-		WAVE entryDurs = $"root:AutoHeadFixData:" + aMouse + "_entryDurs"
-		if (!((WaveExists (entrTIme)  && (WaveExists (entryDurs)))))
-			printf "Entry waves do not exist for %s\t", aMouse + "_entryDurs"
-			continue
-		endif
-		sort entrTIme entrTIme, entryDurs
-		nPts = numPnts (entrTIme)
-		for (iPt =nPts -1; iPt > 0; iPt -= 1)
-			if (entrTIme [iPt] == entrTIme [iPt-1])
-				deletePoints iPt, 1, entrTIme, entryDurs
-			endif
-		endfor
-		
-		WAVE headFixTIme = $"root:AutoHeadFixData:" + aMouse + "_HdfxTIme"
-		WAVE headFixDurs = $"root:AutoHeadFixData:" + aMouse + "_HdFxDurs"
-		if (!((WaveExists (headFixTIme)  && (WaveExists (headFixDurs)))))
-			printf "Head fix waves do not exist for %s\t", aMouse + "_HdFxDurs"
-			continue
-		endif
-		sort headFixTIme headFixTIme, headFixDurs
-		nPts = numPnts (headFixTIme)
-		for (iPt =nPts -1; iPt > 0; iPt -= 1)
-			if (headFixTIme [iPt] == headFixTIme [iPt-1])
-				deletePoints iPt, 1, headFixTIme, headFixDurs
-			endif
-		endfor
-		
-	endfor
-	
-end
-
-
-// if a head fix strats this soon after another finishes, must be trapped
-STATIC CONSTANT kHEADFIXMinDIff = 3.1
-// if entry lasts longer than this many seconds, must be trapped, these head fixes do not count
-STATIC CONSTANT kMAXENTRTIME = 600
-
-Function  AHF_ClipFixesGrp(theGrp)
-	string theGrp
-	
-	WAVE/T grpList = root:AutoheadFixData:grpList
-	variable iMouse, nMice = dimsize (grpList, 0)
-	for (iMouse =1; iMouse < nMice; iMouse+=1)
-		if (cmpstr (theGrp, grplist [iMouse] [1]) ==0)
-			 AHF_ClipFixes( grplist [iMouse] [1] +  grplist [iMouse] [0] )
-		endif
-	endfor
-end
-	
-
-function AHF_ClipFixes(mouse)
-	string mouse
-	
-	if (!(DataFolderExists ("root:HeadFixesClipped:")))
-		newDataFolder root:HeadFixesClipped
-	endif
-	WAVE entrytimeIn = $" root:AutoHeadFixData:" + mouse +"_EntrTime"
-	Wave entryDurIn = $" root:AutoHeadFixData:" + mouse + "_entryDurs"
-	Duplicate/o entrytimeIn $"root:HeadFixesClipped:" + mouse + "_EntrTime"
-	Duplicate/o entryDurIn  $"root:HeadFixesClipped:" + mouse + "_entryDurs"
-	WAVE entryTime =  $"root:HeadFixesClipped:" + mouse + "_EntrTime"
-	WAVE entryDur = $"root:HeadFixesClipped:" + mouse + "_entryDurs"
-	
-	WAVE headFixTimeIn = $"root:AutoHeadFixData:" + mouse + "_HdFxTime"
-	WAVE headFixDurIn = $"root:AutoHeadFixData:" + mouse + "_HdFxDurs"
-	Duplicate/o headFixTimeIn $"root:HeadFixesClipped:" + mouse + "_HdFxTime"
-	Duplicate/o  headFixDurIn $"root:HeadFixesClipped:" + mouse + "_HdFxDurs"
-	WAVE headFixTime =  $"root:HeadFixesClipped:" + mouse + "_HdFxTime"
-	WAVE headFixDur =  $"root:HeadFixesClipped:" + mouse + "_HdFxDurs"
-	
-	variable iEntry, nEntries = numPnts (entryTime)
-	variable iFix, nFIxes = numpnts (headFixTime)
-	
-	for (iFix = nFIxes -1; iFix > 0; iFix -=1)
-		if ( headFixDur [iFIx - 1] > 100) // dunno where these come from, but some values are off by orders of magnitude
-			continue
-		endif
-		if (headFixTime [iFix] < headFixTime [iFIx-1 ] +  headFixDur [iFIx - 1] + kHEADFIXMinDIff)
-			printf "Head fix interval at point %d for %s was too short  on %s\r",iFix,  mouse, secs2date ( headFixTime [iFix], 2)
-			deletepoints iFix, 1, headFixTime,headFixDur
-			continue
-		endif
-	endfor
-	
-//	variable endTime, nBads
-//	for (iEntry =0, iFix =0; iEntry < nEntries; iEntry +=1)
-//		if (entryDur [iEntry] > kMAXENTRTIME)
-//			printf "Entry Time at point %d for %s was too long at %f", iEntry, mouse, entryDur [iEntry]
-//			iFix =abs (GUIPMathFindNum (headFixTime, entryTime [iEntry] , iFix, nFIxes, 0)) 
-//			for (endTime  =entryTime [iEntry]  + entryDur [iEntry], nBads=0; ( (iFix < nFIxes) && (headFixTime [iFix] < endTime)); nFIxes -=1, nBads +=1)
-//				deletepoints iFix, 1, headFixTime,headFixDur
-//			endfor
-//			printf ": %d  head fixes were removed\r", nBads
-//		endif
-//	endfor
 end
 
 
@@ -1189,5 +914,753 @@ Function EntryHist (theMouse, startTime, endTime, binSize)
 		startPt = abs (GUIPMathFindNum (hfxWave, iTime, 0, Inf, 0)) -1
 		endPt = abs (GUIPMathFindNum (hfxWave, iTime + binSize, startPt, INF, 0))
 		theHist [iBin] = endPt - startPt
+	endfor
+end
+
+
+
+//STRCONSTANT kMiceList = "m2016080026;m201608298;m201608315;m201608466;m201608468;m201608481;m201609114;m201609124;m201609136;m201609336;m5855691;"
+STRCONSTANT kPerformMiceList = "m2016080026;m201608298;m201608466;m201608468;m201608481;m201609336;m201609136"
+STRCONSTANT kMiceList = "m0026;m8298;m8466;m8468;m8481;m9336;m9136;"
+
+// histogram of licks from start of buzz
+CONSTANT kMinus = 2.0
+CONSTANT kPlus = 2.0 
+CONSTANT kBinSize = 0.1
+function periBuzzHist (string mouse, string dateStr)
+	
+	WAVE/T eventWave = $"root:AutoHeadFixData:" + mouse + "_" + dateStr + "_event"
+	WAVE timeWave = $"root:AutoHeadFixData:" + mouse + "_" + dateStr + "_time"
+	variable iPnt, nPnts = numpnts (timeWave)
+	make/o/n= ((kPlus + kMinus)/kBinSize) $mouse + "_" + dateStr + "_pbHist"
+	WAVE histWave = $mouse + "_" + dateStr + "_pbHist"
+	setscale/p x -kMinus, kBinSize, "s", histWave
+	histWave =0
+	display histWave
+	ModifyGraph mode=5, hbFill=4
+		variable startPnt, endPnt, histStartPnt, histEndPnt, histPnt
+	variable startTime, endTime, buzzTime, histStartTime, histEndTime, histTime
+	string event
+	variable nBuzzes = 0
+	for (iPnt =0; iPnt < nPnts; iPnt += 1)
+		// look for check+ for start of trial
+		for (; (iPnt < nPnts) && cmpStr (eventWave [iPnt], "check+") != 0; iPnt += 1)
+		endfor
+		startPnt = iPnt
+		startTime = timeWave [iPnt]
+		// look for next complete, exit, or SeshEnd
+		for (; (iPnt < nPnts) && (!((cmpStr (eventWave [iPnt], "complete") == 0) || (cmpStr (eventWave [iPnt], "exit") == 0) || (cmpStr (eventWave [iPnt], "SeshEnd") == 0))); iPnt +=1)
+		endfor
+		endPnt = iPnt
+		endTime = timeWave [iPnt]
+		// look for buzzes within this trial
+		for (iPnt = startPnt; iPnt < endPnt; iPnt +=1)
+			if (cmpStr (StringFromList(0, eventWave [iPnt], ":"), "Buzz") == 0) // add buzz times to histogram
+				nBuzzes +=1
+				buzzTime = timeWave [iPnt]
+				histStartTime = Max (timeWave [iPnt] - kMinus, startTime)
+				histEndTime = Min (timeWave [iPnt] + kPlus, endTime)
+				histStartPnt =  GUIPMathFindNum (timeWave, histStartTime, startPnt, endPnt, 0)
+				if (histStartPnt < 0)
+					histStartPnt = -histStartPnt -1
+				endif
+				histEndPnt =  GUIPMathFindNum (timeWave, histEndTime, startPnt, endPnt, 0)
+				if (histEndPnt < 0)
+					histEndPnt = -histEndPnt - 1
+				endif
+				for (histPnt = histStartPnt; histPnt < histEndPnt; histPnt +=1)
+					if (cmpstr (StringFromList (0, eventWave [histPnt], ":"), "lick") ==0)
+						histWave [x2pnt(histWave, timeWave [histPnt] - buzzTime)] += 1
+					endif
+				endfor
+			endif
+		endfor
+	endfor
+	histWave /= (nBuzzes * kBinSize)
+	string labelStr = "\\Z14" + mouse + "\r" + dateStr + "\r" + num2str (nBuzzes) + " buzzes"
+	TextBox/C/N=text0/F=0/A=MT labelStr
+	label left "Licks/Second"
+	label bottom  "Time relative to buzz start (\\U)"
+end
+
+
+function periBuzzHist_Disc_BUP (string mouse, string dateStr)
+	
+	WAVE/T eventWave = $"root:AutoHeadFixData:" + mouse + "_" + dateStr + "_event"
+	WAVE timeWave = $"root:AutoHeadFixData:" + mouse + "_" + dateStr + "_time"
+	variable iPnt, nPnts = numpnts (timeWave)
+	make/o/n= ((kPlus + kMinus)/kBinSize) $mouse + "_" + dateStr + "_pbHist_RC", $mouse + "_" + dateStr + "_pbHist_RI"
+	make/o/n= ((kPlus + kMinus)/kBinSize) $mouse + "_" + dateStr + "_pbHist_NC", $mouse + "_" + dateStr + "_pbHist_NI"
+	WAVE histWaveRC = $mouse + "_" + dateStr + "_pbHist_RC"
+	WAVE histWaveRI = $mouse + "_" + dateStr + "_pbHist_RI"
+	WAVE histWaveNC = $mouse + "_" + dateStr + "_pbHist_NC"
+	WAVE histWaveNI = $mouse + "_" + dateStr + "_pbHist_NI"
+	setscale/p x -kMinus, kBinSize, "s", histWaveRC, histWaveRI, histWaveNC, histWaveNI
+	histWaveRC =0;histWaveRI =0; histWaveNC =0; histWaveNI =0
+	variable startPnt, endPnt, histStartPnt, histEndPnt, histPnt
+	variable startTime, endTime, buzzTime, histStartTime, histEndTime, histTime
+	string event
+	variable goCode
+	variable nBuzzesRC = 0, nBuzzesRI =0, nBuzzesNC =0, nBuzzesNI =0
+	for (iPnt =0; iPnt < nPnts; iPnt += 1)
+		// look for check+ for start of trial
+		for (; (iPnt < nPnts) && cmpStr (eventWave [iPnt], "check+") != 0; iPnt += 1)
+		endfor
+		startPnt = iPnt
+		startTime = timeWave [iPnt]
+		// look for next complete, exit, or SeshEnd
+		for (; (iPnt < nPnts) && (!((cmpStr (eventWave [iPnt], "complete") == 0) || (cmpStr (eventWave [iPnt], "exit") == 0) || (cmpStr (eventWave [iPnt], "SeshEnd") == 0))); iPnt +=1)
+		endfor
+		endPnt = iPnt
+		endTime = timeWave [iPnt]
+		// look for buzzes within this trial
+		for (iPnt = startPnt; iPnt < endPnt; iPnt +=1)
+			if (cmpStr (StringFromList(0, eventWave [iPnt], ":"), "Buzz") == 0) // add buzz times to histogram for trial type
+				goCode = NumberByKey("GO", StringFromList(1, eventWave [iPnt], ":"), "=", ",")
+				switch (goCode)
+					case 2:
+						WAVE histWave = histWaveRC
+						nBuzzesRC +=1
+						break
+					case -2:
+						WAVE histWave = histWaveRI
+						nBuzzesRI +=1
+						break
+					case 1:
+						WAVE histWave = histWaveNC
+						nBuzzesNC +=1
+						break
+					case -1:
+						WAVE histWave = histWaveNI
+						nBuzzesNI +=1
+						break
+					default:
+						print "Bad data at point " + num2istr (iPnt)
+				endSwitch
+				buzzTime = timeWave [iPnt]
+				histStartTime = Max (timeWave [iPnt] - kMinus, startTime)
+				histEndTime = Min (timeWave [iPnt] + kPlus, endTime)
+				histStartPnt =  GUIPMathFindNum (timeWave, histStartTime, startPnt, endPnt, 0)
+				if (histStartPnt < 0)
+					histStartPnt = -histStartPnt -1
+				endif
+				histEndPnt =  GUIPMathFindNum (timeWave, histEndTime, startPnt, endPnt, 0)
+				if (histEndPnt < 0)
+					histEndPnt = -histEndPnt - 1
+				endif
+				for (histPnt = histStartPnt; histPnt < histEndPnt; histPnt +=1)
+					if (cmpstr (StringFromList (0, eventWave [histPnt], ":"), "lick") ==0)
+						histWave [x2pnt(histWave, timeWave [histPnt] - buzzTime)] += 1
+					endif
+				endfor
+			endif
+		endfor
+	endfor
+	
+	histWaveRC /= (nBuzzesRC* kBinSize)
+	histWaveRI /= (nBuzzesRI* kBinSize)
+	histWaveNC /= (nBuzzesNC* kBinSize)
+	histWaveNI /= (nBuzzesNI* kBinSize)
+	
+	display histWaveRC, histWaveRI, histWaveNC, histWaveNI
+	string labelStr = "\\Z14" + mouse + "\r" + dateStr + "\rRC=" + num2str (nBuzzesRC) + ", RI=" + num2str (nBuzzesRI) + ", NC=" + num2str (nBuzzesNC) + ", NI=" + num2str (nBuzzesNI)
+	TextBox/C/N=text0/F=0/A=MT labelStr
+		label left "Licks/Second"
+	label bottom  "Time relative to buzz start (\\U)"
+end
+	
+
+
+function periBuzzHist_Disc_ALL(string grp, string startDateTime, string endDateTime)
+	
+	string miceList = GUIPListObjs ("root:AutoHeadFixData:", 1, "*_event", 0, ""), aMouse
+	variable iMouse, nMice = itemsinlist (miceList, ";")
+	for (iMouse =0;iMouse < nMice;iMouse +=1)
+		aMouse = stringfromlist (iMouse, micelist, ";")
+		WAVE aWave = $"root:AutoHeadFixData:" + aMouse
+		if (cmpstr (StringByKey("grp", note (aWave) , "=" , "\r"), grp) == 0)
+			periBuzzHist_Disc (removeending (aMouse, "_event"), startDateTime, endDateTime)
+		endif
+	endfor
+end
+
+function periBuzzHist_ALL(string dateStr)
+	
+	variable iMouse, nMice = itemsinlist (kMiceList, ";")
+	for (iMouse =0;iMouse < nMice;iMouse +=1)
+		periBuzzHist (stringfromlist (iMouse, kMiceList, ";"), dateStr)
+	endfor
+end
+
+
+// startStr and endStr in date/tme format : "2017-06-30 13:40:44.11"
+// makes histogram of numbers of entries and headfixes
+function AHF_EntryFixHists (theGrp, startStr, endStr, binSize)
+	string theGrp,startStr, endStr 
+	variable binSize
+	
+	string dateStr =  stringfromlist (0, startStr, " ")
+	string timeStr = stringfromlist (1, startStr, " ")
+	variable timeEls = itemsinlist (timeStr, ":")
+	variable startTIme = date2secs (str2num (stringfromlist (0, dateStr, "-")), str2num (stringfromlist (1, dateStr, "-")), str2num (stringfromlist (2, dateStr, "-")))
+	if (timeEls > 0)
+		startTime += str2num (stringfromlist (0, timeStr, ":")) * 3600
+		if (timeEls > 1)
+			startTime += str2num (stringfromlist (1, timeStr, ":")) * 60
+			if (timeEls > 2)
+				startTime += str2num (stringfromlist (2, timeStr, ":"))
+			endif
+		endif
+	endif
+	// now end time
+	dateStr =  stringfromlist (0, endStr, " ")
+	timeStr = stringfromlist (1, endStr, " ")
+	timeEls = itemsinlist (timeStr, ":")
+	variable endTime = date2secs (str2num (stringfromlist (0, dateStr, "-")), str2num (stringfromlist (1, dateStr, "-")), str2num (stringfromlist (2, dateStr, "-")))
+	if (timeEls > 0)
+		endTime += str2num (stringfromlist (0, timeStr, ":")) * 3600
+		if (timeEls > 1)
+			endTime += str2num (stringfromlist (1, timeStr, ":")) * 60
+			if (timeEls > 2)
+				endTime += str2num (stringfromlist (2, timeStr, ":"))
+			endif
+		endif
+	endif
+	variable nBins = floor ((endTime - startTime)/binSize)
+	
+	//string grpList = GUIPListWavesByNoteKey ("root:AutoHeadFixData", "grp", theGrp,  0, "",keySepStr="=", listSepStr="\r")
+//	variable iWave, nWaves = itemsinlist (grpList, ";")
+//	for (iWave =0;iWave < nWaves;iWave +=1)
+//		aWaveName = StringFromList(iWave, grpList)
+//		if (cmpStr (stringFromlist (1, aWaveName, "_"), "time") ==0)
+//			miceList += stringFromlist (0, aWaveName, "_") + ";"
+//		endif
+//	endfor
+//	string miceList = "", aWaveName
+//variable iMouse, nMice= itemsinList (miceList)
+	
+	WAVE/T grpList = root:AutoHeadFixData:GrpList
+	variable iMouse, nMice = dimsize (grpList, 0)	
+	variable iPnt, endPnt, nPnts, iBin
+	variable entryStart, fixStart, isEntered, isFixed
+	string anEvent, mouseName
+	for (iMouse =0; iMouse < nMice; iMouse +=1)
+		//mouseName = stringfromlist (iMouse, miceList) 
+		mouseName = "m" + grpList [iMouse] [0]
+		WAVE timeWave = $"root:AutoHeadFixData:" + mouseName + "_time"
+		WAVE/T eventWave = $"root:AutoHeadFIxData:" + mouseName + "_event"
+		make/o/n = (nBins) $mouseName + "_entries", $mouseName + "_fixes", $mouseName + "_entryDur",  $mouseName + "_fixDur"
+		WAVE entryHist = $mouseName + "_entries"
+		WAVE fixHist = $mouseName + "_fixes"
+		WAVE entryDurs = $mouseName + "_entryDur"
+		WAVE fixDurs = $mouseName + "_fixDur"
+		setscale/p x startTime, binSize, "dat", entryHist, fixHist, entryDurs, fixDurs
+		setscale d 0,0, "s", entryDurs, fixDurs
+		entryHist = 0;fixHist=0;entryDurs=0;fixDurs=0
+		// find start and end pnts
+		nPnts = numPnts (timeWave)
+		iPnt = GUIPMathFindNum(timeWave, startTime, 0, nPnts, 0)
+		if (iPnt < 0)
+			iPnt *=-1; iPnt -=1
+		endif
+		endPnt = GUIPMathFindNum(timeWave, endTime, iPnt, nPnts, 0)
+		if (endPnt < 0)
+			endPnt *=-1; endPnt -=1
+		endif
+		// iterate through data points assigning to corrct bin
+		for (iBin =0, entryStart=0, fixStart=0, isEntered=0, isFixed=0;iPnt < endPnt; iPnt +=1)
+			anEvent = eventWave [iPnt]
+			strSwitch (anEvent)
+				case "entry":
+					if (isEntered)
+						printf "Error for %s: entered twice without exiting at point %d.\r", mouseName, iPnt
+						isEntered =0
+					else
+						isEntered=1
+						entryStart = timeWave [iPnt]
+					endif
+					break
+				case "exit":
+					if (isEntered==0)
+						printf "Error for %s: exited before entering at point %d.\r", mouseName, iPnt
+						isEntered =0
+					else
+						iBin = floor((timeWave [iPnt] - startTime)/binSize)
+						entryDurs [iBin] += (timeWave [iPnt] - entryStart)
+						entryHist [iBin] +=1
+						isEntered=0
+					endif
+					break
+				case "check No Fix Trial":
+					isFixed = 2
+					break
+				case "check+":
+					if (isFixed ==1)
+						printf "Error for %s: fixed twice without completion at point %d.\r", mouseName, iPnt
+						isFixed =0
+						break
+					else
+						isFixed=1
+						fixStart = timeWave [iPnt]
+					endif
+					break
+				case "complete":
+					if (isFixed ==0)
+						printf "Error for %s: Completed head fix trial twice without starting at point %d.\r", mouseName, iPnt
+					elseif (isFixed ==1)
+						iBin = floor((timeWave [iPnt] - startTime)/binSize)
+						fixDurs [iBin] += (timeWave [iPnt] - fixStart)
+						fixHist [iBin] +=1
+					endif
+					isFixed=0
+					break
+			endSwitch
+		endfor
+	endfor
+	// now make some plots
+	display /N=$theGrp + "_EntryHist" as theGrp + "_Number of Entries per " + num2str (binSize/3600) + " hrs"
+	string entryHistName = S_name
+	display /N=$theGrp + "_EntryDurations" as theGrp + "_Total Time in Chamber per " + num2str (binSize/3600) + " hrs"
+	string entryDurName = S_name
+	display /N=$theGrp + "_headFixHist" as theGrp + "_Number of Head Fixes per " + num2str (binSize/3600) + " hrs"
+	string headFixHistName = S_name
+	display /N=$theGrp + "_headFixDurations" as theGrp + "_Total Time headFixed per " + num2str (binSize/3600) + " hrs"
+	string headFixDurName = S_name
+	
+	variable rVal, gVal, bVal
+	
+	for (iMouse =0; iMouse < nMice; iMouse +=1)
+		//mouseName = stringfromlist (iMouse, miceList)
+		mouseName = "m" + grpList [iMouse] [0]
+		GUIPcolorRamp ("rainbow256", iMouse, nMice, rVal, gVal, bVal)
+		WAVE entryHist = $mouseName + "_entries"
+		WAVE fixHist = $mouseName + "_fixes"
+		WAVE entryDurs = $mouseName + "_entryDur"
+		WAVE fixDurs = $mouseName + "_fixDur"
+		appendtograph/w=$entryHistName /c=(rval, gval, bval) entryHist
+		appendtograph/w=$entryDurName /c=(rval, gval, bval) entryDurs
+		appendtograph/w=$headFixHistName /c=(rval, gval, bval) fixHist
+		appendtograph/w=$headFixDurName /c=(rval, gval, bval) fixDurs
+	endfor
+	ModifyGraph/w=$entryHistName mode=5,toMode=3, hbFill=5
+	ModifyGraph/w=$entryDurName mode=5,toMode=3, hbFill=5
+	ModifyGraph/w=$headFixHistName mode=5,toMode=3, hbFill=5
+	ModifyGraph/w=$headFixDurName mode=5,toMode=3, hbFill=5
+end
+
+
+function periBuzzHist_Disc (string mouse, string startStr, string endStr)
+	
+	WAVE/T eventWave = $"root:AutoHeadFixData:" + mouse + "_event"
+	WAVE timeWave = $"root:AutoHeadFixData:" + mouse + "_time"
+	
+	string dateStr =  stringfromlist (0, startStr, " ")
+	string timeStr = stringfromlist (1, startStr, " ")
+	variable timeEls = itemsinlist (timeStr, ":")
+	variable startTIme = date2secs (str2num (stringfromlist (0, dateStr, "-")), str2num (stringfromlist (1, dateStr, "-")), str2num (stringfromlist (2, dateStr, "-")))
+	if (timeEls > 0)
+		startTime += str2num (stringfromlist (0, timeStr, ":")) * 3600
+		if (timeEls > 1)
+			startTime += str2num (stringfromlist (1, timeStr, ":")) * 60
+			if (timeEls > 2)
+				startTime += str2num (stringfromlist (2, timeStr, ":"))
+			endif
+		endif
+	endif
+	// now end time
+	dateStr =  stringfromlist (0, endStr, " ")
+	timeStr = stringfromlist (1, endStr, " ")
+	timeEls = itemsinlist (timeStr, ":")
+	variable endTime = date2secs (str2num (stringfromlist (0, dateStr, "-")), str2num (stringfromlist (1, dateStr, "-")), str2num (stringfromlist (2, dateStr, "-")))
+	if (timeEls > 0)
+		endTime += str2num (stringfromlist (0, timeStr, ":")) * 3600
+		if (timeEls > 1)
+			endTime += str2num (stringfromlist (1, timeStr, ":")) * 60
+			if (timeEls > 2)
+				endTime += str2num (stringfromlist (2, timeStr, ":"))
+			endif
+		endif
+	endif
+	// find start and end pnts
+	variable startPntG, endPntG, nPnts = numPnts (timeWave)
+	startPntG = GUIPMathFindNum(timeWave, startTime, 0, nPnts, 0)
+	if (startPntG < 0)
+		startPntG *=-1; startPntG -=1
+	endif
+	endPntG = GUIPMathFindNum(timeWave, endTime, startPntG, nPnts, 0)
+	if (endPntG < 0)
+		endPntG *=-1; endPntG -=1
+	endif
+	//Make output waves
+	make/o/n= ((kPlus + kMinus)/kBinSize) $mouse + "_pbHist_RC", $mouse + "_pbHist_RI"
+	make/o/n= ((kPlus + kMinus)/kBinSize) $mouse   + "_pbHist_NC", $mouse   + "_pbHist_NI"
+	make/o/n= ((kPlus + kMinus)/kBinSize) $mouse   + "_pbHist_GO"
+	WAVE histWaveRC = $mouse + "_pbHist_RC"
+	WAVE histWaveRI = $mouse + "_pbHist_RI"
+	WAVE histWaveNC = $mouse +  "_pbHist_NC"
+	WAVE histWaveNI = $mouse +  "_pbHist_NI"
+	WAVE histWaveGO = $mouse   + "_pbHist_GO"
+	setscale/p x -kMinus, kBinSize, "s", histWaveRC, histWaveRI, histWaveNC, histWaveNI, histWaveGO
+	histWaveRC = 0;histWaveRI =0; histWaveNC =0; histWaveNI =0
+	histWaveGO = 0
+	
+	variable iPnt, startPnt, endPnt, histStartPnt, histEndPnt, histPnt
+	variable buzzTime, histStartTime, histEndTime, histTime
+	string event
+	variable goCode
+	variable nBuzzesRC = 0, nBuzzesRI =0, nBuzzesNC =0, nBuzzesNI =0, nBuzzesGO = 0
+	for (iPnt =startPntG; iPnt < endPntG; iPnt += 1)
+		// look for check+ for start of trial
+		for (; (iPnt < endPnt) && cmpStr (eventWave [iPnt], "check+") != 0; iPnt += 1)
+		endfor
+		startPnt = iPnt
+		startTime = timeWave [iPnt]
+		// look for next complete, exit, or SeshEnd
+		for (; (iPnt < nPnts) && (!((cmpStr (eventWave [iPnt], "complete") == 0) || (cmpStr (eventWave [iPnt], "exit") == 0))); iPnt +=1)
+		endfor
+		endPnt = iPnt
+		endTime = timeWave [iPnt]
+		// look for buzzes within this trial
+		for (iPnt = startPnt; iPnt < endPnt; iPnt +=1)
+			if (stringMatch (eventWave [iPnt], "*Buzz*") == 1)
+			//if (cmpStr (StringFromList(1, eventWave [iPnt], ":"), "Buzz") == 0) // add buzz times to histogram for trial type
+				goCode = NumberByKey("GO", eventWave [iPnt], "=", ",")
+				switch (goCode)
+					case 2:
+						WAVE histWave = histWaveRC
+						nBuzzesRC +=1
+						break
+					case -2:
+						WAVE histWave = histWaveRI
+						nBuzzesRI +=1
+						break
+					case 1:
+						WAVE histWave = histWaveNC
+						nBuzzesNC +=1
+						break
+					case -1:
+						WAVE histWave = histWaveNI
+						nBuzzesNI +=1
+						break
+					default:
+						//printf "Bad data at point %d\r", iPnt
+						WAVE histWave =histWaveGO
+						nBuzzesGO +=1
+				endSwitch
+				//if (!(WaveExists (histwave)))
+				//	continue
+				//endif
+				buzzTime = timeWave [iPnt]
+				histStartTime = Max (timeWave [iPnt] - kMinus, startTime)
+				histEndTime = Min (timeWave [iPnt] + kPlus, endTime)
+				histStartPnt =  GUIPMathFindNum (timeWave, histStartTime, startPnt, endPnt, 0)
+				if (histStartPnt < 0)
+					histStartPnt = -histStartPnt -1
+				endif
+				histEndPnt =  GUIPMathFindNum (timeWave, histEndTime, startPnt, endPnt, 0)
+				if (histEndPnt < 0)
+					histEndPnt = -histEndPnt - 1
+				endif
+				for (histPnt = histStartPnt; histPnt < histEndPnt; histPnt +=1)
+					if (cmpstr (StringFromList (0, eventWave [histPnt], ":"), "lick") ==0)
+						histWave [x2pnt(histWave, timeWave [histPnt] - buzzTime)] += 1
+					endif
+				endfor
+			endif
+		endfor
+	endfor
+	
+	histWaveRC /= (nBuzzesRC* kBinSize)
+	histWaveRI /= (nBuzzesRI* kBinSize)
+	histWaveNC /= (nBuzzesNC* kBinSize)
+	histWaveNI /= (nBuzzesNI* kBinSize)
+	histWaveGO /= (nBuzzesGO* kBinSize)
+	display histWaveRC, histWaveRI, histWaveNC, histWaveNI, histWaveGO
+	ModifyGraph lstyle($nameofWave(histWaveRI))=1,rgb($nameofWave(histWaveNC))=(1,16019,65535),lstyle($nameofWave(histWaveNI))=1,rgb($nameofWave(histWaveNI))=(1,16019,65535)
+	
+	
+	string labelStr = "\\Z14" + mouse + "\r" + dateStr + "\rRC=" + num2str (nBuzzesRC) + ", RI=" + num2str (nBuzzesRI) + ", NC=" + num2str (nBuzzesNC) + ", NI=" + num2str (nBuzzesNI) + ",GO=" + num2str (nBuzzesGO)
+	TextBox/C/N=text0/F=0/A=MT labelStr
+		label left "Licks/Second"
+	label bottom  "Time relative to buzz start (\\U)"
+end
+
+
+function periBuzzHist_NOT_Disc (string mouse, string startStr, string endStr)
+	
+	WAVE/T eventWave = $"root:AutoHeadFixData:" + mouse + "_event"
+	WAVE timeWave = $"root:AutoHeadFixData:" + mouse + "_time"
+	
+	string dateStr =  stringfromlist (0, startStr, " ")
+	string timeStr = stringfromlist (1, startStr, " ")
+	variable timeEls = itemsinlist (timeStr, ":")
+	variable startTIme = date2secs (str2num (stringfromlist (0, dateStr, "-")), str2num (stringfromlist (1, dateStr, "-")), str2num (stringfromlist (2, dateStr, "-")))
+	if (timeEls > 0)
+		startTime += str2num (stringfromlist (0, timeStr, ":")) * 3600
+		if (timeEls > 1)
+			startTime += str2num (stringfromlist (1, timeStr, ":")) * 60
+			if (timeEls > 2)
+				startTime += str2num (stringfromlist (2, timeStr, ":"))
+			endif
+		endif
+	endif
+	// now end time
+	dateStr =  stringfromlist (0, endStr, " ")
+	timeStr = stringfromlist (1, endStr, " ")
+	timeEls = itemsinlist (timeStr, ":")
+	variable endTime = date2secs (str2num (stringfromlist (0, dateStr, "-")), str2num (stringfromlist (1, dateStr, "-")), str2num (stringfromlist (2, dateStr, "-")))
+	if (timeEls > 0)
+		endTime += str2num (stringfromlist (0, timeStr, ":")) * 3600
+		if (timeEls > 1)
+			endTime += str2num (stringfromlist (1, timeStr, ":")) * 60
+			if (timeEls > 2)
+				endTime += str2num (stringfromlist (2, timeStr, ":"))
+			endif
+		endif
+	endif
+	// find start and end pnts
+	variable startPntG, endPntG, nPnts = numPnts (timeWave)
+	startPntG = GUIPMathFindNum(timeWave, startTime, 0, nPnts, 0)
+	if (startPntG < 0)
+		startPntG *=-1; startPntG -=1
+	endif
+	endPntG = GUIPMathFindNum(timeWave, endTime, startPntG, nPnts, 0)
+	if (endPntG < 0)
+		endPntG *=-1; endPntG -=1
+	endif
+	//Make output waves
+	make/o/n= ((kPlus + kMinus)/kBinSize) $mouse + "_pbHist_Go", $mouse + "_pbHist_NoGo"
+	WAVE histWaveGo = $mouse + "_pbHist_Go"
+	WAVE histWaveNoGo = $mouse + "_pbHist_NoGo"
+
+	setscale/p x -kMinus, kBinSize, "s", histWaveGo, histWaveNoGo
+	histWaveGo = 0;histWaveNoGo =0
+	
+	variable iPnt, startPnt, endPnt, histStartPnt, histEndPnt, histPnt
+	variable buzzTime, histStartTime, histEndTime, histTime
+	string event
+	variable goCode
+	variable nBuzzesRC = 0, nBuzzesRI =0, nBuzzesNC =0, nBuzzesNI =0
+	for (iPnt =startPntG; iPnt < endPntG; iPnt += 1)
+		// look for check+ for start of trial
+		for (; (iPnt < endPnt) && cmpStr (eventWave [iPnt], "check+") != 0 && cmpStr (eventWave [iPnt], "check No Fix Trial") != 0; iPnt += 1)
+		endfor
+		startPnt = iPnt
+		startTime = timeWave [iPnt]
+		// look for next complete, exit, or SeshEnd
+		for (; (iPnt < nPnts) && (!((cmpStr (eventWave [iPnt], "complete") == 0) || (cmpStr (eventWave [iPnt], "exit") == 0))); iPnt +=1)
+		endfor
+		endPnt = iPnt
+		endTime = timeWave [iPnt]
+		// look for buzzes within this trial
+		for (iPnt = startPnt; iPnt < endPnt; iPnt +=1)
+			if (stringMatch (eventWave [iPnt], "*Buzz*") == 1)
+			//if (cmpStr (StringFromList(1, eventWave [iPnt], ":"), "Buzz") == 0) // add buzz times to histogram for trial type
+				goCode = NumberByKey("GO", eventWave [iPnt], "=", ",")
+				switch (goCode)
+					case 2:
+						WAVE histWave = histWaveGo
+						nBuzzesRC +=1
+						break
+					case -2:
+						WAVE histWave = histWaveGo
+						nBuzzesRI +=1
+						break
+					case 1:
+						WAVE histWave = histWaveNoGo
+						nBuzzesNC +=1
+						break
+					case -1:
+						WAVE histWave = histWaveNoGo
+						nBuzzesNI +=1
+						break
+					default:
+						printf "Bad data at point %d\r", iPnt
+				endSwitch
+				buzzTime = timeWave [iPnt]
+				histStartTime = Max (timeWave [iPnt] - kMinus, startTime)
+				histEndTime = Min (timeWave [iPnt] + kPlus, endTime)
+				histStartPnt =  GUIPMathFindNum (timeWave, histStartTime, startPnt, endPnt, 0)
+				if (histStartPnt < 0)
+					histStartPnt = -histStartPnt -1
+				endif
+				histEndPnt =  GUIPMathFindNum (timeWave, histEndTime, startPnt, endPnt, 0)
+				if (histEndPnt < 0)
+					histEndPnt = -histEndPnt - 1
+				endif
+				for (histPnt = histStartPnt; histPnt < histEndPnt; histPnt +=1)
+					if (cmpstr (StringFromList (0, eventWave [histPnt], ":"), "lick") ==0)
+						histWave [x2pnt(histWave, timeWave [histPnt] - buzzTime)] += 1
+					endif
+				endfor
+			endif
+		endfor
+	endfor
+	
+	histWaveGo /= ((nBuzzesRC + nBuzzesRI) * kBinSize)
+	histWaveNoGo /= ((nBuzzesNC + nBuzzesNI) * kBinSize)
+	//histWaveNC /= (nBuzzesNC* kBinSize)
+	//histWaveNI /= (nBuzzesNI* kBinSize)
+	
+	display histWaveGo, histWaveNoGo
+	ModifyGraph rgb($nameofWave(histWaveNoGo))=(1,16019,65535),lstyle($nameofWave(histWaveNoGo))=1
+	
+	
+	string labelStr = "\\Z14" + mouse + "\r" + dateStr + "\rRC=" + num2str (nBuzzesRC) + ", RI=" + num2str (nBuzzesRI) + ", NC=" + num2str (nBuzzesNC) + ", NI=" + num2str (nBuzzesNI)
+	TextBox/C/N=text0/F=0/A=MT labelStr
+		label left "Licks/Second"
+	label bottom  "Time relative to buzz start (\\U)"
+end
+
+
+STRCONSTANT kstartTIme = "2017-06-30 0:0:0"
+STRCONSTANT kEndTime = "2017-11-10 0:0:0"
+function MovieLists ()
+	variable iMouse, nMice = itemsinList (kMiceList, ";")
+	string aMouse
+	for (iMouse =0; iMouse < nMice; iMouse +=1)
+		aMouse = StringFromList(iMouse, kMiceList, ";")
+		AHF_movieList (aMouse, kstartTIme, kEndTime)
+	endfor
+end
+
+// Print a list of movie names and events
+function AHF_movieList (string mouse, string startStr, string endStr)
+	
+	WAVE/T eventWave = $"root:AutoHeadFixData:" + mouse + "_event"
+	WAVE timeWave = $"root:AutoHeadFixData:" + mouse + "_time"
+	
+	variable movieRefNum
+	open /P=Auto_Head_fixLoadPath movieRefNum as mouse + "_movieEvents.txt"
+	string dateStr =  stringfromlist (0, startStr, " ")
+	string timeStr = stringfromlist (1, startStr, " ")
+	variable timeEls = itemsinlist (timeStr, ":")
+	variable startTIme = date2secs (str2num (stringfromlist (0, dateStr, "-")), str2num (stringfromlist (1, dateStr, "-")), str2num (stringfromlist (2, dateStr, "-")))
+	if (timeEls > 0)
+		startTime += str2num (stringfromlist (0, timeStr, ":")) * 3600
+		if (timeEls > 1)
+			startTime += str2num (stringfromlist (1, timeStr, ":")) * 60
+			if (timeEls > 2)
+				startTime += str2num (stringfromlist (2, timeStr, ":"))
+			endif
+		endif
+	endif
+	// now end time
+	dateStr =  stringfromlist (0, endStr, " ")
+	timeStr = stringfromlist (1, endStr, " ")
+	timeEls = itemsinlist (timeStr, ":")
+	variable endTime = date2secs (str2num (stringfromlist (0, dateStr, "-")), str2num (stringfromlist (1, dateStr, "-")), str2num (stringfromlist (2, dateStr, "-")))
+	if (timeEls > 0)
+		endTime += str2num (stringfromlist (0, timeStr, ":")) * 3600
+		if (timeEls > 1)
+			endTime += str2num (stringfromlist (1, timeStr, ":")) * 60
+			if (timeEls > 2)
+				endTime += str2num (stringfromlist (2, timeStr, ":"))
+			endif
+		endif
+	endif
+	// find start and end pnts
+	variable startPntG, endPntG, nPnts = numPnts (timeWave)
+	startPntG = GUIPMathFindNum(timeWave, startTime, 0, nPnts, 0)
+	if (startPntG < 0)
+		startPntG *=-1; startPntG -=1
+	endif
+	endPntG = GUIPMathFindNum(timeWave, endTime, startPntG, nPnts, 0)
+	if (endPntG < 0)
+		endPntG *=-1; endPntG -=1
+	endif
+	
+	variable iPt
+	string videoName, fullPath
+	variable videoStartTime, lwt, go
+	for (iPt = startPntG; iPt < endPntG; iPt +=1)
+		if (cmpstr ("",stringbykey ("video", eventWave [iPt], ":",";")) !=0)
+			videoName = "M" + StringByKey("video", eventWave [iPt] , ":" , ";")
+//			fullPath =  removeending (GUIPListFiles ("Auto_head_fixLoadPath",  ".raw", videoName, 3, "NOTFOUND"), ";")
+//			if (cmpStr (fullPath, "NOTFOUND") != 0)
+//				fullPath = removeListItem (0,fullPath, ":")
+//				fullPath = removeListItem (0,fullPath, ":")
+//				fullPath = removeListItem (0,fullPath, ":")
+//				fullPath = removeListItem (0,fullPath, ":")
+				fprintf movieRefNum, "Movie\t0\t%s\r", videoName
+				//printf "Movie\t0\t%s\r", videoName
+				videoStartTime = timeWave [iPt]
+				// look for rewards and buzzes till conplete
+				for (iPt +=1;cmpstr (eventWave [iPt],"complete") != 0; iPt +=1)
+					if (cmpStr (eventWave [iPt], "reward") == 0)
+						fprintf movieRefNum, "reward\t%.2f\t\r",(timeWave [iPt] - videoStartTime)
+					elseif (cmpStr (StringByKey("Buzz", eventWave [iPt] ,":", ","), "") != 0)
+						lwt = NumberByKey("lickWitholdTime", eventWave [iPt], "=", ",")
+						go = NumberByKey("GO", eventWave [iPt], "=", ",")
+						fprintf movieRefNum, "stim\t%.2f\tGO=%d,witholdtime=%.2f\r", (timeWave [iPt] - videoStartTime), go, lwt
+					elseif (cmpStr (eventWave [iPt], "lick:2") == 0)	
+						fprintf movieRefNum, "lick\t%.2f\t\r",(timeWave [iPt] - videoStartTime)
+					elseif (((cmpStr (eventWave [iPt],"BrainLEDON") ==0)) || ((cmpStr (eventWave [iPt],"BrainLEDOFF") ==0)))
+						fprintf movieRefNum, "%s\t%.2f\t\r",eventWave [iPt],(timeWave [iPt] - videoStartTime)
+					endif
+				endfor
+			endif
+//		endif
+	endfor
+	close movieRefNum
+end
+		
+		
+		
+function AFH_LoadVideos (string mouse, string startStr, string endStr)
+	
+	WAVE/T eventWave = $"root:AutoHeadFixData:" + mouse + "_event"
+	WAVE timeWave = $"root:AutoHeadFixData:" + mouse + "_time"
+	
+	string dateStr =  stringfromlist (0, startStr, " ")
+	string timeStr = stringfromlist (1, startStr, " ")
+	variable timeEls = itemsinlist (timeStr, ":")
+	variable startTIme = date2secs (str2num (stringfromlist (0, dateStr, "-")), str2num (stringfromlist (1, dateStr, "-")), str2num (stringfromlist (2, dateStr, "-")))
+	if (timeEls > 0)
+		startTime += str2num (stringfromlist (0, timeStr, ":")) * 3600
+		if (timeEls > 1)
+			startTime += str2num (stringfromlist (1, timeStr, ":")) * 60
+			if (timeEls > 2)
+				startTime += str2num (stringfromlist (2, timeStr, ":"))
+			endif
+		endif
+	endif
+	// now end time
+	dateStr =  stringfromlist (0, endStr, " ")
+	timeStr = stringfromlist (1, endStr, " ")
+	timeEls = itemsinlist (timeStr, ":")
+	variable endTime = date2secs (str2num (stringfromlist (0, dateStr, "-")), str2num (stringfromlist (1, dateStr, "-")), str2num (stringfromlist (2, dateStr, "-")))
+	if (timeEls > 0)
+		endTime += str2num (stringfromlist (0, timeStr, ":")) * 3600
+		if (timeEls > 1)
+			endTime += str2num (stringfromlist (1, timeStr, ":")) * 60
+			if (timeEls > 2)
+				endTime += str2num (stringfromlist (2, timeStr, ":"))
+			endif
+		endif
+	endif
+	// find start and end pnts
+	variable startPntG, endPntG, nPnts = numPnts (timeWave)
+	startPntG = GUIPMathFindNum(timeWave, startTime, 0, nPnts, 0)
+	if (startPntG < 0)
+		startPntG *=-1; startPntG -=1
+	endif
+	endPntG = GUIPMathFindNum(timeWave, endTime, startPntG, nPnts, 0)
+	if (endPntG < 0)
+		endPntG *=-1; endPntG -=1
+	endif
+	
+	variable iPt
+	string videoName, fullPath
+	variable videoStartTime
+	for (iPt = startPntG; iPt < endPntG; iPt +=1)
+		if (cmpstr (eventWave [iPt], "check+") ==0)
+			iPt +=1
+			videoName = "M" + StringByKey("video", eventWave [iPt] , ":" , ";")
+			fullPath =  removeending (GUIPListFiles ("Auto_head_fixLoadPath",  ".raw", videoName, 3, "NOTFOUND"), ";")
+			if (cmpStr (fullPath, "NOTFOUND") != 0)
+				AHF_LoadMovie(fullPath, 0)
+			endif
+		endif
 	endfor
 end
