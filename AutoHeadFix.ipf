@@ -365,7 +365,6 @@ Function AHF_Load (ImportPathStr, FileNameStr, OptionsStr, FileDescStr)
 					iData +=1
 					if (iData == nData)
 						insertPoints nData, nData, eventTime, eventData, eventMouse
-						print eventMouse [61]
 						nData *=2
 					endif
 				endif
@@ -1662,4 +1661,28 @@ Function AHF_Load_DataFix (ImportPathStr, FileNameStr, OptionsStr, FileDescStr)
 		FReadLine/T="\n" fileRefNum, aLine
 	endfor
 	close fileRefNum
+end
+
+
+function AHF_remdupes (string theGrp)
+	
+	
+	WAVE/T grpList = root:AutoHeadFixData:GrpList
+	variable iMouse, nMice = dimsize (grpList, 0)	
+	string  mouseName
+	variable iPnt, nPnts
+	for (iMouse =0; iMouse < nMice; iMouse +=1)
+		if (cmpStr (grpList [iMouse] [1], theGrp) ==0)
+			mouseName = "m" + grpList [iMouse] [0]
+			WAVE timeWave = $"root:AutoHeadFixData:" + mouseName + "_time"
+			WAVE/T eventWave = $"root:AutoHeadFIxData:" + mouseName + "_event"
+			sort timewave timeWave, eventWave
+			nPnts = numpnts (timeWave)
+			for (iPnt = nPnts -1; iPnt > 0;iPnt -=1)
+				if (timeWave [iPnt - 1] == timeWave [iPnt])
+					DeletePoints iPnt, 1,  timeWave, eventWave
+				endif
+			endfor
+		endif
+	endfor
 end
