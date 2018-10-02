@@ -1,5 +1,3 @@
-from AHF_Rewarder import AHF_Rewarder
-import RPi.GPIO as GPIO
 import json
 class Mouse:
     """

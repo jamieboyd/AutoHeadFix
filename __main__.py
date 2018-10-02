@@ -88,9 +88,11 @@ def main():
         nextDay = startTime + timedelta (hours=24)
         # initialize mice from mice config path, if possible
         mice = Mice(cageSettings, expSettings)
+        makeLogFile (expSettings, cageSettings)
+        #print (expSettings.logFP)
         # make datalogger, which will handle creating and writing events to AHF text file and updating quickStats file
         dataLogger = Simple_Logger (expSettings.logFP)
-        dataLogger.makeQuickStatsFile (mice)
+        #makeQuickStatsFile (mice)
         # set up the GPIO pins for each for their respective functionalities.
         GPIO.setmode (GPIO.BCM)
         GPIO.setwarnings(False)
@@ -130,7 +132,7 @@ def main():
         else:
             UDPTrigger = None
         # make a lick detector
-        if cageSettings.lickIRQ > 0:
+        if cageSettings.lickIRQ is not None:
             from AHF_LickDetector import AHF_LickDetector
             lickDetector = AHF_LickDetector ((0,1), cageSettings.lickIRQ, dataLogger)
             lickDetector.start_logging()
@@ -171,11 +173,11 @@ def main():
                     if thisMouse is None:
                         # try to open mouse config file to initialize mouse data
                         thisMouse=Mouse(tag,1,0,0,0)
-                        mice.addMouse (thisMouse)
-                        dataLogger.addMouseToStats (thisMouse, mice.nMice())
-                    dataLogger.setMouse (thisMouse)
-                    dataLogger.writeToLogFile ('entry')
-                    thisMouse.entries += 1
+                        #mice.addMouse (thisMouse)
+                        #dataLogger.addMouseToStats (thisMouse, mice.nMice())
+                    #dataLogger.setMouse (thisMouse)
+                    #dataLogger.writeToLogFile ('entry')
+                    #thisMouse.entries += 1
                     # if we have entrance reward, first wait for entrance reward or first head-fix, which countermands entry reward
                     if thisMouse.entranceRewards < expSettings.maxEntryRewards:
                         giveEntranceReward = True
@@ -214,8 +216,8 @@ def main():
                         #GPIO.setup (cageSettings.entryBBpin, GPIO.IN, pull_up_down = GPIO.PUD_UP)
                         GPIO.add_event_detect (cageSettings.entryBBpin, GPIO.BOTH, entryBBCallback)
                     # after exit, update stats
-                    writeToLogFile(expSettings.logFP, thisMouse, 'exit')
-                    updateStats (expSettings.statsFP, mice, thisMouse)
+                    #writeToLogFile(expSettings.logFP, thisMouse, 'exit')
+                    #updateStats (expSettings.statsFP, mice, thisMouse)
                     # after each exit check for a new day
                     if datetime.fromtimestamp (int (time())) > nextDay:
                         now = datetime.fromtimestamp (int (time()))
@@ -349,8 +351,8 @@ def runTrial (thisMouse, expSettings, cageSettings, camera, rewarder, headFixer,
             extension = 'h264'
 
         video_name = str (thisMouse.tag) + "_" + stimStr + "_" + '%d' % headFixTime + '.' + extension
-        video_name_path = expSettings.dayFolderPath + 'Videos/' + "M" + video_name
-        writeToLogFile (expSettings.logFP, thisMouse, "video:" + video_name)
+        video_name_path = '/home/pi/Documents/' + "M" + video_name
+        #writeToLogFile (expSettings.logFP, thisMouse, "video:" + video_name)
         # send socket message to start behavioural camera
         if expSettings.hasUDP == True:
             #MESSAGE = str (thisMouse.tag) + "_" + stimStr + "_" + '%d' % headFixTime
@@ -429,7 +431,7 @@ def makeLogFile (expSettings, cageSettings):
     open a new text log file for today, or open an exisiting text file with 'a' for append
     """
     try:
-        logFilePath = expSettings.dayFolderPath + 'TextFiles/headFix_' + cageSettings.cageID + '_' + expSettings.dateStr + '.txt'
+        logFilePath ='/home/pi/Documents/headFix_' + cageSettings.cageID + '_' + '.txt'
         expSettings.logFP = open(logFilePath, 'a')
         uid = getpwnam ('pi').pw_uid
         gid = getgrnam ('pi').gr_gid
