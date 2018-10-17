@@ -104,12 +104,12 @@ class AHF_HeadFixer(metaclass = ABCMeta):
 
     @staticmethod
     @abstractmethod
-    def configDict_read (cageSet,configDict):
+    def configDict_read (task,configDict):
         pass
 
     @staticmethod
     @abstractmethod
-    def config_user_get (cageSet,configDict):
+    def config_user_get (task,configDict):
         """
         reads data for headFixer configuration from the json configDict, copies it to the cageSet
         """
@@ -117,7 +117,7 @@ class AHF_HeadFixer(metaclass = ABCMeta):
 
     @staticmethod
     @abstractmethod
-    def configDict_set (cageSet,configDict):
+    def configDict_set (task,configDict):
         """
         gets data from the cageSet object, and updates the json configDict
         """
@@ -125,7 +125,7 @@ class AHF_HeadFixer(metaclass = ABCMeta):
 
     @staticmethod
     @abstractmethod
-    def config_show (cageSet):
+    def config_show (task):
         """
         returns a string containing config data for this headFixer currently loaded into the cageSet object
         """

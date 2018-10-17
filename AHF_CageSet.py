@@ -6,6 +6,67 @@ import os
 import pwd
 import grp
 from AHF_HeadFixer import AHF_HeadFixer
+
+def load (task):
+     try:
+          with open ('AHFconfig.jsn', 'r') as fp:
+               data = fp.read()
+               data=data.replace('\n', ',')
+               configDict = json.loads(data);print (configDict)
+               fp.close()
+               setattr (task, 'cageID', configDict.get('Cage ID'))
+               setattr (task, 'headFixer', configDict.get('Head Fixer'))
+               AHF_HeadFixer.get_class (self.headFixer).configDict_read (task, configDict)
+               setattr (task, 'rewardPin', configDict.get('Reward Pin'))
+               setattr (task, 'tirPin', configDict.get('Tag In Range Pin'))
+               setattr (task, 'contactPin', configDict.get('Contact Pin'))
+               setattr (task, 'contactPolarity', configDict.get('Contact Polarity')) # RISING or FALLING, GPIO.RISING = 31, GPIO.FALLING = 32
+               setattr (task, 'contactPUD', configDict.get('Contact Pull Up Down')) # OFF, DOWN, or UP, GPIO.PUD_OFF=20, GPIO.PUD_DOWN =21, GPIO.PUD_UP=22
+               setattr (task, 'ledPin', configDict.get('LED Pin')) # OFF, DOWN, or UP, GPIO.PUD_OFF=20, GPIO.PUD_DOWN =21, GPIO.PUD_UP=22
+               setattr (task, 'contactPin', configDict.get('Contact Pin'))
+               setattr (task, 'serialPort', configDict.get('Serial Port'))
+               setattr (task, 'lickIRQ', configDict.get('lick IRQ Pin'))   # or -1 if we dont have a lick sensor
+               setattr (task, 'dataPath', configDict.get('Path to Save Data'))
+               setattr (task, 'mouseConfigPath', configDict.get('Path to Mouse Config Data'))
+               setattr (task, 'entryBBpin', configDict.get('Entry Beam Break Pin'))
+        except (TypeError, IOError) as e:
+            #we will make a file if we didn't find it, or if it was incomplete
+            print ('Unable to open base configuration file, AHFconfig.jsn, let\'s make a new one.\n')
+            task.cageID = input('Enter the cage ID:')
+            task.headFixer = AHF_HeadFixer.get_HeadFixer_from_user()
+            AHF_HeadFixer.get_class (task.headFixer).config_user_get (task)
+            task.rewardPin = int (input ('Enter the GPIO pin connected to the water delivery solenoid:'))
+            task.tirPin = int (input ('Enter the GPIO pin connected to the Tag-in-Range pin on the Tag reader:'))
+            task.contactPin = int (input ('Enter the GPIO pin connected to the headbar contacts or IR beam-breaker:'))
+            contactInt = int (input ('Enter the contact polarity, 0=FALLING for IR beam-breaker or falling polarity electrical contacts, 1=RISING for rising polarity elctrical contacts:'))
+            if contactInt == 0:
+                task.contactPolarity = 'FALLING'
+            else:
+                task.contactPolarity = 'RISING'
+            contactInt = int (input('Enter desired resistor on contact pin, 0=OFF if external resistor present, else 1=DOWN if rising polarity electrical contact or 2 = UP if IR beam-breaker or falling polarity electrical contacts:'))
+            if contactInt ==0:
+                task.contactPUD = 'OFF'
+            elif contactInt == 1:
+                task.contactPUD = 'DOWN'
+            else:
+                task.contactPUD='UP'
+            task.ledPin = int (input ('Enter the GPIO pin connected to the blue LED for camera illumination:'))
+            task.serialPort = input ('Enter serial port for tag reader(likely either /dev/ttyAMA0 or /dev/ttyUSB0):')
+            task.dataPath = input ('Enter the path to the directory where the data will be saved:')
+            hasEntryBB = input('Does the experimental tube has a beam break at the entry, yes or no:')
+            if (hasEntryBB [0] == 'Y' OR
+            if task.hasEntryBB != 0:
+                task.entryBBpin = int (input ('Enter the GPIO pin connected to the beam break at the tube entrance:'))
+            AHF_CageSet.show(task)
+            doSave = input ('Enter \'e\' to re-edit the new Cage settings, or any other character to save the new settings to a file.')
+            if doSave == 'e' or doSave == 'E':
+                self.edit()
+            else:
+                self.save()
+        return
+
+
+
 class AHF_CageSet (object):
 
     """

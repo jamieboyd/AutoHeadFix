@@ -7,8 +7,8 @@ from time import sleep
 
 class AHF_HeadFixer_Pistons(AHF_HeadFixer):
 
-    def __init__(self, cageSet):
-        self.pistonsPin = cageSet.pistonsPin
+    def __init__(self, task):
+        self.pistonsPin = task.pistonsPin
         GPIO.setup (self.pistonsPin, GPIO.OUT, initial = GPIO.LOW)
 
     def fixMouse(self):
@@ -18,28 +18,29 @@ class AHF_HeadFixer_Pistons(AHF_HeadFixer):
         GPIO.output(self.pistonsPin, GPIO.LOW)
         
     @staticmethod
-    def configDict_read (cageSet, configDict):
-        cageSet.pistonsPin= int(configDict.get('Pistons Pin'))
+    def configDict_read (task, configDict):
+        setattr (task, 'pistonsPin',int(configDict.get('Pistons Pin')))
 
     @staticmethod
-    def configDict_set(cageSet,configDict):
-        configDict.update ({'Pistons Pin':cageSet.pistonsPin})
+    def configDict_set(task,configDict):
+        configDict.update ({'Pistons Pin':task.pistonsPin})
                    
     @staticmethod
-    def config_user_get (cageSet):
-        cageSet.pistonsPin = int(input ('Enter the GPIO pin connected to the Head Fixing pistons:'))
+    def config_user_get (task):
+        pin= int(input ('Enter the GPIO pin connected to the Head Fixing pistons:'))
+        setattr (task, 'pistonsPin',pin)
         
     @staticmethod
-    def config_show(cageSet):
-        return 'Pistons Solenoid Pin=' +  str (cageSet.pistonsPin)
+    def config_show(task):
+        return 'Pistons Solenoid Pin=' +  str (task.pistonsPin)
     
-    def test (self, cageSet):
+    def test (self, task):
         print ('Pistons Solenoid energizing for 2 sec')
-        GPIO.output(cageSet.pistonsPin, 1)
+        GPIO.output(task.pistonsPin, 1)
         sleep (2)
-        GPIO.output(cageSet.pistonsPin, 0)
+        GPIO.output(task.pistonsPin, 0)
         inputStr=input ('Pistons Solenoid de-energized.\nDo you want to change the Pistons Solenoid Pin (currently ' + str(cageSet.pistonsPin) + ')?')
         if inputStr[0] == 'y' or inputStr[0] == "Y":
-            cageSet.pistonsPin = int (input('Enter New Pistons Solenoid Pin:'))
-            self.pistonsPin = cageSet.pistonsPin
-            GPIO.setup (cageSet.pistonsPin, GPIO.OUT)
+            task.pistonsPin = int (input('Enter New Pistons Solenoid Pin:'))
+            self.pistonsPin = task.pistonsPin
+            GPIO.setup (self.pistonsPin, GPIO.OUT)
