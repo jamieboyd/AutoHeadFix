@@ -2,30 +2,45 @@
 #-*-coding: utf-8 -*-
 
 #library imports
-import RPi.GPIO as GPIO
-
+#import RPi.GPIO as GPIO
 from RFIDTagReader import RFIDTagReader
-
-
 # local files, part of AutoHeadFix
-from AHF_Settings import AHF_Settings
-from AHF_CageSet import AHF_CageSet
+import AHF_CageSet # defines hardware setup, other things specific to each cage
+#from AHF_Settings import AHF_Settings # defines settings related to the runn
 
-# when we start a new day, in 24 hr format, so 7 is 7 AM and 19 is 7 PM
+# when we stop and make new text files, in 24 hr format, so 7 is 7 AM and 19 is 7 PM
 KDAYSTARTHOUR =13
-
-
 kTIMEOUTSECS= 0.05 #time to sleep in each pass through loop while witing for RFID reader
-
 
 """
 RFID reader object and tag need to be global so we can access them
 easily from Tag-In-Range calback
 """
-from RFIDTagReader import RFIDTagReader
-
 tagReader=None
 tag =0
+
+
+
+"""
+The plan is to copy all variables from settings, user, into a single object using setattr
+Main makes a task, then calls its run method
+"""
+class Task:
+    def __init__ (self, configFile):
+        """
+        Initializes a Task object with cage settings and experiment settings
+        """
+        print ('loading file')
+        AHF_CageSet.load(self)
+        
+
+
+    
+
+
+
+
+
 
 
 
@@ -37,6 +52,15 @@ def main():
     Ctrl-C is used to enter a menu-driven mode where settings can be altered.
     """
     try:
+        configFile = None
+    #if argv.__len__() > 1:
+ #       configFile = argv [1]
+        task = Task (configFile) 
+        print ('LED pin =', task.ledPin)
+    except Exception as e:
+        print ('error:' + str (e))
+    
+    """
         # load general settings for this cage, mostly hardware pinouts
         # things not expected to change often - there is only one AHFconfig.jsn file, in the enclosing folder
         cageSettings = AHF_CageSet()
@@ -45,10 +69,7 @@ def main():
         # we will add some other  variables to expSettings so we can pass them as a single argument to functions
         # logFP, statsFP, dateStr, dayFolderPath, doHeadFix, 
         # configFile can be specified if launched from command line, eg, sudo python3 myconfig or sudo python3 AHFexp_myconfig.jsn
-        configFile = None
-        if argv.__len__() > 1:
-            configFile = argv [1]
-        expSettings = AHF_Settings (configFile)
+ 
         # nextDay starts tomorrow at KDAYSTARTHOUR
         now = datetime.fromtimestamp (int (time()))
         startTime = datetime (now.year, now.month,now.day, KDAYSTARTHOUR,0,0)
@@ -56,3 +77,8 @@ def main():
          # initialize mice from mice config path, if possible
         mice = Mice(cageSettings, expSettings)
         makeLogFile (expSettings, cageSettings)
+    """
+
+
+if __name__ == '__main__':
+    main()
