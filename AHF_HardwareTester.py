@@ -29,7 +29,7 @@ if __name__ == '__main__':
         headFixer=AHF_HeadFixer.get_class (cageSet.headFixer) (cageSet)
         # open TagReader
         try:
-            tagReader = AHF_TagReader (cageSet.serialPort, True)
+            tagReader = RFIDTagReader (cageSet.serialPort, True,timeOutSecs = None, kind='ID')
         except IOError:
             tagReader = None
         htloop (cageSet, tagReader, headFixer)
