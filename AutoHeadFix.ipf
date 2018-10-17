@@ -60,7 +60,7 @@ function AHF_Secs (dtStr)
 	// add them all up
 	variable totalSecs = date2secs(year, month, day) +  (hrs * 3600) +  (minutes* 60) + seconds
 	// subtract offset for Igor/local to UNIX/UT
-	totalSecs -= kUNIXEPOCHGMOFFSET
+	//totalSecs -= kUNIXEPOCHGMOFFSET
 	return totalSecs
 end
 
@@ -87,10 +87,8 @@ Function Auto_Head_Fix_drawControls (vTop)
 	
 	// variables for overwriting and loading movies
 	Variable/G root:packages:GUIP:Auto_Head_Fix:loadMovies =0
-	Variable/G root:packages:GUIP:Auto_Head_Fix:Overwrite = 0
 	Variable/G root:packages:GUIP:Auto_Head_Fix:ExistingMiceOnly =0
 	SVAR optionStr = root:packages:GUIP:Auto_Head_Fix:GUIPloadOptionStr
-	optionStr = "Overwrite=no;LoadMovies=no;"
 	SVAR GUIPDataFolderStr = root:packages:GUIP:Auto_Head_Fix:GUIPDataFolderStr
 	GUIPDataFolderStr = "root:AutoHeadFixData"
 	// list box with IDs and groups
@@ -113,18 +111,14 @@ Function Auto_Head_Fix_drawControls (vTop)
 	endif
 	// variables for overwriting and loading movies
 	Variable/G root:packages:GUIP:Auto_Head_Fix:loadMovies =0
-	Variable/G root:packages:GUIP:Auto_Head_Fix:Overwrite = 0
 	Variable/G root:packages:GUIP:Auto_Head_Fix:ExistingMiceOnly =0
 	SVAR optionStr = root:packages:GUIP:Auto_Head_Fix:GUIPloadOptionStr
-	optionStr = "Overwrite=no;LoadMovies=no;"
+	optionStr = "LoadMovies=no;"
 	// list box for groups
 	ListBox GroupsList win = Auto_Head_FixLoader,pos={5,vTop + 22},size={285,110}
 	ListBox GroupsList win = Auto_Head_FixLoader,listWave=GrpList,selWave=GrpListSel, mode= 3
 	ListBox GroupsList win = Auto_Head_FixLoader,widths={106,161},userColumnResize= 1, proc=AHF_GrpListProc
 	// checkboxes for options
-	CheckBox OverwriteCheck win = Auto_Head_FixLoader, pos={4,vTop + 2},size={91,15},title="Overwrite Existing Data"
-	CheckBox OverwriteCheck win = Auto_Head_FixLoader, help={"If a file for a particular day was loaded previously, delete existing data and load new data"}
-	CheckBox OverwriteCheck win = Auto_Head_FixLoader, variable= root:packages:GUIP:Auto_Head_Fix:Overwrite, proc = AHF_OptionsCheckProc
 	CheckBox LoadMoviesCheck win = Auto_Head_FixLoader,pos={136,vTop + 2},size={71,16},proc=AHF_OptionsCheckProc,title="Load Movies"
 	CheckBox LoadMoviesCheck win = Auto_Head_FixLoader,help={"Try to load movies for head fixed events, using relative file path from text file folder"}
 	CheckBox LoadMoviesCheck win = Auto_Head_FixLoader,variable= root:packages:GUIP:Auto_Head_Fix:loadMovies
@@ -294,10 +288,7 @@ End
 Function AHF_Load (ImportPathStr, FileNameStr, OptionsStr, FileDescStr)
 	string ImportPathStr, FileNameStr, OptionsStr, FileDescStr
 	
-	variable overWrite = 0
-	if (cmpStr (StringByKey("Overwrite", OptionsStr, "=", ";"), "yes") ==0)
-		overwrite = 1
-	endif
+
 	variable loadMovie =0
 	if (cmpStr (StringByKey("LoadMovies", OptionsStr, "=", ";"), "yes") ==0)
 		loadMovie = 1
@@ -426,19 +417,7 @@ Function AHF_Load (ImportPathStr, FileNameStr, OptionsStr, FileDescStr)
 			if (insertStart < 0)
 				insertStart *= -1;insertStart -=1
 			endif
-//			insertEnd=GUIPMathFindNum (timeWave, eventTime [lastPos], 0, dataPts, 0)
-//			if (insertEnd < 0)
-//				insertEnd *= -1;insertEnd -=1
-//			endif
-//			if (insertStart != insertEnd) // data has been inserted before, so overwriting
-//				
-//				print "Overwrite"
-//				if (overWrite == 0)
-//					printf "Data for file %s was already loaded and will NOT be overwritten.\r", fileNameStr
-//				else
-//					DeletePoints insertStart, (insertEnd-InsertStart + 1), timeWave , eventWave
-//				endif
-//			endif
+
 			insertPnts =(lastPos - firstPos +1)
 			InsertPoints insertStart, insertPnts, timeWave, eventWave
 			timeWave [insertStart, insertStart + insertPnts-1] = eventTime [p - insertStart + firstPos]
@@ -1428,202 +1407,6 @@ function AFH_LoadVideos (string mouse, string startStr, string endStr)
 end
 
 
-// copies data for this sesh from temp waves to data waves
-Function AHF_SeshEnd(seshStart, seshEnd, cageName, doOverWrite, existingMiceOnly)
-	variable seshStart, seshEnd
-	string cageName
-	variable doOverWrite
-	variable existingMiceOnly
-	
-	// reference text wave containing tagIDs and grp assignments
-	WAVE/T grpWave = root:AutoHeadFixData:GrpList
-	WAVE grpSelWave = root:packages:GUIP:Auto_Head_Fix:GrpListSel
-	// and make sure it is sorted by mouseID
-	if (DimSize (grpWave, 0) > 2)
-		STRUCT WMListboxAction lba
-		lba.eventCode = 3
-		lba.row = -1
-		lba.col = 0
-		WAVE/T lba.listWave = grpWave
-		AHF_GrpListProc(lba)
-	endif
-	// reference temp waves for mice and event numbers
-	WAVE mice = root:packages:mice
-	WAVE entries= root:packages:entries
-	WAVE entryRewards = root:packages:entryRewards
-	WAVE fixes = root:packages:fixes
-	WAVE fixRewards = root:packages:fixRewards
-	// number of seconds from epoch to start of day when this session started
-	variable startDay =floor((seshStart - kSECSTODAYSTART)/ kSECSPERDAY) * kSECSPERDAY
-	// number of seconds in this session
-	// yes, we could have slightly more than 24 hr in a daily session, but in the end it will average out
-	variable cageDuration = seshEnd - seshStart 
-	// get data for each mouse in temp mice wave
-	variable iMouse, mouseDayPos, nMice = numPnts (mice)
-	variable aMouse, mousePos, grpPos
-	string tempNameStr, dataNameStr, mouseIDstr, grp
-	for (iMouse =0; iMouse < nMice; iMouse +=1)
-		aMouse = mice [iMouse]
-		// Reference temp data waves for this mouse
-		tempNameStr = "root:packages:m" + num2str (aMouse)
-		WAVE entryTimesTemp = $tempNameStr + "_entryTimes"
-		WAVE entryDursTemp = $tempNameStr + "_entryDurs"
-		WAVE wasEntryRewardTemp = $tempNameStr + "_WasEntryReward"
-		WAVE headFixTimesTemp = $tempNameStr + "_HeadFixTimes"
-		WAVE headFixDursTemp =$tempNameStr+ "_HeadFixDurs"
-		WAVE headFixRewardsTemp= $tempNameStr + "_HeadFixRewards"
-		// do we have a grp for this mouse? If not, use cageName as grp
-		mouseIDstr = num2iStr (aMouse)
-		grpPos = GUIPMathFindText2D (grpWave, mouseIDstr, 1, INF, 0, 0, 0)
-		if (grpPos < 0)
-			if (existingMiceOnly)
-				continue
-			else
-				grp = CleanupName(cageName, 0) 
-				grpPos = -(grpPos + 1) 
-				insertpoints/M=0 grpPos, 1, grpWave,grpSelWave
-				grpWave [grpPos] [0] = mouseIDstr
-				grpWave [grpPos] [1] = cageName
-				grpSelWave [grpPos] [0] = 0
-				grpSelWave [grpPos] [1] = 3
-			else
-				grp = grpWave [grpPos] [1]
-			endif
-			if (cmpStr (grp, "test") ==0)
-				continue
-			endif
-		else
-			grp = grpWave [grpPos] [1]
-		endif
-		dataNameStr = "root:AutoHeadFixData:" + grp + mouseIDstr
-		// Copy individual entry/exits/wasEntryReward into waves for this mouse
-		variable nEntries = entries [iMouse]
-		if (nEntries > 0)
-			WAVE/Z EntryTimes = $dataNameStr +  "_EntrTime"
-			if (!(WaveExists (EntryTimes)))
-				Make/D/n = (nEntries) $dataNameStr + "_EntrTime"
-				Make/n = (nEntries) $dataNameStr  + "_entryDurs"
-				make/b/u/n=(nEntries)  $dataNameStr + "_WasEntryReward"
-				WAVE EntryTimes = $dataNameStr +  "_EntrTime"
-				WAVE entryDurs = $dataNameStr  + "_entryDurs"
-				WAVE wasRewarded = $dataNameStr + "_WasEntryReward"
-				EntryTimes = entryTimesTemp [p]
-				entryDurs = entryDursTemp [p]
-				wasRewarded = wasEntryRewardTemp [p]
-			else
-				WAVE entryDurs = $dataNameStr  + "_entryDurs"
-				WAVE wasRewarded = $dataNameStr + "_WasEntryReward"
-				variable entryPos =  GUIPMathFindNum (EntryTimes, entryTimesTemp [0], 0, INF, 0)
-				if (entryPos < 0)
-					entryPos = -(entryPos + 1) 
-				endif
-				insertpoints entryPos, (nEntries), EntryTimes, entryDurs//, wasRewarded
-				EntryTimes [entryPos, entryPos + nEntries -1] = entryTimesTemp [p - entryPos]
-				entryDurs [entryPos, entryPos + nEntries -1] = entryDursTemp [p - entryPos]
-				//wasRewarded [entryPos, entryPos + nEntries -1] = wasEntryRewardTemp [p - entryPos]
-			endif
-			//				else // first entry was found in data
-			//					
-			//					if (doOverWrite)
-			//						// find position of last entry from temp waves in existing data 
-			//						variable entryEnd =  GUIPMathFindNum (EntryTimes, entryTimesTemp [nEntries -1], entryPos, INF, 0)
-			//						if (entryEnd < 0)
-			//							entryEnd = -(entryEnd + 1)
-			//						endif
-			//						DeletePoints entryPos, (entryEnd - entryPos), EntryTimes, entryDurs, wasRewarded
-			//						insertpoints entryPos, (nEntries), EntryTimes, entryDurs, wasRewarded
-			//						EntryTimes [entryPos, entryPos + nEntries -1] = entryTimesTemp [p - entryPos]
-			//						entryDurs [entryPos, entryPos + nEntries -1] = entryDursTemp [p - entryPos]
-			//						wasRewarded [entryPos, entryPos + nEntries -1] = wasEntryRewardTemp [p - entryPos]
-			//					else
-			//						doAlert 0, "Entries for that session were already loaded."
-			//						continue
-			//					endif
-			//				endif
-		endif
-		// Copy individual headFixes/headfix rewards for this mouse
-		variable nheadFixes= fixes [iMouse]
-		if (nHeadFixes > 0)
-			WAVE/Z headFixes = $dataNameStr +  "_HdFxTime"
-			if (!(WaveExists (headFixes)))
-				Make/D/n = (nheadFixes) $dataNameStr + "_HdFxTime"
-				Make/n = (nheadFixes) $dataNameStr  + "_HdFxDurs"
-				Make/n = (nheadFixes) $dataNameStr  + "_HdFxRews"
-				WAVE headFixes = $dataNameStr +  "_HdFxTime"
-				WAVE headFixDurs = $dataNameStr +  "_HdFxDurs"
-				WAVE headFixRews=$dataNameStr  + "_HdFxRews"
-				headFixes = headFixTimesTemp [p]
-				headFixDurs = headFixDursTemp [p]
-				headFixRews = headFixRewardsTemp [p]
-			else
-				WAVE headFixDurs = $dataNameStr +  "_HdFxDurs"
-				WAVE headFixRews=$dataNameStr  + "_HdFxRews"
-				variable hfPos =  GUIPMathFindNum (headFixes, headFixTimesTemp [0], 0, INF, 0)
-				if (hfPos < 0)
-					hfPos = -(hfPos + 1) 
-					print "errm"
-					//else
-					
-				endif
-				insertpoints hfPos, (nheadFixes), headFixes, headFixDurs//, headFixRews
-				headFixes [hfPos, hfPos + nheadFixes -1] = headFixTimesTemp [p-hfPos]
-				headFixDurs [hfPos, hfPos + nheadFixes -1] = headFixDursTemp [p -hfPos]
-				//headFixRews  [hfPos, hfPos + nheadFixes -1]  = headFixRewardsTemp  [p -hfPos]
-				//				else
-				//					variable hfEnd = GUIPMathFindNum (headFixes, headFixTimesTemp [nHeadFixes -1], hfPos, INF, 0)
-				//					if (hfEnd < 0)
-				//						hfEnd = -(hfEnd + 1)
-				//					endif
-				//					DeletePoints hfPos, (hfEnd - hfPos), headFixes, headFixDurs, headFixRews
-				//					insertpoints hfPos, (nEntries), headFixes, headFixDurs, headFixRews
-				//					headFixes [hfPos, hfPos + nheadFixes -1] = headFixTimesTemp [p - hfPos]
-				//					headFixDurs  [hfPos, hfPos + nheadFixes -1] = headFixTimesTemp [p - hfPos]
-				//					headFixRews  [hfPos, hfPos + nheadFixes -1] = headFixRewardsTemp [p - hfPos]
-				//				endif
-			endif
-		endif
-		// copy day and duration data into wave for this mouse
-		WAVE/Z mouseDayWave = $dataNameStr + "_Date"
-		if (!(WaveExists (mouseDayWave)))
-			make/D/n = (1) $dataNameStr + "_Date"
-			make/n = (1) $dataNameStr+ "_DayCageDur"
-			make/n = (1) $dataNameStr + "_DayEntries"
-			make/n = (1) $dataNameStr + "_DayEntRews"
-			make/n = (1) $dataNameStr + "_DayHeadFixes"
-			make/n = (1) $dataNameStr + "_DayHFixRewds"
-			WAVE mouseDayWave = $dataNameStr + "_Date"
-			WAVE mouseCageDurWave = $dataNameStr + "_DayCageDur"
-			WAVE mouseDayEntries=$dataNameStr + "_DayEntries"
-			WAVE mouseDayEntryRewards = $dataNameStr + "_DayEntRews"
-			WAVE mouseDayHeadFixes = $dataNameStr + "_DayHeadFixes"
-			WAVE mouseDayHeadFixRewards =  $dataNameStr + "_DayHFixRewds"
-			mouseDayPos=0
-			mouseCageDurWave [0] = 0
-			mouseDayEntries [0] =0
-			mouseDayEntryRewards [0] = 0
-			mouseDayHeadFixes [0]=0
-			mouseDayHeadFixRewards [0] =0
-		else
-			WAVE mouseCageDurWave = $dataNameStr + "_DayCageDur"
-			WAVE mouseDayEntries=$dataNameStr + "_DayEntries"
-			WAVE mouseDayEntryRewards = $dataNameStr + "_DayEntRews"
-			WAVE mouseDayHeadFixes = $dataNameStr + "_DayHeadFixes"
-			WAVE mouseDayHeadFixRewards =  $dataNameStr + "_DayHFixRewds"
-			mouseDayPos = GUIPMathFindNum (mouseDayWave, startDay, 0, INF, 0)
-			if (mouseDayPos < 0)
-				mouseDayPos = -(mouseDayPos+1) 
-				insertpoints mouseDayPos, 1, mouseDayWave, mouseCageDurWave, mouseDayEntries, mouseDayEntryRewards,mouseDayHeadFixes,mouseDayHeadFixRewards
-			endif
-		endif
-		mouseDayWave[mouseDayPos]=startDay
-		mouseCageDurWave [mouseDayPos] += cageDuration
-		mouseDayEntries [mouseDayPos] += entries [iMouse]
-		mouseDayEntryRewards [mouseDayPos] += entryRewards [iMouse]
-		mouseDayHeadFixes [mouseDayPos]+=fixes [iMouse]
-		mouseDayHeadFixRewards [mouseDayPos] += fixRewards [imouse]
-	endfor
-	entries[*]=0;entryRewards[*]=0; fixes[*]=0;fixRewards[*]=0
-end
 
 
 
