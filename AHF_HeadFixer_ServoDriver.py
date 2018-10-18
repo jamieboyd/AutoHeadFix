@@ -13,7 +13,7 @@ git clone https://github.com/adafruit/Adafruit_Python_PCA9685.git
 # Import the PCA9685 module.
 import Adafruit_PCA9685
 from AHF_HeadFixer import AHF_HeadFixer
-from AHF_CageSet import AHF_CageSet
+import AHF_CageSet
 from time import sleep
 class AHF_HeadFixer_ServoDriver (AHF_HeadFixer):
 

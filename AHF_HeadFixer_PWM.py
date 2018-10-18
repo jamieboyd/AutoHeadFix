@@ -2,20 +2,23 @@
 #-*-coding: utf-8 -*-
 
 from abc import ABCMeta, abstractmethod
-from AHF_HeadFixer import AHF_HeadFixer
-from AHF_CageSet import AHF_CageSet
+import AHF_CageSet
 from time import sleep
 
 class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
+    """
+    Abstract class for PWM-based head fixers for servo motors. As long as you map your PWM range onto
+    the appropriate pulse width for the servo, you should be good to go.
+    """
     hasLevels = True
 
     ##################################################################################
     #part 1: three main methods of initing, fixing, and releasing, only initing is different for different PWM methods
     @abstractmethod
-    def __init__(self, cageSet):
-        self.servoReleasedPosition = cageSet.servoReleasedPosition
-        self.servoFixedPosition = cageSet.servoFixedPosition
-        self.servoIncrement = int ((self.servoReleasedPosition - self.servoFixedPosition)/5)
+    def __init__(self, task):
+        self.servoReleasedPosition = task.servoReleasedPosition
+        self.servoFixedPosition = task.servoFixedPosition
+        self.servoIncrement = int ((task.servoReleasedPosition - task.servoFixedPosition)/5)
 
     # with progressive head fixing. typical servo values 325 =fixed, 540 = released
     # 8 different levels of fixing tightness

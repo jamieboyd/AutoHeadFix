@@ -78,9 +78,9 @@ class AHF_HeadFixer(metaclass = ABCMeta):
     #abstact methods each headfixer class must implement
     #part 1: three main methods of initing, fixing, and releasing
     @abstractmethod
-    def __init__(self, cageSet):
+    def __init__(self, task):
         """
-        hardware initialization of a headFixer, reading data from a cageSet object
+        hardware initialization of a headFixer, reading data from the task object
         """
         pass
 
@@ -100,26 +100,29 @@ class AHF_HeadFixer(metaclass = ABCMeta):
 
     ##################################################################################
     #abstact methods each headfixer class must implement
-    #part 2: static functions for reading, editing, and saving ConfigDict from/to cageSet
+    #part 2: static functions for reading, editing, and saving ConfigDict from/to task
 
     @staticmethod
     @abstractmethod
-    def configDict_read (task,configDict):
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def config_user_get (task,configDict):
+    def configDict_read (task, configDict):
         """
-        reads data for headFixer configuration from the json configDict, copies it to the cageSet
+        reads data for headFixer configuration from the json configDict, copies it to the task
         """
         pass
 
     @staticmethod
     @abstractmethod
-    def configDict_set (task,configDict):
+    def config_user_get (task):
         """
-        gets data from the cageSet object, and updates the json configDict
+        in absence of json configDict, queerries user for settings, and copies them to the task
+        """
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def configDict_set (task, configDict):
+        """
+        gets headfix configuration data from the task object, and updates the json configDict
         """
         pass 
 
@@ -127,7 +130,7 @@ class AHF_HeadFixer(metaclass = ABCMeta):
     @abstractmethod
     def config_show (task):
         """
-        returns a string containing config data for this headFixer currently loaded into the cageSet object
+        returns a string containing head fix config data for this headFixer currently loaded into the task object
         """
         pass
     
@@ -136,9 +139,10 @@ class AHF_HeadFixer(metaclass = ABCMeta):
     #abstract methods each headfixer class must implement
     #part 3: hadware tester function
     @abstractmethod
-    def test(self, cageSet):
+    def test(self, task):
         """
-        Called by hardwaretester, runs a harware test for headFixer, verifying that it works and gives user a chance to save settings
+        Called by hardwaretester, runs a harware test for headFixer, verifying that it works
+        gives user a chance to change configuration, and, if changed, saves new configuration info in task
         """
         pass
 
@@ -164,7 +168,7 @@ class AHF_HeadFixer(metaclass = ABCMeta):
     @staticmethod
     def funcForMain ():
         from time import sleep
-        from AHF_CageSet import AHF_CageSet
+        import AHF_CageSet
         from AHF_HeadFixer import AHF_HeadFixer
         cageSettings = AHF_CageSet ()
         cageSettings.edit()
