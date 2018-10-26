@@ -3,7 +3,7 @@
 
 #library imports
 import RPi.GPIO as GPIO
-from RFIDTagReader import RFIDTagReader
+from RFIDTagReader import TagReader
 
 
 # local files, part of AutoHeadFix
@@ -22,19 +22,7 @@ tagReader=None
 tag =0
 
 
-"""
-The plan is to copy all variables from settings, user, into a single object using setattr
-Main makes a task, then calls its run method
-"""
-class Task:
-    def __init__ (self, configFile):
-        """
-        Initializes a Task object with cage settings and experiment settings
-        """
-        AHF_CageSet.load(self) # cage settings from ./AHF_Config.jsn, only 1 of these
-        AHF_Settings.load (self, configFile) # experiment settings, if configFile is None, querry user
     
-
 
 def main():
     """
