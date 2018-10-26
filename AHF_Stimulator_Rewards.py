@@ -38,14 +38,14 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
         self.mouse.headFixRewards += self.nRewards
         
     def logfile (self):
-        event = '\treward'
-        mStr = '{:013}'.format(self.mouse.tag) + '\t'
+        event = 'reward'
+        mStr = '{:013}'.format(self.mouse.tag)
         for rewardTime in self.rewardTimes:
-            outPutStr = mStr + datetime.fromtimestamp (int (rewardTime)).isoformat (' ') + event
+            outPutStr = mStr + '\t' + datetime.fromtimestamp (int (rewardTime)).isoformat (' ') + '\t' + event
             print (outPutStr)
         if self.textfp != None:
             for rewardTime in self.rewardTimes:
-                outPutStr = mStr + datetime.fromtimestamp (int (rewardTime)).isoformat (' ') + "\t" + '{:.2f}'.format (rewardTime)  + event
+                outPutStr = mStr + '\t' + '{:.2f}'.format (rewardTime) + '\t'  + event +  "\t"  + datetime.fromtimestamp (int (rewardTime)).isoformat (' ') 
                 self.textfp.write(outPutStr + '\n')
             self.textfp.flush()
 

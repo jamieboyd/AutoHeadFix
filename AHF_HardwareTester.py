@@ -4,7 +4,7 @@
 
 import RPi.GPIO as GPIO
 from time import sleep
-from RFIDTagReader import RFIDTagReader
+from AHF_TagReader import AHF_TagReader
 from AHF_HeadFixer import AHF_HeadFixer
 from AHF_CageSet import AHF_CageSet
 from time import time
@@ -29,7 +29,7 @@ if __name__ == '__main__':
         headFixer=AHF_HeadFixer.get_class (cageSet.headFixer) (cageSet)
         # open TagReader
         try:
-            tagReader = RFIDTagReader (cageSet.serialPort, True,timeOutSecs = None, kind='ID')
+            tagReader = AHF_TagReader (cageSet.serialPort, True)
         except IOError:
             tagReader = None
         htloop (cageSet, tagReader, headFixer)
@@ -39,6 +39,7 @@ else:
         Hardware Tester for Auto Head Fixing, allows you to verify the various hardware bits are working
         """
         htloop (cageSet, tagReader, headFixer)
+        
 
 def htloop (cageSet, tagReader, headFixer):
     """

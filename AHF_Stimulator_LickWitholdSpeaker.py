@@ -119,7 +119,7 @@ class AHF_Stimulator_LickWitholdSpeaker (AHF_Stimulator_LickNoLick):
             buzzLeadEnd = afterBuzzEndTime + self.buzz_lead
             self.buzzer1.do_train()
             # sleep for a bit, then give reward
-            sleep (0.5)
+            sleep (1.0)
             self.rewardTimes.append (time())
             self.rewarder.giveReward('task')
             self.buzzTypes.append (2)

@@ -1,3 +1,5 @@
+from AHF_Rewarder import AHF_Rewarder
+import RPi.GPIO as GPIO
 import json
 class Mouse:
     """
@@ -65,7 +67,7 @@ class Mice:
     """
     The mice class simply contains an array of mouse objects
     """
-    def __init__(self, cageSettings, expSettings):
+    def __init__(self):
         """
         Initializes the array of mice with an empty array
         """

@@ -6,7 +6,7 @@ from AHF_Settings import AHF_Settings
 from AHF_CageSet import AHF_CageSet
 from AHF_Rewarder import AHF_Rewarder
 from AHF_Camera import AHF_Camera
-from RFIDTagReader import RFIDTagReader
+from AHF_TagReader import AHF_TagReader
 from AHF_Notifier import AHF_Notifier
 from AHF_UDPTrig import AHF_UDPTrig
 from AHF_Stimulator import AHF_Stimulator
@@ -22,14 +22,17 @@ from os import chown
 from pwd import getpwnam
 from grp import getgrnam
 from time import time, localtime,timezone, sleep
-from datetime import datetime, timedelta
+from datetime import datetime
 from random import random
 from sys import argv
 #library import - need to have RPi.GPIO installed, but should be standard on Raspbian Woody or Jessie
 import RPi.GPIO as GPIO
 
-# when we start a new day, in 24 hr format, so 7 is 7 AM and 19 is 7 PM
-KDAYSTARTHOUR =13
+# constants used for calculating when to start a new day
+# we put each day's movies and text files in a separate folder, and keep separate stats
+KSECSPERDAY = 86400
+KSECSPERHOUR = 3600
+KDAYSTARTHOUR =13 # when we start a new day, in 24 hr format, so 7 is 7 AM and 19 is 7 PM
 
 """
 constant for time outs when waiting on an event - instead of waiting for ever, and missing, e.g., keyboard event,
@@ -69,6 +72,7 @@ def main():
         # load general settings for this cage, mostly hardware pinouts
         # things not expected to change often - there is only one AHFconfig.jsn file, in the enclosing folder
         cageSettings = AHF_CageSet()
+        #print (cageSettings)
         # get settings that may vary by experiment, including rewarder, camera parameters, and stimulator
         # More than one of these files can exist, and the user needs to choose one or make one
         # we will add some other  variables to expSettings so we can pass them as a single argument to functions
@@ -78,21 +82,16 @@ def main():
         if argv.__len__() > 1:
             configFile = argv [1]
         expSettings = AHF_Settings (configFile)
-        #put settings into one big dictionary 
-        #allSettings = {}
-        #allSettings.update (cageSettings.asDict())
-        #allSettings.update (expSettings.asDict())
         # nextDay starts tomorrow at KDAYSTARTHOUR
-        now = datetime.fromtimestamp (int (time()))
-        startTime = datetime (now.year, now.month,now.day, KDAYSTARTHOUR,0,0)
-        nextDay = startTime + timedelta (hours=24)
-        # initialize mice from mice config path, if possible
-        mice = Mice(cageSettings, expSettings)
+        #nextDay = (int((time() - timezone)/KSECSPERDAY) + 1) * KSECSPERDAY + timezone + (KDAYSTARTHOUR * KSECSPERHOUR)
+        nextDay = ((int((time() - timezone + localtime().tm_isdst * 3600)/KSECSPERDAY)) * KSECSPERDAY)  + timezone - (localtime().tm_isdst * 3600) + KSECSPERDAY + KDAYSTARTHOUR
+        # Create folders where the files for today will be stored
+        makeDayFolderPath(expSettings, cageSettings)
+        # initialize mice with zero mice
+        mice = Mice()
+        # make daily Log files and quick stats file
         makeLogFile (expSettings, cageSettings)
-        #print (expSettings.logFP)
-        # make datalogger, which will handle creating and writing events to AHF text file and updating quickStats file
-        dataLogger = Simple_Logger (expSettings.logFP)
-        #makeQuickStatsFile (mice)
+        makeQuickStatsFile (expSettings, cageSettings, mice)
         # set up the GPIO pins for each for their respective functionalities.
         GPIO.setmode (GPIO.BCM)
         GPIO.setwarnings(False)
@@ -111,33 +110,30 @@ def main():
             expSettings.noContactState = GPIO.HIGH
         # make head fixer - does its own GPIO initialization from info in cageSettings
         headFixer=AHF_HeadFixer.get_class (cageSettings.headFixer) (cageSettings)
-        # make a rewarder -does its own GPIO initialization from info in cageSettings
+        # make a rewarder
         rewarder = AHF_Rewarder (30e-03, cageSettings.rewardPin)
         rewarder.addToDict('entrance', expSettings.entranceRewardTime)
         rewarder.addToDict ('task', expSettings.taskRewardTime)
         # make a notifier object
         if expSettings.hasTextMsg == True:
-            from AHF_Notifier import AHF_Notifier
             notifier = AHF_Notifier (cageSettings.cageID, expSettings.phoneList)
         else:
             notifier = None
         # make RFID reader
-        tagReader = RFIDTagReader(cageSettings.serialPort, False)
+        tagReader = AHF_TagReader(cageSettings.serialPort, False, -1)
         # configure camera
         camera = AHF_Camera(expSettings.camParamsDict)
         # make UDP Trigger
         if expSettings.hasUDP == True:
-            from AHF_UDPTrig import AHF_UDPTrig
             UDPTrigger = AHF_UDPTrig (expSettings.UDPList)
+            print (UDPTrigger)
         else:
             UDPTrigger = None
         # make a lick detector
-        if cageSettings.lickIRQ is not None:
-            from AHF_LickDetector import AHF_LickDetector
-            lickDetector = AHF_LickDetector ((0,1), cageSettings.lickIRQ, dataLogger)
-            lickDetector.start_logging()
-        else:
-            lickDetector = None
+        simpleLogger = Simple_Logger (expSettings.logFP)
+        lickDetector = AHF_LickDetector ((0,1),26,simpleLogger)
+        sleep(1)
+        lickDetector.start_logging ()
         # make stimulator
         stimulator = AHF_Stimulator.get_class (expSettings.stimulator)(expSettings.stimDict, rewarder, lickDetector, expSettings.logFP)
         expSettings.stimDict = stimulator.configDict
@@ -173,11 +169,9 @@ def main():
                     if thisMouse is None:
                         # try to open mouse config file to initialize mouse data
                         thisMouse=Mouse(tag,1,0,0,0)
-                        #mice.addMouse (thisMouse)
-                        #dataLogger.addMouseToStats (thisMouse, mice.nMice())
-                    #dataLogger.setMouse (thisMouse)
-                    #dataLogger.writeToLogFile ('entry')
-                    #thisMouse.entries += 1
+                        mice.addMouse (thisMouse, expSettings.statsFP)
+                    writeToLogFile(expSettings.logFP, thisMouse, 'entry')
+                    thisMouse.entries += 1
                     # if we have entrance reward, first wait for entrance reward or first head-fix, which countermands entry reward
                     if thisMouse.entranceRewards < expSettings.maxEntryRewards:
                         giveEntranceReward = True
@@ -216,13 +210,11 @@ def main():
                         #GPIO.setup (cageSettings.entryBBpin, GPIO.IN, pull_up_down = GPIO.PUD_UP)
                         GPIO.add_event_detect (cageSettings.entryBBpin, GPIO.BOTH, entryBBCallback)
                     # after exit, update stats
-                    #writeToLogFile(expSettings.logFP, thisMouse, 'exit')
-                    #updateStats (expSettings.statsFP, mice, thisMouse)
+                    writeToLogFile(expSettings.logFP, thisMouse, 'exit')
+                    updateStats (expSettings.statsFP, mice, thisMouse)
                     # after each exit check for a new day
-                    if datetime.fromtimestamp (int (time())) > nextDay:
-                        now = datetime.fromtimestamp (int (time()))
-                        startTime = datetime (now.year, now.month, now.day, KDAYSTARTHOUR,0,0)
-                        nextDay = startTime + timedelta (hours=24)
+                    if time() > nextDay:
+                        # stop lick logging so we dont write to file when it is closed 
                         lickDetector.stop_logging ()
                         mice.show()
                         writeToLogFile(expSettings.logFP, None, 'SeshEnd')
@@ -233,6 +225,7 @@ def main():
                         simpleLogger.logFP = expSettings.logFP
                         makeQuickStatsFile (expSettings, cageSettings, mice)
                         stimulator.nextDay (expSettings.logFP)
+                        nextDay += KSECSPERDAY
                         mice.clear ()
                         # reinitialize lick detector because it can lock up if too many licks when not logging
                         lickDetector.__init__((0,1),26,simpleLogger)
@@ -351,8 +344,8 @@ def runTrial (thisMouse, expSettings, cageSettings, camera, rewarder, headFixer,
             extension = 'h264'
 
         video_name = str (thisMouse.tag) + "_" + stimStr + "_" + '%d' % headFixTime + '.' + extension
-        video_name_path = '/home/pi/Documents/' + "M" + video_name
-        #writeToLogFile (expSettings.logFP, thisMouse, "video:" + video_name)
+        video_name_path = expSettings.dayFolderPath + 'Videos/' + "M" + video_name
+        writeToLogFile (expSettings.logFP, thisMouse, "video:" + video_name)
         # send socket message to start behavioural camera
         if expSettings.hasUDP == True:
             #MESSAGE = str (thisMouse.tag) + "_" + stimStr + "_" + '%d' % headFixTime
@@ -423,7 +416,7 @@ def makeDayFolderPath (expSettings, cageSettings):
             chown (expSettings.dayFolderPath + 'TextFiles/', uid, gid)
             chown (expSettings.dayFolderPath + 'Videos/', uid, gid)
     except Exception as e:
-            print ("Error making directories\n", str(e))
+            print ("Error maing directories\n", str(e))
         
 
 def makeLogFile (expSettings, cageSettings):
@@ -431,7 +424,7 @@ def makeLogFile (expSettings, cageSettings):
     open a new text log file for today, or open an exisiting text file with 'a' for append
     """
     try:
-        logFilePath ='/home/pi/Documents/headFix_' + cageSettings.cageID + '_' + '.txt'
+        logFilePath = expSettings.dayFolderPath + 'TextFiles/headFix_' + cageSettings.cageID + '_' + expSettings.dateStr + '.txt'
         expSettings.logFP = open(logFilePath, 'a')
         uid = getpwnam ('pi').pw_uid
         gid = getgrnam ('pi').gr_gid

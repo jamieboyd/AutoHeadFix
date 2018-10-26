@@ -2,7 +2,6 @@
 #-*-coding: utf-8 -*-
 from abc import ABCMeta, abstractmethod
 import os
-import inspect
 
 class AHF_HeadFixer(metaclass = ABCMeta):
     #################################################################################
@@ -33,33 +32,19 @@ class AHF_HeadFixer(metaclass = ABCMeta):
         """
         iFile=0
         files = ''
-        #print (os.listdir(os.curdir))
-        for f in os.listdir(os.curdir):
+        for f in os.listdir('.'):
             if f.startswith ('AHF_HeadFixer_') and f.endswith ('.py'):
-                f= f.rstrip  ('.py')
-                #print ('file = ' + str (f))
-                try:
-                    moduleObj=__import__ (f)
-                    #print ('module=' + str (moduleObj))
-                    classObj = getattr(moduleObj, moduleObj.__name__)
-                    #print ('class obj = ' + str (classObj))
-                    isAbstractClass =inspect.isabstract (classObj)
-                    if isAbstractClass == False:
-                        if iFile > 0:
-                            files += ';'
-                        files += f
-                        iFile += 1
-                except Exception as e: # exception will be thrown if imported module imports non-existant modules
-                    print (e)
-                    continue     
+                if iFile > 0:
+                    files += ';'
+                files += f
+                iFile += 1
         if iFile == 0:
             print ('Could not find an AHF_HeadFixer_ file in the current or enclosing directory')
             raise FileNotFoundError
         else:
             if iFile == 1:
-                headfixFile =  files.split('.')[0]
-                print ('Head Fixer file found: ' + headfixFile)
-                headfixFile =  files.split('.')[0]
+                print ('Head Fixer file found: ' + stimFile)
+                stimFile =  files.split('.')[0]
             else:
                 inputStr = '\nEnter a number from 0 to ' + str (iFile -1) + ' to Choose a HeadFixer class:\n'
                 ii=0
@@ -67,20 +52,20 @@ class AHF_HeadFixer(metaclass = ABCMeta):
                     inputStr += str (ii) + ': ' + file + '\n'
                     ii +=1
                 inputStr += ':'
-                headfixNum = -1
-                while headfixNum < 0 or headfixNum > (iFile -1):
-                    headfixNum =  int(input (inputStr))
-                headfixFile =  files.split(';')[headfixNum]
-                headfixFile =  headfixFile.split('.')[0]
-            return headfixFile
+                stimFileNum = -1
+                while stimFileNum < 0 or stimFileNum > (iFile -1):
+                    stimFileNum =  int(input (inputStr))
+                stimFile =  files.split(';')[stimFileNum]
+                stimFile =  stimFile.split('.')[0]
+            return stimFile
 
     ##################################################################################
     #abstact methods each headfixer class must implement
     #part 1: three main methods of initing, fixing, and releasing
     @abstractmethod
-    def __init__(self, task):
+    def __init__(self, cageSet):
         """
-        hardware initialization of a headFixer, reading data from the task object
+        hardware initialization of a headFixer, reading data from a cageSet object
         """
         pass
 
@@ -100,37 +85,34 @@ class AHF_HeadFixer(metaclass = ABCMeta):
 
     ##################################################################################
     #abstact methods each headfixer class must implement
-    #part 2: static functions for reading, editing, and saving ConfigDict from/to task
+    #part 2: static functions for reading, editing, and saving ConfigDict from/to cageSet
 
     @staticmethod
     @abstractmethod
-    def configDict_read (task, configDict):
+    def configDict_read (cageSet,configDict):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def config_user_get (cageSet,configDict):
         """
-        reads data for headFixer configuration from the json configDict, copies it to the task
+        reads data for headFixer configuration from the json configDict, copies it to the cageSet
         """
         pass
 
     @staticmethod
     @abstractmethod
-    def config_user_get (task):
+    def configDict_set (cageSet,configDict):
         """
-        in absence of json configDict, queerries user for settings, and copies them to the task
-        """
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def configDict_set (task, configDict):
-        """
-        gets headfix configuration data from the task object, and updates the json configDict
+        gets data from the cageSet object, and updates the json configDict
         """
         pass 
 
     @staticmethod
     @abstractmethod
-    def config_show (task):
+    def config_show (cageSet):
         """
-        returns a string containing head fix config data for this headFixer currently loaded into the task object
+        returns a string containing config data for this headFixer currently loaded into the cageSet object
         """
         pass
     
@@ -139,13 +121,12 @@ class AHF_HeadFixer(metaclass = ABCMeta):
     #abstract methods each headfixer class must implement
     #part 3: hadware tester function
     @abstractmethod
-    def test(self, task):
-        """
-        Called by hardwaretester, runs a harware test for headFixer, verifying that it works
-        gives user a chance to change configuration, and, if changed, saves new configuration info in task
-        """
+    def test(self, cageSet):
         pass
-
+        """
+        Called by hardwaretester, runs a harware test for headFixer, verifying that it works and gives user a chance to save settings
+        """
+ 
     ###################################################################################
     # methods a headFixer will implement if it hasLevels
     # we pass the current level of a particular mouse and level up before head fixing
@@ -162,25 +143,5 @@ class AHF_HeadFixer(metaclass = ABCMeta):
 
     def level_set_level (self, level):
         pass
-
-    ##################################################################################
-    # a simple function to run when run as Main, for all head fixers
-    @staticmethod
-    def funcForMain ():
-        from time import sleep
-        from AHF_CageSet import AHF_CageSet
-        from AHF_HeadFixer import AHF_HeadFixer
-        cageSettings = AHF_CageSet ()
-        cageSettings.edit()
-        cageSettings.save()
-        headFixer=AHF_HeadFixer.get_class (cageSettings.headFixer) (cageSettings)
-        headFixer.releaseMouse()
-        sleep (1)
-        headFixer.fixMouse()
-        sleep (1)
-        headFixer.releaseMouse()
-
-
-if __name__ == "__main__":
-    AHF_HeadFixer.funcForMain()
-
+        
+    

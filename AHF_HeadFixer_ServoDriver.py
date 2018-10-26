@@ -1,15 +1,6 @@
 #! /usr/bin/python3
 #-*-coding: utf-8 -*-
 
-"""
-sudo apt-get install i2c-tools
-sudo apt-get install python3-smbus
-git clone https://github.com/adafruit/Adafruit_Python_GPIO.git
-git clone https://github.com/adafruit/Adafruit_Python_PCA9685.git
-
-
-"""
-
 # Import the PCA9685 module.
 import Adafruit_PCA9685
 from AHF_HeadFixer import AHF_HeadFixer
@@ -80,5 +71,5 @@ if __name__ == "__main__":
     hardWare.save()
     s = AHF_HeadFixer_ServoDriver(hardWare)
     s.fixMouse()
-    sleep(5)
+    sleep(0.5)
     s.releaseMouse()
