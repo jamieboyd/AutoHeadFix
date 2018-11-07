@@ -1,8 +1,9 @@
 #! /usr/bin/python
 #-*-coding: utf-8 -*
 
+from abc import ABCMeta, abstractmethod
 
-from AHF_Rewarder import AHF_Rewarder
+
 from AHF_LickDetector import AHF_LickDetector
 from AHF_Mouse import Mouse
 import time
@@ -11,7 +12,7 @@ import os
 from time import time, sleep
 from datetime import datetime
 
-class AHF_Stimulator (object):
+class AHF_Stimulator (object, metaclass = ABCMeta):
     
     """
     Stimulator does all stimulation and reward during a head fix task
@@ -35,8 +36,10 @@ class AHF_Stimulator (object):
             self.configDict = configDict
         self.setup()
 
+    @abstractmethod
     def setup (self):
         pass
+
 
     def change_config (self, changesDict):
         """
@@ -45,7 +48,6 @@ class AHF_Stimulator (object):
         """
         for key in sorted (changesDict.keys()):
             self.configDict.update({key : changesDict.get (key)})
-
 
 
     def config_from_user (self):
@@ -72,7 +74,7 @@ class AHF_Stimulator (object):
                 self.configDict.update({key : value})
     
 
-    
+    @abstractmethod
     def configStim (self, mouse):
         """
         Called before running each head fix trial, stimulator decides what to do and configures itself

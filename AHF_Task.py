@@ -1,6 +1,12 @@
 #! /usr/bin/python
 #-*-coding: utf-8 -*-
 
+
+
+"""
+The plan is to copy all variables from settings, user, into a single object 
+"""
+   
 import json
 import os
 import pwd

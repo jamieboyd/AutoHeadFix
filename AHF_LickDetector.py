@@ -7,7 +7,13 @@ import RPi.GPIO as GPIO
 import Adafruit_MPR121.MPR121 as MPR121
 
 """
-Adafruit_MPR121 imports Adafruit_GPIO for the i2c library. The file
+Adafruit_MPR121 requires the Adafuit MPR121 library which, in turn,
+requires the Adafuit GPIO library
+git clone https://github.com/adafruit/Adafruit_Python_MPR121
+git clone https://github.com/adafruit/Adafruit_Python_GPIO
+
+
+imports Adafruit_GPIO for the i2c library. The file
 /Adafruit_Python_GPIO/Adafruit_GPIO/Adafruit_GPIO/I2C.py contains a function,
 require_repeated_start, that fails with newer OS verions. It tries to edit
 a file, '/sys/module/i2c_bcm2708/parameters/combined', that may no longer exist.

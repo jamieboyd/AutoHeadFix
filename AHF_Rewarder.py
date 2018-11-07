@@ -1,28 +1,35 @@
 #! /usr/bin/python
-from PTSimpleGPIO import PTSimpleGPIO, Pulse
+#-*-coding: utf-8 -*-
+
 from PTCountermandPulse import CountermandPulse
+from time import sleep
 
 class AHF_Rewarder:
     """
-    A class to use a solenoid to deliver water rewards.
-
-    A dictionary is used to store different opening durations with user-defined names.
-    A separate dictionary with the same keys is used to store the total number of rewards of each
-    type that have been delivered. The Rewarder class is inited with a default duration to be used if
-    a non-existent key is later requested, and the pin number of the GPIO pin used to
-    control the solenoid. Be sure to run GPIO.setmode and GPIO.setup before using the rewarder
-    TODO:1)include a measure of flow rate and record/return values in litres delivered, not
-    seconds open.2)make doReward threaded, so main program does not have to stop for long reards
+    A class to use a solenoid to deliver water rewards
     """
     def __init__ (self, defaultTimeVal, rewardPin):
         """
         Makes a new Rewarder object with a GPIO pin and default opening time
 
-        :param defaultTimeVal: opening suration to be used if requested reward Type is not in dictionary
+        :param defaultTimeVal: opening duration to be used if requested reward Type is not in dictionary
         :param rewardPin: GPIO pin number connected to the solenoid
         :return: returns nothing
         """
-        self.pulse = CountermandPulse (rewardPin, 0, 0.01, defaultTimeVal, PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
+        self.rewardPin = rewardPin
+        self.gpio_pin, polarity, delay, duration, accuracy_level)
+        
+
+
+    def addToDict(self, rewardName, rewardSize):
+        """
+        Adds a new reward type with defined size to the dictionary of reward sizes
+
+        param: rewardName: name of new reward type to add
+        param:rewardSize: opening duration of solenoid, in seconds        
+        """
+        self.rewardDict.update({rewardName : rewardSize})
+        self.totalsDict.update({rewardName : 0})
         
 
     def giveReward(self, rewardName):

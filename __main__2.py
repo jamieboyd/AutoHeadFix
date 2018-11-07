@@ -3,11 +3,10 @@
 
 #library imports
 import RPi.GPIO as GPIO
+from RFIDTagReader import TagReader
+
 from PTSimpleGPIO import PTSimpleGPIO, Pulse
 from PTCountermandPulse import CountermandPulse
-
-
-from RFIDTagReader import RFIDTagReader
 
 # local files, part of AutoHeadFix
 from AHF_Task import AHF_Task
@@ -24,29 +23,8 @@ or callling sleep and maybe missing the thing we were waiting for, we loop using
 """
 kTIMEOUTmS = 50
 
-"""
-RFID reader object and tag need to be global so we can access them
-easily from Tag-In-Range calback
-"""
-tagReader=None
-tag =0
-"""
-Threaded call back function on Tag-In-Range pin
-Updates tag global variable whenever Tag-In-Range pin toggles
-Setting tag to 0 means no tag is presently in range
-"""
-def tagReaderCallback (channel):
-    global tag # the global indicates that it is the same variable declared above and also used by main loop
-    global tagReader
-    if GPIO.input (channel) == GPIO.HIGH: # tag just entered
-        try:
-            tag = tagReader.readTag ()
-        except Exception as e:
-            tag = 0
-    else:  # tag just left
-        tag = 0
 
-        
+
 
 def main():
     """
@@ -56,42 +34,57 @@ def main():
     Ctrl-C is used to enter a menu-driven mode where settings can be altered.
     """
     try:
+        configFile = None
+        if argv.__len__() > 1:
+            configFile = argv [1]
+        task = Task (configFile) 
+        print ('LED pin =', task.ledPin) # quick debug check that task got loaded
+        # initialize GPIO, and initialize pins for the simple tasks; more complex tasks have their own code for initializing
         GPIO.setmode (GPIO.BCM)
         GPIO.setwarnings(False)
-        configFile = None
-#        if argv.__len__() > 1:
-#            configFile = argv [1]
-        task = Task (configFile) 
-        print ('LED pin =', task.ledPin)
-        """
-        Initialize tag reader - the global keyword indicates these are the same variables
-        used in the tagReader callback
-        """
-        global tag
-        global tagReader
-        tagReader = RFIDTagReader(task.serialPort, doCheckSum = True)
-        GPIO.setup (task.tirPin, GPIO.IN)
-        GPIO.add_event_detect (task.tirPin, GPIO.BOTH)
-        GPIO.add_event_callback (task.tirPin, tagReaderCallback)
-    except Exception as e:
-        print ('error starting AutoHeadFix:' + str (e))
-        raise e
-    # do some GPIO setup
-    GPIO.setmode (GPIO.BCM)
-    GPIO.setwarnings(False)
-    GPIO.setup (task.ledPin, GPIO.OUT, initial = GPIO.LOW) # turns on brain illumination LED
-    GPIO.setup (task.tirPin, GPIO.IN)  # Tag-in-range output from RFID tatg reader
-    GPIO.setup (task.contactPin, GPIO.IN, pull_up_down=getattr (GPIO, "PUD_" + task.contactPUD))
-    # make head fixer - does its own GPIO initialization from info in cageSettings
-    headFixer=AHF_HeadFixer.get_class(task.headFixerName)(task)
-    # make rewarder - uses PTSimpleGPIO
-    rewarder = CountermandPulse (task.rewardPin, 0, 0.01, 0.01, PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
-    # make a notifier object
-    if expSettings.hasTextMsg == True:
-        from AHF_Notifier import AHF_Notifier
-        notifier = AHF_Notifier (task.cageID, task.phoneList)
-    else:
-        notifier = None
+        # set up pin that turns on brain illumination LED
+        GPIO.setup (task.ledPin, GPIO.OUT, initial = GPIO.LOW)
+        # set up pin for ascertaining mouse contact, ready for head fixing
+        GPIO.setup (task.contactPin, GPIO.IN, pull_up_down=getattr (GPIO, "PUD_" + task.contactPUD))
+        # set up countermandable pulse for water solenoid
+        rewarder = PTCountermandPulse (task.rewardPin, 0, 0, task.entranceRewardTime, 1)
+        
+        # make head fixer - does its own GPIO initialization from info in task
+        headFixer=AHF_HeadFixer.get_class (task.headFixer) (task)
+        # set up tag reader with callback on tag_in_range_pin
+        # the callback will set RFIDTagReader.globalTag
+        tagReader =TagReader (task.serialPort, doChecksum = True, timeOutSecs = 0.05, kind='ID')
+        tagReader.installCallBack (task.tag_in_range_pin)
+        
+        now = datetime.fromtimestamp (int (time()))
+        startTime = datetime (now.year, now.month, now.day, KDAYSTARTHOUR,0,0)
+        #set 
+        # Loop with a brief sleep, waiting for a tag to be read.
+        while True:
+            try:
+                print ('Waiting for a mouse....')
+                while RFIDTagReader.globalTag == 0:
+                    sleep (kTIMEOUTSECS)
+                    if datetime.fromtimestamp (int (time())) > nextDay:
+                        newDay (task)
+                # a Tag has been read
+                thisMouse = mice.getMouseFromTag (RFIDTagReader.globalTag)
+                if thisMouse.entranceRewards < expSettings.maxEntryRewards:
+
+     except Exception as anError:
+        print ('AutoHeadFix error:' + str (anError))
+        raise anError
+    finally:
+        stimulator.quitting()
+        GPIO.output(task.ledPin, GPIO.LOW)
+        headFixer.releaseMouse()
+        GPIO.output(task.rewardPin, GPIO.LOW)
+        GPIO.cleanup()
+        writeToLogFile(task.logFP, None, 'SeshEnd')
+        task.logFP.close()
+        task.statsFP.close()
+        print ('AutoHeadFix Stopped')
+                
 
 """
 

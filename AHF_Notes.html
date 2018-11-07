@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<HTML>
+<head>
+<title>Auto Head Fix</title>
+<META NAME="AUTHOR" CONTENT="Jamie Boyd">
+</head><body>
+<H2>Notes for AHF</H2>
+<p>Cage settings and Experiment settings will be kept separate in different JSON files, but will be loaded together into one dictionary called task.  That way, only onw dictionary has to be passed around. Individual variables  for things like GPIO pin numbers will not be created, functions will refer to task.GPIOpin. Try to remove disconnect between changing, saving hardware settings in the JSON files and in the task dictionary in the running program.</p>
+<p>What experiment information needs to be separate for each mouse? The Stimulator class will define a lot of task specific stuff, each mouse will have an entry for a stimulator dictionary containing information specific to that mouse. Other things:
+Reward sizes
+number of entry rewards
+head-fix proportions
+Maybe keep these things in experiment settings as defaults, so if a Mouse is created without these values, it gets the global ones as defaults.</p>
+<p>need better management of mouse data within the program, will want to add images, lever position arrays, other non-text data to mouse. pickle or ome other serializer thing.
+
+</p>
+
+</body>
+</html>

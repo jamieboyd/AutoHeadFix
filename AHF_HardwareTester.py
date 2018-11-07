@@ -6,21 +6,24 @@ import RPi.GPIO as GPIO
 from time import sleep
 from RFIDTagReader import RFIDTagReader
 from AHF_HeadFixer import AHF_HeadFixer
-from AHF_CageSet import AHF_CageSet
-from time import time
+from AHF_Task import AHF_Task
 
 if __name__ == '__main__':
     def hardwareTester ():
         """
         Hardware Tester for Auto Head Fixing, allows you to verify the various hardware bits are working
         """
-        cageSet = AHF_CageSet()
+        task = AHF_Task()
         # set up GPIO to use BCM mode for GPIO pin numbering
         GPIO.setwarnings(False)
         GPIO.setmode (GPIO.BCM)
-        GPIO.setup (cageSet.rewardPin, GPIO.OUT)
-        GPIO.setup (cageSet.ledPin, GPIO.OUT)
-        GPIO.setup (cageSet.tirPin, GPIO.IN)
+        # set up pin that turns on brain illumination LED
+        GPIO.setup (task.ledPin, GPIO.OUT, initial = GPIO.LOW)
+        # set up pin for ascertaining mouse contact, ready for head fixing
+        GPIO.setup (task.contactPin, GPIO.IN, pull_up_down=getattr (GPIO, "PUD_" + task.contactPUD))
+        # set up countermandable pulse for water solenoid
+        rewarder = PTCountermandPulse (task.rewardPin, 0, 0, task.entranceRewardTime, 1)
+
         if cageSet.hasEntryBB:
             GPIO.setup (cageSet.entryBBpin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         # contact pin can have a pullup/down resistor enabled
