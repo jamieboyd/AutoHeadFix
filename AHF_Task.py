@@ -10,6 +10,10 @@ from AHF_Stimulator import AHF_Stimulator
 from AHF_Camera import AHF_Camera
 
 class Task:
+    """
+    The plan is to copy all variables from settings, user, into a single object
+    Main makes a task, then calls its run method
+    """
     def __init__ (self, fileName):
         """
         Initializes a Task object with cage settings and experiment settings
@@ -22,15 +26,14 @@ class Task:
                 configDict = json.loads(data);print (configDict)
                 fp.close()
                 self.cageID = configDict.get('Cage ID')
-                self.headFixer = configDict.get('Head Fixer')
-                AHF_HeadFixer.get_class (self.headFixer).configDict_read (self, configDict)
+                self.headFixerName = configDict.get('Head Fixer')
+                AHF_HeadFixer.get_class (self.headFixerName).configDict_read (self, configDict)
                 self.rewardPin = configDict.get('Reward Pin')
                 self.tirPin = configDict.get('Tag In Range Pin')
-                self.contactPin = configDict.get('Contact Pin')
+                self.contactPin = configDict.get('Contact Pin')              
                 self.contactPolarity = configDict.get('Contact Polarity') # RISING or FALLING, GPIO.RISING = 31, GPIO.FALLING = 32
-                self.contactPUD = configDict.get('Contact Pull Up Down') # OFF, DOWN, or UP, GPIO.PUD_OFF=20, GPIO.PUD_DOWN =21, GPIO.PUD_UP=22
+                self.contactPUD = configDict.get('Contact Pull Up Down') # OFF, DOWN, or UP, GPIO.PUD_OFF=20, GPIO.PUD_DOWN =21, GPIO.PUD_UP=2
                 self.ledPin = configDict.get('LED Pin') # OFF, DOWN, or UP, GPIO.PUD_OFF=20, GPIO.PUD_DOWN =21, GPIO.PUD_UP=22
-                self.contactPin =configDict.get('Contact Pin')
                 self.serialPort = configDict.get('Serial Port')
                 if configDict.get('lick IRQ Pin') is not None:
                     self.lickIRQ = configDict.get('lick IRQ Pin')
@@ -43,15 +46,23 @@ class Task:
             self.cageID = input('Enter the cage ID:')
             self.dataPath = configDict.get('Path to Save Data')
             self.mouseConfigPath = configDict.get('Path to Mouse Config Data')
-            self.headFixer = AHF_HeadFixer.get_HeadFixer_from_user()
+            self.headFixerName = AHF_HeadFixer.get_HeadFixer_from_user()
             AHF_HeadFixer.get_class (self.headFixer).config_user_get (self)
             self.rewardPin = int (input ('Enter the GPIO pin connected to the water delivery solenoid:'))
             self.contactPin = int (input ('Enter the GPIO pin connected to the headbar contacts or IR beam-breaker:'))
             contactInt = int (input ('Enter the contact polarity, 0=FALLING for IR beam-breaker or falling polarity electrical contacts, 1=RISING for rising polarity elctrical contacts:'))
             if contactInt == 0:
-                self.contactPolarity = 'FALLING'
+                self.contactPolarity = 'FALLING' # string for readbility, writing back to JSON
+                self.contactEdge = GPIO.FALLING  # numeric constants defined in GPIO class
+                self.noContactEdge = GPIO.RISING 
+                self.contactState = GPIO.LOW
+                self.noContactState = GPIO.HIGH
             else:
                 self.contactPolarity = 'RISING'
+                self.contactEdge = GPIO.RISING 
+                expSettings.noContactEdge = GPIO.FALLING
+                expSettings.contactState = GPIO.HIGH
+                expSettings.noContactState = GPIO.LOW 
             contactInt = int (input('Enter desired resistor on contact pin, 0=OFF if external resistor present, else 1=DOWN if rising polarity electrical contact or 2 = UP if IR beam-breaker or falling polarity electrical contacts:'))
             if contactInt ==0:
                 self.contactPUD = 'OFF'
@@ -111,6 +122,7 @@ class Task:
                 # file list starts with a separator (\n) so we split the list on \n and get fileNum + 1
                 # each list item starts with fileNum: so split the list item on ":" and get item 1 to get file name
                 self.loadExpSettings ((files.split('\n')[fileNum + 1]).split (':')[1])
+  
 
 
     def saveCageSet(self):
@@ -177,9 +189,9 @@ class Task:
             elif editNum == 3:
                 self.dataPath = input ('Enter the path to the directory from which mouse configuration data can be loaded:')
             elif editNum == 4:
-                self.headFixer = AHF_HeadFixer.get_HeadFixer_from_user()
+                self.headFixerName = AHF_HeadFixer.get_HeadFixer_from_user()
             elif editNum == 5:
-                AHF_HeadFixer.get_class (self.headFixer).config_user_get (self)
+                AHF_HeadFixer.get_class (self.headFixerName).config_user_get (self)
             elif editNum == 6:
                 self.rewardPin = int (input ('Enter the GPIO pin connected to the water delivery solenoid:'))
             elif editNum == 7:
