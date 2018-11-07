@@ -3,9 +3,8 @@
 
 #library imports
 import RPi.GPIO as GPIO
-import RFIDTagReader
-from RFIDTagReader import RFIDTagReader
-from PTCountermandPulse import CountermandPulse
+from RFIDTagReader import TagReader
+
 
 # local files, part of AutoHeadFix
 import AHF_Settings
@@ -19,21 +18,6 @@ from datetime import datetime, timedelta
 KDAYSTARTHOUR =13 # when we start a new day, in 24 hr format, so 7 is 7 AM and 19 is 7 PM
 kTIMEOUTSECS= 0.05 #time to sleep in each pass through loop while witing for RFID reader
 
-
-def newDay (task):
-    now = datetime.fromtimestamp (int (time()))
-    startTime = datetime (now.year, now.month, now.day, KDAYSTARTHOUR,0,0)
-    nextDay = startTime + timedelta (hours=24)
-    mice.show()
-    writeToLogFile(expSettings.logFP, None, 'SeshEnd')
-    expSettings.logFP.close()
-    expSettings.statsFP.close()
-    makeDayFolderPath(expSettings, cageSettings)
-    makeLogFile (expSettings, cageSettings)
-    simpleLogger.logFP = expSettings.logFP
-    makeQuickStatsFile (expSettings, cageSettings, mice)
-    stimulator.nextDay (expSettings.logFP)
-    mice.clear ()
 
 def main():
     """
