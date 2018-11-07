@@ -170,7 +170,7 @@ class AHF_HeadFixer(metaclass = ABCMeta):
         from time import sleep
         import AHF_CageSet
         from AHF_HeadFixer import AHF_HeadFixer
-        cageSettings = AHF_CageSet ()
+        cageSettings = AHF_CageSet()
         cageSettings.edit()
         cageSettings.save()
         headFixer=AHF_HeadFixer.get_class (cageSettings.headFixer) (cageSettings)
