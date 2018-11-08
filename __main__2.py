@@ -71,7 +71,14 @@ def main():
                 thisMouse = mice.getMouseFromTag (RFIDTagReader.globalTag)
                 if thisMouse.entranceRewards < expSettings.maxEntryRewards:
 
-     except Exception as anError:
+                    
+            except KeyboardInterrupt:
+                GPIO.output(cageSettings.ledPin, GPIO.LOW)
+                headFixer.releaseMouse()
+                GPIO.output(cageSettings.rewardPin, GPIO.LOW)
+                lickDetector.stop_logging () 
+
+    except Exception as anError:
         print ('AutoHeadFix error:' + str (anError))
         raise anError
     finally:

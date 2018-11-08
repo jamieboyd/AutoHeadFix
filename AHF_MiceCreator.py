@@ -1,15 +1,15 @@
-from AHF_CageSet import AHF_CageSet
+from AHF_Task import Task
 from AHF_Mouse import Mouse, Mice
-from AHF_TagReader import AHF_TagReader
+from RFIDTagReader import TagReader
 from time import sleep
 
 
 if __name__ == "__main__":
-    cageSettings = AHF_CageSet()
+    task = Task(None)
 
-    print (cageSettings.mouseConfigPath)
+    print (task.mouseConfigPath)
 
-    reader = AHF_TagReader(cageSettings.serialPort)
+    reader = TagReader(task.serialPort, doChecksum = True)
     while True: 
         try:
             reader.clearBuffer()

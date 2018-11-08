@@ -2,7 +2,6 @@
 #-*-coding: utf-8 -*-
 
 
-
 """
 The plan is to copy all variables from settings, user, into a single object 
 """
@@ -232,7 +231,7 @@ class Task:
         self.saveCageSet()
 
     def loadExpSettings (self, fileName):
-        with open (file, 'r') as fp:
+        with open (fileName, 'r') as fp:
             data = fp.read()
             data=data.replace('\n', ',')
             configDict = json.loads(data);print (configDict)
