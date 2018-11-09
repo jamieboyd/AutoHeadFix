@@ -5,13 +5,13 @@ from pwd import getpwnam
 from grp import getgrnam
 from time import time, localtime,timezone
 from datetime import datetime
+import RFIDTagReader
 
 class AHF_DataLogger (object):
 
-    def __init__ (self, cageID, dataPath):
-        self.cageID = cageID
-        self.dataPath = dataPath
-        self.mouse = None
+    def __init__ (self, task):
+        self.cageID = str(task.get ('cageID'))
+        self.dataPath = task.get('dataPath')
         self.logFP = None
         self.statsFP = None
         self.setDateStr ()
@@ -23,6 +23,7 @@ class AHF_DataLogger (object):
         self.writeToLogFile ('SeshEnd')
         if self.logFP is not None:
             self.logFP.close()
+        if self.statsFP is not None:
             self.statsFP.close()
         self.setDateStr () 
         self.makeDayFolderPath()
@@ -65,9 +66,6 @@ class AHF_DataLogger (object):
         chown (self.logFilePath, uid, gid)
         self.writeToLogFile ('SeshStart')
 
-    def setMouse (self, mouse):
-        self.mouse = mouse
-
         
     def writeToLogFile(self, event):
         """
@@ -79,15 +77,17 @@ class AHF_DataLogger (object):
         :param event: the type of event to be printed, entry, exit, reward, etc.
         returns: nothing
         """
-        if event == 'SeshStart' or event == 'SeshEnd' or self.mouse is None:
+        tag = RFIDTagReader.globalTag
+        if event == 'SeshStart' or event == 'SeshEnd' or tag == 0:
             outPutStr = ''.zfill(13)
         else:
-            outPutStr = '{:013}'.format(self.mouse.tag)
+            outPutStr = '{:013}'.format(tag)
         logOutPutStr = outPutStr + '\t' + '{:.2f}'.format (time ())  + '\t' + event +  '\t' + datetime.fromtimestamp (int (time())).isoformat (' ')
         printOutPutStr = outPutStr + '\t' + datetime.fromtimestamp (int (time())).isoformat (' ') + '\t' + event
         print (printOutPutStr)
-        self.logFP.write(logOutPutStr + '\n')
-        self.logFP.flush()
+        if self.logFP is not None:
+            self.logFP.write(logOutPutStr + '\n')
+            self.logFP.flush()
 
 
     def makeQuickStatsFile (self, mice):
@@ -102,8 +102,9 @@ class AHF_DataLogger (object):
         self.statsFilePath = self.dayFolderPath + 'TextFiles/quickStats_' + self.cageID + '_' + self.dateStr + '.txt'
         if path.exists(self.statsFilePath):
             self.statsFP = open(self.statsFilePath, 'r+')
-            mice.addMiceFromFile(self.statsFP)
-            mice.show()
+            if mice is not None:
+                mice.addMiceFromFile(self.statsFP)
+                mice.show()
         else:
             self.statsFP = open(self.statsFilePath, 'w')
             self.statsFP.write('Mouse_ID\tentries\tent_rew\thfixes\thf_rew\n')
