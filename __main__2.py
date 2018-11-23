@@ -25,7 +25,6 @@ kTIMEOUTmS = 50
 
 
 
-
 def main():
     """
     The main function for the AutoHeadFix program.
@@ -39,7 +38,7 @@ def main():
             configFile = argv [1]
         task = Task (configFile) 
         print ('LED pin =', task.ledPin) # quick debug check that task got loaded
-        # initialize GPIO, and initialize pins for the simple tasks; more complex tasks have their own code for initializing
+        # initialize GPIO, and initialize pins for the simple sub-tasks; more complex sub-tasks have their own code for initializing
         GPIO.setmode (GPIO.BCM)
         GPIO.setwarnings(False)
         # set up pin that turns on brain illumination LED
@@ -69,9 +68,18 @@ def main():
                         newDay (task)
                 # a Tag has been read
                 thisMouse = mice.getMouseFromTag (RFIDTagReader.globalTag)
-                if thisMouse.entranceRewards < expSettings.maxEntryRewards:
+                entryTime = time()
+                # log entrance and give entrance reward, if this mouse supports it
+                thisMouse.entry(rewarder, dataLogger)
+                # set head fixing probability
+                task.doHeadFix = expSettings.propHeadFix > random()
+                while GPIO.input (task.tirPin)== GPIO.HIGH and time () < entryTime + task.inChamberTimeLimit:
+                    if (GPIO.input (task.contactPin)== task.noContactState):
+                        GPIO.wait_for_edge (task.contactPin, task.contactEdge, timeout= kTIMEOUTmS)
+                    if (GPIO.input (task.contactPin)== task.contactState):
+                        runTrial (thisMouse, task, camera, rewarder, headFixer, stimulator, UDPTrigger)
+                        expSettings.doHeadFix = expSettings.propHeadFix > random() # set doHeadFix for next contact
 
-                    
             except KeyboardInterrupt:
                 GPIO.output(cageSettings.ledPin, GPIO.LOW)
                 headFixer.releaseMouse()

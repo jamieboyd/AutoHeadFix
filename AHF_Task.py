@@ -255,3 +255,5 @@ class Task:
             self.stimulator = configDict.get('stimulator')
             self.stimDict = configDict.get('stimParams')
 
+if __name__ == '__main__':
+    task = Task (None) 
