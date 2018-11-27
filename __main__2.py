@@ -3,8 +3,7 @@
 
 #library imports
 import RPi.GPIO as GPIO
-from RFIDTagReader import TagReader
-
+import RFIDTagReader
 from PTSimpleGPIO import PTSimpleGPIO, Pulse
 from PTCountermandPulse import CountermandPulse
 
@@ -47,13 +46,15 @@ def main():
         GPIO.setup (task.contactPin, GPIO.IN, pull_up_down=getattr (GPIO, "PUD_" + task.contactPUD))
         # set up countermandable pulse for water solenoid
         rewarder = PTCountermandPulse (task.rewardPin, 0, 0, task.entranceRewardTime, 1)
-        
+        setattr (task, 'rewarder', rewarder)
         # make head fixer - does its own GPIO initialization from info in task
         headFixer=AHF_HeadFixer.get_class (task.headFixer) (task)
+        setattr (task, 'headFixer', headFixer)
         # set up tag reader with callback on tag_in_range_pin
         # the callback will set RFIDTagReader.globalTag
-        tagReader =TagReader (task.serialPort, doChecksum = True, timeOutSecs = 0.05, kind='ID')
+        tagReader =RFIDTagReader.TagReader (task.serialPort, doChecksum = True, timeOutSecs = 0.05, kind='ID')
         tagReader.installCallBack (task.tag_in_range_pin)
+        setattr(task, 'tagReader', tagReader)
         
         now = datetime.fromtimestamp (int (time()))
         startTime = datetime (now.year, now.month, now.day, KDAYSTARTHOUR,0,0)

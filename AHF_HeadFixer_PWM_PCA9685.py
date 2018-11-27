@@ -1,6 +1,15 @@
 #! /usr/bin/python3
 #-*-coding: utf-8 -*-
 
+"""
+uses PCA9685 code from AdaFruit, install as follows
+sudo apt-get install i2c-tools
+sudo apt-get install python3-smbus
+git clone https://github.com/adafruit/Adafruit_Python_GPIO.git
+git clone https://github.com/adafruit/Adafruit_Python_PCA9685.git
+
+"""
+
 # Import the PCA9685 module.
 import Adafruit_PCA9685
 from AHF_HeadFixer_PWM import AHF_HeadFixer_PWM

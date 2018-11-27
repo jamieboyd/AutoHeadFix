@@ -17,7 +17,8 @@ from AHF_Camera import AHF_Camera
 class Task:
     """
     The plan is to copy all variables from settings, user, into a single object
-    Main makes a task, then calls its run method
+    The object will have fields for things loaded from hardware config dictionary and experiment config dictionary
+    as well as fields for objects created when program runs (headFixer, TagReader, rewarder)
     """
     def __init__ (self, fileName):
         """
@@ -44,6 +45,7 @@ class Task:
                     self.lickIRQ = configDict.get('lick IRQ Pin')
                 self.dataPath = configDict.get('Path to Save Data')
                 self.mouseConfigPath = configDict.get('Path to Mouse Config Data')
+                self.hasEntryBeamBreak = configDict.get ('Has Entry Beam Break')
                 if configDict.get('Entry Beam Break Pin') is not None:
                     self.entryBBpin = configDict.get('Entry Beam Break Pin')
         except (TypeError, IOError) as e: #we will make a file if we didn't find it, or if it was incomplete
