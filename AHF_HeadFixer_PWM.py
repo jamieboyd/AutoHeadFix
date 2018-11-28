@@ -2,7 +2,8 @@
 #-*-coding: utf-8 -*-
 
 from abc import ABCMeta, abstractmethod
-import AHF_CageSet
+import AHF_Task
+from AHF_HeadFixer import AHF_HeadFixer
 from time import sleep
 
 class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
@@ -66,24 +67,20 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
     #abstact methods each PWM headfixer class must implement
     #part 2: static functions for reading, editing, and saving ConfigDict from/to cageSet
     @staticmethod
-    @abstractmethod
     def configDict_read (cageSet,configDict):
         cageSet.servoReleasedPosition = int(configDict.get('Released Servo Position', 815))
         cageSet.servoFixedPosition = int(configDict.get('Fixed Servo Position', 500))
 
     @staticmethod
-    @abstractmethod
     def configDict_set(cageSet,configDict):
         configDict.update ({'Released Servo Position':cageSet.servoReleasedPosition, 'Fixed Servo Position':cageSet.servoFixedPosition}) 
     
     @staticmethod
-    @abstractmethod
     def config_user_get (cageSet):
         cageSet.servoReleasedPosition = int(input("Servo Released Position (0-4095): "))
         cageSet.servoFixedPosition = int(input("Servo Fixed Position (0-4095): "))
         
     @staticmethod
-    @abstractmethod
     def config_show(cageSet):
         rStr = 'Released Servo Position=' + str(cageSet.servoReleasedPosition)
         rStr += '\n\tFixed Servo Position=' + str(cageSet.servoFixedPosition)

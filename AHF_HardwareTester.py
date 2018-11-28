@@ -17,7 +17,7 @@ if __name__ == '__main__':
         Single GPIO pin stuff: pin numbers and possibly polarities etc. stored in config:
         Brain Illumination LED, Contact Check, entry Beam Break
         Objects: created from info in config, pointer to them stored in task
-        tagReader, headFixer, rewarder
+        tagReader, headFixer, rewarder, stimulator, lick detetctor
         """
         # when run as __main__, user chooses exp config file
         task = Task(None)
@@ -44,6 +44,12 @@ if __name__ == '__main__':
         except IOError:
             tagReader = None
         setattr (task, 'tagReader', tagReader)
+        
+        # initialize lick detetctor
+        if task.hasLickDetector:
+           from AHF_LickDetector import AHF_LickDetector
+           lickDetector  = AHF_LickDetector (task.lickDetectorChans, task.lickDetectorIRQpin, None)
+           setattr (task, 'lickDetector', lickDetector) 
         # now that hardware is initialized, enter hardware test loop
         htloop (task)
         # now test a few things, make sure changes were applied
@@ -66,31 +72,36 @@ def htloop (task):
     t= tagReader: trys to read a tag and, if successful, monitors Tag in Range Pin until tag goes away
     r = reward solenoid:  Opens the reward solenoid for a 1 second duration, then closes it
     c = contact check:  Monitors the head contact pin until contact, and then while contact is maintained
-    f = head Fixer
+    f = head Fixer: runs test function from loaded head fixer class
+    s = stimulator: runs test function from loaded stmulator class
     e = Entry beam break
     l = LED: Turns on the brain illumination LED for a 2 second duration, then off
+    k = licK detector: verified licks are being registered
     h = sHow config settings: Prints out the current pinout in the AHF_task object
     v = saVe modified config file: Saves the the AHF_task object to the file ./AHF_Config.jsn
     q = quit: quits the program
     """
 
     try:
-        menuStr = '\n---------Hardware tester---------\nt=tagReader\nr=reward solenoid\nc=contact check'
+        menuStr = '\n---------Hardware tester---------\nt = tagReader\nr = reward solenoid\nc = contact check'
         if task.hasEntryBeamBreak:
-            menuStr += '\ne= entry beam break'
-        menuStr += '\nf=head Fixer\nl=LED\nh=sHow config\nv= saVe config\nq=quit:'
+            menuStr += '\ne = entry beam break'
+        menuStr += '\nf = head Fixer\nStimulator\nl = LED'
+        if task.hasLickDetector:
+            menuStr += '\nk = licK detector
+        menuStr += '\nh=sHow config\nv= saVe config\nq=quit:'
         while (True):
             inputStr = input (menuStr)
             if inputStr == 't': # t for tagreader
-                print ('Waiting for a tag....')
+                print ('\nWaiting for a tag....')
                 startTime = time()
-                tagReaderError = 0
+                tagReaderError = False
                 try:
                     while RFIDTagReader.globalTag == 0 and time () < startTime + 10:
                         sleep (0.05)
                     if time () > startTime + 10:
                         print ('No tag read in 10 seconds.')
-                        tagReaderError = 1
+                        tagReaderError = True
                     else:
                         print ('Read a tag ', RFIDTagReader.globalTag)
                         startTime = time()
@@ -99,11 +110,11 @@ def htloop (task):
                             print ('Tag is still in range')
                         if time () > startTime + 10:
                             print ('Tag is still in range after 10 seconds.')
-                            tagReaderError = 2
+                            tagReaderError = True
                         else:
                             print ('Tag is no longer in range')
                 except IOError as anError:
-                    tagReaderError = 3
+                    tagReaderError = True
                     print ('Tag Reader not set up properly:' + str (anError))
                 if tagReaderError > 0:
                     inputStr= input('Do you want to change the tag reader port (currently ' + str (task.serialPort) + ') or tag-in-range pin (currently ' + str (task.tirPin) + ')?')
@@ -115,7 +126,7 @@ def htloop (task):
             elif inputStr == 'r': # r for reward solenoid
                 savedDuration = task.rewarder.get_duration()
                 task.rewarder.set_duration(1.0)
-                print ('Reward Solenoid opening for 1 sec')
+                print ('\nReward Solenoid opening for 1 sec')
                 task.rewarder.do_pulse()
                 task.rewarder.wait_on_busy(2)
                 task.rewarder.set_duration(savedDuration)
@@ -124,6 +135,7 @@ def htloop (task):
                     task.rewardPin = int (input('Enter New Reward Solenoid Pin:' ))
                     task.rewarder = CountermandPulse (task.rewardPin, 0, 0, savedDuration, 1)
             elif inputStr == 'c': #c for contact on head fix
+                err = False
                 if task.contactPolarity == 'RISING':
                     contactEdge = GPIO.RISING 
                     noContactEdge = GPIO.FALLING
@@ -135,23 +147,24 @@ def htloop (task):
                     contactState = GPIO.LOW
                     noContactState = GPIO.HIGH
                 if GPIO.input (task.contactPin)== contactState:
-                    print ('Contact pin already indicates contact.')
+                    print ('\nContact pin already indicates contact.')
                     err=True
                 else:
-                    GPIO.wait_for_edge (task.contactPin, contactEdge, 100)
-                    if GPIO.input (task.contactPin)== noContactState:
-                        print ('No Contact after 10 seconds.')
+                    print ('\nWaiting for Contact....')
+                    channel = GPIO.wait_for_edge (task.contactPin, contactEdge, timeout=10000)
+                    if channel is None:
+                        print ('No Contact made after 10 seconds.')
                         err = True
                     else:
                         print ('Contact Made.')
-                        GPIO.wait_for_edge (task.contactPin, noContactEdge, 100)
-                        if GPIO.input (task.contactPin)== contactState:
-                            print ('Contact maintained for 10 seconds.')
+                        channel = GPIO.wait_for_edge (task.contactPin, noContactEdge, timeout=10000)
+                        if channel is None:
+                            print ('Contact maintained for longer than 10 seconds.')
                             err = True
                         else:
                             print ('Contact Broken')
                             err = False
-                if err == True:
+                if err:
                     inputStr= input ('Do you want to change Contact settings (currently pin=' + str (task.contactPin) + ', polarity=' + str(task.contactPolarity) + ', pull up/down =' + str (task.contactPUD) + ')?')
                     if inputStr[0] == 'y' or inputStr[0] == "Y":
                         task.contactPin= int (input ('Enter the GPIO pin connected to the headbar contacts or IR beam-breaker:'))
@@ -168,21 +181,13 @@ def htloop (task):
                         else:
                             task.contactPUD='UP'
                     GPIO.setup (task.contactPin, GPIO.IN, pull_up_down=getattr (GPIO, "PUD_" + task.contactPUD))
-                    if task.contactPolarity =='RISING':
-                        contactEdge = GPIO.RISING 
-                        noContactEdge = GPIO.FALLING
-                        contactState = GPIO.HIGH
-                        noContactState = GPIO.LOW
-                    else:
-                        contactEdge = GPIO.FALLING
-                        noContactEdge = GPIO.RISING 
-                        contactState = GPIO.LOW
-                        noContactState = GPIO.HIGH
             elif inputStr == 'e': # beam break at enty
+                err = False
                 if GPIO.input (task.entryBBpin)== GPIO.LOW:
-                    print ('Entry beam break is already broken')
+                    print ('\nEntry beam break is already broken')
                     err=True
                 else:
+                    print ('\nWaiting for Beam Break....')
                     GPIO.wait_for_edge (task.entryBBpin, GPIO.FALLING, timeout= 10000)
                     if GPIO.input (task.entryBBpin)== GPIO.HIGH:
                         print ('Entry beam not broken after 10 seconds.')
@@ -191,21 +196,22 @@ def htloop (task):
                         print ('Entry Beam Broken.')
                         GPIO.wait_for_edge (task.entryBBpin, GPIO.RISING, timeout= 10000)
                         if GPIO.input (task.entryBBpin)== GPIO.LOW:
-                            print ('Entry Beam Broken maintained for 10 seconds.')
+                            print ('Entry Beam Broken maintained for longer than 10 seconds.')
                             err = True
                         else:
                             print ('Entry Beam Intact Again.')
                             err = False
-                if err == True:
+                if err:
                     inputStr= input ('Do you want to change the Entry Beam Break Pin (currently pin=' + str (task.entryBBpin)+ '?')
                     if inputStr[0] == 'y' or inputStr[0] == "Y":
                         task.entryBBpin= int (input ('Enter the GPIO pin connected to the tube entry IR beam-breaker:'))
                         GPIO.setup (task.entryBBpin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-                
             elif inputStr == 'f': # head Fixer, run test from headFixer class
                 task.headFixer.test(task)
+            elif inputStr == 's':
+                
             elif inputStr == 'l': # l for LED trigger
-                print ('LED turning ON for 2 seconds.')
+                print ('\nLED turning ON for 2 seconds.')
                 GPIO.output(task.ledPin, 1)
                 sleep (2)
                 GPIO.output(task.ledPin, 0)

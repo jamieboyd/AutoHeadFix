@@ -35,12 +35,12 @@ class AHF_HeadFixer_Pistons(AHF_HeadFixer):
         """
         reads pistons pin number form dictionary and sets attribute in task
         """
-        setattr (task, 'pistonsPin',int(configDict.get('Pistons Pin')))
+        setattr (task, 'pistonsPin', int(configDict.get('Pistons Pin')))
 
     @staticmethod
     def configDict_set(task,configDict):
         """
-        copied pin number from task to config dict
+        copies pin number from task to config dict
         """
         configDict.update ({'Pistons Pin':task.pistonsPin})
                    

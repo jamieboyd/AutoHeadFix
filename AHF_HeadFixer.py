@@ -5,8 +5,10 @@ import os
 import inspect
 
 class AHF_HeadFixer(metaclass = ABCMeta):
-    #################################################################################
-    # boolean for settability of headFixing levels, default is False. Can be used for incremental learning
+    """
+    Base class for all head fix classs. Other head fixers subclass from this, or from one of its subclasses
+    boolean for settability of headFixing levels, default is False. Can be used for incremental learning
+    """
     hasLevels = False
     
     ##################################################################################
@@ -16,7 +18,7 @@ class AHF_HeadFixer(metaclass = ABCMeta):
         """
         Imports a module from a fileName (stripped of the .py) and returns the class
 
-        Assumes the class is named the same as the module
+        Assumes the class is named the same as the module. 
         """
         module = __import__(fileName)
         return getattr(module, fileName)
@@ -49,7 +51,7 @@ class AHF_HeadFixer(metaclass = ABCMeta):
                             files += ';'
                         files += f
                         iFile += 1
-                except Exception as e: # exception will be thrown if imported module imports non-existant modules
+                except Exception as e: # exception will be thrown if imported module imports non-existant modules, for instance
                     print (e)
                     continue     
         if iFile == 0:
