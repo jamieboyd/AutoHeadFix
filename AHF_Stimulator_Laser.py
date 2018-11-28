@@ -3,16 +3,19 @@ from AHF_Rewarder import AHF_Rewarder
 from AHF_Mouse import Mouse, Mice
 import RPi.GPIO as GPIO
 from AHF_Camera import AHF_Camera
-from time import sleep
-import numpy as np
-from array import array
-from PTPWM import PTPWM
-import imreg_dft as ird
+from picamera import PiCamera
 from pynput import keyboard
-
-import matplotlib
-matplotlib.use('TkAgg')
+from StepperController import StepperController
+import numpy as np
+from PTPWM import PTPWM
+from array import array
+from queue import Queue
+from threading import Thread
+from time import sleep
+from itertools import combinations,product
+import imreg_dft as ird
 import matplotlib.pyplot as plt
+import warnings
 
 class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
     def __init__ (self, configDict, rewarder, lickDetector, textfp):
@@ -37,6 +40,16 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             stimDict.update({'PWM_mode'} : 0)
         if not 'PWM_channel' in stimDict:
             stimDict.update({'PWM_channel' : 1})
+        if not 'width' in stimDict:
+            stimDict.update({'width' : 200})
+        if not 'height' in stimDict:
+            stimDict.update({'height' : 200})
+        if not 'preview_width' in stimDict:
+            stimDict.update({'preview_width' : 600})
+        if not 'preview_height' in stimDict:
+            stimDict.update({'preview_height' : 600})
+        if not 'preview_pos' in stimDict:
+            stimDict.update({'preview_pos' : 50})
         return super(AHF_Stimulator_Laser,AHF_Stimulator_Laser).dict_from_user (stimDict)
 
     def setup (self):
@@ -52,16 +65,28 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         self.PWM = PTPWM(1,1000,1000,0,(int(1E6/1000)),1000,2) #PWM object
         self.PWM.add_channel(self.PWM_channel,0,self.PWM_mode,0,0,self.array)
         self.PWM.set_PWM_enable(1,self.PWM_channel,0)
-        self.camera = AHF_Camera(expSettings.camParamsDict)
+        #self.camera = AHF_Camera(expSettings.camParamsDict)
+        self.width = int(self.configDict.get('width', 200))
+        self.height = int(self.configDict.get('height', 200))
+        self.preview_width = int(self.configDict.get('preview_width', 600))
+        self.preview_height = int(self.configDict.get('preview_height', 600))
+        self.preview_pos = int(self.configDict.get('preview_pos', 50))
+        self.ratio = self.preview_width/self.width
+        self.overlay_width,self.overlay_height = self.rounding(self.preview_width,self.preview_height)
+        self.actual_width,self.actual_height = self.rounding(self.width,self.height)
+        self.cross_pos = np.array([self.preview_height//2,self.preview_width//2])
+        self.cross_step = int(self.preview_width/50)
+
+        self.cross_q = Queue(maxsize=0)
 
         GPIO.setup(self.SHCP, GPIO.OUT, initial = GPIO.HIGH)
         GPIO.setup(self.DS, GPIO.OUT, initial = GPIO.LOW)
         GPIO.setup(self.STCP, GPIO.OUT, initial = GPIO.HIGH)
         GPIO.setup(self.Q7S, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
 
-        self.pos = np.array([0,0])
         self.phase_x = 0
         self.phase_y = 0
+        self.pos = np.array([0,0])
         self.laser_points = []
         self.image_points = []
 '''
@@ -96,8 +121,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             GPIO.output(self.SHCP,1)
         return state.tolist()
 
-    @staticmethod
-    def get_dir(steps):
+    def get_dir(self,steps):
         if steps > 0:
             return 1
         elif steps < 0:
@@ -105,37 +129,91 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         else:
             return 0
 
-    @staticmethod
-    def get_arrow_dir(key):
-        if key == keyboard.Key.right:
-            return 1,0
-        elif key == keyboard.Key.left:
-            return -1,0
-        elif key == keyboard.Key.down:
-            return 0,1
-        elif key == keyboard.Key.up:
-            return 0,-1
+    def rounding(self,width,height):
+        #The overlay-width and height must be a multiple of 32/16
+        if width%32 and height%16:
+            return width + 32 - width%32,height + 16 - height%16
+        elif width%32 and not height%16:
+            return width + 32 - width%32,height
+        elif height%16 and not width%32:
+            return width,height + 16 - height%16
         else:
-            pass
+            return width,height
+
+    def get_arrow_dir(self,key):
+        if hasattr(key,'char'):
+            self.kb.press(keyboard.Key.backspace)
+            self.kb.release(keyboard.Key.backspace)
+            return 0,0,0,0
+        elif key == keyboard.Key.right:
+            return 1,0,0,0
+        elif key == keyboard.Key.left:
+            return -1,0,0,0
+        elif key == keyboard.Key.down:
+            return 0,1,0,0
+        elif key == keyboard.Key.up:
+            return 0,-1,0,0
+        elif key == keyboard.Key.delete:
+            return 0,0,0,-self.cross_step
+        elif key == keyboard.Key.page_down:
+            return 0,0,0,self.cross_step
+        elif key == keyboard.Key.home:
+            return 0,0,-self.cross_step,0
+        elif key == keyboard.Key.end:
+            return 0,0,self.cross_step,0
+        else:
+            return 0,0,0,0
 
     def on_press(self,key):
-        try:
-            di = get_arrow_dir(key)
-            self.move(di[0],di[1])
-        except:
-            pass
-
-    def on_release(self,key):
+        di = self.get_arrow_dir(key)
+        if any(np.asarray(di[:2])!=0):
+            self.move(x=di[0],y=di[1])
+        if any(np.asarray(di[2:])!=0):
+            self.cross_q.put(di[2:])
+        if key == keyboard.Key.space:
+            self.image_points.append(np.copy(self.cross_pos/self.ratio))
+            self.laser_points.append(np.copy(np.flip(self.pos,axis=0)))
+            print('Position saved!')
         if key == keyboard.Key.esc:
-            # Stop listener
-            return False
-        if key == keyboard.Key.enter:
-            self.laser_points.append(self.pos)
-            self.ref = np.empty((width,height,3),dtype=np.uint8)
-            self.camera.capture(self.ref,'rgb')
-            print('Reference point saved')
-        else:
-            pass
+            if len(self.image_points)>=3:
+                self.image_points = np.asarray(self.image_points)
+                self.laser_points = np.asarray(self.laser_points)
+                # Stop listener
+                return False
+            else:
+                print('Need at least 3 points!')
+                print('Want to exit anyway? [y/n]')
+                if input()=='y':
+                    self.image_points = np.asarray(self.image_points)
+                    self.laser_points = np.asarray(self.laser_points)
+                    return False
+                else:
+                    pass
+
+    def make_cross(self):
+        cross = np.zeros((self.overlay_height,self.overlay_width,3),dtype=np.uint8)
+        cross[self.cross_pos[0],:,:] = 0xff
+        cross[:,self.cross_pos[1],:] = 0xff
+        self.l3 = self.camera.add_overlay(cross.tobytes(),
+                            layer=3,
+                            alpha=100,
+                            fullscreen=False,
+                            window = (self.preview_pos,
+                                      self.preview_pos,
+                                      self.preview_width,
+                                      self.preview_height))
+
+    def update_cross(self,q):
+        while True:
+            if not q.empty():
+                #Make sure the cross remains within the boundaries given by the overlay
+                next_pos = self.cross_pos + np.array(q.get())
+                if not any((any(next_pos<0),any(next_pos>=np.array([self.preview_height,self.preview_width])))):
+                    self.cross_pos = next_pos
+                    self.camera.remove_overlay(self.l3)
+                    self.make_cross()
+                else:
+                    pass
 
     def move(self,x,y,delay=0.03):
         states = [[1, 0, 0, 0], [1, 1, 0, 0], [0, 1, 0, 0], [0, 1, 1, 0],
@@ -196,8 +274,6 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
 '''
     def pulse(self,duration,duty_cycle):
         if duration<=1000:
-            #self.array = array('i',[int(duty_cycle*10) if i<duration else 0 for i in range(1000)])
-            #might change this to enumerate
             for i in self.array:
                 i = 0
             for i in range(1,duration):
@@ -205,59 +281,174 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             self.PWM.start_train()
         else:
             print('Duration must be below 1000 ms.')
+
+
 '''
-========================Utility functions for the matching=====================
-'''
-    @staticmethod
-    def trans_mat(angle,x,y,scale):
-        rot_ext = np.array([[np.cos(angle),-np.sin(angle),x],
-                            [np.sin(angle),np.cos(angle),y]])
-        scale_mat = np.array([[1/scale[0],1,1],[1,1/scale[1],1]])
-        return rot_ext*scale_mat
+==== Functions to perform the matching, target selection and image registration ====
+'''    def matcher(self):
+        '''
+        ========================Solver function for the matching=====================
+        '''
+        def solver(image_points,laser_points):
+            #===================Solver Approach 2===================
+            a=np.column_stack((image_points,np.array([1,1,1])))
+            b1=laser_points[:,0]
+            b2=laser_points[:,1]
+            return np.vstack((np.linalg.solve(a, b1),np.linalg.solve(a, b2)))
 
-    @staticmethod
-    def dft_trans_mat(angle,x,y,scale):
-        angle = -1*np.radians(angle)
-        scale = 1/scale
-        x = -1*x
-        y = -1*y
-        rot_ext = np.array([[np.cos(angle),-np.sin(angle),y*np.cos(angle)-x*np.sin(angle)],
-                            [np.sin(angle),np.cos(angle),y*np.sin(angle)+x*np.cos(angle)]])
-        scale_mat = np.array([[scale,1,1],[1,scale,1]])
-        return rot_ext*scale_mat
+        print('\nINSTRUCTION\n')
+        print('Move:\tLaser\t\tcross hairs')
+        print('---------------------------------------')
+        print('Keys:\tarrow keys\tdelete home end page-down\n')
+        print('1.: Move the laser and the cross hairs to at least 3 different points and hit the space key.')
+        print('2.: To exit, hit the esc key.')
 
-    @staticmethod
-    def manual_annot(img):
-        fig = plt.figure(figsize=(22,12))
-        imgplot = plt.imshow(img[:,:,1],'gray')
-        plt.title('Click on laser spot.')
-        plt.show()
-        points = np.around(np.asarray(plt.ginput(n=1,show_clicks=True)))
-        plt.close()
-        #fig = plt.figure(figsize=(22,12))
-        xses = map(int,[t[0] for t in points])
-        yses = map(int,[t[1] for t in points])
-        return list(xses[0]),list(yses[0])
+        try:
+            with PiCamera() as self.camera:
+                #Turn on the laser
+                self.pulse(1000,5) #If duration = 1000 Laser stays on.
+                self.camera.resolution = (self.overlay_width,self.overlay_height)
+                self.camera.framerate = 24
+                #Start camera preview
+                self.camera.start_preview(fullscreen = False, window = (self.preview_pos,
+                                                                   self.preview_pos,
+                                                                   self.preview_width,
+                                                                   self.preview_height))
 
-    def matcher(self):
-        #Reset clocks and zero serial input
-        self.unlock()
-        #Turn on the laser
-        self.pulse(1000,80) #If duration = 1000 Laser stays on.
-        #Start camera preview
-        self.camera.start_preview(fullscreen = False, window=camera.AHFpreview)
-        # Collect events until released
-        print('Use the arrow keys to move the laser to two reference points and \
-        hit the enter key. When done, hit the esc key.')
-        with keyboard.Listener(
-                on_press=on_press,
-                on_release=on_release) as listener:
-            while True:
-                if hasattr(self,'ref'):
-                    self.image_points = manual_annot(self.ref)
-                    del self.ref
-                else:
-                    pass
+                self.make_cross()
+                #Start the thread which updates the cross
+                t = Thread(target = self.update_cross,args=(self.cross_q,))
+                t.setDaemon(True)
+                t.start()
+
+                #Make object for the keyboard Controller
+                self.kb = keyboard.Controller()
+
+                #Start the thread which listens to the keyboard
+                with keyboard.Listener(on_press=self.on_press) as k_listener:
+                    k_listener.join()
+        finally:
+            try:
+                self.cross_q.task_done()
+            except:
+                pass
+            self.unlock()
+
+        '''
+        ======================Calcualtion================================
+        Average the coefficient matrix obatained by solving all combinations of triplets.
+        '''
+        if self.image_points.shape[0] >= 3:
+            self.coeff = []
+            for i in combinations(enumerate(zip(self.image_points,self.laser_points)),3):
+                ip = np.vstack((i[0][1][0],i[1][1][0],i[2][1][0]))
+                lp = np.array([i[0][1][1],i[1][1][1],i[2][1][1]])
+                self.coeff.append(solver(ip, lp))
+            self.coeff = np.mean(np.asarray(self.coeff),axis=0)
+        else:
+            print('Need more than 3 points for the calcualtion.')
+            return None
+
+    def get_targets(self):
+        '''
+        ========================GUI function for the selecting targets=====================
+        '''
+        def manual_annot(img):
+            warnings.filterwarnings("ignore",".*GUI is implemented.*")
+            fig = plt.figure(figsize=(10,10))
+            imgplot = plt.imshow(img)
+            plt.title('Choose targets')
+            plt.show(block=False)
+            points = np.around(np.asarray(plt.ginput(n=200,show_clicks=True,timeout=0)))
+            plt.close()
+            xses = map(int,[t[1] for t in points])
+            yses = map(int,[t[0] for t in points])
+            return list(xses),list(yses)
+
+        if self.image_points.shape[0] < 3:
+            return None
+        with PiCamera() as camera:
+            self.targets = {}
+            camera.resolution = (self.overlay_width,self.overlay_height)
+            camera.framerate = 24
+            target_image = np.empty((self.overlay_width * self.overlay_height * 3),dtype=np.uint8)
+            camera.capture(target_image,'rgb')
+            target_image = target_image.reshape((self.overlay_height,self.overlay_width,3))
+            target_image = target_image[:self.preview_width,:self.preview_height,:]
+
+            self.ref = np.empty((self.actual_height, self.actual_width, 3),dtype=np.uint8)
+            warnings.filterwarnings("ignore",".*you may find the equivalent alpha format faster*")
+            camera.capture(self.ref,'rgb',resize=(self.actual_width,self.actual_height))
+            self.ref = self.ref[:self.width,:self.height,:]
+
+            targets_coords = manual_annot(target_image)
+            targets_coords = list(zip(np.array(targets_coords[0]),np.array(targets_coords[1])))
+
+            for i,j in enumerate(targets_coords):
+                target = 'target_'+str(i)
+                self.targets[target]=np.array(np.asarray(j)/self.ratio).astype(int) #Scale coordinate to desired size
+
+            print('TARGET\tx\ty')
+            for key,value in self.targets.items():
+                print('{0}\t{1}\t{2}'.format(key[-1],value[0],value[1]))
+
+        try:
+            self.pulse(1000,5)
+            for key,value in self.targets.items():
+                #======================Approach 1==========================
+                #targ_pos = np.dot(aff_rotmat(self.rot,self.translation,self.scale,self.clockwise),np.append(np.asarray(value),1))
+                targ_pos = np.dot(self.coeff,np.append(np.asarray(value),1))
+                print('Moving to: ',targ_pos)
+                self.move_to(targ_pos[1],targ_pos[0])
+                sleep(2)
+        finally:
+            self.move_to(0,0)
+            self.unlock()
+            #Ugly way to turn the laser off
+            #del self.PWM
+
+    def next_trial(self):
+        '''
+        ============Utility function to get the rotation matrix=================
+        '''
+        def trans_mat(angle,x,y,scale):
+            angle = -1*np.radians(angle)
+            scale = 1/scale
+            x = -1*x
+            y = -1*y
+            rot_ext = np.array([[np.cos(angle),-np.sin(angle),y*np.cos(angle)-x*np.sin(angle)],
+                                [np.sin(angle),np.cos(angle),y*np.sin(angle)+x*np.cos(angle)]])
+            scale_mat = np.array([[scale,1,1],[1,scale,1]])
+            return rot_ext*scale_mat
+
+        with PiCamera() as camera:
+            camera.resolution = (self.actual_width,self.actual_height)
+            camera.framerate = 24
+            trial = np.empty((self.actual_width * self.actual_height * 3),dtype=np.uint8)
+            camera.capture(trial,'rgb')
+            trial = trial.reshape((self.actual_height,self.actual_width,3))
+            trial = trial[:self.width,:self.height,:]
+        try:
+            warnings.filterwarnings("ignore",".*the returned array has changed*")
+            tf = ird.similarity(self.ref[:,:,0],trial[:,:,0],numiter=3)
+            print('scale\tangle\tty\ttx')
+            print('{0:.3}\t{1:.3}\t{2:.3}\t{3:.3}'.format(tf['scale'],tf['angle'],tf['tvec'][0],tf['tvec'][1]))
+
+            #Transform the reference targets
+            R = trans_mat(tf['angle'],tf['tvec'][1],tf['tvec'][0],tf['scale'])
+            print('TARGET\ttx\tty')
+            for key,value in self.targets.items():
+                value = np.asarray(value) - np.array([int(self.width/2),int(self.height/2)]) #translate targets to center of image
+                trans_coord = np.dot(R,np.append(value,1))+np.array([int(self.width/2),int(self.height/2)])
+                targ_pos = np.dot(self.coeff,np.append(trans_coord,1))
+                print('{0}\t{1:.01f}\t{2:.01f}'.format(key,trans_coord[0],trans_coord[1]))
+                self.move_to(targ_pos[1],targ_pos[0])
+                sleep(2)
+        finally:
+            self.move_to(0,0)
+            self.unlock()
+            #Ugly way to turn the laser off
+            #del self.PWM
 
 '''
 ==============================Trial=============================================
