@@ -3,7 +3,9 @@
 
 
 """
-The plan is to copy all variables from settings, user, into a single object 
+We copy all variables from cage settings and exp settings,plus pointers to all created objects,
+into a single object called Task
+
 """
    
 import json
@@ -41,14 +43,16 @@ class Task:
                 self.contactPUD = configDict.get('Contact Pull Up Down') # OFF, DOWN, or UP, GPIO.PUD_OFF=20, GPIO.PUD_DOWN =21, GPIO.PUD_UP=2
                 self.ledPin = configDict.get('LED Pin') # OFF, DOWN, or UP, GPIO.PUD_OFF=20, GPIO.PUD_DOWN =21, GPIO.PUD_UP=22
                 self.serialPort = configDict.get('Serial Port')
-                if configDict.get('lick IRQ Pin') is not None:
-                    self.lickIRQ = configDict.get('lick IRQ Pin')
+                self.hasLickDetector = configDict.get('has Lick Detetctor', False)
+                if self.hasLickDetector:
+                    self.lickIRQ = configDict.get('Lick IRQ Pin')
+                    self.lickChans = configDict.get ('Lick Channels')
                 self.dataPath = configDict.get('Path to Save Data')
                 self.mouseConfigPath = configDict.get('Path to Mouse Config Data')
-                self.hasEntryBeamBreak = configDict.get ('Has Entry Beam Break')
-                if configDict.get('Entry Beam Break Pin') is not None:
+                self.hasEntryBeamBreak = configDict.get ('Has Entry Beam Break', False)
+                if self.hasEntryBeamBreak:
                     self.entryBBpin = configDict.get('Entry Beam Break Pin')
-        except (TypeError, IOError) as e: #we will make a file if we didn't find it, or if it was incomplete
+        except (TypeError, IOError, ValueError) as e: #we will make a file if we didn't find it, or if it was incomplete
             print ('Unable to open base configuration file, AHFconfig.jsn, let\'s make new settings.\n')
             self.cageID = input('Enter the cage ID:')
             self.dataPath = configDict.get('Path to Save Data')

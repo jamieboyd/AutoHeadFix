@@ -44,12 +44,11 @@ if __name__ == '__main__':
         except IOError:
             tagReader = None
         setattr (task, 'tagReader', tagReader)
-        
         # initialize lick detetctor
         if task.hasLickDetector:
-           from AHF_LickDetector import AHF_LickDetector
-           lickDetector  = AHF_LickDetector (task.lickDetectorChans, task.lickDetectorIRQpin, None)
-           setattr (task, 'lickDetector', lickDetector) 
+            from AHF_LickDetector import AHF_LickDetector
+            lickDetector = AHF_LickDetector (task.lickChans, task.lickIRQ, None)
+            setattr (task, 'lickDetector', lickDetector) 
         # now that hardware is initialized, enter hardware test loop
         htloop (task)
         # now test a few things, make sure changes were applied
@@ -69,14 +68,15 @@ def htloop (task):
     If a test fails, a dialog is presented asking user to change the pin setup. The modified pinout
     can be saved, overwriting the configuration in ./AHF_Config.jsn
     Commands are:
-    t= tagReader: trys to read a tag and, if successful, monitors Tag in Range Pin until tag goes away
-    r = reward solenoid:  Opens the reward solenoid for a 1 second duration, then closes it
-    c = contact check:  Monitors the head contact pin until contact, and then while contact is maintained
+    t= TagReader: trys to read a tag and, if successful, monitors Tag in Range Pin until tag goes away
+    r = Reward solenoid:  Opens the reward solenoid for a 1 second duration, then closes it
+    c = Contact check:  Monitors the head contact pin until contact, and then while contact is maintained
     f = head Fixer: runs test function from loaded head fixer class
-    s = stimulator: runs test function from loaded stmulator class
+    s = Stimulator: runs test function from loaded stmulator class
     e = Entry beam break
     l = LED: Turns on the brain illumination LED for a 2 second duration, then off
     k = licK detector: verified licks are being registered
+    a = camerA: check and verify settings for camera
     h = sHow config settings: Prints out the current pinout in the AHF_task object
     v = saVe modified config file: Saves the the AHF_task object to the file ./AHF_Config.jsn
     q = quit: quits the program
@@ -86,9 +86,9 @@ def htloop (task):
         menuStr = '\n---------Hardware tester---------\nt = tagReader\nr = reward solenoid\nc = contact check'
         if task.hasEntryBeamBreak:
             menuStr += '\ne = entry beam break'
-        menuStr += '\nf = head Fixer\nStimulator\nl = LED'
+        menuStr += '\nf = head Fixer\ns = Stimulator\nl = LED'
         if task.hasLickDetector:
-            menuStr += '\nk = licK detector
+            menuStr += '\nk = licK detector'
         menuStr += '\nh=sHow config\nv= saVe config\nq=quit:'
         while (True):
             inputStr = input (menuStr)
@@ -208,8 +208,10 @@ def htloop (task):
                         GPIO.setup (task.entryBBpin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
             elif inputStr == 'f': # head Fixer, run test from headFixer class
                 task.headFixer.test(task)
+            elif inputStr == 'k': # licK detretctor, run tests from lick detetor
+                task.lickDetector.test (task)
             elif inputStr == 's':
-                
+                pass # for now
             elif inputStr == 'l': # l for LED trigger
                 print ('\nLED turning ON for 2 seconds.')
                 GPIO.output(task.ledPin, 1)
