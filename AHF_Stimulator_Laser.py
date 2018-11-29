@@ -1,7 +1,6 @@
 from AHF_Stimulator_Rewards import AHF_Stimulator_Rewards
 from AHF_Rewarder import AHF_Rewarder
 from AHF_Mouse import Mouse, Mice
-import RPi.GPIO as GPIO
 from AHF_Camera import AHF_Camera
 from picamera import PiCamera
 from pynput import keyboard
@@ -285,7 +284,8 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
 
 '''
 ==== Functions to perform the matching, target selection and image registration ====
-'''    def matcher(self):
+'''
+    def matcher(self):
         '''
         ========================Solver function for the matching=====================
         '''
@@ -453,14 +453,34 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
 '''
 ==============================Trial=============================================
 '''
-    def run(thisMouse, expSettings, cageSettings, camera, rewarder, headFixer, stimulator, UDPTrigger=None):
+    def run(self):
+        self.stimTimes = []
         #run matcher
-
+        self.matcher()
+        self.get_targets()
 
         #Wait for mouse, when mouse inside (RFID tag) for the first time, make object and take image and let user select brain targets
         # Run stimulation, for now without reward and stuff
 
-    def logfile:
-
 
 if __name__ == '__main__':
+    import RPi.GPIO as GPIO
+    try:
+        GPIO.setmode(GPIO.BCM)
+        rewarder = AHF_Rewarder (30e-03, 24)
+        rewarder.addToDict ('task', 50e-03)
+        thisMouse = Mouse (2525, 0,0,0,0)
+        stimdict = {'nRewards' : 5, 'rewardInterval' : 1.5}
+        stimulator = AHF_Stimulator_Laser (stimdict, rewarder, None)
+        stimulator.configStim (thisMouse)
+        stimulator.run ()
+        #stimulator.logfile()
+        #stimulator.config_from_user()
+        #stimulator.configStim (thisMouse)
+        #stimulator.run ()
+        #stimulator.logfile()
+        #thisMouse.show()
+    except Exception as er:
+        print ('Error:' + str (er))
+    finally:
+        GPIO.cleanup ()
