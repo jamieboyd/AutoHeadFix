@@ -46,9 +46,9 @@ if __name__ == '__main__':
         setattr (task, 'tagReader', tagReader)
         # initialize lick detetctor
         if task.hasLickDetector:
-            from AHF_LickDetector import AHF_LickDetector
-            lickDetector = AHF_LickDetector (task.lickChans, task.lickIRQ, None)
-            setattr (task, 'lickDetector', lickDetector) 
+            import AHF_LickDetector
+            lickDetector = AHF_LickDetector.LickDetector (task.lickIRQ, None)
+            setattr (task, 'lickDetector', lickDetector)
         # now that hardware is initialized, enter hardware test loop
         htloop (task)
         # now test a few things, make sure changes were applied

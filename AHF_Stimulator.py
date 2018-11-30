@@ -4,7 +4,7 @@
 from abc import ABCMeta, abstractmethod
 
 
-from AHF_LickDetector import AHF_LickDetector
+from AHF_LickDetector import LickDetector
 from AHF_Mouse import Mouse
 import time
 import json
