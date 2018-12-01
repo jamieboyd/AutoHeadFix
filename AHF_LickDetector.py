@@ -212,8 +212,8 @@ class LickDetector (object):
  
     def test (self, cageSet):
         """
-        tests the lick detetcor, designed to called by the hardware tester, can modify IRQ pin in hardware settings
-        IF asked to change IRQ pin, also resets the detector
+        tests the lick detector, designed to called by the hardware tester, can modify IRQ pin in hardware settings
+        If asked to change IRQ pin, also resets the detector
         """
         self.startCallback()
         self.startLogging ()
@@ -232,14 +232,25 @@ class LickDetector (object):
                 cageSet.lickIRQ = int (input('Enter New Lick Detector IRQ pin:'))
                 self.IRQ_PIN = cageSet.lickIRQ
                 GPIO.setup(self.IRQ_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)        
-        sleep (0.2)
-        
+       
+
 class Simple_Logger (object):
+    """
+    A class to do simple logging of licks, used ig no data logger is passed to lickdetector constructor
+    """
+    
     def __init__(self, logFP):
+        """
+        takes file pointer to a file opened for writing
+        If file ponter is none, will just write to shell
+        """
         self.logFP = logFP
 
     
     def writeToLogFile(self, event):
+        """
+        Writes time of lick to shell, and to a file, if present, in AHF_dataLogger format
+        """
         outPutStr = '{:013}'.format(0)
         logOutPutStr = outPutStr + '\t' + '{:.2f}'.format (time ())  + '\t' + event +  '\t' + datetime.fromtimestamp (int (time())).isoformat (' ')
         printOutPutStr = outPutStr + '\t' + datetime.fromtimestamp (int (time())).isoformat (' ') + '\t' + event
@@ -247,45 +258,3 @@ class Simple_Logger (object):
         if self.logFP is not None:
             self.logFP.write(logOutPutStr + '\n')
             self.logFP.flush()
-
-
-if __name__ == '__main__':
-    import RPi.GPIO as GPIO
-    from AHF_LickDetector import AHF_LickDetector
-    from RFIDTagReader import TagReader
-    from AHF_DataLogger import AHF_DataLogger
-    # constants for hardware
-    serialPort = '/dev/ttyUSB0'
-    tag_in_range_pin=17
-    lick_IRQ_pin = 26
-    try:
-        GPIO.setmode(GPIO.BCM)
-        # a minimal dict for data logger
-        task={'cageID':'c17', 'dataPath':'/home/pi/Documents/'}
-        logger = AHF_DataLogger (task)
-        logger.newDay (None)
-        ld = AHF_LickDetector ((0,1),lick_IRQ_pin,logger)
-        tagReader = TagReader(serialPort, True, timeOutSecs = 0.05, kind='ID')
-        tagReader.installCallBack (tag_in_range_pin)
-
-    
-        ld.start_logging ()
-        print ('Licks in 30 seconds...')
-        print ('=', ld.countLicks_Soft (30))
-        """
-        for i in range (0, 5):
-            print ('soft wait no-zero #' +  str (i) + ' : ' + str(ld.waitForLick_Soft (5, False)))
-        for i in range (0, 5):
-            print ('soft wait zero #' +  str (i) + ' : ' + str(ld.waitForLick_Soft (5, True)))
-        ld.stop_logging ()
-        for i in range (0, 5):
-            print ('hard  wait zeroed #' +  str (i) + ' : '  + str(ld.waitForLick_Hard (5, True)))
-        for i in range (0, 5):
-            print ('hard  wait not zeroed #' +  str (i) + ' : '  + str(ld.waitForLick_Hard (5, False)))
-            sleep (0.1)
-        """
-        GPIO.remove_event_detect(tag_in_range_pin)
-        GPIO.cleanup()
-    except Exception as e:
-        GPIO.remove_event_detect(tag_in_range_pin)
-        GPIO.cleanup()

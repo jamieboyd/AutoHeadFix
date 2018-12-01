@@ -3,11 +3,11 @@
 
 
 """
-We copy all variables from cage settings and exp settings,plus pointers to all created objects,
+We copy all variables from cage settings and exp settings, plus pointers to all created objects,
 into a single object called Task
 
 """
-   
+import inspect
 import json
 import os
 import pwd
@@ -26,13 +26,81 @@ class Task:
         """
         Initializes a Task object with cage settings and experiment settings
         """
-        # cage settings from ./AHF_Config.jsn, only 1 of these, load it or query user if it does not exist or is incomplete
+        # cage settings from ./AHFconf_*.jsn, load it or query user if it does not exist or is incomplete
+        # load experiment settings from file 
+        hasFile = False
+        if fileName is not None:
+            if fileName.startswith ('AHFconf_'):
+                configFile = ''
+            else:
+                configFile = 'AHFconf_'
+            configFile += fileName
+            if not fileName.endswith ('.jsn'):
+                configFile += '.jsn'
+            for f in os.listdir('.'):
+                if f == configFile:
+                    hasFile=True
+                    break
+        if hasFile:
+            self.loadSettings (fileName)
+        else:
+            # look for experiment config files in the current directory, they start with AHFconf_ and end with .jsn
+            iFile=0
+            files = ''
+            for f in os.listdir('.'):
+                if f.startswith ('AFHconf_') and f.endswith ('.jsn'):
+                    files += '\n' + str (iFile) + ':' + f
+                    iFile +=1
+            if iFile == 0: # no files found, create one
+                print ('Unable to find an Auto head Fix config file, let\'s make a new configuration:')
+                fileNum=-1
+            else:
+                inputPrompt = 'Enter file number to load Auto Head Fix config file, or -1 to make new config\n'
+                inputPrompt += files +'\n:'
+                fileNum = int (input (inputPrompt))
+            if fileNum == -1:
+                self.expSettingsFromUser()
+                self.saveExpSettings()
+            else:
+                # file list starts with a separator (\n) so we split the list on \n and get fileNum + 1
+                # each list item starts with fileNum: so split the list item on ":" and get item 1 to get file name
+                self.loadExpSettings ((files.split('\n')[fileNum + 1]).split (':')[1])
+
+    def loadSettings (self, filename):
+        try:
+            with open (filename, 'r') as fp:
+                data = fp.read()
+                data=data.replace('\n', ',')
+                configDict = json.loads(data)
+                fp.close()
+            for key in configDict:
+                setattr (self, key, configDict.get(key))
+            print (self.__dict__)
+        except (TypeError, IOError, ValueError) as e: #we will make a file if we didn't find it, or if it was incomplete
+            print ('Unable to open a configuration, let\'s make new configuration file.\n')
+            
+        if not hasattr (self, 'cageID'):
+            self.cageID = input('Enter the cage ID:')
+        
+
+
+            
+        """       
+                
         try:
             with open ('AHFconfig.jsn', 'r') as fp:
                 data = fp.read()
                 data=data.replace('\n', ',')
-                configDict = json.loads(data);print (configDict)
+                configDict = json.loads(data)
                 fp.close()
+                for key in configDict:
+                    setattr (self, key, configDict.get(key))
+                print (self.__dict__)
+                if not hasattr (self, 'cageID'):
+                    self.cageID = input('Enter the cage ID:')
+
+
+                #print (inspect.getmembers (self))
                 self.cageID = configDict.get('Cage ID')
                 self.headFixerName = configDict.get('Head Fixer')
                 AHF_HeadFixer.get_class (self.headFixerName).configDict_read (self, configDict)
@@ -138,11 +206,11 @@ class Task:
 
     def saveCageSet(self):
         """
-        Saves current configuration stored in the task object into the file ./AHFconfig.jsn
-        Call this function after modifying the contents of the task to save your changes
+        #Saves current configuration stored in the task object into the file ./AHFconfig.jsn
+        #Call this function after modifying the contents of the task to save your changes
 
-        :param: none
-        :returns: nothing
+        #:param: none
+        #:returns: nothing
         """
         jsonDict={'Cage ID':self.cageID,'Head Fixer':self.headFixer}
         AHF_HeadFixer.get_class (self.headFixer).configDict_set (self, jsonDict)
@@ -160,10 +228,10 @@ class Task:
 
     def showCageSet (self):
         """
-        Prints the current configuration stored in this AHF_CageSet to the console, nicely formatted
+        #Prints the current configuration stored in this AHF_CageSet to the console, nicely formatted
 
-        :param: none
-        :returns: nothing
+        #:param: none
+        #:returns: nothing
         """
         print ('****************Current Auto-Head-Fix Cage Settings********************************')
         print ('1:Cage ID=' + str (self.cageID))
@@ -186,7 +254,7 @@ class Task:
 
     def editCageSet (self):
         """
-        Allows the user to edit and save the cage settings
+        #Allows the user to edit and save the cage settings
         """
         while True:
             self.showCageSet ()
@@ -260,6 +328,13 @@ class Task:
             self.camParamsDict = configDict.get('camParams', {})
             self.stimulator = configDict.get('stimulator')
             self.stimDict = configDict.get('stimParams')
+"""
 
 if __name__ == '__main__':
-    task = Task (None) 
+    task = Task (None)
+    d1 = task.__dir__()
+    
+    #print ("\n\n")
+    #d1=task.__dict__
+    #print (d1)
+    #print (",".join(task.__dict__.keys()))
