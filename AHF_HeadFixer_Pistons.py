@@ -25,7 +25,7 @@ class AHF_HeadFixer_Pistons(AHF_HeadFixer):
         GPIO.output(self.pistonsPin, GPIO.HIGH)
 
     def releaseMouse(self):
-         """
+        """
         sets GPIO pin low to retract pistons
         """
         GPIO.output(self.pistonsPin, GPIO.LOW)

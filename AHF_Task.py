@@ -21,6 +21,9 @@ class Task:
     The plan is to copy all variables from settings, user, into a single object
     The object will have fields for things loaded from hardware config dictionary and experiment config dictionary
     as well as fields for objects created when program runs (headFixer, TagReader, rewarder)
+    Using the same names in the object fields as in the dictionary, and only loading one dictionary from
+    a combined settings file, we don't need the dictionary because the task object can recreate the dict
+    with self.__dict__
     """
     def __init__ (self, fileName):
         """
@@ -28,7 +31,7 @@ class Task:
         """
         # cage settings from ./AHFconf_*.jsn, load it or query user if it does not exist or is incomplete
         # load experiment settings from file 
-        hasFile = False
+        fileLoaded = False
         if fileName is not None:
             if fileName.startswith ('AHFconf_'):
                 configFile = ''
@@ -39,11 +42,9 @@ class Task:
                 configFile += '.jsn'
             for f in os.listdir('.'):
                 if f == configFile:
-                    hasFile=True
+                    fileLoaded=self.loadSettings (fileName)
                     break
-        if hasFile:
-            self.loadSettings (fileName)
-        else:
+        if not fileLoaded:
             # look for experiment config files in the current directory, they start with AHFconf_ and end with .jsn
             iFile=0
             files = ''
@@ -59,32 +60,45 @@ class Task:
                 inputPrompt += files +'\n:'
                 fileNum = int (input (inputPrompt))
             if fileNum == -1:
-                self.expSettingsFromUser()
-                self.saveExpSettings()
+                fileLoaded = self.loadSettings (None)
             else:
                 # file list starts with a separator (\n) so we split the list on \n and get fileNum + 1
                 # each list item starts with fileNum: so split the list item on ":" and get item 1 to get file name
-                self.loadExpSettings ((files.split('\n')[fileNum + 1]).split (':')[1])
-
-    def loadSettings (self, filename):
-        try:
-            with open (filename, 'r') as fp:
-                data = fp.read()
-                data=data.replace('\n', ',')
-                configDict = json.loads(data)
-                fp.close()
-            for key in configDict:
-                setattr (self, key, configDict.get(key))
-            print (self.__dict__)
-        except (TypeError, IOError, ValueError) as e: #we will make a file if we didn't find it, or if it was incomplete
-            print ('Unable to open a configuration, let\'s make new configuration file.\n')
-            
-        if not hasattr (self, 'cageID'):
-            self.cageID = input('Enter the cage ID:')
+                fileLoaded = self.loadSettings ((files.split('\n')[fileNum + 1]).split (':')[1])
         
 
+    def loadSettings (self, fileName):
+        fileErr = False
+        if fileName is not None:
+            try:
+                with open (filename, 'r') as fp:
+                    data = fp.read()
+                    data=data.replace('\n', ',')
+                    configDict = json.loads(data)
+                    fp.close()
+                for key in configDict:
+                    setattr (self, key, configDict.get(key))
+                print (self.__dict__)
+            except (TypeError, IOError, ValueError) as e: #we will make a file if we didn't find it, or if it was incomplete
+                print ('Unable to open a configuration, let\'s make new configuration.\n')
+                fileErr = True
+        # check for any missing settings, all settings will be missing if making a new config
+        if not hasattr (self, 'cageID'):
+            self.cageID = input('Enter the cage ID:')
+            fileErr = True
+        if not hasattr (self, 'headFixer'):
+            self.headFixer = AHF_HeadFixer.get_HeadFixer_from_user ()
+            fileErr = True
+        print (",".join(self.__dict__.keys()))
 
-            
+        if fileErr: 
+            response = input ('Save new/updated settings to a configuration  file?')
+            if response [0] == 'y' or response [0] == 'Y':
+
+
+
+        
+                              
         """       
                 
         try:
