@@ -55,7 +55,7 @@ class AHF_HeadFixer(metaclass = ABCMeta):
                     print (e)
                     continue     
         if iFile == 0:
-            print ('Could not find an AHF_HeadFixer_ file in the current or enclosing directory')
+            print ('Could not find any AHF_HeadFixer_ files in the current or enclosing directory')
             raise FileNotFoundError
         else:
             if iFile == 1:
@@ -80,7 +80,7 @@ class AHF_HeadFixer(metaclass = ABCMeta):
     #abstact methods each headfixer class must implement
     #part 1: three main methods of initing, fixing, and releasing
     @abstractmethod
-    def __init__(self, task):
+    def __init__(self, settingsDict):
         """
         hardware initialization of a headFixer, reading data from the task object
         """
@@ -102,39 +102,18 @@ class AHF_HeadFixer(metaclass = ABCMeta):
 
     ##################################################################################
     #abstact methods each headfixer class must implement
-    #part 2: static functions for reading, editing, and saving ConfigDict from/to task
+    #part 2: static function for getting ConfigDict from user
+
 
     @staticmethod
     @abstractmethod
-    def configDict_read (task, configDict):
+    def config_user_get ():
         """
-        reads data for headFixer configuration from the json configDict, copies it to the task
+        in absence of json configDict, queerries user for settings, and returns a dictionary with settings
         """
         pass
 
-    @staticmethod
-    @abstractmethod
-    def config_user_get (task):
-        """
-        in absence of json configDict, queerries user for settings, and copies them to the task
-        """
-        pass
 
-    @staticmethod
-    @abstractmethod
-    def configDict_set (task, configDict):
-        """
-        gets headfix configuration data from the task object, and updates the json configDict
-        """
-        pass 
-
-    @staticmethod
-    @abstractmethod
-    def config_show (task):
-        """
-        returns a string containing head fix config data for this headFixer currently loaded into the task object
-        """
-        pass
     
 
     ##################################################################################
@@ -144,7 +123,7 @@ class AHF_HeadFixer(metaclass = ABCMeta):
     def test(self, task):
         """
         Called by hardwaretester, runs a harware test for headFixer, verifying that it works
-        gives user a chance to change configuration, and, if changed, saves new configuration info in task
+        gives user a chance to change configuration, and, if changed, saves new configuration info in headFixer dictionary in task
         """
         pass
 

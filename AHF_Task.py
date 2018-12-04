@@ -20,18 +20,21 @@ class Task:
     """
     The plan is to copy all variables from settings, user, into a single object
     The object will have fields for things loaded from hardware config dictionary and experiment config dictionary
-    as well as fields for objects created when program runs (headFixer, TagReader, rewarder)
+    as well as fields for objects created when program runs (headFixer, TagReader, rewarder, camera, stimulator)
+    Objects that are created from subclassable objects will have a dictionary of their own as an entry in the main dictionay
     Using the same names in the object fields as in the dictionary, and only loading one dictionary from
     a combined settings file, we don't need the dictionary because the task object can recreate the dict
     with self.__dict__
     """
     def __init__ (self, fileName):
         """
-        Initializes a Task object with cage settings and experiment settings
+        Initializes a Task object with hardware settings and experiment settings by calling loadSettings function
+        self.fileLoaded will be set to True if settings file was loaded successfully or created by user
+        
         """
-        # cage settings from ./AHFconf_*.jsn, load it or query user if it does not exist or is incomplete
-        # load experiment settings from file 
-        fileLoaded = False
+        # try to load ssettings from ./AHFconf_*.jsn, load it or query user if it does not exist or is incomplete
+        self.fileLoaded = False
+        # load experiment settings from passed in file name, if program was started with a config file name 
         if fileName is not None:
             if fileName.startswith ('AHFconf_'):
                 configFile = ''
@@ -42,9 +45,9 @@ class Task:
                 configFile += '.jsn'
             for f in os.listdir('.'):
                 if f == configFile:
-                    fileLoaded=self.loadSettings (fileName)
+                    self.fileLoaded=self.loadSettings (fileName)
                     break
-        if not fileLoaded:
+        if not self.fileLoaded:
             # look for experiment config files in the current directory, they start with AHFconf_ and end with .jsn
             iFile=0
             files = ''
@@ -52,22 +55,27 @@ class Task:
                 if f.startswith ('AFHconf_') and f.endswith ('.jsn'):
                     files += '\n' + str (iFile) + ':' + f
                     iFile +=1
-            if iFile == 0: # no files found, create one
-                print ('Unable to find an Auto head Fix config file, let\'s make a new configuration:')
+            if iFile == 0: # no files found, so set flag for user to create one
+                print ('Unable to find any Auto head Fix config files, let\'s make a new configuration:')
                 fileNum=-1
-            else:
+            else:  # list all settings files and get user to choose one, or choose -1 to make new file anyway
                 inputPrompt = 'Enter file number to load Auto Head Fix config file, or -1 to make new config\n'
                 inputPrompt += files +'\n:'
                 fileNum = int (input (inputPrompt))
-            if fileNum == -1:
-                fileLoaded = self.loadSettings (None)
-            else:
+            if fileNum == -1: # no settings file found, or user decided to make a new one, call loadSettings with None
+                self.fileLoaded = self.loadSettings (None)
+            else: # load user's chosen settings file. 
                 # file list starts with a separator (\n) so we split the list on \n and get fileNum + 1
                 # each list item starts with fileNum: so split the list item on ":" and get item 1 to get file name
-                fileLoaded = self.loadSettings ((files.split('\n')[fileNum + 1]).split (':')[1])
+                self.fileLoaded = self.loadSettings ((files.split('\n')[fileNum + 1]).split (':')[1])
         
 
     def loadSettings (self, fileName):
+        """
+        Loads settings from a JSON text file in current folder, unless fileName is None, in which case user is querried
+        for all settings
+        returns True if settings were loaded
+        """
         fileErr = False
         if fileName is not None:
             try:
@@ -78,28 +86,94 @@ class Task:
                     fp.close()
                 for key in configDict:
                     setattr (self, key, configDict.get(key))
-                print (self.__dict__)
+                #print (self.__dict__)
             except (TypeError, IOError, ValueError) as e: #we will make a file if we didn't find it, or if it was incomplete
-                print ('Unable to open a configuration, let\'s make new configuration.\n')
+                print ('Unable to open and load configuration:' + str (e) + '\n let\'s make new configuration.\n')
                 fileErr = True
-        # check for any missing settings, all settings will be missing if making a new config
+        # check for any missing settings, all settings will be missing if making a new config, and call setting functions for
+        # things like head fixer that are subclassable need some extra work , when either loaded from file or user queried
+        ########## cage specific hardware settings #################################
+        if not hasattr (self, 'headFixerClass') or not hasattr (self, 'headFixerDict'):
+            self.headFixerClass = AHF_HeadFixer.get_HeadFixer_from_user ()
+            self.headFixerDict = AHF_HeadFixer.get_class(self.headFixerClass).config_user_get ()
+            fileErr = True
+        if not hasattr (self, 'rewardPin'):
+            self.rewardPin = int (input('Enter the GPIO pin used by the water delivery solenoid:'))
+            fileErr = True
+        if not hasattr (self, 'serialPort'):
+            self.serialPort = input ('Enter serial port for tag reader(likely either /dev/Serial0 or /dev/ttyUSB0):')
+            fileErr = True
+        if not hasattr (self, 'tirPin'):
+            self.tirPin = int (input('Enter the GPIO pin connected to the Tag-In-Range pin on the Tag Reader:'))
+            fileErr = True
+        if not hasattr (self, 'contactPin') or not hasattr (self, 'contactPolarity') or not hasattr (self, 'contactPUD'):
+            self.contactPin = int (input ('Enter the GPIO pin connected to the headbar contacts or IR beam-breaker:'))
+            fileErr = True
+            tempInput = int (input ('Enter the contact polarity, 0=FALLING for IR beam-breaker or falling polarity electrical contacts, 1=RISING for rising polarity elctrical contacts:'))
+            if tempInput == 0:
+                self.contactPolarity = 'FALLING'
+            else:
+                self.contactPolarity = 'RISING'
+            tempInput = int (input('Enter desired resistor on contact pin, 0=OFF if external resistor present, else 1=DOWN if rising polarity electrical contact or 2 = UP if IR beam-breaker or falling polarity electrical contacts:'))
+            if tempInput == 0:
+                self.contactPUD = 'PUD_OFF'
+            elif tempInput == 1:
+                self.contactPUD = 'PUD_DOWN'
+            else:
+                self.contactPUD='PUD_UP'
+            fileErr = True
+        if not hasattr (self, 'LEDpin'):
+            self.LEDpin = int (input ('Enter the GPIO pin connected to the blue LED for camera illumination:'))
+            fileErr = True
+        if not hasattr (self, 'hasLickDetector') or not hasattr (self, 'lickDetectorIRQ'):
+            tempInput = input ('Does this setup have a Lick Detector installed? (Y or N)')
+            if tempInput [0] == 'y' or tempInput [0] == 'Y':
+                self.hasLickDetector = True
+                self.lickDetectorIRQ = int (input ('Enter the GPIO pin connected to the IRQ pin for the Lick Detector'))
+            else:
+                self.hasLickDetector = False
+                self.lickDetectorIRQ = 0
+            fileErr = True
+        if not hasattr ('hasEntryBB') or not hasattr ('entryBBpin'):
+            tempInput = input ('Does this setup have a beam break installed at the tube enty way? (Y or N)')
+            if tempInput [0] == 'y' or tempInput [0] == 'Y':
+                self.hasEntryBB = True
+                self.entryBBpin = int (input ('Enter the GPIO pin connected to the entry beam break'))
+            else:
+                self.hasEntryBB = False
+                self.entryBBpin = 0
+            fileErr = True
+         ####### settings for experiment configuration ########  
         if not hasattr (self, 'cageID'):
-            self.cageID = input('Enter the cage ID:')
+            self.cageID = input('Enter a name for the cage ID:')
             fileErr = True
-        if not hasattr (self, 'headFixer'):
-            self.headFixer = AHF_HeadFixer.get_HeadFixer_from_user ()
+        if not hasattr (self, 'dataPath'):
+            self.dataPth = input ('Enter the path to the directory where the data will be saved:')
+            fileErr = True:
+        if not hasattr (self, 'mouseConfigPath'):
+            self.mouseConfigPath = input ('Enter the path to the directory where mouse configuration data can be loaded:')
+         if not hasattr (self, 'StimulatorClass') or not hasattr (self, 'StimulatorDict'):
+            self.StimulatorClass = AHF_Stimulator.get_Stimulator_from_user ()
+            self.StimulatorDict = AHF_HeadStimulator.get_class(self.StimulatorClass).config_user_get ()
             fileErr = True
-        print (",".join(self.__dict__.keys()))
-
-        if fileErr: 
-            response = input ('Save new/updated settings to a configuration  file?')
-            if response [0] == 'y' or response [0] == 'Y':
-
+            
 
 
         
-                              
-        """       
+        if fileErr: 
+            response = input ('Save new/updated settings to a configuration  file?')
+            if response [0] == 'y' or response [0] == 'Y':
+                print ('right away boss')
+
+
+
+if __name__ == '__main__':
+    task = Task (None)
+    for key, value in inspect.getmembers(task):
+        if key.startswith ('__') is False and inspect.isroutine (getattr (task,key)) is False:
+            print(key, ' = ', value)
+    print (task.__dict__ )                   
+"""       
                 
         try:
             with open ('AHFconfig.jsn', 'r') as fp:
@@ -219,13 +293,13 @@ class Task:
 
 
     def saveCageSet(self):
-        """
+        
         #Saves current configuration stored in the task object into the file ./AHFconfig.jsn
         #Call this function after modifying the contents of the task to save your changes
 
         #:param: none
         #:returns: nothing
-        """
+    
         jsonDict={'Cage ID':self.cageID,'Head Fixer':self.headFixer}
         AHF_HeadFixer.get_class (self.headFixer).configDict_set (self, jsonDict)
         jsonDict.update ({'Reward Pin':self.rewardPin, 'Tag In Range Pin':self.tirPin, 'Contact Pin':self.contactPin})
@@ -241,12 +315,12 @@ class Task:
             os.chown ('AHFconfig.jsn', uid, gid) # we may run as root for pi PWM, so we need to expicitly set ownership
 
     def showCageSet (self):
-        """
+        
         #Prints the current configuration stored in this AHF_CageSet to the console, nicely formatted
 
         #:param: none
         #:returns: nothing
-        """
+        
         print ('****************Current Auto-Head-Fix Cage Settings********************************')
         print ('1:Cage ID=' + str (self.cageID))
         print ('2:data Path=' + self.dataPath)
@@ -267,9 +341,9 @@ class Task:
 
 
     def editCageSet (self):
-        """
+        
         #Allows the user to edit and save the cage settings
-        """
+        
         while True:
             self.showCageSet ()
             editNum = int(input ('Enter number of paramater to Edit, or 0 when done to save file:'))
@@ -344,11 +418,3 @@ class Task:
             self.stimDict = configDict.get('stimParams')
 """
 
-if __name__ == '__main__':
-    task = Task (None)
-    d1 = task.__dir__()
-    
-    #print ("\n\n")
-    #d1=task.__dict__
-    #print (d1)
-    #print (",".join(task.__dict__.keys()))

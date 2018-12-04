@@ -78,6 +78,7 @@ def config_from_user (task):
     task.propHeadFix = min (1, max (0, self.propHeadFix)) # make sure proportion is bewteen 0 and 1
     task.skeddadleTime = float (input ('Time, in seconds, for mouse to get head off the contacts when session ends:'))
     tempInput = input ('Send text messages if mouse exceeds criterion time in chamber?(Y or N):')
+
     task.hasTextMsg = bool(tempInput [0] == 'y' or tempInput [0] == 'Y')
     if task.hasTextMsg == True:
         task.inChamberTimeLimit = float (input ('In-Chamber duration limit, seconds, before stopping head-fix trials and sending text messg:'))
