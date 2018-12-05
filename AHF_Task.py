@@ -29,11 +29,10 @@ class Task:
     def __init__ (self, fileName):
         """
         Initializes a Task object with hardware settings and experiment settings by calling loadSettings function
-        self.fileLoaded will be set to True if settings file was loaded successfully or created by user
         
         """
         # try to load ssettings from ./AHFconf_*.jsn, load it or query user if it does not exist or is incomplete
-        self.fileLoaded = False
+        fileLoaded = False
         # load experiment settings from passed in file name, if program was started with a config file name 
         if fileName is not None:
             if fileName.startswith ('AHFconf_'):
@@ -45,9 +44,9 @@ class Task:
                 configFile += '.jsn'
             for f in os.listdir('.'):
                 if f == configFile:
-                    self.fileLoaded=self.loadSettings (fileName)
+                    fileLoaded=self.loadSettings (fileName)
                     break
-        if not self.fileLoaded:
+        if not fileLoaded:
             # look for experiment config files in the current directory, they start with AHFconf_ and end with .jsn
             iFile=0
             files = ''
@@ -63,11 +62,11 @@ class Task:
                 inputPrompt += files +'\n:'
                 fileNum = int (input (inputPrompt))
             if fileNum == -1: # no settings file found, or user decided to make a new one, call loadSettings with None
-                self.fileLoaded = self.loadSettings (None)
+                fileLoaded = self.loadSettings (None)
             else: # load user's chosen settings file. 
                 # file list starts with a separator (\n) so we split the list on \n and get fileNum + 1
                 # each list item starts with fileNum: so split the list item on ":" and get item 1 to get file name
-                self.fileLoaded = self.loadSettings ((files.split('\n')[fileNum + 1]).split (':')[1])
+                fileLoaded = self.loadSettings ((files.split('\n')[fileNum + 1]).split (':')[1])
         
 
     def loadSettings (self, fileName):
@@ -93,9 +92,16 @@ class Task:
         # check for any missing settings, all settings will be missing if making a new config, and call setting functions for
         # things like head fixer that are subclassable need some extra work , when either loaded from file or user queried
         ########## cage specific hardware settings #################################
-        if not hasattr (self, 'headFixerClass') or not hasattr (self, 'headFixerDict'):
-            self.headFixerClass = AHF_HeadFixer.get_HeadFixer_from_user ()
-            self.headFixerDict = AHF_HeadFixer.get_class(self.headFixerClass).config_user_get ()
+        if not hasattr (self, 'hasHeadFixer') or not hasattr (self, 'headFixerClass') or not hasattr (self, 'headFixerDict'):
+            tempInput = input ('Does this setup have a head fixing mechanism installed? (Y or N)')
+            if tempInput [0] == 'y' or tempInput [0] == 'Y':
+                self.hasHeadFixer = True
+                self.headFixerClass = AHF_HeadFixer.get_HeadFixer_from_user ()
+                self.headFixerDict = AHF_HeadFixer.get_class(self.headFixerClass).config_user_get ()
+            else:
+                self.hasHeadFixer = False
+                self.headFixerClass = None
+                self.headFixerDict = {}
             fileErr = True
         if not hasattr (self, 'rewardPin'):
             self.rewardPin = int (input('Enter the GPIO pin used by the water delivery solenoid:'))
@@ -103,8 +109,8 @@ class Task:
         if not hasattr (self, 'serialPort'):
             self.serialPort = input ('Enter serial port for tag reader(likely either /dev/Serial0 or /dev/ttyUSB0):')
             fileErr = True
-        if not hasattr (self, 'tirPin'):
-            self.tirPin = int (input('Enter the GPIO pin connected to the Tag-In-Range pin on the Tag Reader:'))
+        if not hasattr (self, 'TIRpin'):
+            self.TIRpin = int (input('Enter the GPIO pin connected to the Tag-In-Range pin on the Tag Reader:'))
             fileErr = True
         if not hasattr (self, 'contactPin') or not hasattr (self, 'contactPolarity') or not hasattr (self, 'contactPUD'):
             self.contactPin = int (input ('Enter the GPIO pin connected to the headbar contacts or IR beam-breaker:'))
@@ -134,7 +140,7 @@ class Task:
                 self.hasLickDetector = False
                 self.lickDetectorIRQ = 0
             fileErr = True
-        if not hasattr ('hasEntryBB') or not hasattr ('entryBBpin'):
+        if not hasattr (self, 'hasEntryBB') or not hasattr (self, 'entryBBpin'):
             tempInput = input ('Does this setup have a beam break installed at the tube enty way? (Y or N)')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
                 self.hasEntryBB = True
@@ -149,21 +155,86 @@ class Task:
             fileErr = True
         if not hasattr (self, 'dataPath'):
             self.dataPth = input ('Enter the path to the directory where the data will be saved:')
-            fileErr = True:
+            fileErr = True
         if not hasattr (self, 'mouseConfigPath'):
             self.mouseConfigPath = input ('Enter the path to the directory where mouse configuration data can be loaded:')
-         if not hasattr (self, 'StimulatorClass') or not hasattr (self, 'StimulatorDict'):
+        ################################ Stimulator class makes its own dictionary #######################
+        if not hasattr (self, 'StimulatorClass') or not hasattr (self, 'StimulatorDict'):
             self.StimulatorClass = AHF_Stimulator.get_Stimulator_from_user ()
-            self.StimulatorDict = AHF_HeadStimulator.get_class(self.StimulatorClass).config_user_get ()
+            self.StimulatorDict = AHF_Stimulator.get_class(self.StimulatorClass).config_user_get ()
             fileErr = True
-            
-
-
-        
+            #### the reward and head-fix proportion settings can also be set on a per-mouse bassis
+            ### these provide default values
+        if not hasattr (self, 'entranceRewardTime'):
+            self.entranceRewardTime = float (input ('Enter solenoid opening duration, in seconds, for entrance rewards:'))
+            fileErr = True
+        if not hasattr (self, 'taskRewardTime'):
+            self.taskRewardTime = float (input ('Enter solenoid opening duration,in seconds, for task rewards:'))
+            fileErr = True
+        if not hasattr (self, 'maxEntryRewards'):
+            self.maxEntryRewards = int (input ('Enter maximum number of entry rewards that will be given per day:'))
+            fileErr = True
+        if not hasattr (self, 'entryRewardDelay'):
+            self.entryRewardDelay= float (input('Enter delay, in seconds, before an entrance reward is given:'))
+            fileErr = True
+        if not hasattr (self, 'propHeadFix'):
+            self.propHeadFix= float (input('Enter proportion (0 to 1) of trials that are head-fixed:'))
+            self.propHeadFix = min (1, max (0, self.propHeadFix)) # make sure proportion is bewteen 0 and 1
+            fileErr = True
+        if not hasattr (self, 'skeddadleTime'):
+            self.skeddadleTime = float (input ('Enter time, in seconds, for mouse to get head off the contacts when session ends:'))
+            fileErr = True
+        if not hasattr (self, 'inChamberTimeLimit'):
+            self.inChamberTimeLimit = float(input('In-Chamber duration limit, seconds, before stopping head-fix trials:'))
+        ############################ text messaging using textbelt service ############################
+        if not hasattr (self, 'hasTextMsg') or not hasattr (self, 'phoneList') or not hasattr (self, 'textBeltKey'):
+            tempInput = input ('Send text messages if mouse exceeds criterion time in chamber?(Y or N):')
+            if tempInput [0] == 'y' or tempInput [0] == 'Y':
+                self.hasTextMsg = True
+                self.phoneList =tuple (input('Phone numbers to receive a text message if mouse is in chamber too long:').split(','))
+                self.textBeltKey = input ('Enter the textBelt code (it\'s only 65 characters):')
+            else:
+                self.hasTextMsg = False
+                self.phoneList = ()
+                self.textBeltKey = ''
+            fileErr = True
+        ####################################### UDP triggers for alerting other computers ######################3
+        if not hasattr(self, 'hasUDP') or not hasattr (self, 'UDPList') or not hasattr (self,'UDPstartDelay') :
+            tempInput = input ('Send UDP triggers to start tasks on secondary computers (Y or N):')
+            if tempInput [0] == 'y' or tempInput [0] == 'Y':
+                self.hasUDP = True
+                self.UDPList =tuple (input('IP addresses of Pis running secondary cameras:').split (','))
+                self.UDPstartDelay = float (input ('Delay in seconds between sending UDP and toggling blue LED.'))
+            else:
+                self.hasUDP = False
+                self.UDPList = ()
+                self.UDPstartDelay = 0
+            fileErr = True
+        ############################################ Camera makes its own dictionary of settings #################
+        if not hasattr (self, 'hasCamera') or not hasattr (self, 'cameraClass') or not hasattr (self, 'cameraDict'):
+            tempInput = input ('Does this system have a main camera installed (Y or N):')
+            if tempInput [0] == 'y' or tempInput [0] == 'Y':
+                self.hasCamera = True
+                self.cameraClass = AHF_Camera.get_Camera_from_user ()
+                self.cameraDict = AHF_Camera.get_class(self.CameraClass).config_user_get ()
+            else:
+                self.hasCamera=False
+                self.cameraClass = None
+                self.cameraDict = {}
+            fileErr = True
+        # if some of the paramaters were set by user, give option to save
         if fileErr: 
             response = input ('Save new/updated settings to a configuration  file?')
             if response [0] == 'y' or response [0] == 'Y':
-                print ('right away boss')
+                self.showSettings ()
+
+
+
+    def showSettings (self):
+        ii = 0
+        for key, value in inspect.getmembers(self):
+            if key.startswith ('__') is False and inspect.isroutine (getattr (self, key)) is False:
+                print(ii, ')\t', key, ' = ', value)
 
 
 

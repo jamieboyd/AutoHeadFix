@@ -1,65 +1,97 @@
 #! /usr/bin/python3
 #-*-coding: utf-8 -*-
+from abc import ABCMeta, abstractmethod
+import os
+import inspect
 
-from picamera import PiCamera
-from time import sleep
-
-class AHF_Camera (PiCamera):
+class AHF_Camera(metaclass = ABCMeta):
     """
-    AHF_Camera is subclassed from PiCamera to hold a few extra settings and to initialize the camera for constant exposure.
+    AHF_Camera is the base class for the main brain imaging camera used in Auto Head Fix
     """
 
-    def __init__(self, paramDict):
+    ##################################################################################
+    # Static methods for base class for getting class names and importing classes
+    @staticmethod
+    def get_class(fileName):
         """
-        Initializes an AHF_Camera object from a dictonary and sets the gain as appropriate
+        Imports a module from a fileName (stripped of the .py) and returns the class
 
-        :param paramDict.format: video format for recording, default='.h264'
-        :param paramDict.quality: different video formats interpret quality paramater differently, default = 10
-        :param paramDict.resolution: two-tuple of horizontal pixel number and vertical pixel number default= (640, 480)
-        :param paramDict.framerate: rate,1 in Hz, at which to record video, default = 30
-        :param paramDict.shutter_speed: camera exposure time, in microseconds, inverse must be less than frame rate default = 30
-        :param paramDict.iso: used to set gain of camera directly, or use 0 to have camera calculate gain automatically
-        :param paramDict.whiteBalance: set to True if you want camera to auto white balance, set to False to set all color gains to 1, default = False
-        :param paramDict.previewWin: set the size of the preview window, in pixels a tuple of (left, top, right, bottom) coordinates. default = (0,0,640,480)
-        :raises PiCameraError: error raised by superclass PiCamera if camera is not found, or can't be initialized
+        Assumes the class is named the same as the module. 
         """
-        # init superClass
-        try:
-            super().__init__()
-        except Exception as anError:
-            print ("Error initializing camera.." + str (anError))
-            raise anError
-        # set fields in  super-class
-        self.resolution = paramDict.get ('resolution', (640, 480))
-        self.framerate = paramDict.get ('framerate', 30)
-        self.iso = paramDict.get ('iso', 0)
-        self.shutter_speed = paramDict.get ('shutter_speed', 30000)
-        # set fields that are in AFF_Camera class
-        self.AHFvideoFormat = paramDict.get ('format', 'h264')
-        self.AHFvideoQuality = paramDict.get ('quality', 20)
-        self.AHFframerate= paramDict.get ('framerate', 30)
-        self.AHFpreview = paramDict.get('previewWin', (0,0,640,480))
-        whiteBalance = paramDict.get ('whiteBalance', False)
-        self.AHFgainMode = (whiteBalance == True) # set bit 0 of gain for auto white balancing
-        self.AHFgainMode += 2 * (self.iso == 0) # set bit 1 for auto gain
-        # turn off LED on camera
-        self.led = False
-        # set gain based on 2 sec preview
-        self.set_gain ()
-        return
+        module = __import__(fileName)
+        return getattr(module, fileName)
 
-    def get_configDict (self):
-        """
-        Loads camera settings into a dictionary with same keys as used in __init__ and returns that dictionary
 
-        Note that we use float () on framerate becuase it is a Fraction, i,e, 30 is represented as Fraction (30, 1)
-        and it doen't serialize for storing as a JSON dict
+    @staticmethod
+    def get_Camera_from_user ():
         """
-        paramDict = {'resolution' : self.resolution, 'framerate' : float (self.framerate), 'iso' : self.iso}
-        paramDict.update ({'shutter_speed' : self.shutter_speed, 'format' : self.AHFvideoFormat})
-        paramDict.update ({'quality' : self.AHFvideoQuality, 'framerate' : self.AHFframerate})
-        paramDict.update ({'previewWin' : self.AHFpreview, 'whiteBalance' : bool(self.AHFgainMode & 1)})
-        return paramDict
+        Static method that trawls through current folder looking for Camera class python files
+        
+        Allows user to choose from the list of files found. Files are recognized by names starting
+        with 'AHF_Camera_' and ending with '.py'
+        Raises: FileNotFoundError if no stimulator class files found
+        """
+        iFile=0
+        files = ''
+        #print (os.listdir(os.curdir))
+        for f in os.listdir(os.curdir):
+            if f.startswith ('AHF_Camera_') and f.endswith ('.py'):
+                f= f.rstrip  ('.py')
+                #print ('file = ' + str (f))
+                try:
+                    moduleObj=__import__ (f)
+                    #print ('module=' + str (moduleObj))
+                    classObj = getattr(moduleObj, moduleObj.__name__)
+                    #print ('class obj = ' + str (classObj))
+                    isAbstractClass =inspect.isabstract (classObj)
+                    if isAbstractClass == False:
+                        if iFile > 0:
+                            files += ';'
+                        files += f
+                        iFile += 1
+                except Exception as e: # exception will be thrown if imported module imports non-existant modules, for instance
+                    print (e)
+                    continue     
+        if iFile == 0:
+            print ('Could not find any AHF_Camera_ files in the current or enclosing directory')
+            raise FileNotFoundError
+        else:
+            if iFile == 1:
+                CameraFile =  files.split('.')[0]
+                print ('AHF Camera file found: ' + CameraFile)
+                CameraFile =  files.split('.')[0]
+            else:
+                inputStr = '\nEnter a number from 0 to ' + str (iFile -1) + ' to Choose a Camera class:\n'
+                ii=0
+                for file in files.split(';'):
+                    inputStr += str (ii) + ': ' + file + '\n'
+                    ii +=1
+                inputStr += ':'
+                CameraNum = -1
+                while CameraNum < 0 or CameraNum > (iFile -1):
+                    CameraNum =  int(input (inputStr))
+                CameraFile =  files.split(';')[CameraNum]
+                CameraFile =  CameraFile.split('.')[0]
+            return CameraFile
+
+
+
+    ##################################################################################
+    #abstact methods each Camera class must implement
+    #part 1: three main methods of initing
+    @abstractmethod
+    def __init__(self, settingsDict):
+        """
+        hardware initialization of a headFixer, reading data from the task object
+        """
+        pass
+
+
+     @staticmethod
+    def config_user_get ():
+        """
+        Querries user for settings for the Camera class and returns a dictionary of those settings
+        """
 
     def set_params (self, paramDict):
         """

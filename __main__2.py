@@ -35,25 +35,26 @@ def main():
         configFile = None
         if argv.__len__() > 1:
             configFile = argv [1]
-        task = Task (configFile) 
-        print ('LED pin =', task.ledPin) # quick debug check that task got loaded
+        task = Task (configFile)
+        assert (hasattr (task, 'LEDpin') # quick debug check that task got loaded
         # initialize GPIO, and initialize pins for the simple sub-tasks; more complex sub-tasks have their own code for initializing
         GPIO.setmode (GPIO.BCM)
         GPIO.setwarnings(False)
         # set up pin that turns on brain illumination LED
-        GPIO.setup (task.ledPin, GPIO.OUT, initial = GPIO.LOW)
+        GPIO.setup (task.LEDpin, GPIO.OUT, initial = GPIO.LOW)
         # set up pin for ascertaining mouse contact, ready for head fixing
-        GPIO.setup (task.contactPin, GPIO.IN, pull_up_down=getattr (GPIO, "PUD_" + task.contactPUD))
+        GPIO.setup (task.contactPin, GPIO.IN, pull_up_down=getattr (GPIO, task.contactPUD))
         # set up countermandable pulse for water solenoid
         rewarder = PTCountermandPulse (task.rewardPin, 0, 0, task.entranceRewardTime, 1)
         setattr (task, 'rewarder', rewarder)
         # make head fixer - does its own GPIO initialization from info in task
-        headFixer=AHF_HeadFixer.get_class (task.headFixer) (task)
-        setattr (task, 'headFixer', headFixer)
+        if task.hasHeadFixer:
+            headFixer=AHF_HeadFixer.get_class (task.headFixerClass) (task.headFixerDict)
+            setattr (task, 'headFixer', headFixer)
         # set up tag reader with callback on tag_in_range_pin
         # the callback will set RFIDTagReader.globalTag
         tagReader =RFIDTagReader.TagReader (task.serialPort, doChecksum = True, timeOutSecs = 0.05, kind='ID')
-        tagReader.installCallBack (task.tag_in_range_pin)
+        tagReader.installCallBack (task.TIRpin)
         setattr(task, 'tagReader', tagReader)
         
         now = datetime.fromtimestamp (int (time()))
