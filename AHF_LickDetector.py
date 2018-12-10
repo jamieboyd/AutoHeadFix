@@ -6,7 +6,7 @@ from datetime import datetime
 import RPi.GPIO as GPIO
 import Adafruit_MPR121.MPR121 as MPR121
 from array import array
-
+import RFIDTagReader
 """
 Adafruit_MPR121 requires the Adafuit MPR121 library which, in turn,
 requires the Adafuit GPIO library
@@ -48,7 +48,7 @@ def AHF_LickDetectorCallback (channel):
         if (gLickTouches & pinBit) and not (gLickDetector.prevTouches & pinBit):
             gLickArray [i] +=1
             if gLickDetector.isLogging:
-                gLickDetector.dataLogger.writeToLogFile('Lick:' + str (i))
+                gLickDetector.dataLogger.writeToLogFile(RFIDTagReader.globalTag, 'Lick:' + str (i))
         pinBit *= 2
     gLickDetector.prevTouches = gLickTouches
 
@@ -236,25 +236,63 @@ class LickDetector (object):
 
 class Simple_Logger (object):
     """
-    A class to do simple logging of licks, used ig no data logger is passed to lickdetector constructor
+    A class to do simple logging of licks, or other events, used if no data logger is passed to lickdetector constructor
     """
-    
+    PSEUDO_MUTEX =0
+   
     def __init__(self, logFP):
         """
         takes file pointer to a file opened for writing
-        If file ponter is none, will just write to shell
+        If file pointer is none, will just write to shell
         """
         self.logFP = logFP
 
     
-    def writeToLogFile(self, event):
+    def writeToLogFile(self, tag, event):
         """
         Writes time of lick to shell, and to a file, if present, in AHF_dataLogger format
         """
-        outPutStr = '{:013}'.format(0)
+        while Simple_Logger.PSEUDO_MUTEX ==1:
+            sleep (0.01)
+        Simple_Logger.PSEUDO_MUTEX =1
+        outPutStr = '{:013}'.format(tag)
         logOutPutStr = outPutStr + '\t' + '{:.2f}'.format (time ())  + '\t' + event +  '\t' + datetime.fromtimestamp (int (time())).isoformat (' ')
         printOutPutStr = outPutStr + '\t' + datetime.fromtimestamp (int (time())).isoformat (' ') + '\t' + event
         print (printOutPutStr)
         if self.logFP is not None:
             self.logFP.write(logOutPutStr + '\n')
             self.logFP.flush()
+        Simple_Logger.PSEUDO_MUTEX = 0
+
+
+def main():
+    serialPort = '/dev/serial0'
+    #serialPort = '/dev/ttyUSB0'
+    tag_in_range_pin=21
+    lick_IRQ_pin = 26
+    import RPi.GPIO as GPIO
+    import RFIDTagReader
+    from time import sleep
+    GPIO.setmode (GPIO.BCM)
+    tagReader = RFIDTagReader.TagReader(serialPort, True, timeOutSecs = 0.05, kind='ID')
+    tagReader.installCallBack (tag_in_range_pin)
+    logger = Simple_Logger (None)
+    lickDetetctor = LickDetector (lick_IRQ_pin, logger)
+    lickDetetctor.zeroLickCount ([0,1])
+    print ('Waiting for licks...')
+    lickDetetctor.startLogging()
+    #sleep (20)
+    for i in range (0,10):
+        while RFIDTagReader.globalTag == 0:
+            sleep (0.02)
+        mouse = RFIDTagReader.globalTag
+        logger.writeToLogFile (mouse, 'Mouse Entry')
+        while RFIDTagReader.globalTag != 0:
+            sleep (0.02)
+        logger.writeToLogFile (mouse, 'Mouse Exit')
+    lickDetetctor.stopLogging()
+    print (lickDetetctor.getLickCount ([0,1]), ' licks in 10 entries')
+
+
+if __name__ == '__main__':
+    main()

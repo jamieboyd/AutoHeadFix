@@ -8,7 +8,7 @@ from datetime import datetime
 import RFIDTagReader
 
 class AHF_DataLogger (object):
-
+    PSEUDO_MUTEX =0
     def __init__ (self, task):
         self.cageID = str(task.get ('cageID'))
         self.dataPath = task.get('dataPath')
@@ -67,28 +67,30 @@ class AHF_DataLogger (object):
         self.writeToLogFile ('SeshStart')
 
         
-    def writeToLogFile(self, event):
+    def writeToLogFile(self, tag, event):
         """
         Writes the time and type of each event to a text log file, and also to the shell
 
         Format of the output string: tag     time_epoch or datetime       event
         The computer-parsable time_epoch is printed to the log file and user-friendly datetime is printed to the shell
-        :param logFP: file pointer to the log file
+        :param tag: the tag of mouse, usually from RFIDTagreader.globalTag
         :param event: the type of event to be printed, entry, exit, reward, etc.
         returns: nothing
         """
         tag = RFIDTagReader.globalTag
-        if event == 'SeshStart' or event == 'SeshEnd' or tag == 0:
-            outPutStr = ''.zfill(13)
-        else:
-            outPutStr = '{:013}'.format(tag)
+        while AHF_DataLogger.PSEUDO_MUTEX ==1:
+            sleep (0.01)
+        AHF_DataLogger.PSEUDO_MUTEX = 1
+        if event == 'SeshStart' or event == 'SeshEnd':
+            tag = 0
+        outPutStr = '{:013}'.format(tag)
         logOutPutStr = outPutStr + '\t' + '{:.2f}'.format (time ())  + '\t' + event +  '\t' + datetime.fromtimestamp (int (time())).isoformat (' ')
         printOutPutStr = outPutStr + '\t' + datetime.fromtimestamp (int (time())).isoformat (' ') + '\t' + event
         print (printOutPutStr)
         if self.logFP is not None:
             self.logFP.write(logOutPutStr + '\n')
             self.logFP.flush()
-
+        AHF_DataLogger.PSEUDO_MUTEX = 0
 
     def makeQuickStatsFile (self, mice):
         """

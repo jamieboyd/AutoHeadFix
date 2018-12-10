@@ -87,7 +87,7 @@ class AHF_Camera(metaclass = ABCMeta):
         pass
 
 
-     @staticmethod
+    @staticmethod
     def config_user_get ():
         """
         Querries user for settings for the Camera class and returns a dictionary of those settings
