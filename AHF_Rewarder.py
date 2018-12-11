@@ -16,9 +16,7 @@ class AHF_Rewarder:
         :param rewardPin: GPIO pin number connected to the solenoid
         :return: returns nothing
         """
-        self.rewardPin = rewardPin
-        self.gpio_pin, polarity, delay, duration, accuracy_level)
-        
+        self.rewardPin = rewardPin        
 
 
     def addToDict(self, rewardName, rewardSize):

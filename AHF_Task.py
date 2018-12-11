@@ -31,34 +31,37 @@ class Task:
         Initializes a Task object with hardware settings and experiment settings by calling loadSettings function
         
         """
-        # try to load ssettings from ./AHFconf_*.jsn, load it or query user if it does not exist or is incomplete
+        # try to load ssettings from ./AHFtask_*.jsn, load it or query user if it does not exist or is incomplete
         fileLoaded = False
-        # load experiment settings from passed in file name, if program was started with a config file name 
+        self.fileName = ''
+        # load experiment settings from passed in file name, if program was started with a task file name 
         if fileName is not None:
-            if fileName.startswith ('AHFconf_'):
+            # file name passed in may or may not start with AFHtask_ and end with .jsn
+            if fileName.startswith ('AHFtask_'):
                 configFile = ''
             else:
-                configFile = 'AHFconf_'
+                configFile = 'AHFtask_'
             configFile += fileName
             if not fileName.endswith ('.jsn'):
                 configFile += '.jsn'
+            # try to find the file name in current directory and load it
             for f in os.listdir('.'):
                 if f == configFile:
-                    fileLoaded=self.loadSettings (fileName)
+                    fileLoaded=self.loadSettings (configFile)
                     break
         if not fileLoaded:
-            # look for experiment config files in the current directory, they start with AHFconf_ and end with .jsn
+            # look for all experiment config files in the current directory, they start with AHFtask_ and end with .jsn
             iFile=0
             files = ''
             for f in os.listdir('.'):
-                if f.startswith ('AFHconf_') and f.endswith ('.jsn'):
+                if f.startswith ('AFHtask_') and f.endswith ('.jsn'):
                     files += '\n' + str (iFile) + ':' + f
                     iFile +=1
             if iFile == 0: # no files found, so set flag for user to create one
-                print ('Unable to find any Auto head Fix config files, let\'s make a new configuration:')
+                print ('Unable to find any Auto head Fix task files, let\'s configure a new task:')
                 fileNum=-1
             else:  # list all settings files and get user to choose one, or choose -1 to make new file anyway
-                inputPrompt = 'Enter file number to load Auto Head Fix config file, or -1 to make new config\n'
+                inputPrompt = 'Enter file number to load Auto Head Fix task file, or -1 to configure q new task\n'
                 inputPrompt += files +'\n:'
                 fileNum = int (input (inputPrompt))
             if fileNum == -1: # no settings file found, or user decided to make a new one, call loadSettings with None
@@ -77,6 +80,7 @@ class Task:
         """
         fileErr = False
         if fileName is not None:
+            self.filename = fileName
             try:
                 with open (filename, 'r') as fp:
                     data = fp.read()
@@ -87,7 +91,7 @@ class Task:
                     setattr (self, key, configDict.get(key))
                 #print (self.__dict__)
             except (TypeError, IOError, ValueError) as e: #we will make a file if we didn't find it, or if it was incomplete
-                print ('Unable to open and load configuration:' + str (e) + '\n let\'s make new configuration.\n')
+                print ('Unable to open and load task configuration:' + str (e) + '\n let\'s configure a new task.\n')
                 fileErr = True
         # check for any missing settings, all settings will be missing if making a new config, and call setting functions for
         # things like head fixer that are subclassable need some extra work , when either loaded from file or user queried
@@ -192,7 +196,7 @@ class Task:
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
                 self.hasTextMsg = True
                 self.phoneList =tuple (input('Phone numbers to receive a text message if mouse is in chamber too long:').split(','))
-                self.textBeltKey = input ('Enter the textBelt code (it\'s only 65 characters):')
+                self.textBeltKey = input ('Enter the textBelt code (c\'mon it\'s only 65 characters):')
             else:
                 self.hasTextMsg = False
                 self.phoneList = ()
@@ -224,26 +228,67 @@ class Task:
             fileErr = True
         # if some of the paramaters were set by user, give option to save
         if fileErr: 
-            response = input ('Save new/updated settings to a configuration  file?')
+            response = input ('Save new/updated settings to a task configuration file?')
             if response [0] == 'y' or response [0] == 'Y':
-                self.showSettings ()
+                self.saveSettings ()
+                
+                
+    def saveSettings(self):
+        """
+        Saves current configuration stored in the task object into AHFtask_*.jsn
+        Call this function after modifying the contents of the task to save your changes
+
+        :param: none
+        :returns: nothing
+        """
+        # get name for new config file and massage it a bit
+        if self.fileName != '':
+            inputStr = 'Enter a name to save task settings, or enter to use current name, \'' + self.fileName + '\':'
+            newConfig = input (inputStr)
+            if newConfig == '':
+                configFile = self.fileName
+        else:
+            newConfig = input ('Enter a name to save task settings as file:')
+            # file name passed in may or may not start with AFHconf_ and end with .jsn
+            if newConfig.startswith ('AHFconf_'):
+                startStr = ''
+            else:
+                startStr = 'AHFconf_'
+            if newConfig.endswith ('.jsn'):
+                endStr = ''
+            else:
+                endStr = '.jsn'
+            configFile = startStr + ''.join([c for c in newConfig if c.isalpha() or c.isdigit() or c=='_']) + endStr
+        task.fileName = configFile
+        # make a dictionary of pretty much all attributes and write it to disk with json dmps
+        jsonDict = {}
+        for key, value in self.__dict__ :
+            if key.startswith ('_') is False and inspect.isroutine (getattr (task,key)) is False:
+                jsonDict.update({key: value})
+
+        with open (configFile, 'w') as fp:
+            fp.write (json.dumps (jsonDict))
+            fp.close ()
+            uid = pwd.getpwnam ('pi').pw_uid
+            gid = grp.getgrnam ('pi').gr_gid
+            os.chown ('AHFconfig.jsn', uid, gid) # we may run as root for pi PWM, so we need to expicitly set ownership
 
 
 
     def showSettings (self):
         ii = 0
         for key, value in inspect.getmembers(self):
-            if key.startswith ('__') is False and inspect.isroutine (getattr (self, key)) is False:
+            if key.startswith ('_') is False and inspect.isroutine (getattr (self, key)) is False:
                 print(ii, ')\t', key, ' = ', value)
 
+    
 
 
 if __name__ == '__main__':
     task = Task (None)
-    for key, value in inspect.getmembers(task):
-        if key.startswith ('__') is False and inspect.isroutine (getattr (task,key)) is False:
-            print(key, ' = ', value)
-    print (task.__dict__ )                   
+    task.showSettings()
+
+
 """       
                 
         try:

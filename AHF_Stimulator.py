@@ -11,7 +11,7 @@ from AHF_Mouse import Mouse
 import time
 import json
 import os
-from time import time, sleep
+from time import time, s leep
 from datetime import datetime
 """
 class AHF_Stimulator (object, metaclass = ABCMeta):
@@ -64,7 +64,7 @@ class AHF_Stimulator (object, metaclass = ABCMeta):
                         files += f
                         iFile += 1
                 except Exception as e: # exception will be thrown if imported module imports non-existant modules, for instance
-                    print (e)
+                    print ('Could not load \'' + f + '\':' + str (e))
                     continue     
         if iFile == 0:
             print ('Could not find any AHF_Stimulator files in the current or enclosing directory')

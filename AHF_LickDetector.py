@@ -32,7 +32,7 @@ gLickArray = None           # array for counting licks in callback, will be init
 
 def AHF_LickDetectorCallback (channel):
     """
-    Lick Detetctor Calback, updates global for touches, adds new touches to global array, possibly logs licks
+    Lick Detetctor Callback, updates global for touches, adds new touches to global array, possibly logs licks
     If callback is running, do not interact with mpr121 directly, only through globals set by callback function
     Callback tracks only touches, not un-touches, by keeping track of last touches
     mpr121.touched() returns a 12-but value  where each bit  represents a pin, with a value of 1 being touched

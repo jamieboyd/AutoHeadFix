@@ -8,7 +8,17 @@ from datetime import datetime
 import RFIDTagReader
 
 class AHF_DataLogger (object):
+    """
+    The class field PSEUDO_MUTEX is used for preventing print statements from different places in the code
+    from executing at the same time, which leads to garbled output. Unlike a real mutex, execution of the
+    thread is not halted while waiting on the PSEUDO_MUTEX, hence the loops with calls to sleep to allow the
+    other threads of execution to continue while waiting for the mutex to be free. Also, read/write to the
+    PSEUDO_MUTEX is not atomic; one thread may read PSEUDO_MUTEX as 0, and set it to 1, but in the interval
+    between reading and writing to PSEUDO_MUTEX,another thread may have read PSEUDO_MUTEX as 0 and both
+    threads think they have the mutex
+    """
     PSEUDO_MUTEX =0
+
     def __init__ (self, task):
         self.cageID = str(task.get ('cageID'))
         self.dataPath = task.get('dataPath')
