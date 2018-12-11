@@ -4,7 +4,7 @@
 
 import RPi.GPIO as GPIO
 from time import sleep
-from AHF_TagReader import AHF_TagReader
+from RFIDTagReader import TagReader
 from AHF_HeadFixer import AHF_HeadFixer
 from AHF_CageSet import AHF_CageSet
 from time import time
@@ -32,16 +32,16 @@ if __name__ == '__main__':
             tagReader = AHF_TagReader (cageSet.serialPort, True)
         except IOError:
             tagReader = None
-        htloop (cageSet, tagReader, headFixer)
+        htloop (cageSet, tagReader, headFixer, stimulator, mice)
 else:
-    def hardwareTester (cageSet, tagReader, headFixer):
+    def hardwareTester (cageSet, tagReader, headFixer, stimulator, mice):
         """
         Hardware Tester for Auto Head Fixing, allows you to verify the various hardware bits are working
         """
-        htloop (cageSet, tagReader, headFixer)
+        htloop (cageSet, tagReader, headFixer, stimulator, mice)
         
 
-def htloop (cageSet, tagReader, headFixer):
+def htloop (cageSet, tagReader, headFixer, stimulator, mice):
     """
     Presents a menu asking user to choose a bit of hardware to test, and runs the tests
 
@@ -71,12 +71,12 @@ def htloop (cageSet, tagReader, headFixer):
           noContactState = GPIO.HIGH
     try:
         while (True):
-            inputStr = input ('t=tagReader, r=reward solenoid, c=contact check, e= entry beam break, f=head Fixer, l=LED, h=sHow config, v= saVe config, q=quit:')
+            inputStr = input ('t=tagReader, r=reward solenoid, c=contact check, e= entry beam break, f=head Fixer, l=LED, s=stimulator tester, h=sHow config, v= saVe config, q=quit:')
             if inputStr == 't': # t for tagreader
                 if tagReader == None:
                     cageSet.serialPort = input ('First, set the tag reader serial port:')
                     try:
-                        tagReader = AHF_TagReader (cageSet.serialPort, True)
+                        tagReader = TagReader (cageSet.serialPort, True)
                         inputStr =  input ('Do you want to read a tag now?')
                         if inputStr[0] == 'n' or inputStr[0] == "N":
                             continue
@@ -100,7 +100,7 @@ def htloop (cageSet, tagReader, headFixer):
                         if inputStr == 'y' or inputStr == "Y":
                             cageSet.serialPort = input ('Enter New Serial Port:')
                             # remake tagReader and open serial port
-                            tagReader = AHF_TagReader (cageSet.serialPort, True)
+                            tagReader = TagReader (cageSet.serialPort, True)
                     else:
                         print ("Tag ID =", tagID)
                         # now check Tag-In-Range pin function
@@ -210,6 +210,8 @@ def htloop (cageSet, tagReader, headFixer):
                 if inputStr == 'y' or inputStr == "Y":
                     cageSet.ledPin = int (input('Enter New LED Pin:'))
                     GPIO.setup (cageSet.ledPin, GPIO.OUT, initial = GPIO.LOW)
+            elif inputStr == 's':
+                stimulator.tester(mice)
             elif inputStr == 'h':
                 cageSet.show()
             elif inputStr=='v':

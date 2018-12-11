@@ -135,7 +135,7 @@ def main():
         sleep(1)
         lickDetector.start_logging ()
         # make stimulator
-        stimulator = AHF_Stimulator.get_class (expSettings.stimulator)(expSettings.stimDict, rewarder, lickDetector, expSettings.logFP)
+        stimulator = AHF_Stimulator.get_class (expSettings.stimulator)(expSettings.stimDict, rewarder, lickDetector, expSettings.logFP, camera)
         expSettings.stimDict = stimulator.configDict
         # Entry beam breaker
         if cageSettings.hasEntryBB==True:
@@ -271,7 +271,7 @@ def main():
                     elif event == 'v' or event== "V":
                         valveControl (cageSettings)
                     elif event == 'h' or event == 'H':
-                        hardwareTester(cageSettings, tagReader, headFixer)
+                        hardwareTester(cageSettings, tagReader, headFixer, stimulator, mice)
                         if cageSettings.contactPolarity == 'RISING':
                             expSettings.contactEdge = GPIO.RISING 
                             expSettings.noContactEdge = GPIO.FALLING

@@ -20,7 +20,7 @@ class AHF_Stimulator (object):
  
     """
     
-    def __init__ (self, configDict, rewarder, lickDetector, textfp):
+    def __init__ (self, configDict, rewarder, lickDetector, textfp, camera):
         """
         The Stimulator class is inited with: a config dictionary of settings; the same rewarder
         object used to give entry rewards; and a file pointer to the log file
@@ -28,6 +28,7 @@ class AHF_Stimulator (object):
         self.rewarder = rewarder
         self.textfp = textfp
         self.lickDetector = lickDetector
+        self.camera = camera
         self.mouse = None
         if configDict == None:
             self.config_from_user ()

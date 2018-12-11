@@ -20,6 +20,7 @@ class Mouse:
         """
         self.tag = tag
         self.entries = entries
+        self.tot_entries = entries
         self.entranceRewards = entranceRewards
         self.headFixes = headFixes
         self.headFixRewards = headFixRewards

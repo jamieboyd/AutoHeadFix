@@ -30,7 +30,8 @@ class AHF_Camera (PiCamera):
             print ("Error initializing camera.." + str (anError))
             raise anError
         # set fields in  super-class
-        self.resolution = paramDict.get ('resolution', (640, 480))
+        self.resolution = paramDict.get ('resolution', (608, 608))
+        self.resized = paramDict.get ('resized', (256, 256))
         self.framerate = paramDict.get ('framerate', 30)
         self.iso = paramDict.get ('iso', 0)
         self.shutter_speed = paramDict.get ('shutter_speed', 30000)
