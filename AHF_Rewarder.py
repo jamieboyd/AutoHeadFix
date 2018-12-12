@@ -1,31 +1,22 @@
 #! /usr/bin/python
-import RPi.GPIO as GPIO
+#-*-coding: utf-8 -*-
+
+from PTCountermandPulse import CountermandPulse
 from time import sleep
 
 class AHF_Rewarder:
     """
-    A class to use a solenoid to deliver water rewards of various sizes and keep track of rewards delivered.
-
-    A dictionary is used to store different opening durations with user-defined names.
-    A separate dictionary with the same keys is used to store the total number of rewards of each
-    type that have been delivered. The Rewarder class is inited with a default duration to be used if
-    a non-existent key is later requested, and the pin number of the GPIO pin used to
-    control the solenoid. Be sure to run GPIO.setmode and GPIO.setup before using the rewarder
-    TODO:1)include a measure of flow rate and record/return values in litres delivered, not
-    seconds open.2)make doReward threaded, so main program does not have to stop for long reards
+    A class to use a solenoid to deliver water rewards
     """
     def __init__ (self, defaultTimeVal, rewardPin):
         """
         Makes a new Rewarder object with a GPIO pin and default opening time
 
-        :param defaultTimeVal: opening suration to be used if requested reward Type is not in dictionary
+        :param defaultTimeVal: opening duration to be used if requested reward Type is not in dictionary
         :param rewardPin: GPIO pin number connected to the solenoid
         :return: returns nothing
         """
-        self.rewardDict = {'default': defaultTimeVal}
-        self.totalsDict = {'default': 0}
-        self.rewardPin = rewardPin
-        GPIO.setup (self.rewardPin, GPIO.OUT, initial= GPIO.LOW)
+        self.rewardPin = rewardPin        
 
 
     def addToDict(self, rewardName, rewardSize):
@@ -56,46 +47,6 @@ class AHF_Rewarder:
         self.totalsDict[rewardName] += 1
         return sleepTime
 
-    def getTotalDur (self):
-        """Returns the total duration in seconds of solenoid openings, of all reward types"""
-        total = 0
-        for key in self.totalsDict.keys():
-            total += self.totalsDict[key] * self.rewardDict [key]
-        return total
-
-    def getNumOfType (self, rewardName):
-        """
-        Returns the number of times rewards of a particular reward type have been disbursed
-
-        param:rewardName: the type of the reward queried, should already be in the dictionary, or exception wil be raised
-        """
-        return self.totalsDict.get(rewardName)
-
-    def setNumOfType (self, rewardName, rewardNum):
-        """
-        Sets number of rewards of a particular type, if, for example, a rewarder is associated with an existing mouse
-        """
-        self.totalsDict[rewardName] = rewardNum
-        
-    def zeroTotals (self):
-        """
-        Zeros the count of number of rewards given, for all reward types.
-
-        You might want to do this if keeping track of how many rewards have been delivered per day
-        """
-        for key in self.totalsDict.keys():
-            self.totalsDict[key]=0
-
-    def totalsToStr (self):
-        """
-        Returns a formatted string of total rewards given 
-
-        """
-        returnStr = ''
-        for key in self.totalsDict.keys():
-            if not key == 'default':
-                returnStr += str (key) +':' + str (self.totalsDict[key]) + '\t'
-        return returnStr
         
 #for testing purposes
 if __name__ == '__main__':

@@ -1,0 +1,17 @@
+{"releasedServoPosition": 930
+"LEDpin": 23
+"cageID": "3"
+"hasEntryBeamBreak": false
+"contactPullUpDown": "UP"
+"rewardPin": 13
+"contactPolarity": "FALLING"
+"headFixer": "AHF_HeadFixer_PWM_PCA9685"
+"serialPort": "/dev/serial0"
+"servoAddress": 64
+"tagInRange Pin": 21
+"pathToSaveData": "/media/pi/July_2018_8_mouse/"
+"mouseConfigPath": "/home/pi/Mice/"
+"contactPin": 24
+"fixedServoPosition": 600
+"hasLickDetetctor": true
+"lickIRQpin": 26}
