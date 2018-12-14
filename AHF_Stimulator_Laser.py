@@ -7,8 +7,9 @@ from pynput import keyboard
 import numpy as np
 from PTPWM import PTPWM
 from array import array
-from queue import Queue
+from queue import Queue as queue
 from threading import Thread
+from multiprocessing import Process, Queue
 from time import sleep
 from itertools import combinations,product
 import imreg_dft as ird
@@ -37,20 +38,24 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         self.PWM.set_PWM_enable(1,self.PWM_channel,0)
         self.duty_cycle = int(self.configDict.get('duty_cycle', 0))
         self.laser_on_time = int(self.configDict.get('laser_on_time', 0))
+        self.delay = self.configDict.get('motor_delay', 0.03)
+        
         #Overlay settings
         self.ratio = self.camera.resolution[0]/self.camera.resized[0]
         self.overlay_resolution = self.camera.resolution
         self.cross_pos = (np.array(self.camera.resolution)/2).astype(int)
         self.cross_step = int(self.camera.resolution[0]/50)
-        self.cross_q = Queue(maxsize=0) #Queues the cross-pin changes
-
+        self.cross_q = queue(maxsize=0) #Queues the cross-pin changes
+        
+        #Stepper settings
         GPIO.setup(self.SHCP, GPIO.OUT, initial = GPIO.HIGH)
         GPIO.setup(self.DS, GPIO.OUT, initial = GPIO.LOW)
         GPIO.setup(self.STCP, GPIO.OUT, initial = GPIO.HIGH)
         GPIO.setup(self.Q7S, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
-        #Stepper settings
-        self.phase_x = 0
-        self.phase_y = 0
+        
+        self.mot_q = Queue(maxsize=0) #Queues steper motor commands
+        self.phase_queue = Queue(maxsize=0) #Returns the new phase of the motors
+        self.phase_queue.put([0,0])
         self.pos = np.array([0,0])
         self.laser_points = []
         self.image_points = []
@@ -64,7 +69,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             GPIO.output(self.SHCP,1)
         GPIO.output(self.STCP,0)
         GPIO.output(self.STCP,1)
-        print('Motors unlocked.')
+        print('\n\nMotors unlocked.\n\n')
 
     def feed_byte(self,byte):
         for j in reversed(byte):
@@ -132,7 +137,8 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
     def on_press(self,key):
         di = self.get_arrow_dir(key)
         if any(np.asarray(di[:2])!=0):
-            self.move(x=di[0],y=di[1])
+            self.mot_q.put(di[:2])
+            self.pos += np.asarray(di[:2]) #Update the motor position
         if any(np.asarray(di[2:])!=0):
             self.cross_q.put(di[2:])
         if key == keyboard.Key.space:
@@ -140,26 +146,22 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             self.kb.release(keyboard.Key.backspace)
             self.image_points.append(np.copy(self.cross_pos/self.ratio))
             self.laser_points.append(np.copy(np.flip(self.pos,axis=0)))
-            print('Position saved!')
+            print('\n\nPosition saved!\n\n')
         if key == keyboard.Key.esc:
             if len(self.image_points)>=3:
                 self.image_points = np.asarray(self.image_points)
                 self.laser_points = np.asarray(self.laser_points)
+                try:
+                    self.cross_q.task_done()
+                    self.phase_q.task_done()
+                    self.cross_q.put(None)#To terminate the thread
+                except:
+                    pass
                 # Stop listener
                 return False
             else:
-                print('Need at least 3 points!')
-                print('Want to exit anyway? [y/n] ')
-                if input()=='y':
-                    self.image_points = np.asarray(self.image_points)
-                    self.laser_points = np.asarray(self.laser_points)
-                    try:
-                        self.cross_q.task_done()
-                    except:
-                        pass
-                    return False
-                else:
-                    pass
+                print('\n\nNeed at least 3 points!\n\n')
+                pass
 
     def make_cross(self):
         cross = np.zeros((self.overlay_resolution[0],self.overlay_resolution[0],3),dtype=np.uint8)
@@ -173,9 +175,12 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
 
     def update_cross(self,q):
         while True:
-            if not q.empty():
+            if not q.empty():    
+                prod = q.get()
+                if prod is None:
+                    return False
+                next_pos = self.cross_pos + np.array(prod)
                 #Make sure the cross remains within the boundaries given by the overlay
-                next_pos = self.cross_pos + np.array(q.get())
                 if not any((any(next_pos<0),any(next_pos>=np.array(self.camera.AHFpreview[2:])))):
                     self.cross_pos = next_pos
                     self.camera.remove_overlay(self.l3)
@@ -183,9 +188,22 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                 else:
                     pass
 
-    def move(self,x,y,delay=0.03):
+    def update_mot(self,mot_q,phase_queue,delay,topleft):
+        while True:
+            if not mot_q.empty():
+                x,y = mot_q.get()
+                self.move(x,y,phase_queue,delay,topleft)
+                self.pos += np.array([x,y])
+
+    def move(self,x,y,phase_queue,delay,topleft):
+        phase_x,phase_y = phase_queue.get()
+        
         states = [[1, 0, 0, 0], [1, 1, 0, 0], [0, 1, 0, 0], [0, 1, 1, 0],
                   [0, 0, 1, 0], [0, 0, 1, 1], [0, 0, 0, 1], [1, 0, 0, 1]]
+
+        if topleft==True:
+            x-=30
+            y-=30
 
         if abs(x)>=abs(y):
             x_steps = np.arange(start=0,stop=abs(x),dtype=int)
@@ -197,47 +215,61 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             x_steps = np.linspace(start=0,stop=abs(y-1),num=abs(x),endpoint=False,dtype=int)
 
         for i in (i for i in x_steps if x_steps.size>=y_steps.size):
-            next_phase_x = (self.phase_x + self.get_dir(x)) % len(states)
+            next_phase_x = (phase_x + self.get_dir(x)) % len(states)
             if i in y_steps:
-                next_phase_y = (self.phase_y + self.get_dir(y)) % len(states)
+                next_phase_y = (phase_y + self.get_dir(y)) % len(states)
                 byte = states[next_phase_x]+states[next_phase_y]
-                self.phase_y = next_phase_y
+                phase_y = next_phase_y
             else:
                 state_y = self.get_state()[-4:]
                 byte = states[next_phase_x]+state_y
             #Send and execute new byte
             self.feed_byte(byte)
             #Update phase
-            self.phase_x = next_phase_x
+            phase_x = next_phase_x
             sleep(delay)
 
         for i in (i for i in y_steps if y_steps.size>x_steps.size):
-            next_phase_y = (self.phase_y + self.get_dir(y)) % len(states)
+            next_phase_y = (phase_y + self.get_dir(y)) % len(states)
             if i in x_steps:
-                next_phase_x = (self.phase_x + self.get_dir(x)) % len(states)
+                next_phase_x = (phase_x + self.get_dir(x)) % len(states)
                 byte = states[next_phase_x]+states[next_phase_y]
-                self.phase_x = next_phase_x
+                phase_x = next_phase_x
             else:
                 state_x = self.get_state()[:4]
                 byte = state_x+states[next_phase_y]
             #Send and execute new byte
             self.feed_byte(byte)
-            self.phase_y = next_phase_y
+            phase_y = next_phase_y
             sleep(delay)
+            
+        if topleft == True:
+            x = 30
+            y = 30
+            for i in np.arange(start=0,stop=30,dtype=int):
+                next_phase_x = (phase_x + self.get_dir(x)) % len(states)
+                next_phase_y = (phase_y + self.get_dir(y)) % len(states)
+                byte = states[next_phase_x]+states[next_phase_y]
+                #Send and execute new byte
+                self.feed_byte(byte)
+                #Update phase
+                phase_x = next_phase_x
+                phase_y = next_phase_y
+                sleep(delay)
+            self.unlock()
+               
+        #Save the phase. This is the only output needed.
+        phase_queue.put([phase_x,phase_y])
 
-        #Update the position
-        self.pos += np.array([x,y])
-
-    def move_to(self, new_x, new_y,delay=0.03,topleft=True):
+    def move_to(self, new_x, new_y,topleft=True,join=False):
         steps_x = int(round(new_x)) - self.pos[0]
         steps_y = int(round(new_y)) - self.pos[1]
-        if topleft==True:
-            self.move(steps_x-30, steps_y-30,delay)
-            sleep(0.03)
-            self.move(30,30,delay)
-        else:
-            self.move(steps_x, steps_y,delay)
-
+        mp = Process(target=self.move, args=(steps_x,steps_y,self.phase_queue,self.delay,topleft,))
+        self.pos += np.array([steps_x,steps_y])
+        mp.daemon = True
+        mp.start()
+        if join:
+            mp.join()
 
     def pulse(self,duration,duty_cycle=0):
         if duration<=1000:
@@ -266,7 +298,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         print('---------------------------------------')
         print('Keys:\tarrow keys\tdelete home end page-down\n')
         print('1.: Move the laser and the cross hairs to at least 3 different points and hit the space key to save a point.')
-        print('2.: To exit, hit the esc key.')
+        print('2.: To exit, hit the esc key.\n\n')
 
         try:
             #Turn on the laser
@@ -280,6 +312,11 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             t.setDaemon(True)
             t.start()
 
+            #Start the process which updates the motor
+            mp = Process(target=self.update_mot, args=(self.mot_q,self.phase_queue,self.delay,False,))
+            mp.daemon = True
+            mp.start()
+            
             #Make object for the keyboard Controller
             self.kb = keyboard.Controller()
 
@@ -287,9 +324,11 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             with keyboard.Listener(on_press=self.on_press) as k_listener:
                 k_listener.join()
         finally:
+            self.move_to(0,0,topleft=True,join=False)
+            k_listener.stop()
+            mp.terminate()
             #Turn off the laser
             self.pulse(0)
-            self.unlock()
             self.camera.stop_preview()
             self.camera.remove_overlay(self.l3)
             
@@ -297,16 +336,13 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         #======================Calculation================================
         #Average the coefficient matrix obatained by solving all combinations of triplets.
         
-        if self.image_points.shape[0] >= 3:
-            self.coeff = []
-            for i in combinations(enumerate(zip(self.image_points,self.laser_points)),3):
-                ip = np.vstack((i[0][1][0],i[1][1][0],i[2][1][0]))
-                lp = np.array([i[0][1][1],i[1][1][1],i[2][1][1]])
-                self.coeff.append(solver(ip, lp))
-            self.coeff = np.mean(np.asarray(self.coeff),axis=0)
-        else:
-            print('Need more than 3 points for the calcualtion.')
-            return None
+        self.coeff = []
+        for i in combinations(enumerate(zip(self.image_points,self.laser_points)),3):
+            ip = np.vstack((i[0][1][0],i[1][1][0],i[2][1][0]))
+            lp = np.array([i[0][1][1],i[1][1][1],i[2][1][1]])
+            self.coeff.append(solver(ip, lp))
+        self.coeff = np.mean(np.asarray(self.coeff),axis=0)
+        print(self.coeff)
 
     def get_ref_im(self):
         #Save a reference image whithin the mouse object
@@ -383,7 +419,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             print('{0:.3}\t{1:.3}\t{2:.3}\t{3:.3}'.format(tf['scale'],tf['angle'],tf['tvec'][0],tf['tvec'][1]))
 
             #start recording
-            self.camera.start_recording(video_name_path)
+            #self.camera.start_recording(video_name_path)
 
             #Transform the reference targets
             R = trans_mat(tf['angle'],tf['tvec'][1],tf['tvec'][0],tf['scale'])
@@ -393,14 +429,13 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                 trans_coord = np.dot(R,np.append(value,1))+np.array([int(self.camera.resized[0]/2),int(self.camera.resized[0]/2)])
                 targ_pos = np.dot(self.coeff,np.append(trans_coord,1))
                 print('{0}\t{1:.01f}\t{2:.01f}'.format(key,trans_coord[0],trans_coord[1]))
-                self.move_to(targ_pos[1],targ_pos[0])
+                self.move_to(targ_pos[1],targ_pos[0],topleft=True,join=True)
                 self.pulse(self.laser_on_time,self.duty_cycle)
                 sleep(1)
         finally:
             #stop recording
-            self.camera.stop_recording()
-            self.move_to(0,0)
-            self.unlock()
+            #self.camera.stop_recording()
+            self.move_to(0,0,topleft=True,join=False)
 
 #=================Main functions called from outside===========================
 
