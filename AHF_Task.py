@@ -8,6 +8,7 @@ into a single object called Task
 
 """
 import inspect
+import collections
 import json
 import os
 import pwd
@@ -107,6 +108,23 @@ class Task:
                 self.headFixerClass = None
                 self.headFixerDict = {}
             fileErr = True
+        ################################ Stimulator class makes its own dictionary #######################
+        if not hasattr (self, 'StimulatorClass') or not hasattr (self, 'StimulatorDict'):
+            self.StimulatorClass = AHF_Stimulator.get_Stimulator_from_user ()
+            self.StimulatorDict = AHF_Stimulator.get_class(self.StimulatorClass).config_user_get ()
+            fileErr = True
+         ############################################ Camera makes its own dictionary of settings #################
+        if not hasattr (self, 'hasCamera') or not hasattr (self, 'cameraClass') or not hasattr (self, 'cameraDict'):
+            tempInput = input ('Does this system have a main camera installed (Y or N):')
+            if tempInput [0] == 'y' or tempInput [0] == 'Y':
+                self.hasCamera = True
+                self.cameraClass = AHF_Camera.get_Camera_from_user ()
+                self.cameraDict = AHF_Camera.get_class(self.CameraClass).config_user_get ()
+            else:
+                self.hasCamera=False
+                self.cameraClass = None
+                self.cameraDict = {}
+            fileErr = True
         if not hasattr (self, 'rewardPin'):
             self.rewardPin = int (input('Enter the GPIO pin used by the water delivery solenoid:'))
             fileErr = True
@@ -162,11 +180,6 @@ class Task:
             fileErr = True
         if not hasattr (self, 'mouseConfigPath'):
             self.mouseConfigPath = input ('Enter the path to the directory where mouse configuration data can be loaded:')
-        ################################ Stimulator class makes its own dictionary #######################
-        if not hasattr (self, 'StimulatorClass') or not hasattr (self, 'StimulatorDict'):
-            self.StimulatorClass = AHF_Stimulator.get_Stimulator_from_user ()
-            self.StimulatorDict = AHF_Stimulator.get_class(self.StimulatorClass).config_user_get ()
-            fileErr = True
             #### the reward and head-fix proportion settings can also be set on a per-mouse bassis
             ### these provide default values
         if not hasattr (self, 'entranceRewardTime'):
@@ -214,18 +227,7 @@ class Task:
                 self.UDPList = ()
                 self.UDPstartDelay = 0
             fileErr = True
-        ############################################ Camera makes its own dictionary of settings #################
-        if not hasattr (self, 'hasCamera') or not hasattr (self, 'cameraClass') or not hasattr (self, 'cameraDict'):
-            tempInput = input ('Does this system have a main camera installed (Y or N):')
-            if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.hasCamera = True
-                self.cameraClass = AHF_Camera.get_Camera_from_user ()
-                self.cameraDict = AHF_Camera.get_class(self.CameraClass).config_user_get ()
-            else:
-                self.hasCamera=False
-                self.cameraClass = None
-                self.cameraDict = {}
-            fileErr = True
+       
         # if some of the paramaters were set by user, give option to save
         if fileErr: 
             response = input ('Save new/updated settings to a task configuration file?')
@@ -276,13 +278,69 @@ class Task:
 
 
     def showSettings (self):
-        ii = 0
-        for key, value in inspect.getmembers(self):
+        """
+        Prints settings to screen in a numbered fashion from an ordered dictionary, making it easy to select a setting to
+        change. Returns the ordered dictionary, used by editSettings function
+        """
+        print ('*************** Current Program Settings *******************')
+        showDict = OrderedDict()
+        itemDict = {}
+        nP = 0
+        for key, value in self.__dict__ :
+        #for key, value in inspect.getmembers(self):
             if key.startswith ('_') is False and inspect.isroutine (getattr (self, key)) is False:
-                print(ii, ')\t', key, ' = ', value)
-
+                showDict.update ({nP:{key: value}})
+                nP += 1
+        for ii in range (0, np):
+            itemDict.update (showDict [ii])
+            kvp = itemDict.popitem()
+            print(str (ii) +') ', kvp [0], ' = ', kvp [1])
+        print ('**********************************\n')
+        return showDict
     
 
+    def editSettings (self):
+        itemDict = {}
+        while True:
+            showDict = self.showSettings()
+            inputNum = int (input ('Enter number of setting to edit, or -1 to exit:'))
+            if inputNum == 0:
+                break
+            else:
+                itemDict.update (showDict [inputNum])
+                kvp = itemDict.popitem()
+                itemKey = kvp [0]
+                itemValue = kvp [1]
+                ### do special settings, subclassed things with extra user input needed #####
+                if itemkey == 'headFixerClass':
+                    self.headFixerClass = AHF_HeadFixer.get_HeadFixer_from_user ()
+                elif itemKey == 'headFixerDict':
+                    self.headFixerDict = AHF_HeadFixer.get_class(self.headFixerClass).config_user_get ()
+                elif itemKey == 'StimulatorClass': 
+                    self.StimulatorClass = AHF_Stimulator.get_Stimulator_from_user ()
+                elif itemKey == 'StimulatorDict':
+                    self.StimulatorDict = AHF_Stimulator.get_class(self.StimulatorClass).config_user_get ()
+                #####  other settings can be handled in a more generic way ##########################
+                elif type (itemValue) is str:
+                    inputStr = input ('Enter a new text value for %s, currently %s:' % itemKey, str (itemValue))
+                    setattr (self, itemKey, inputStr)
+                elif type (itemValue) is int:
+                    inputStr = input ('Enter a new integer value for %s, currently %s:' % itemKey, str (itemValue))
+                    setattr (self, itemKey, int (inputStr))
+                elif type (itemValue) is float:
+                    inputStr = input ('Enter a new floating point value for %s, currently %s:' % itemKey, str (itemValue))
+                    setattr (self, itemKey, float (inputStr))
+                elif type (itemValue) is tuple:
+                    inputStr = input ('Enter a new comma separated list for %s, currently %s:' % itemKey, str (itemValue))
+                    setattr (self, itemkey, tuple (inputStr.split(',')))
+                elif type (itemVale) is bool:
+                    inputStr = input ('%s, True for or False?, currently %s:' % itemKey, str (itemValue))
+                    if inputStr [0] == 'T' or inputStr [0] == 't':
+                        setattr (self, itemkey, True)
+                    else:
+                        setattr (self, itemkey, False)
+                
+                            
 
 if __name__ == '__main__':
     task = Task (None)

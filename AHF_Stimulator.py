@@ -110,7 +110,7 @@ class AHF_Stimulator (object, metaclass = ABCMeta):
 
 
     @abstractmethod
-    def config_user_get ():
+    def config_user_get (self):
         """
             makes a dictionary object that holds settings for this  stimulator
         

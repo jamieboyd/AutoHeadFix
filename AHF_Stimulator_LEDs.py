@@ -19,7 +19,7 @@ class AHF_Stimulator_LEDs (AHF_Stimulator_Rewards):
 
 
     @staticmethod
-    def dict_from_user (stimDict):
+    def config_user_get (self):
         if not 'left_led_pin' in stimDict:
             stimDict.update ({'left_led_pin' : 18})
         if not 'center_led_pin' in stimDict:

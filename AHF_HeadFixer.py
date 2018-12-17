@@ -82,9 +82,17 @@ class AHF_HeadFixer(metaclass = ABCMeta):
     @abstractmethod
     def __init__(self, settingsDict):
         """
-        hardware initialization of a headFixer, reading data from the task object
+        read data from the settingsDict, do hardware initialization of a headFixer with setup
         """
         pass
+
+    @abstractmethod
+    def setup (self):
+        """
+        does hardware initialization of a headFixer with (possibly updated) info in self.settingsDict
+        """
+        pass
+        
 
     @abstractmethod
     def fixMouse(self):
@@ -109,7 +117,7 @@ class AHF_HeadFixer(metaclass = ABCMeta):
     @abstractmethod
     def config_user_get ():
         """
-        in absence of json configDict, queerries user for settings, and returns a dictionary with settings
+        in absence of json configDict, querries user for settings, and returns a dictionary with settings
         """
         pass
 
