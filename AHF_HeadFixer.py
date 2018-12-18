@@ -157,16 +157,19 @@ class AHF_HeadFixer(metaclass = ABCMeta):
     @staticmethod
     def funcForMain ():
         from time import sleep
-        import AHF_CageSet
-        from AHF_HeadFixer import AHF_HeadFixer
-        cageSettings = AHF_CageSet()
-        cageSettings.edit()
-        cageSettings.save()
-        headFixer=AHF_HeadFixer.get_class (cageSettings.headFixer) (cageSettings)
+        from AHF_HeadFixer 
+        from AHF_Task import AHF_Task
+        task = AHF_Task(None)
+        task.edit()
+        task.save()
+        headFixer=AHF_HeadFixer.get_class (task.headFixerClass) (task.headFixerDict)
+        print ('Released Position')
         headFixer.releaseMouse()
         sleep (1)
+        print ('Fixed Position')
         headFixer.fixMouse()
         sleep (1)
+        print ('Released Position')
         headFixer.releaseMouse()
 
 

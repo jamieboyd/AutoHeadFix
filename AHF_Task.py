@@ -15,6 +15,7 @@ import pwd
 import grp
 from AHF_HeadFixer import AHF_HeadFixer
 from AHF_Stimulator import AHF_Stimulator
+from AHF_Rewarder import AHF_Rewarder
 from AHF_Camera import AHF_Camera
 
 class Task:
@@ -24,7 +25,7 @@ class Task:
     as well as fields for objects created when program runs (headFixer, TagReader, rewarder, camera, stimulator)
     Objects that are created from subclassable objects will have a dictionary of their own as an entry in the main dictionay
     Using the same names in the object fields as in the dictionary, and only loading one dictionary from
-    a combined settings file, we don't need the dictionary because the task object can recreate the dict
+    a combined settings file, we don't need a dictionary while thr program is running because the task object can recreate the dict
     with self.__dict__
     """
     def __init__ (self, fileName):
@@ -32,7 +33,6 @@ class Task:
         Initializes a Task object with hardware settings and experiment settings by calling loadSettings function
         
         """
-        # try to load ssettings from ./AHFtask_*.jsn, load it or query user if it does not exist or is incomplete
         fileLoaded = False
         self.fileName = ''
         # load experiment settings from passed in file name, if program was started with a task file name 
@@ -113,7 +113,12 @@ class Task:
             self.StimulatorClass = AHF_Stimulator.get_Stimulator_from_user ()
             self.StimulatorDict = AHF_Stimulator.get_class(self.StimulatorClass).config_user_get ()
             fileErr = True
-         ############################################ Camera makes its own dictionary of settings #################
+         ################################ Rewarder class makes its own dictionary #######################
+        if not hasattr (self, 'RewarderClass') or not hasattr (self, 'RewarderDict'):
+            self.RewarderClass = AHF_Rewarder.get_Rewarder_from_user ()
+            self.RewarderDict = AHF_Rewarder.get_class(self.RewarderClass).config_user_get ()
+            fileErr = True
+         ################################ Camera makes its own dictionary of settings ####################
         if not hasattr (self, 'hasCamera') or not hasattr (self, 'cameraClass') or not hasattr (self, 'cameraDict'):
             tempInput = input ('Does this system have a main camera installed (Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
@@ -303,10 +308,11 @@ class Task:
                 itemKey = kvp [0]
                 itemValue = kvp [1]
                 ### do special settings, subclassed things with extra user input needed #####
-                if itemKey = 'RewarderClass':
+                ### these classes use same patterns of static functions to get class names and settings dictionaries
+                if itemKey == 'RewarderClass':
                     self.RewarderClass = AHF_Rewarder.get_Rewarder_from_user ()
-                elif itemKey = 'RewarderDict':
-                    
+                elif itemKey == 'RewarderDict':
+                    self.RewarderDict = AHF_Rewarder.get_class(self.RewarderClass).config_user_get()
                 elif itemkey == 'headFixerClass':
                     self.headFixerClass = AHF_HeadFixer.get_HeadFixer_from_user ()
                 elif itemKey == 'headFixerDict':
