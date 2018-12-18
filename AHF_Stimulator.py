@@ -90,48 +90,19 @@ class AHF_Stimulator (object, metaclass = ABCMeta):
 
 
     ##################################################################################
-    #abstact methods each headfixer class must implement
+    #abstact methods each stimulator class must implement
     @abstractmethod
-    def __init__ (self, stimDict):
+    def __init__ (self, task):
         pass
 
     @abstractmethod
     def setup (self):
         pass
 
-    @abstractmethod
-    def change_config (self, changesDict):
-        """
-        Edits the configuration dictionary, adding or replacing with key/value pairs from changesDict paramater
-
-        """
-        for key in sorted (changesDict.keys()):
-            self.configDict.update({key : changesDict.get (key)})
-
 
     @abstractmethod
     def config_user_get (self):
-        """
-            makes a dictionary object that holds settings for this  stimulator
-        
-            Gets info from user with the input function, which returns strings
-            so your sublass methods will need to use int() or float() to convert values as appropriate
-        """
-        if self.configDict is not None and len (self.configDict.keys()) > 0:
-            for key in sorted (self.configDict.keys()):
-                tempInput = input ('set ' + key + '(currently ' + str (self.configDict[key]) + ') to :')
-                if tempInput != '':
-                    self.configDict[key] = tempInput
-        else:
-            print ('starting with a new empty dictionary...')
-            self.configDict = {}
-        while True:
-            key = input ('Enter a new Key, or -1 to quit:')
-            if key == '-1' or key == '':
-                break
-            else:
-                value = input ('Enter a value for ' + key + ':')
-                self.configDict.update({key : value})
+        pass
     
 
     @abstractmethod
@@ -196,35 +167,6 @@ class AHF_Stimulator (object, metaclass = ABCMeta):
         """
         pass
 
-
-
-
-
-
-    @staticmethod
-    def dict_from_user (stimDict):
-        """
-            static method that makes or edits a dictionary object that holds settings for a stimulator
-        
-            configure gets info from user with the input function, which returns strings
-            so your sublass methods will need to use int() or float() to convert values as appropriate
-        """
-        if stimDict is not None and len (stimDict.keys()) > 0:
-            for key in sorted (stimDict.keys()):
-                tempInput = input ('set ' + key + '(currently ' + str (stimDict[key]) + ') to :')
-                if tempInput != '':
-                    stimDict[key] = tempInput
-        else:
-            print ('starting with a new empty dictionary...')
-            stimDict = {}
-        while True:
-            key = input ('Enter a new Key, or -1 to quit:')
-            if key == '-1' or key == '':
-                break
-            else:
-                value = input ('Enter a value for ' + key + ':')
-                stimDict.update({key : value})
-        return stimDict
 
 
 if __name__ == '__main__':

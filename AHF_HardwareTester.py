@@ -6,6 +6,7 @@ import RPi.GPIO as GPIO
 from time import sleep, time
 import RFIDTagReader
 from AHF_HeadFixer import AHF_HeadFixer
+from AHF_Rewarder import AHF_Rewarder
 from AHF_Task import Task
 from PTSimpleGPIO import PTSimpleGPIO, Pulse
 from PTCountermandPulse import CountermandPulse
@@ -31,8 +32,8 @@ if __name__ == '__main__':
         # set up entry beam break pin, if we have it
         if task.hasEntryBeamBreak:
             GPIO.setup (task.entryBBpin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        # initialize countermandable pulse object for water solenoid
-        rewarder = CountermandPulse (task.rewardPin, 0, 0, task.entranceRewardTime, 1)
+        # initialize rewarder
+        rewarder = AHF_Rewarder.get_class (task.RewarderName) (task)
         setattr (task, 'rewarder', rewarder)
         # initialize head fixer object
         headFixer=AHF_HeadFixer.get_class (task.headFixerName) (task)
@@ -124,16 +125,7 @@ def htloop (task):
                         task.tagReader = RFIDTagReader.TagReader (task.serialPort, True,timeOutSecs = None, kind='ID')
                         task.tagReader.installCallBack (task.tirPin)
             elif inputStr == 'r': # r for reward solenoid
-                savedDuration = task.rewarder.get_duration()
-                task.rewarder.set_duration(1.0)
-                print ('\nReward Solenoid opening for 1 sec')
-                task.rewarder.do_pulse()
-                task.rewarder.wait_on_busy(2)
-                task.rewarder.set_duration(savedDuration)
-                inputStr= input('Reward Solenoid closed.\nDo you want to change the Reward Solenoid Pin (currently ' + str (task.rewardPin) + ')?')
-                if inputStr[0] == 'y' or inputStr[0] == "Y":
-                    task.rewardPin = int (input('Enter New Reward Solenoid Pin:' ))
-                    task.rewarder = CountermandPulse (task.rewardPin, 0, 0, savedDuration, 1)
+                rewarder.hardwareTest()
             elif inputStr == 'c': #c for contact on head fix
                 err = False
                 if task.contactPolarity == 'RISING':

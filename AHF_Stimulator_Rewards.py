@@ -10,8 +10,9 @@ from datetime import datetime
 
 class AHF_Stimulator_Rewards (AHF_Stimulator):
     
-    def __init__ (self, configDict, rewarder, lickDetector,textfp):
-        super().__init__(configDict, rewarder, lickDetector, textfp)
+    def __init__ (self, taskP):
+        self.task = taskP
+        self.stimDict = self.task.StimulatorDict
         self.setup()
 
     def setup (self):

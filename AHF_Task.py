@@ -96,7 +96,7 @@ class Task:
                 fileErr = True
         # check for any missing settings, all settings will be missing if making a new config, and call setting functions for
         # things like head fixer that are subclassable need some extra work , when either loaded from file or user queried
-        ########## cage specific hardware settings #################################
+        ########## Head Fixer makes its own dictionary #################################
         if not hasattr (self, 'hasHeadFixer') or not hasattr (self, 'headFixerClass') or not hasattr (self, 'headFixerDict'):
             tempInput = input ('Does this setup have a head fixing mechanism installed? (Y or N)')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
@@ -124,9 +124,6 @@ class Task:
                 self.hasCamera=False
                 self.cameraClass = None
                 self.cameraDict = {}
-            fileErr = True
-        if not hasattr (self, 'rewardPin'):
-            self.rewardPin = int (input('Enter the GPIO pin used by the water delivery solenoid:'))
             fileErr = True
         if not hasattr (self, 'serialPort'):
             self.serialPort = input ('Enter serial port for tag reader(likely either /dev/Serial0 or /dev/ttyUSB0):')
@@ -182,12 +179,6 @@ class Task:
             self.mouseConfigPath = input ('Enter the path to the directory where mouse configuration data can be loaded:')
             #### the reward and head-fix proportion settings can also be set on a per-mouse bassis
             ### these provide default values
-        if not hasattr (self, 'entranceRewardTime'):
-            self.entranceRewardTime = float (input ('Enter solenoid opening duration, in seconds, for entrance rewards:'))
-            fileErr = True
-        if not hasattr (self, 'taskRewardTime'):
-            self.taskRewardTime = float (input ('Enter solenoid opening duration,in seconds, for task rewards:'))
-            fileErr = True
         if not hasattr (self, 'maxEntryRewards'):
             self.maxEntryRewards = int (input ('Enter maximum number of entry rewards that will be given per day:'))
             fileErr = True
@@ -312,7 +303,11 @@ class Task:
                 itemKey = kvp [0]
                 itemValue = kvp [1]
                 ### do special settings, subclassed things with extra user input needed #####
-                if itemkey == 'headFixerClass':
+                if itemKey = 'RewarderClass':
+                    self.RewarderClass = AHF_Rewarder.get_Rewarder_from_user ()
+                elif itemKey = 'RewarderDict':
+                    
+                elif itemkey == 'headFixerClass':
                     self.headFixerClass = AHF_HeadFixer.get_HeadFixer_from_user ()
                 elif itemKey == 'headFixerDict':
                     self.headFixerDict = AHF_HeadFixer.get_class(self.headFixerClass).config_user_get ()
