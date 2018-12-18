@@ -5,6 +5,8 @@ import os
 import inspect
 
 class AHF_Rewarder(metaclass = ABCMeta):
+    rewardUnits = ''
+    testAmount = 0
     """
     Base class for all rewarder classs. Other rewarders subclass from this, or from one of its subclasses
     """
@@ -159,3 +161,25 @@ class AHF_Rewarder(metaclass = ABCMeta):
                     else:
                         self.rewarderDict.update ({itemKey: False})
         self.setup()    
+
+
+#for testing purposes
+if __name__ == '__main__':
+    import RPi.GPIO as GPIO
+    from time import sleep
+    GPIO.setmode (GPIO.BCM)
+    rewarderClass = AHF_Rewarder.get_class(AHF_Rewarder.get_Rewarder_from_user())
+    rewarderDict = rewarderClass.config_user_get ()
+    rewarder = rewarderClass (rewarderDict)
+    print (rewarder.rewardDict)
+    print (rewarderClass.rewardUnits)
+    total = rewarder.giveReward ("entry")
+    sleep(0.5)
+    total += rewarder.giveReward ("entry")
+    sleep(0.5)
+    total += rewarder.giveReward ("task")
+    sleep (0.5)
+    total += rewarder.giveReward ("test")
+    sleep (1.0)
+    print ('Total rewards given = %f ' % total + rewarderClass.rewardUnits)
+    GPIO.cleanup()
