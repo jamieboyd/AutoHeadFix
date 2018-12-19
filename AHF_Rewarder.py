@@ -109,17 +109,18 @@ class AHF_Rewarder(metaclass = ABCMeta):
         pass
 
 
-    def showSettings (self):
+    @staticmethod
+    def showDict (staticDict):
         """
-        Prints settings to screen in a numbered fashion from an ordered dictionary, making it easy to select a setting to
-        change. Returns the ordered dictionary, used by editSettings function
+        Makes an Ordered Dictionary from any passed-in dictionary and prints settings to screen in a numbered fashion,
+        making it easy to select a setting to change. Returns the ordered dictionary, used by editSettings function
+        for dictionaries within dictionaries
         """
         print ('*************** Current Rewarder Settings *******************')
         showDict = OrderedDict()
         itemDict = {}
         nP = 0
-        for key, value in self.rewarderDict:
-        #for key, value in inspect.getmembers(self):
+        for key, value in staticDict:
             showDict.update ({nP:{key: value}})
             nP += 1
         for ii in range (0, np):
@@ -128,14 +129,17 @@ class AHF_Rewarder(metaclass = ABCMeta):
             print(str (ii) +') ', kvp [0], ' = ', kvp [1])
         print ('**********************************\n')
         return showDict
-    
+
 
     def editSettings (self):
+    """
+    Edits settings in the rewarderDict, in a generic way, not having to know ahead of time the name and type of each setting
+    """
         itemDict = {}
         while True:
             showDict = self.showSettings()
             inputNum = int (input ('Enter number of setting to edit, or -1 to exit:'))
-            if inputNum == 0:
+            if inputNum == -1:
                 break
             else:
                 itemDict.update (showDict [inputNum])
@@ -154,13 +158,63 @@ class AHF_Rewarder(metaclass = ABCMeta):
                 elif type (itemValue) is tuple:
                     inputStr = input ('Enter a new comma separated list for %s, currently %s:' % itemKey, str (itemValue))
                     self.rewarderDict.update ({itemKey: tuple (inputStr.split(','))})
-                elif type (itemVale) is bool:
+                elif type (itemValue) is bool:
                     inputStr = input ('%s, True for or False?, currently %s:' % itemKey, str (itemValue))
                     if inputStr [0] == 'T' or inputStr [0] == 't':
                         self.rewarderDict.update ({itemKey: True})
                     else:
                         self.rewarderDict.update ({itemKey: False})
+                elif type (itemValue) is dict:
+                    dictDict = self.rewarderDict.get(itemKey)
+                    orderedDict = showDict (dictDict)
+                    updateDict = editDict (orderedDict)
+                    self.rewarderDict.update ({itemKey: updateDict})
         self.setup()    
+
+
+
+    @staticmethod
+    def editDict (someOrderedDict):
+    """
+    Edits values in a passed in dict, in a generic way, not having to know ahead of time the name and type of each setting
+    used by editSettings when a setting contains a dict, Returns dictionary of settings that were edited by user
+    """
+        itemDict = {}
+        updatedDict = {}
+        while True:
+            inputNum = int (input ('Enter number of setting to edit, or -1 to exit:'))
+            if inputNum == -1:
+                break
+            else:
+                itemDict.update (someOrderedDict [inputNum])
+                kvp = itemDict.popitem()
+                itemKey = kvp [0]
+                itemValue = kvp [1]
+                if type (itemValue) is str:
+                    inputStr = input ('Enter a new text value for %s, currently %s:' % itemKey, str (itemValue))
+                    updatedDict.update ({itemKey: inputStr})
+                elif type (itemValue) is int:
+                    inputStr = input ('Enter a new integer value for %s, currently %s:' % itemKey, str (itemValue))
+                    updatedDict.update ({itemKey: int (inputStr)})
+                elif type (itemValue) is float:
+                    inputStr = input ('Enter a new floating point value for %s, currently %s:' % itemKey, str (itemValue))
+                    updatedDict.update ({itemKey: float (inputStr)})
+                elif type (itemValue) is tuple:
+                    inputStr = input ('Enter a new comma separated list for %s, currently %s:' % itemKey, str (itemValue))
+                    updatedDict.update ({itemKey: tuple (inputStr.split(','))})
+                elif type (itemValue) is bool:
+                    inputStr = input ('%s, True for or False?, currently %s:' % itemKey, str (itemValue))
+                    if inputStr [0] == 'T' or inputStr [0] == 't':
+                        updatedDict.update ({itemKey: True})
+                    else:
+                        updatedDict.update ({itemKey: False})
+                elif type (itemValue) is dict:
+                    dictDict = self.rewarderDict.get(itemKey)
+                    orderedDict = showDict (dictDict)
+                    editedDict = editDict (orderedDict)
+                    updatedDict.update (editedDict)
+        return updatedDict
+
 
 
 #for testing purposes
