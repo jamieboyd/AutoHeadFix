@@ -3,7 +3,7 @@
 
 
 """
-We copy all variables from cage settings and exp settings, plus pointers to all created objects,
+We copy all variables from cage settings and exp settings, plus references to all created objects,
 into a single object called Task
 
 """
@@ -96,7 +96,7 @@ class Task:
                 fileErr = True
         # check for any missing settings, all settings will be missing if making a new config, and call setting functions for
         # things like head fixer that are subclassable need some extra work , when either loaded from file or user queried
-        ########## Head Fixer makes its own dictionary #################################
+        ########## Head Fixer (optoinal) makes its own dictionary #################################
         if not hasattr (self, 'hasHeadFixer') or not hasattr (self, 'headFixerClass') or not hasattr (self, 'headFixerDict'):
             tempInput = input ('Does this setup have a head fixing mechanism installed? (Y or N)')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
@@ -108,17 +108,17 @@ class Task:
                 self.headFixerClass = None
                 self.headFixerDict = {}
             fileErr = True
-        ################################ Stimulator class makes its own dictionary #######################
+        ################################ Stimulator makes its own dictionary #######################
         if not hasattr (self, 'StimulatorClass') or not hasattr (self, 'StimulatorDict'):
             self.StimulatorClass = AHF_Stimulator.get_Stimulator_from_user ()
             self.StimulatorDict = AHF_Stimulator.get_class(self.StimulatorClass).config_user_get ()
             fileErr = True
-         ################################ Rewarder class makes its own dictionary #######################
+        ################################ Rewarder class makes its own dictionary #######################
         if not hasattr (self, 'RewarderClass') or not hasattr (self, 'RewarderDict'):
             self.RewarderClass = AHF_Rewarder.get_Rewarder_from_user ()
             self.RewarderDict = AHF_Rewarder.get_class(self.RewarderClass).config_user_get ()
             fileErr = True
-         ################################ Camera makes its own dictionary of settings ####################
+        ################################ Camera (optional) makes its own dictionary of settings ####################
         if not hasattr (self, 'hasCamera') or not hasattr (self, 'cameraClass') or not hasattr (self, 'cameraDict'):
             tempInput = input ('Does this system have a main camera installed (Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
@@ -130,31 +130,19 @@ class Task:
                 self.cameraClass = None
                 self.cameraDict = {}
             fileErr = True
+        ############################# ContactCheck makes its own dictionary of settings ###################
+        if not hasattr (self, 'ContactCheckClass') or not hasattr (self, 'ContactCheckDict'):
+            self.ContactCheckClass = AHF_ContactCheck.get_ContactCheck_from_user ()
+            self.ContactCheckDict = AHF_ContactCheck.get_class(self.ContactCheckClass).config_user_get ()
+            fileErr = True
+        ############################ TagReader is not subclassable, so does not make its own dictionary ##############
         if not hasattr (self, 'serialPort'):
             self.serialPort = input ('Enter serial port for tag reader(likely either /dev/Serial0 or /dev/ttyUSB0):')
             fileErr = True
         if not hasattr (self, 'TIRpin'):
             self.TIRpin = int (input('Enter the GPIO pin connected to the Tag-In-Range pin on the Tag Reader:'))
             fileErr = True
-        if not hasattr (self, 'contactPin') or not hasattr (self, 'contactPolarity') or not hasattr (self, 'contactPUD'):
-            self.contactPin = int (input ('Enter the GPIO pin connected to the headbar contacts or IR beam-breaker:'))
-            fileErr = True
-            tempInput = int (input ('Enter the contact polarity, 0=FALLING for IR beam-breaker or falling polarity electrical contacts, 1=RISING for rising polarity elctrical contacts:'))
-            if tempInput == 0:
-                self.contactPolarity = 'FALLING'
-            else:
-                self.contactPolarity = 'RISING'
-            tempInput = int (input('Enter desired resistor on contact pin, 0=OFF if external resistor present, else 1=DOWN if rising polarity electrical contact or 2 = UP if IR beam-breaker or falling polarity electrical contacts:'))
-            if tempInput == 0:
-                self.contactPUD = 'PUD_OFF'
-            elif tempInput == 1:
-                self.contactPUD = 'PUD_DOWN'
-            else:
-                self.contactPUD='PUD_UP'
-            fileErr = True
-        if not hasattr (self, 'LEDpin'):
-            self.LEDpin = int (input ('Enter the GPIO pin connected to the blue LED for camera illumination:'))
-            fileErr = True
+        ############################## LickDetector (optional) is not subclassable, so does not make its own dictionary ##############
         if not hasattr (self, 'hasLickDetector') or not hasattr (self, 'lickDetectorIRQ'):
             tempInput = input ('Does this setup have a Lick Detector installed? (Y or N)')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
@@ -164,7 +152,13 @@ class Task:
                 self.hasLickDetector = False
                 self.lickDetectorIRQ = 0
             fileErr = True
-        if not hasattr (self, 'hasEntryBB') or not hasattr (self, 'entryBBpin'):
+        ############################ Remaining hardware things are single GPIO pins that are not defined in classes ###########
+         if not hasattr (self, 'LEDpin'):
+            self.LEDpin = int (input ('Enter the GPIO pin connected to the blue LED for camera illumination:'))
+            fileErr = True
+        """
+        #### The entry beam break is not implemented in current systems, so is commented out for now
+        if not hasattr(self, 'hasEntryBB') or not hasattr (self, 'entryBBpin'):
             tempInput = input ('Does this setup have a beam break installed at the tube enty way? (Y or N)')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
                 self.hasEntryBB = True
@@ -173,6 +167,7 @@ class Task:
                 self.hasEntryBB = False
                 self.entryBBpin = 0
             fileErr = True
+        """
          ####### settings for experiment configuration ########  
         if not hasattr (self, 'cageID'):
             self.cageID = input('Enter a name for the cage ID:')
@@ -199,7 +194,7 @@ class Task:
             fileErr = True
         if not hasattr (self, 'inChamberTimeLimit'):
             self.inChamberTimeLimit = float(input('In-Chamber duration limit, seconds, before stopping head-fix trials:'))
-        ############################ text messaging using textbelt service ############################
+        ############################ text messaging using textbelt service (Optional) not sunbclassable ######################
         if not hasattr (self, 'hasTextMsg') or not hasattr (self, 'phoneList') or not hasattr (self, 'textBeltKey'):
             tempInput = input ('Send text messages if mouse exceeds criterion time in chamber?(Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
@@ -211,7 +206,7 @@ class Task:
                 self.phoneList = ()
                 self.textBeltKey = ''
             fileErr = True
-        ####################################### UDP triggers for alerting other computers ######################3
+        ####################################### UDP triggers for alerting other computers (Optional) not subclassable ######################3
         if not hasattr(self, 'hasUDP') or not hasattr (self, 'UDPList') or not hasattr (self,'UDPstartDelay') :
             tempInput = input ('Send UDP triggers to start tasks on secondary computers (Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
