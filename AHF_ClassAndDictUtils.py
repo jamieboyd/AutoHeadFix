@@ -21,17 +21,28 @@ def AHF_class_from_file(fileName):
     return getattr(module, fileName)
 
 
-def AHF_file_from_user (nameStr, longName, typeSuffix):
+
+def AHF_file_exists (nameTypeStr, nameStr, typeSuffix):
+    findFile = 'AHF_' + nameTypeStr + '_' + nameStr + typeSuffix
+    # try to find the file name in current directory and load it
+    returnVal = False
+    for f in os.listdir('.'):
+        if f == findFile:
+            returnVal =  True
+            break
+    return returnVal
+
+def AHF_file_from_user (nameTypeStr, longName, typeSuffix):
     """
-    Static method that trawls through current folder looking for python files matching nameStr
+    Static method that trawls through current folder looking for python files matching nameTypeStr
     
     Allows user to choose from the list of files found. Files are recognized by names starting
-    with 'AHF_' + nameStr' and ending with '.py'
+    with 'AHF_' + nameTypeStr' + '_' and ending with '.py'
     Raises: FileNotFoundError if no nameStr class files found
     """
     iFile=0
     fileList = []
-    startStr = 'AHF_' + nameStr + '_'
+    startStr = 'AHF_' + nameTypeStr + '_'
     #print (os.listdir(os.curdir))
     for f in os.listdir(os.curdir):
         if f.startswith (startStr) and f.endswith (typeSuffix):
