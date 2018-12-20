@@ -21,7 +21,7 @@ def AHF_class_from_file(fileName):
     return getattr(module, fileName)
 
 
-def AHF_file_from_user (nameStr, longName):
+def AHF_file_from_user (nameStr, longName, typeSuffix):
     """
     Static method that trawls through current folder looking for python files matching nameStr
     
@@ -30,48 +30,42 @@ def AHF_file_from_user (nameStr, longName):
     Raises: FileNotFoundError if no nameStr class files found
     """
     iFile=0
-    files = ''
+    fileList = []
     startStr = 'AHF_' + nameStr + '_'
     #print (os.listdir(os.curdir))
     for f in os.listdir(os.curdir):
-        if f.startswith (startStr) and f.endswith ('.py'):
-            f= f.rstrip  ('.py')
-            #print ('file = ' + str (f))
+        if f.startswith (startStr) and f.endswith (typeSuffix):
+            f= f.rstrip(typeSuffix)
             try:
                 moduleObj=__import__ (f)
                 #print ('module=' + str (moduleObj))
                 classObj = getattr(moduleObj, moduleObj.__name__)
-                #print ('class obj = ' + str (classObj))
                 isAbstractClass =inspect.isabstract (classObj)
                 if isAbstractClass == False:
-                    if iFile > 0:
-                        files += ';'
-                    files += f
+                    fileList.append (f.lstrip(startStr))
                     iFile += 1
             except Exception as e: # exception will be thrown if imported module imports non-existant modules, for instance
                 print (e)
                 continue     
     if iFile == 0:
-        print ('Could not find any %s files in the current or enclosing directory' % longName)
+        print ('Could not find any %s files in the current directory' % longName)
         raise FileNotFoundError
     else:
         if iFile == 1:
-            ClassFile =  files.split('.')[0]
+            ClassFile =  fileList[0]
             print ('Class file found: ' + ClassFile)
-            ClassFile =  files.split('.')[0]
         else:
             inputStr = '\nEnter a number from 0 to {} to Choose a {} class:\n'.format((iFile -1), longName)
             ii=0
-            for file in files.split(';'):
+            for file in fileList:
                 inputStr += str (ii) + ': ' + file + '\n'
                 ii +=1
             inputStr += ':'
             ClassNum = -1
             while ClassNum < 0 or ClassNum > (iFile -1):
                 ClassNum =  int(input (inputStr))
-            ClassFile =  files.split(';')[ClassNum]
-            ClassFile =  ClassFile.split('.')[0]
-        return ClassFile
+            ClassFile =  fileList[ClassNum]
+        return startStr + ClassFile
 
 
 ########################################################################################################################
@@ -134,11 +128,17 @@ def AHF_edit_dict (anyDict, longName):
                 elif type (itemValue [0]) is int:
                     inputStr = input ('Enter a new comma separated list of integer values for %s, currently %s:' % (itemKey, str (itemValue)))
                     for string in inputStr.split(','):
-                        outputList.append (int (string))
+                        try:
+                            outputList.append (int (string))
+                        except ValueError:
+                            continue
                 elif type (itemValue [0]) is float:
                     inputStr = input ('Enter a new comma separated list of floating point values for %s, currently %s:' % (itemKey, str (itemValue)))
                     for string in inputStr.split(','):
-                        outputList.append (float (string))
+                        try:
+                            outputList.append (float (string))
+                        except ValueError:
+                            continue
                 if type (itemValue) is tuple:
                     updatDict = {itemKey: tuple (outputList)}
                 else:
@@ -153,4 +153,19 @@ def AHF_edit_dict (anyDict, longName):
                 AHF_edit_dict (itemValue, itemKey)
                 anyDict[itemKey].update (itemValue)
             anyDict.update (updatDict)
-            
+
+
+def AHF_obj_fields_to_dict(anObject):
+    aDict = {}
+    for key, value in anObject.__dict__ :
+        if key.startswith ('_') is False and inspect.isroutine (getattr (anObject, key)) is False:
+            aDict.update({key: value})
+    return aDict
+
+
+
+def AHF_dict_to_obj_fields (anObject, aDict):
+    for key, value in aDict:
+        setattr (anObject, key, value)
+        
+    

@@ -153,7 +153,7 @@ class Task:
                 self.lickDetectorIRQ = 0
             fileErr = True
         ############################ Remaining hardware things are single GPIO pins that are not defined in classes ###########
-         if not hasattr (self, 'LEDpin'):
+        if not hasattr (self, 'LEDpin'):
             self.LEDpin = int (input ('Enter the GPIO pin connected to the blue LED for camera illumination:'))
             fileErr = True
         """
