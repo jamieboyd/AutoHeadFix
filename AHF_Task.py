@@ -17,6 +17,8 @@ from AHF_HeadFixer import AHF_HeadFixer
 from AHF_Stimulator import AHF_Stimulator
 from AHF_Rewarder import AHF_Rewarder
 from AHF_Camera import AHF_Camera
+from AHF_ClassAndDictUtils import AHF_class_from_file, AHF_file_exists, AHF_file_from_user, AHF_show_ordered_dict
+from AHF_ClassAndDictUtils import AHF_edit_dict, AHF_obj_fields_to_dict, AHF_dict_to_obj_fields, AHF_dict_to_file
 
 class Task:
     """
@@ -33,67 +35,32 @@ class Task:
         Initializes a Task object with hardware settings and experiment settings by calling loadSettings function
         
         """
-        fileLoaded = False
         self.fileName = ''
         # load experiment settings from passed in file name, if program was started with a task file name 
         if fileName is not None:
-            # file name passed in may or may not start with AFHtask_ and end with .jsn
-            if fileName.startswith ('AHF_task_'):
-                configFile = ''
-            else:
-                configFile = 'AHF_task_'
-            configFile += fileName
-            if not fileName.endswith ('.jsn'):
-                configFile += '.jsn'
-            # try to find the file name in current directory and load it
-            for f in os.listdir('.'):
-                if f == configFile:
-                    fileLoaded=self.loadSettings (configFile)
-                    break
-        if not fileLoaded:
-            try:
-                fileName = AHF_file_from_user (nameStr, longName, typeSuffix)
-            # look for all experiment config files in the current directory, they start with AHFtask_ and end with .jsn
-            iFile=0
-            files = ''
-            for f in os.listdir('.'):
-                if f.startswith ('AFHtask_') and f.endswith ('.jsn'):
-                    files += '\n' + str (iFile) + ':' + f
-                    iFile +=1
-            if iFile == 0: # no files found, so set flag for user to create one
-                print ('Unable to find any Auto head Fix task files, let\'s configure a new task:')
-                fileNum=-1
-            else:  # list all settings files and get user to choose one, or choose -1 to make new file anyway
-                inputPrompt = 'Enter file number to load Auto Head Fix task file, or -1 to configure q new task\n'
-                inputPrompt += files +'\n:'
-                fileNum = int (input (inputPrompt))
-            if fileNum == -1: # no settings file found, or user decided to make a new one, call loadSettings with None
-                fileLoaded = self.loadSettings (None)
-            else: # load user's chosen settings file. 
-                # file list starts with a separator (\n) so we split the list on \n and get fileNum + 1
-                # each list item starts with fileNum: so split the list item on ":" and get item 1 to get file name
-                fileLoaded = self.loadSettings ((files.split('\n')[fileNum + 1]).split (':')[1])
-        
+            # file name passed in may or may not start with AFH_task_ and end with .jsn
+            nameStr = filename.lstrip ('AHF_task_').rstrip ('.jsn')
+            if AHF_file_exists ('task', nameStr, '.jsn'):
+                self.fileName = 'AHF_task_' +  nameStr + '.jsn'
+                self.loadSettings (self.fileName)
+                return
+        try:
+            self.fileName = AHF_file_from_user (nameStr, 'AHF task config file', '.jsn')
+            self.loadSettings (self.fileName)
+        except FileNotFoundError:
+            self.fileName = ''
+            self.loadSettings (None)
+        return
 
     def loadSettings (self, fileName):
         """
         Loads settings from a JSON text file in current folder, unless fileName is None, in which case user is querried
         for all settings
-        returns True if settings were loaded
         """
         fileErr = False
         if fileName is not None:
             self.filename = fileName
-            try:
-                with open (filename, 'r') as fp:
-                    data = fp.read()
-                    data=data.replace('\n', ',')
-                    configDict = json.loads(data)
-                    fp.close()
-                for key, value in configDict:
-                    setattr (self, key, value)
-                #print (self.__dict__)
-            except (TypeError, IOError, ValueError) as e: #we will make a file if we didn't find it, or if it was incomplete
+            
                 print ('Unable to open and load task configuration:' + str (e) + '\n let\'s configure a new task.\n')
                 fileErr = True
         # check for any missing settings, all settings will be missing if making a new config, and call setting functions for
@@ -230,7 +197,7 @@ class Task:
                 
     def saveSettings(self):
         """
-        Saves current configuration stored in the task object into AHFtask_*.jsn
+        Saves current configuration stored in the task object into AHF_task_*.jsn
         Call this function after modifying the contents of the task to save your changes
 
         :param: none
@@ -238,36 +205,17 @@ class Task:
         """
         # get name for new config file and massage it a bit
         if self.fileName != '':
-            inputStr = 'Enter a name to save task settings, or enter to use current name, \'' + self.fileName + '\':'
+            inputStr = 'Enter a name to save task settings, or enter to use current name, \'' + self.fileName.lstrip('AHF_task_').rstrip ('.jsn') + '\':'
             newConfig = input (inputStr)
-            if newConfig == '':
-                configFile = self.fileName
         else:
             newConfig = input ('Enter a name to save task settings as file:')
-            # file name passed in may or may not start with AFHconf_ and end with .jsn
-            if newConfig.startswith ('AHFconf_'):
-                startStr = ''
-            else:
-                startStr = 'AHFconf_'
-            if newConfig.endswith ('.jsn'):
-                endStr = ''
-            else:
-                endStr = '.jsn'
-            configFile = startStr + ''.join([c for c in newConfig if c.isalpha() or c.isdigit() or c=='_']) + endStr
-        task.fileName = configFile
+        # file name passed in may or may not start with AFHconf_ and end with .jsn
+        newConfig = newconfig.lstrip('AHF_task_').rstrip ('.jsn')
+        newConfig = ''.join([c for c in newConfig if c.isalpha() or c.isdigit() or c=='_'])
+        sekf.fileName = 'AHF_task_' + newConfig + '.jsn'
         # make a dictionary of pretty much all attributes and write it to disk with json dmps
-        jsonDict = {}
-        for key, value in self.__dict__ :
-            if key.startswith ('_') is False and inspect.isroutine (getattr (task,key)) is False:
-                jsonDict.update({key: value})
-
-        with open (configFile, 'w') as fp:
-            fp.write (json.dumps (jsonDict))
-            fp.close ()
-            uid = pwd.getpwnam ('pi').pw_uid
-            gid = grp.getgrnam ('pi').gr_gid
-            os.chown ('AHFconfig.jsn', uid, gid) # we may run as root for pi PWM, so we need to expicitly set ownership
-
+        jsonDict = AHF_obj_fields_to_dict(self)
+        AHF_dict_to_file (jsonDict, 'task', newConfig, '.jsn')
 
 
     def showSettings (self):

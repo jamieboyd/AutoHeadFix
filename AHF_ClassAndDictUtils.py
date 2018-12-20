@@ -178,5 +178,30 @@ def AHF_obj_fields_to_dict(anObject):
 def AHF_dict_to_obj_fields (anObject, aDict):
     for key, value in aDict:
         setattr (anObject, key, value)
+
+
+def AHF_obj_fields_to_file (anObject, nameTypeStr, nameStr, typeSuffix):
+    configFile = 'AHF_' + nameTypeStr + '_' + nameStr + typeSuffix
+    with open (configFile, 'w') as fp:
+        fp.write (json.dumps (jsonDict, separators = '\n', ":"))
+        fp.close ()
+        uid = pwd.getpwnam ('pi').pw_uid
+        gid = grp.getgrnam ('pi').gr_gid
+        os.chown (configFile, uid, gid) # we may run as root for pi PWM, so we need to expicitly set ownership
         
-    
+
+def AHF_file_to_obj_fields (nameTypeStr, nameStr, longName, typeSuffix, anObject):
+    filename = 'AHF_' + nameTypeStr + '_' + nameStr + typeSuffix
+    errFlag = False
+    with open (filename, 'r') as fp:
+        data = fp.read()
+        data=data.replace('\n', ',')
+        configDict = json.loads(data)
+        fp.close()
+    for key, value in configDict:
+        try:
+            setattr (anObject, key, value)
+        except ValueError:
+            errFlag = True
+    if errFlag:
+        raise ValueError
