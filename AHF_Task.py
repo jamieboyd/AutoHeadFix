@@ -38,10 +38,10 @@ class Task:
         # load experiment settings from passed in file name, if program was started with a task file name 
         if fileName is not None:
             # file name passed in may or may not start with AFHtask_ and end with .jsn
-            if fileName.startswith ('AHFtask_'):
+            if fileName.startswith ('AHF_task_'):
                 configFile = ''
             else:
-                configFile = 'AHFtask_'
+                configFile = 'AHF_task_'
             configFile += fileName
             if not fileName.endswith ('.jsn'):
                 configFile += '.jsn'
@@ -51,6 +51,8 @@ class Task:
                     fileLoaded=self.loadSettings (configFile)
                     break
         if not fileLoaded:
+            try:
+                fileName = AHF_file_from_user (nameStr, longName, typeSuffix)
             # look for all experiment config files in the current directory, they start with AHFtask_ and end with .jsn
             iFile=0
             files = ''
@@ -88,8 +90,8 @@ class Task:
                     data=data.replace('\n', ',')
                     configDict = json.loads(data)
                     fp.close()
-                for key in configDict:
-                    setattr (self, key, configDict.get(key))
+                for key, value in configDict:
+                    setattr (self, key, value)
                 #print (self.__dict__)
             except (TypeError, IOError, ValueError) as e: #we will make a file if we didn't find it, or if it was incomplete
                 print ('Unable to open and load task configuration:' + str (e) + '\n let\'s configure a new task.\n')

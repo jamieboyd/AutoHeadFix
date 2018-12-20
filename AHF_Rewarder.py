@@ -132,9 +132,9 @@ class AHF_Rewarder(metaclass = ABCMeta):
 
 
     def editSettings (self):
-    """
-    Edits settings in the rewarderDict, in a generic way, not having to know ahead of time the name and type of each setting
-    """
+        """
+        Edits settings in the rewarderDict, in a generic way, not having to know ahead of time the name and type of each setting
+        """
         itemDict = {}
         while True:
             showDict = self.showSettings()
