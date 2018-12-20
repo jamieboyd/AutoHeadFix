@@ -87,6 +87,14 @@ class AHF_HeadFixer(metaclass = ABCMeta):
         pass
 
     @abstractmethod
+    def setup (self):
+        """
+        does hardware initialization of a headFixer with (possibly updated) info in self.settingsDict
+        """
+        pass
+        
+
+    @abstractmethod
     def fixMouse(self):
         """
         performs head fixation by energizing a piston, moving a servomotor, etc
@@ -109,7 +117,7 @@ class AHF_HeadFixer(metaclass = ABCMeta):
     @abstractmethod
     def config_user_get ():
         """
-        in absence of json configDict, queerries user for settings, and returns a dictionary with settings
+        in absence of json configDict, querries user for settings, and returns a dictionary with settings
         """
         pass
 
@@ -149,16 +157,19 @@ class AHF_HeadFixer(metaclass = ABCMeta):
     @staticmethod
     def funcForMain ():
         from time import sleep
-        import AHF_CageSet
-        from AHF_HeadFixer import AHF_HeadFixer
-        cageSettings = AHF_CageSet()
-        cageSettings.edit()
-        cageSettings.save()
-        headFixer=AHF_HeadFixer.get_class (cageSettings.headFixer) (cageSettings)
+        from AHF_HeadFixer 
+        from AHF_Task import AHF_Task
+        task = AHF_Task(None)
+        task.edit()
+        task.save()
+        headFixer=AHF_HeadFixer.get_class (task.headFixerClass) (task.headFixerDict)
+        print ('Released Position')
         headFixer.releaseMouse()
         sleep (1)
+        print ('Fixed Position')
         headFixer.fixMouse()
         sleep (1)
+        print ('Released Position')
         headFixer.releaseMouse()
 
 

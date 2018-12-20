@@ -105,7 +105,7 @@ class AHF_Stimulator_LickNoLickDisc (AHF_Stimulator_LickNoLick):
                         sleep (self.lickWrongTimeout)
                     adjustedWitholdTime = self.lickWitholdTime
                 else:   # set up for constant buzz that does NOT get rearded
-                    self.buzzer.do_train()
+                    self.buzzer1.do_train()
                     anyLicks = self.lickDetector.waitForLick_Soft (self.buzz_lead, startFromZero=True)
                     if anyLicks == 0: #refrained from licking success
                         print ('refrained from licking when supposed to refrain')

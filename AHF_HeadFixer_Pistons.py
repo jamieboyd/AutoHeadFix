@@ -10,12 +10,19 @@ class AHF_HeadFixer_Pistons(AHF_HeadFixer):
     Head fixer using solenoid-driven pistons to push head bar against front plate
     a single GPIO output triggers a driver of some kind to energize solenoids
     """
-    def __init__(self, settingsDict):
+    def __init__(self, settingsDictP):
         """
         init data is a single GPIO pi, which will be configured for output
         pin number is copied from task, where it will have been loaded from configDict
         """
-        self.pistonsPin = settingsDict.get ('pistonsPin')
+        self.settingsDict = settingsDictP
+        self.pistonsPin = 0
+        self.setup()
+
+    def setup (self):
+        if  self.pistonsPin != 0:
+            GPIO.cleanup(self.pistonsPin)
+        self.pistonsPin = self.settingsDict.get ('pistonsPin')
         GPIO.setup (self.pistonsPin, GPIO.OUT, initial = GPIO.LOW)
 
     def fixMouse(self):

@@ -68,7 +68,7 @@ class Mice:
     """
     The mice class simply contains an array of mouse objects
     """
-    def __init__(self):
+    def __init__(self, cageSettings, expSettings):
         """
         Initializes the array of mice with an empty array
         """
