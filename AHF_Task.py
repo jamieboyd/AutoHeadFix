@@ -18,7 +18,7 @@ from AHF_Stimulator import AHF_Stimulator
 from AHF_Rewarder import AHF_Rewarder
 from AHF_Camera import AHF_Camera
 from AHF_ClassAndDictUtils import AHF_class_from_file, AHF_file_exists, AHF_file_from_user, AHF_show_ordered_dict
-from AHF_ClassAndDictUtils import AHF_edit_dict, AHF_obj_fields_to_dict, AHF_dict_to_obj_fields, AHF_dict_to_file
+from AHF_ClassAndDictUtils import AHF_edit_dict, AHF_obj_fields_to_file, AHF_file_to_obj_fields
 
 class Task:
     """

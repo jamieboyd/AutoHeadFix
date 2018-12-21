@@ -157,7 +157,7 @@ class AHF_HeadFixer(metaclass = ABCMeta):
     @staticmethod
     def funcForMain ():
         from time import sleep
-        from AHF_HeadFixer 
+        from AHF_HeadFixer import AHF_HeadFixer
         from AHF_Task import AHF_Task
         task = AHF_Task(None)
         task.edit()

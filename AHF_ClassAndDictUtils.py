@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 #-*-coding: utf-8 -*-
+import abc
 from abc import ABCMeta, abstractmethod
 import os
 import inspect
@@ -166,21 +167,12 @@ def AHF_edit_dict (anyDict, longName):
             anyDict.update (updatDict)
 
 
-def AHF_obj_fields_to_dict(anObject):
-    aDict = {}
-    for key, value in anObject.__dict__ :
-        if key.startswith ('_') is False and inspect.isroutine (getattr (anObject, key)) is False:
-            aDict.update({key: value})
-    return aDict
-
-
-
-def AHF_dict_to_obj_fields (anObject, aDict):
-    for key, value in aDict:
-        setattr (anObject, key, value)
-
 
 def AHF_obj_fields_to_file (anObject, nameTypeStr, nameStr, typeSuffix):
+    jsonDict = {}
+    for key, value in anObject.__dict__ :
+        if key.startswith ('_') is False and inspect.isroutine (getattr (anObject, key)) is False:
+            jsonDict.update({key: value})
     configFile = 'AHF_' + nameTypeStr + '_' + nameStr + typeSuffix
     with open (configFile, 'w') as fp:
         fp.write (json.dumps (jsonDict, separators = '\n', ":"))
