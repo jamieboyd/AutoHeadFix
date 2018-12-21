@@ -82,7 +82,7 @@ def AHF_file_from_user (nameTypeStr, longName, typeSuffix):
 
 ########################################################################################################################
 ## methods for user editing of a dictionary of settings containing strings, integers, floats, lists, tuples, booleans, and dictionaries of those types
-def AHF_show_ordered_dict (anyDict, longName):
+def AHF_show_ordered_dict (objectDict, longName):
     """
     Dumps standard dictionary settings into an ordered dictionary, prints settings to screen in a numbered fashion from the ordered dictionary,
     making it easy to select a setting to change. Returns the ordered dictionary, used by edit_dict function
@@ -91,7 +91,7 @@ def AHF_show_ordered_dict (anyDict, longName):
     showDict = OrderedDict()
     itemDict = {}
     nP = 0
-    for key in anyDict:
+    for key in objectDict :
         value = anyDict.get (key)
         showDict.update ({nP:{key: value}})
         nP += 1
@@ -175,7 +175,7 @@ def AHF_obj_fields_to_file (anObject, nameTypeStr, nameStr, typeSuffix):
             jsonDict.update({key: value})
     configFile = 'AHF_' + nameTypeStr + '_' + nameStr + typeSuffix
     with open (configFile, 'w') as fp:
-        fp.write (json.dumps (jsonDict, separators = '\n', ":"))
+        fp.write (json.dumps (jsonDict, ":", separators = '\n'))
         fp.close ()
         uid = pwd.getpwnam ('pi').pw_uid
         gid = grp.getgrnam ('pi').gr_gid
@@ -195,5 +195,5 @@ def AHF_file_to_obj_fields (nameTypeStr, nameStr, longName, typeSuffix, anObject
             setattr (anObject, key, value)
         except ValueError:
             errFlag = True
-    if errFlag:
-        raise ValueError
+            continue
+    return errFlag
