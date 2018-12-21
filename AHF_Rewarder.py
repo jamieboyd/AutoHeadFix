@@ -62,26 +62,27 @@ class AHF_Rewarder(metaclass = ABCMeta):
         self.setup()    
 
     def addRewardToDict (self, rewardName, rewardSize):
-        self.rewards.update ({rewardName, rewardSize})
+        self.rewards.update ({rewardName: rewardSize})
 
 #for testing purposes
 if __name__ == '__main__':
     import RPi.GPIO as GPIO
     from time import sleep
+    from AHF_ClassAndDictUtils import AHF_file_from_user, AHF_class_from_file
     GPIO.setmode (GPIO.BCM)
-    rewarderClass = AHF_Rewarder.get_class(AHF_Rewarder.get_Rewarder_from_user())
+    rewarderClass = AHF_class_from_file (AHF_file_from_user ('Rewarder', 'AHF Rewarder', '.py'))
     rewarderDict = rewarderClass.config_user_get ()
     rewarder = rewarderClass (rewarderDict)
     print (rewarder.rewardDict)
     print (rewarderClass.rewardUnits)
     total = rewarder.giveReward ("entry")
-    sleep(0.5)
-    total += rewarder.giveReward ("entry")
+    print ('Gave entry reward')
     sleep(0.5)
     total += rewarder.giveReward ("task")
+    print ('Gave task reward')
     sleep (0.5)
-    total += rewarder.giveReward ("test")
-    sleep (1.0)
+    rewarder.hardwareTest()
     print ('Total rewards given = %f ' % total + rewarderClass.rewardUnits)
+    print (rewarder.rewardDict)
     GPIO.cleanup()
 
