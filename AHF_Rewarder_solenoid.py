@@ -3,6 +3,7 @@
 
 from AHF_Rewarder import AHF_Rewarder
 import RPi.GPIO as GPIO
+from _thread import start_new_thread
 from time import sleep
 
 class AHF_Rewarder_solenoid (AHF_Rewarder):
@@ -23,6 +24,12 @@ class AHF_Rewarder_solenoid (AHF_Rewarder):
         rewards.update({'task' : task})
         rewardDict.update({'rewards': rewards})
         return rewardDict
+
+    @staticmethod
+    def rewardThread (sleepTime, rewardPin):
+        GPIO.output(rewardPin, GPIO.HIGH)
+        sleep(sleepTime) # not very accurate timing, but good enough
+        GPIO.output(rewardPin, GPIO.LOW)
 
     def __init__ (self, rewarderDict):
         """
@@ -46,7 +53,7 @@ class AHF_Rewarder_solenoid (AHF_Rewarder):
             GPIO.cleanup (self.rewardPin)
         self.rewardPin = self.rewardDict.get('rewardPin')
         GPIO.setup(self.rewardPin, GPIO.OUT)
-        
+
 
     def giveReward(self, rewardName):
         """
@@ -57,9 +64,7 @@ class AHF_Rewarder_solenoid (AHF_Rewarder):
         """
         if rewardName in self.rewards:
             sleepTime =self.rewards.get(rewardName)
-            GPIO.output(self.rewardPin, GPIO.HIGH)
-            sleep(sleepTime) # not very accurate timing, but good enough
-            GPIO.output(self.rewardPin, GPIO.LOW)
+            start_new_thread (AHF_Rewarder_solenoid.rewardThread, (sleepTime,self.rewardPin))
             return sleepTime
         else:
             return 0

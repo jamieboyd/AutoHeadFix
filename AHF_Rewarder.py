@@ -3,6 +3,7 @@
 from abc import ABCMeta, abstractmethod
 import os
 import inspect
+from AHF_ClassAndDictUtils import AHF_edit_dict
 
 class AHF_Rewarder(metaclass = ABCMeta):
     """
@@ -58,7 +59,7 @@ class AHF_Rewarder(metaclass = ABCMeta):
         """
         Edits settings in the rewarderDict, in a generic way, not having to know ahead of time the name and type of each setting
         """
-        AHF_edit_dict (self.rewardDict, 'AHF Rewarder Settings')
+        AHF_edit_dict (self.rewardDict, str (self.__class__).lstrip ('<class \'').rstrip('\'>').split ('.')[1])
         self.setup()    
 
     def addRewardToDict (self, rewardName, rewardSize):
@@ -83,6 +84,6 @@ if __name__ == '__main__':
     sleep (0.5)
     rewarder.hardwareTest()
     print ('Total rewards given = %f ' % total + rewarderClass.rewardUnits)
+    rewarder.editSettings()
     print (rewarder.rewardDict)
-    GPIO.cleanup()
 

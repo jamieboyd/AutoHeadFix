@@ -92,7 +92,7 @@ def AHF_show_ordered_dict (objectDict, longName):
     itemDict = {}
     nP = 0
     for key in objectDict :
-        value = anyDict.get (key)
+        value = objectDict.get (key)
         showDict.update ({nP:{key: value}})
         nP += 1
     for ii in range (0, nP):
