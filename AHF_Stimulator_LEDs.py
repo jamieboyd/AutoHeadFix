@@ -10,16 +10,16 @@ from datetime import datetime
 from random import random
 
 class AHF_Stimulator_LEDs (AHF_Stimulator_Rewards):
-    def __init__(self, task):
+    def __init__(self, configDict, rewarder, textfp):
         # init of superclass sets number of rewards  and reward interval
         # this class will flash an LED in the center of each inter-reward interval
         # reward, wait rewardInterval/2 - rewardDur, flash, wait rewardInterval/2- flash_time
-        #super().__init__(configDict, rewarder, textfp)
+        super().__init__(configDict, rewarder, textfp)
         self.setup()
 
 
     @staticmethod
-    def config_user_get (self):
+    def dict_from_user (stimDict):
         if not 'left_led_pin' in stimDict:
             stimDict.update ({'left_led_pin' : 18})
         if not 'center_led_pin' in stimDict:
@@ -35,6 +35,7 @@ class AHF_Stimulator_LEDs (AHF_Stimulator_Rewards):
         return super(AHF_Stimulator_LEDs, AHF_Stimulator_LEDs).dict_from_user (stimDict)
 
     def setup (self):
+        super().setup()
         # 3 leds - left, right, center, controlled by 3 GPIO pins as indicated
         self.left_led_pin = int(self.configDict.get ('left_led_pin', 18))
         self.center_led_pin = int(self.configDict.get ('center_led_pin', 18))
@@ -133,45 +134,25 @@ class AHF_Stimulator_LEDs (AHF_Stimulator_Rewards):
 
 
     def change_config (self, changesDict):
-        #super().change_config (changesDict)
+        super().change_config (changesDict)
         self.setup ()
 
 
-    def config_user_get (self):
-        #super().config_from_user ()
+    def config_from_user (self):
+        super().config_from_user ()
         self.setup ()
-
-
-    def logFile (self):
-        """
-            Called after each head fix, prints more detailed text to the log file, perhaps a line for each event
-
-           You may wish to use the same format as writeToLogFile function in __main__.py
-
-           Or you may wish to override with pass and log from the run method
-        """
-        
-        event = 'stim'
-        mStr = '{:013}'.format(self.mouse.tag) + '\t'
-        outPutStr = mStr + datetime.fromtimestamp (int (time())).isoformat (' ') + '\t' + event
-        print (outPutStr)
-        if self.textfp != None:
-            outPutStr = mStr + '{:.2f}'.format (time ()) + '\t' + event
-            self.textfp.write(outPutStr + '\n')
-            self.textfp.flush()
-            
 
 if __name__ == '__main__':
     import RPi.GPIO as GPIO
     try:
         GPIO.setmode(GPIO.BCM)
         rewarder = AHF_Rewarder (30e-03, 24)
-        #rewarder.addToDict ('task', 50e-03)
+        rewarder.addToDict ('task', 50e-03)
         thisMouse = Mouse (2525, 0,0,0,0)
         #stimdict = AHF_Stimulator_LEDs.dict_from_user({})
         stimdict = {'nRewards' : 5, 'rewardInterval' : 1.5, 'left_led_pin' : 18, 'center_led_pin' : 18, 'right_led_pin' : 18}
         stimdict.update ({'led_on_time' : 0.5e-03, 'led_off_time' : 0.5e-03, 'train_time' : 0.5})
-        stimulator = AHF_Stimulator_LEDs (stimdict)
+        stimulator = AHF_Stimulator_LEDs (stimdict, rewarder, None)
         stimulator.configStim (thisMouse)
         stimulator.run ()
         stimulator.logfile()

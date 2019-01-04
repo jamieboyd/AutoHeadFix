@@ -6,54 +6,42 @@ import RPi.GPIO as GPIO
 from time import sleep
 
 class AHF_HeadFixer_Pistons(AHF_HeadFixer):
-    """
-    Head fixer using solenoid-driven pistons to push head bar against front plate
-    a single GPIO output triggers a driver of some kind to energize solenoids
-    """
-    def __init__(self, settingsDictP):
-        """
-        init data is a single GPIO pi, which will be configured for output
-        pin number is copied from task, where it will have been loaded from configDict
-        """
-        self.settingsDict = settingsDictP
-        self.pistonsPin = 0
-        self.setup()
 
-    def setup (self):
-        if  self.pistonsPin != 0:
-            GPIO.cleanup(self.pistonsPin)
-        self.pistonsPin = self.settingsDict.get ('pistonsPin')
+    def __init__(self, cageSet):
+        self.pistonsPin = cageSet.pistonsPin
         GPIO.setup (self.pistonsPin, GPIO.OUT, initial = GPIO.LOW)
 
     def fixMouse(self):
-        """
-        sets GPIO pin high to trigger pistons
-        """
         GPIO.output(self.pistonsPin, GPIO.HIGH)
 
     def releaseMouse(self):
-        """
-        sets GPIO pin low to retract pistons
-        """
         GPIO.output(self.pistonsPin, GPIO.LOW)
         
+    @staticmethod
+    def configDict_read (cageSet, configDict):
+        cageSet.pistonsPin= int(configDict.get('Pistons Pin'))
+
+    @staticmethod
+    def configDict_set(cageSet,configDict):
+        configDict.update ({'Pistons Pin':cageSet.pistonsPin})
                    
     @staticmethod
-    def config_user_get ():
-        """
-        Querries user for pin number for piston, returns dictionary 
-        """
-        pin= int(input ('Enter the GPIO pin connected to the Head Fixing pistons:'))
-        return {'pistonsPin': pin,}
+    def config_user_get (cageSet):
+        cageSet.pistonsPin = int(input ('Enter the GPIO pin connected to the Head Fixing pistons:'))
+        
+    @staticmethod
+    def config_show(cageSet):
+        return 'Pistons Solenoid Pin=' +  str (cageSet.pistonsPin)
 
     
-    def test (self, task):
+
+    def test (self, cageSet):
         print ('Pistons Solenoid energizing for 2 sec')
-        GPIO.output(task.pistonsPin, GPIO.HIGH)
+        GPIO.output(cageSet.pistonsPin, 1)
         sleep (2)
-        GPIO.output(task.pistonsPin, GPIO.LOW)
+        GPIO.output(cageSet.pistonsPin, 0)
         inputStr=input ('Pistons Solenoid de-energized.\nDo you want to change the Pistons Solenoid Pin (currently ' + str(cageSet.pistonsPin) + ')?')
         if inputStr[0] == 'y' or inputStr[0] == "Y":
-            self.pistonsPin = int (input('Enter New Pistons Solenoid Pin:'))
-            task.headFixerDict.update ({'pistonsPin': self.pistonsPin})
-            GPIO.setup (self.pistonsPin, GPIO.OUT)
+            cageSet.pistonsPin = int (input('Enter New Pistons Solenoid Pin:'))
+            self.pistonsPin = cageSet.pistonsPin
+            GPIO.setup (cageSet.pistonsPin, GPIO.OUT)

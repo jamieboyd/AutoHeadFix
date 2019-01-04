@@ -1,95 +1,63 @@
 #! /usr/bin/python3
 #-*-coding: utf-8 -*-
 
-from abc import ABCMeta, abstractmethod
-import AHF_Task
 from AHF_HeadFixer import AHF_HeadFixer
+from AHF_CageSet import AHF_CageSet
+from PTPWM import PTPWM, PWM_simple
 from time import sleep
 
-class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
-    """
-    Abstract class for PWM-based head fixers for servo motors. As long as you map your PWM range onto
-    the appropriate pulse width for the servo, you should be good to go.
-    """
-    hasLevels = True
+class AHF_HeadFixer_PWM (AHF_HeadFixer):
 
-    ##################################################################################
-    #part 1: three main methods of initing, fixing, and releasing, only initing is different for different PWM methods
-    @abstractmethod
-    def __init__(self, task):
-        self.servoReleasedPosition = task.servoReleasedPosition
-        self.servoFixedPosition = task.servoFixedPosition
-        self.servoIncrement = int ((task.servoReleasedPosition - task.servoFixedPosition)/5)
+    def __init__(self, cageSet):
+        PTPWM.map_peripherals()
+        PTPWM.set_clock (100, 4096)
+        self.pwm =  PWM_simple(cageSet.pwmChan, PTPWM.PWM_MARK_SPACE, 4096)
+        self.servoReleasedPosition = cageSet.servoReleasedPosition
+        self.servoFixedPosition = cageSet.servoFixedPosition
+        self.pwm.set_PWM (self.servoReleasedPosition)
+        self.pwm.set_enable (1)
+        self.releaseMouse()
 
-    # with progressive head fixing. typical servo values 325 =fixed, 540 = released
-    # 8 different levels of fixing tightness
-    def fixMouse(self, headFixationType = 8):
-        # tighter and tighter fixing
-        if headFixationType == 0:
-            return
-        elif headFixationType < 5:
-            target = self.servoReleasedPosition -  headFixationType * self.servoIncrement
-            start = min (self.servoReleasedPosition, target + (2 * self.servoIncrement))
-            print ('start=' + str (start) + ' and target='  + str (target))
-            for i in range(start, target, -1):
-                self.setPWM (i)
-                sleep(0.01)
-        elif headFixationType < 8:
-        # Get a little closer to the bar and retract
-            target = self.servoFixedPosition + int ((7 - headFixationType) * self.servoIncrement/2)
-            start = target + self.servoIncrement
-            retract = target + int (self.servoIncrement/(headFixationType - 4))
-            print ('start=' + str (start) + ', target='  + str (target) + ' and retract = ' + str (retract))
-            for i in range(start, target, -1):
-                self.setPWM (i)
-                sleep(0.01)
-            for i in range(target, retract, 1):
-                self.setPWM (i)
-                sleep(0.01)
-        else:
-            target =self.servoFixedPosition
-            start = target + self.servoIncrement
-            for i in range(start, target, -1):
-                self.setPWM (i)
-                sleep(0.01)
-                
-            
+    def fixMouse(self):
+        self.pwm.set_enable (1)
+        self.pwm.set_PWM (self.servoFixedPosition)
+
     def releaseMouse(self):
-        self.setPWM (self.servoReleasedPosition)
+        self.pwm.set_PWM (self.servoReleasedPosition)
+        #sleep (0.5)
+        #self.pwm.set_enable (0)
 
-    # each PWM subclass must implement its own code to set the pulse width
-    @abstractmethod
-    def setPWM (self, servoPosition):
-        pass
-
-  
-    ##################################################################################
-    #abstact methods each PWM headfixer class must implement
-    #part 2: static functions for reading, editing, and saving ConfigDict from/to cageSet
     @staticmethod
     def configDict_read (cageSet,configDict):
+        cageSet.pwmChan = int(configDict.get('PWM Channel', 0))
         cageSet.servoReleasedPosition = int(configDict.get('Released Servo Position', 815))
         cageSet.servoFixedPosition = int(configDict.get('Fixed Servo Position', 500))
 
     @staticmethod
     def configDict_set(cageSet,configDict):
-        configDict.update ({'Released Servo Position':cageSet.servoReleasedPosition, 'Fixed Servo Position':cageSet.servoFixedPosition}) 
-    
+        configDict.update ({'PWM Channel':cageSet.pwmChan, 'Released Servo Position':cageSet.servoReleasedPosition,'Fixed Servo Position':cageSet.servoFixedPosition})
+
     @staticmethod
     def config_user_get (cageSet):
+        cageSet.pwmChan = int (input ("PWM channel to use for servo: (0 on GPIO-18 or 1 on GPIO-19): "))
         cageSet.servoReleasedPosition = int(input("Servo Released Position (0-4095): "))
         cageSet.servoFixedPosition = int(input("Servo Fixed Position (0-4095): "))
         
     @staticmethod
     def config_show(cageSet):
-        rStr = 'Released Servo Position=' + str(cageSet.servoReleasedPosition)
-        rStr += '\n\tFixed Servo Position=' + str(cageSet.servoFixedPosition)
+        rStr = 'PWM channel used for servo:'
+        if cageSet.pwmChan == 0:
+            rStr += '0 on GPIO-18'
+        elif cageSet.pwmChan ==1:
+            rStr += '1 on GPIO-19'
+        rStr += '\n\tReleased Servo Position=' + str(cageSet.servoReleasedPosition) + '\n\tFixed Servo Position=' + str(cageSet.servoFixedPosition)
         return rStr
     
+
     def test (self, cageSet):
-        print ('PWM moving to Head-Fixed position for 3 seconds')
+        print ('PWM moving to Head-Fixed position for 2 seconds')
         self.fixMouse()
-        sleep (3)
+        sleep (2)
         print ('PWM moving to Released position')
         self.releaseMouse()
         inputStr= input('Do you want to change fixed position, currently ' + str (cageSet.servoFixedPosition) + ', or released position, currently ' + str(cageSet.servoReleasedPosition) + ':')
@@ -98,8 +66,15 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
             cageSet.servoReleasedPosition = int (input('Enter New PWM Released Position:'))
             self.servoReleasedPosition = cageSet.servoReleasedPosition
             self.servoFixedPosition = cageSet.servoFixedPosition
-            self.servoIncrement = int ((self.servoReleasedPosition - self.servoFixedPosition)/5)
-    
+
 
 if __name__ == "__main__":
-    AHF_HeadFixer.funcForMain()
+    from time import sleep
+    hardWare = AHF_CageSet ()
+    hardWare.edit()
+    hardWare.save()
+
+    s = AHF_HeadFixer_PWM (hardWare)
+    s.fixMouse()
+    sleep(5)
+    s.releaseMouse()

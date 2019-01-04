@@ -2,13 +2,10 @@
 #-*-coding: utf-8 -*-
 from abc import ABCMeta, abstractmethod
 import os
-import inspect
 
 class AHF_HeadFixer(metaclass = ABCMeta):
-    """
-    Base class for all head fix classs. Other head fixers subclass from this, or from one of its subclasses
-    boolean for settability of headFixing levels, default is False. Can be used for incremental learning
-    """
+    #################################################################################
+    # boolean for settability of headFixing levels, default is False. Can be used for incremental learning
     hasLevels = False
     
     ##################################################################################
@@ -18,7 +15,7 @@ class AHF_HeadFixer(metaclass = ABCMeta):
         """
         Imports a module from a fileName (stripped of the .py) and returns the class
 
-        Assumes the class is named the same as the module. 
+        Assumes the class is named the same as the module
         """
         module = __import__(fileName)
         return getattr(module, fileName)
@@ -35,33 +32,19 @@ class AHF_HeadFixer(metaclass = ABCMeta):
         """
         iFile=0
         files = ''
-        #print (os.listdir(os.curdir))
-        for f in os.listdir(os.curdir):
+        for f in os.listdir('.'):
             if f.startswith ('AHF_HeadFixer_') and f.endswith ('.py'):
-                f= f.rstrip  ('.py')
-                #print ('file = ' + str (f))
-                try:
-                    moduleObj=__import__ (f)
-                    #print ('module=' + str (moduleObj))
-                    classObj = getattr(moduleObj, moduleObj.__name__)
-                    #print ('class obj = ' + str (classObj))
-                    isAbstractClass =inspect.isabstract (classObj)
-                    if isAbstractClass == False:
-                        if iFile > 0:
-                            files += ';'
-                        files += f
-                        iFile += 1
-                except Exception as e: # exception will be thrown if imported module imports non-existant modules, for instance
-                    print (e)
-                    continue     
+                if iFile > 0:
+                    files += ';'
+                files += f
+                iFile += 1
         if iFile == 0:
-            print ('Could not find any AHF_HeadFixer_ files in the current or enclosing directory')
+            print ('Could not find an AHF_HeadFixer_ file in the current or enclosing directory')
             raise FileNotFoundError
         else:
             if iFile == 1:
-                headfixFile =  files.split('.')[0]
-                print ('Head Fixer file found: ' + headfixFile)
-                headfixFile =  files.split('.')[0]
+                print ('Head Fixer file found: ' + stimFile)
+                stimFile =  files.split('.')[0]
             else:
                 inputStr = '\nEnter a number from 0 to ' + str (iFile -1) + ' to Choose a HeadFixer class:\n'
                 ii=0
@@ -69,30 +52,22 @@ class AHF_HeadFixer(metaclass = ABCMeta):
                     inputStr += str (ii) + ': ' + file + '\n'
                     ii +=1
                 inputStr += ':'
-                headfixNum = -1
-                while headfixNum < 0 or headfixNum > (iFile -1):
-                    headfixNum =  int(input (inputStr))
-                headfixFile =  files.split(';')[headfixNum]
-                headfixFile =  headfixFile.split('.')[0]
-            return headfixFile
+                stimFileNum = -1
+                while stimFileNum < 0 or stimFileNum > (iFile -1):
+                    stimFileNum =  int(input (inputStr))
+                stimFile =  files.split(';')[stimFileNum]
+                stimFile =  stimFile.split('.')[0]
+            return stimFile
 
     ##################################################################################
     #abstact methods each headfixer class must implement
     #part 1: three main methods of initing, fixing, and releasing
     @abstractmethod
-    def __init__(self, settingsDict):
+    def __init__(self, cageSet):
         """
-        hardware initialization of a headFixer, reading data from the task object
-        """
-        pass
-
-    @abstractmethod
-    def setup (self):
-        """
-        does hardware initialization of a headFixer with (possibly updated) info in self.settingsDict
+        hardware initialization of a headFixer, reading data from a cageSet object
         """
         pass
-        
 
     @abstractmethod
     def fixMouse(self):
@@ -110,31 +85,48 @@ class AHF_HeadFixer(metaclass = ABCMeta):
 
     ##################################################################################
     #abstact methods each headfixer class must implement
-    #part 2: static function for getting ConfigDict from user
-
+    #part 2: static functions for reading, editing, and saving ConfigDict from/to cageSet
 
     @staticmethod
     @abstractmethod
-    def config_user_get ():
+    def configDict_read (cageSet,configDict):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def config_user_get (cageSet,configDict):
         """
-        in absence of json configDict, querries user for settings, and returns a dictionary with settings
+        reads data for headFixer configuration from the json configDict, copies it to the cageSet
         """
         pass
 
+    @staticmethod
+    @abstractmethod
+    def configDict_set (cageSet,configDict):
+        """
+        gets data from the cageSet object, and updates the json configDict
+        """
+        pass 
 
+    @staticmethod
+    @abstractmethod
+    def config_show (cageSet):
+        """
+        returns a string containing config data for this headFixer currently loaded into the cageSet object
+        """
+        pass
     
 
     ##################################################################################
     #abstract methods each headfixer class must implement
     #part 3: hadware tester function
     @abstractmethod
-    def test(self, task):
-        """
-        Called by hardwaretester, runs a harware test for headFixer, verifying that it works
-        gives user a chance to change configuration, and, if changed, saves new configuration info in headFixer dictionary in task
-        """
+    def test(self, cageSet):
         pass
-
+        """
+        Called by hardwaretester, runs a harware test for headFixer, verifying that it works and gives user a chance to save settings
+        """
+ 
     ###################################################################################
     # methods a headFixer will implement if it hasLevels
     # we pass the current level of a particular mouse and level up before head fixing
@@ -151,28 +143,5 @@ class AHF_HeadFixer(metaclass = ABCMeta):
 
     def level_set_level (self, level):
         pass
-
-    ##################################################################################
-    # a simple function to run when run as Main, for all head fixers
-    @staticmethod
-    def funcForMain ():
-        from time import sleep
-        from AHF_HeadFixer import AHF_HeadFixer
-        from AHF_Task import AHF_Task
-        task = AHF_Task(None)
-        task.edit()
-        task.save()
-        headFixer=AHF_HeadFixer.get_class (task.headFixerClass) (task.headFixerDict)
-        print ('Released Position')
-        headFixer.releaseMouse()
-        sleep (1)
-        print ('Fixed Position')
-        headFixer.fixMouse()
-        sleep (1)
-        print ('Released Position')
-        headFixer.releaseMouse()
-
-
-if __name__ == "__main__":
-    AHF_HeadFixer.funcForMain()
-
+        
+    

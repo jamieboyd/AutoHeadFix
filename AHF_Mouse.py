@@ -20,9 +20,9 @@ class Mouse:
         """
         self.tag = tag
         self.entries = entries
-        self.tot_entries = entries
         self.entranceRewards = entranceRewards
         self.headFixes = headFixes
+        self.tot_headFixes = headFixes
         self.headFixRewards = headFixRewards
         self.stimResultsDict = {}
 
@@ -68,7 +68,7 @@ class Mice:
     """
     The mice class simply contains an array of mouse objects
     """
-    def __init__(self, cageSettings, expSettings):
+    def __init__(self):
         """
         Initializes the array of mice with an empty array
         """
