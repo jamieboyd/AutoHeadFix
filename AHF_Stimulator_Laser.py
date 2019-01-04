@@ -4,10 +4,8 @@ from PTSimpleGPIO import PTSimpleGPIO, Infinite_train, Train
 from AHF_Rewarder import AHF_Rewarder
 from AHF_Stimulator_Rewards import AHF_Stimulator_Rewards
 from AHF_Mouse import Mouse, Mice
-from AHF_Camera import AHF_Camera
 
 #Laser-stimulator modules
-from picamera import PiCamera
 from pynput import keyboard
 import numpy as np
 import sys
@@ -21,7 +19,6 @@ from time import sleep, time
 from random import random
 from datetime import datetime
 from itertools import combinations,product
-#from termios import tcflush, TCIOFLUSH
 import imreg_dft as ird
 import warnings
 
@@ -37,13 +34,13 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
        
         #PWM settings
         self.PWM_mode = int(self.configDict.get('PWM_mode', 0))
-        self.PWM_channel = int(self.configDict.get('PWM_channel', 2))
+        self.PWM_channel = int(self.configDict.get('PWM_channel', 1))
         self.array = array('i',(0 for i in range(1000)))
         self.PWM = PTPWM(1,1000,1000,0,(int(1E6/1000)),1000,2) #PWM object
         self.PWM.add_channel(self.PWM_channel,0,self.PWM_mode,0,0,self.array)
         self.PWM.set_PWM_enable(1,self.PWM_channel,0)
         self.duty_cycle = int(self.configDict.get('duty_cycle', 0))
-        self.laser_on_time = int(self.configDict.get('laser_on_time', 0))     
+        self.laser_on_time = int(self.configDict.get('laser_on_time', 0))
         
         #Cross-hair Overlay settings
         self.ratio = self.camera.resolution[0]/self.camera.resized[0]
@@ -53,10 +50,11 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         self.cross_q = queue(maxsize=0) #Queues the cross-pin changes
         self.coeff = np.asarray (self.configDict.get ('coeff_matrix', None))
 
-        #Buzzer settings
         self.headFixTime = float (self.configDict.get ('headFixTime', 15))
         self.lickWitholdTime = float (self.configDict.get ('lickWitholdTime', 1))
         self.afterStimWitholdTime = float(self.configDict.get ('after_Stim_Withold_Time', 0.2))
+        
+        #Buzzer settings == Vibmotor
         self.buzz_pulseProb = float (self.configDict.get ('buzz_pulseProb', 1))
         self.buzz_pin = int(self.configDict.get ('buzz_pin', 27))
         self.buzz_freq = float (self.configDict.get ('buzz_freq', 6000))
@@ -64,14 +62,14 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         self.buzz_duty = float (self.configDict.get ('buzz_duty', 0.5))
         self.buzz_lead = float (self.configDict.get ('buzz_lead', 1))
         self.buzzer=Train (PTSimpleGPIO.MODE_FREQ, self.buzz_pin, 0, self.buzz_freq, self.buzz_duty, self.buzz_dur,PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
-
-        #Speaker Settings
+        print('passed buzzer')
+        #Speaker Settings == Buzzer
         self.speakerPin=int(self.configDict.get ('speaker_pin', 25))
-        self.speakerFreq=float(self.configDict.get ('speaker_freq', 300))
-        self.speakerDuty = float(self.configDict.get ('speaker_duty', 0.8))
+        self.speakerFreq=float(self.configDict.get ('speaker_freq', 6000))
+        self.speakerDuty = float(self.configDict.get ('speaker_duty', 0.5))
         self.speakerOffForReward = float(self.configDict.get ('speaker_OffForReward', 1.5))
         self.speaker=Infinite_train (PTSimpleGPIO.MODE_FREQ, self.speakerPin, self.speakerFreq, self.speakerDuty,  PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
-        
+        print('passed speaker')
         #Stepper settings
         #Shift register controlled by 4 GPIOs
         self.DS = int(self.configDict.get('DS', 4))
@@ -338,6 +336,9 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         print('1.: Move the laser and the cross hairs to at least 3 different points and hit the space key to save a point.')
         print('2.: To exit, hit the esc key.\n\n')
         
+        self.laser_points = []
+        self.image_points = []
+
         try:
             #Turn on the laser
             self.pulse(1000,self.duty_cycle) #If duration = 1000, laser stays on.
@@ -345,6 +346,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             self.camera.start_preview(fullscreen = False, window = tuple(self.camera.AHFpreview))
 
             self.make_cross()
+            print('passed_cross')
             #Start the thread which updates the cross
             t = Thread(target = self.update_cross,args=(self.cross_q,))
             t.setDaemon(True)
@@ -481,7 +483,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             ####!!!!!!!!!!!!Timing of pulse doesn't make sense here!!!!!!!!!!!!!!!!!!
             self.mouse.trial_image = np.empty((self.camera.resized[0], self.camera.resized[1], 3),dtype=np.uint8)
             self.pulse(200,self.duty_cycle)
-            self.camera.capture(self.mouse.trial_image,'rgb',resize=self.camera.resized)
+            #self.camera.capture(self.mouse.trial_image,'rgb',resize=self.camera.resized)
             sleep(0.2)
             
             self.buzzTimes = []
@@ -587,7 +589,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         
     def tester(self,mice,expSettings):
         while(True):
-            inputStr = input ('m= matching, t= select targets, p= laser tester, a= camera/LED, i= inspect mice, q= quit: ')
+            inputStr = input ('m= matching, t= select targets, p= laser tester, a= camera/LED, i= inspect mice, s= speaker, q= quit: ')
             if inputStr == 'm':
                 self.matcher()
                 expSettings.stimDict.update({'coeff_matrix' : self.coeff.tolist()})
@@ -618,6 +620,10 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                     if hasattr(mouse,'targets'):
                         targets='yes'
                     print(str(mouse.tag)+'\t'+str(ref_im)+'\t'+str(targets))
+            elif inputStr == 's':
+                self.speaker.start_train()
+                sleep(2)
+                self.speaker.stop_train()
             elif inputStr == 'q':
                 break
             
@@ -775,9 +781,21 @@ if __name__ == '__main__':
             gMouseAtEntry =False
             gTubePanicTime = time () + 25920000 # a month from now.
 
-    def updateH5 (hdf_path,mice,camParams):
+
+    def makeH5File (expSettings,mice):
+        #makes a new .h5-file or opens and existing one
+        hdf_path = expSettings.dayFolderPath + 'TextFiles/mice_metadata.h5'
+        if path.exists(hdf_path):
+            with File(hdf_path,'r+') as hdf:
+                mice.addMiceImFromH5(hdf)
+        else:
+            with File(hdf_path,'w') as hdf:
+                pass
+
+    def updateH5File (expSettings,mice,camParams):    
         #Updates the existing h5 file, which contains relevant information of each mouse.
-        with File(hdf_path + 'TextFiles/mice_metadata.h5','r+') as hdf:
+        hdf_path = expSettings.dayFolderPath + 'TextFiles/mice_metadata.h5'
+        with File(hdf_path,'r+') as hdf:
             for mouse in mice.mouseArray:
                 m = hdf.require_group(str(mouse.tag))
                 m.attrs.create('tot_headFixes',mouse.tot_headFixes)
@@ -785,7 +803,7 @@ if __name__ == '__main__':
                     m.require_dataset('ref_im',shape=tuple(camParams['resized']+[3]),dtype=np.uint8,data=mouse.ref_im)
                     m.require_dataset('ref_im_high',shape=tuple(camParams['resolution']+[3]),dtype=np.uint8,data=mouse.ref_im_high)
                 if hasattr(mouse,'targets'):
-                    m.require_dataset('target',shape=(2,),dtype=np.uint8,data=mouse.targets,)
+                    m.require_dataset('targets',shape=(2,),dtype=np.uint8,data=mouse.targets,)
                 t = m.require_group('trial_image')
                 if hasattr(mouse,'trial_image'):
                     t.create_dataset('trial_'+str(mouse.tot_headFixes),dtype=np.uint8,data=mouse.laser_im)
@@ -955,9 +973,7 @@ if __name__ == '__main__':
         # configure camera
         camera = AHF_Camera(expSettings.camParamsDict)
         #Generate h5 file to store mouse-individual data
-        #Maybe its better to open the h5 file when needed insted of leaving it open all the time
-        with File(expSettings.dayFolderPath + 'TextFiles/mice_metadata.h5','w') as hdf:
-            pass
+        makeH5File(expSettings,mice)
         # make UDP Trigger
         if expSettings.hasUDP == True:
             UDPTrigger = AHF_UDPTrig (expSettings.UDPList)
@@ -1016,7 +1032,7 @@ if __name__ == '__main__':
                                 #======================runTrial================================================
                                 runTrial (thisMouse, expSettings, cageSettings, camera, rewarder, headFixer,stimulator, UDPTrigger)
                                 #==================new========================
-                                updateH5(expSettings.dayFolderPath,mice,expSettings.camParamsDict)
+                                updateH5File(expSettings,mice,expSettings.camParamsDict)
                                 giveEntranceReward = False
                                 break
                         if (GPIO.input (cageSettings.tirPin)== GPIO.HIGH) and giveEntranceReward == True:
@@ -1109,7 +1125,7 @@ if __name__ == '__main__':
                         valveControl (cageSettings)
                     elif event == 'h' or event == 'H':
                         hardwareTester(cageSettings, tagReader, headFixer, stimulator, mice, expSettings)
-                        updateH5(expSettings.dayFolderPath,mice,expSettings.camParamsDict)
+                        updateH5File(expSettings,mice,expSettings.camParamsDict)
                         if cageSettings.contactPolarity == 'RISING':
                             expSettings.contactEdge = GPIO.RISING 
                             expSettings.noContactEdge = GPIO.FALLING
