@@ -82,7 +82,7 @@ class AHF_HeadFixer(metaclass = ABCMeta):
     @abstractmethod
     def __init__(self, settingsDict):
         """
-        read data from the settingsDict, do hardware initialization of a headFixer with setup
+        hardware initialization of a headFixer, reading data from the task object
         """
         pass
 
@@ -157,7 +157,7 @@ class AHF_HeadFixer(metaclass = ABCMeta):
     @staticmethod
     def funcForMain ():
         from time import sleep
-        from AHF_HeadFixer 
+        from AHF_HeadFixer import AHF_HeadFixer
         from AHF_Task import AHF_Task
         task = AHF_Task(None)
         task.edit()

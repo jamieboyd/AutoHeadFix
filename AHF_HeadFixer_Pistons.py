@@ -24,7 +24,6 @@ class AHF_HeadFixer_Pistons(AHF_HeadFixer):
             GPIO.cleanup(self.pistonsPin)
         self.pistonsPin = self.settingsDict.get ('pistonsPin')
         GPIO.setup (self.pistonsPin, GPIO.OUT, initial = GPIO.LOW)
-        
 
     def fixMouse(self):
         """
