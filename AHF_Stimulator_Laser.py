@@ -85,8 +85,8 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         GPIO.setup(self.Q7S, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
         
         self.mot_q = Queue(maxsize=0) #Queues steper motor commands
-        self.phase_queue = Queue(maxsize=0) #Returns the new phase of the motors
-        self.phase_queue.put([0,0])
+        self.phase_queue = Queue(maxsize=0) #Returns the new phase of the motors during the matching
+        self.phase = np.array([0,0])
         self.pos = np.array([0,0])
         self.laser_points = []
         self.image_points = []
@@ -134,17 +134,6 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             return -1
         else:
             return 0
-
-    def rounding(self,width,height):
-        #The overlay-width and height must be a multiple of 32/16
-        if width%32 and height%16:
-            return width + 32 - width%32,height + 16 - height%16
-        elif width%32 and not height%16:
-            return width + 32 - width%32,height
-        elif height%16 and not width%32:
-            return width,height + 16 - height%16
-        else:
-            return width,height
 
     def get_arrow_dir(self,key):
         if hasattr(key,'char'):
@@ -228,11 +217,16 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         while True:
             if not mot_q.empty():
                 x,y = mot_q.get()
-                self.move(x,y,phase_queue,delay,topleft)
+                self.move(x,y,phase_queue,delay,topleft,mp=True)
+                self.phase += np.array([x,y])
+                self.phase = self.phase%8
                 self.pos += np.array([x,y])
 
-    def move(self,x,y,phase_queue,delay,topleft):
-        phase_x,phase_y = phase_queue.get()
+    def move(self,x,y,phase,delay,topleft,mp):
+        if mp == True:
+            phase_x,phase_y = phase.get()
+        else:
+            phase_x,phase_y = phase
         
         states = [[1, 0, 0, 0], [1, 1, 0, 0], [0, 1, 0, 0], [0, 1, 1, 0],
                   [0, 0, 1, 0], [0, 0, 1, 1], [0, 0, 0, 1], [1, 0, 0, 1]]
@@ -293,15 +287,17 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                 phase_y = next_phase_y
                 sleep(delay)
             self.unlock()
-               
-        #Save the phase. This is the only output needed.
-        phase_queue.put([phase_x,phase_y])
 
-    def move_to(self, new_x, new_y,topleft=True,join=False):
-        steps_x = int(round(new_x)) - self.pos[0]
-        steps_y = int(round(new_y)) - self.pos[1]
-        mp = Process(target=self.move, args=(steps_x,steps_y,self.phase_queue,self.delay,topleft,))
-        self.pos += np.array([steps_x,steps_y])
+        if mp == True:       
+            #Save the phase
+            phase.put([phase_x,phase_y])
+
+    def move_to(self,new_pos,topleft=True,join=False):
+        steps = np.around(new_pos).astype(int)-self.pos
+        mp = Process(target=self.move, args=(steps[0],steps[1],self.phase,self.delay,topleft,False,))
+        self.phase += steps%8
+        self.phase = self.phase%8
+        self.pos += steps
         mp.daemon = True
         mp.start()
         if join:
@@ -346,13 +342,15 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             self.camera.start_preview(fullscreen = False, window = tuple(self.camera.AHFpreview))
 
             self.make_cross()
-            print('passed_cross')
             #Start the thread which updates the cross
             t = Thread(target = self.update_cross,args=(self.cross_q,))
             t.setDaemon(True)
             t.start()
 
             #Start the process which updates the motor
+            while not self.phase_queue.empty():
+                self.phase_queue.get()
+            self.phase_queue.put(self.phase)
             mp = Process(target=self.update_mot, args=(self.mot_q,self.phase_queue,self.delay,False,))
             mp.daemon = True
             mp.start()
@@ -364,7 +362,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             with keyboard.Listener(on_press=self.on_press) as k_listener:
                 k_listener.join()
         finally:
-            self.move_to(0,0,topleft=True,join=False)
+            self.move_to(np.array([0,0]),topleft=True,join=False)
             k_listener.stop()
             mp.terminate()
             #Turn off the laser
@@ -376,13 +374,13 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
 
         #======================Calculation================================
         #Average the coefficient matrix obatained by solving all combinations of triplets.
-        
-        self.coeff = []
-        for i in combinations(enumerate(zip(self.image_points,self.laser_points)),3):
-            ip = np.vstack((i[0][1][0],i[1][1][0],i[2][1][0]))
-            lp = np.array([i[0][1][1],i[1][1][1],i[2][1][1]])
-            self.coeff.append(solver(ip, lp))
-        self.coeff = np.mean(np.asarray(self.coeff),axis=0)
+        if len(list(set([x[0] for x in self.laser_points])))>=3:
+            self.coeff = []
+            for i in combinations(enumerate(zip(self.image_points,self.laser_points)),3):
+                ip = np.vstack((i[0][1][0],i[1][1][0],i[2][1][0]))
+                lp = np.array([i[0][1][1],i[1][1][1],i[2][1][1]])
+                self.coeff.append(solver(ip, lp))
+            self.coeff = np.mean(np.asarray(self.coeff),axis=0)
 
     def get_ref_im(self):
         #Save a reference image whithin the mouse object
@@ -477,7 +475,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             print('Image registration')
             targ_pos = self.image_registration()
             print('Moving laser to target and capture image to assert correct laser position')
-            self.move_to(targ_pos[1],targ_pos[0],topleft=True,join=True) #Move laser to target and wait until target reached
+            self.move_to(np.flipud(targ_pos),topleft=True,join=True) #Move laser to target and wait until target reached
             ####!!!!!!!!!!!!Timing of pulse doesn't make sense here!!!!!!!!!!!!!!!!!!
             self.mouse.trial_image = np.empty((self.camera.resolution[0], self.camera.resolution[1], 3),dtype=np.uint8)
             self.pulse(400,self.duty_cycle)
@@ -563,13 +561,12 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                 self.speaker.stop_train()
         finally:
             #Move laser back to zero position at the end of the trial
-            self.move_to(0,0,topleft=True,join=False)
+            self.move_to(np.array([0,0]),topleft=True,join=False)
 
     def logfile (self):
         rewardStr = 'reward'
         buzzStr = 'Buzz:duty=' + str (self.buzz_duty) + ',duration=' + '{:.2f}'.format(self.buzz_dur) + ',frequency=' + '{:.2f}'.format(self.buzz_freq)
         mStr = '{:013}'.format(self.mouse.tag)
-        #outPutStr = ''
         for i in range (0, len (self.buzzTimes)):
             outPutStr = mStr + '\t' + (datetime.fromtimestamp (int (self.buzzTimes [i]))).isoformat (' ') + '\t' + buzzStr
             print (outPutStr)
@@ -624,10 +621,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                 sleep(2)
                 self.speaker.stop_train()
             elif inputStr == 'c':
-                x,y = self.pos
-                coords = np.arange(-30,30,30)
-                    
-                self.move(10,10)
+                self.move_to(np.array([0,0]),topleft=True,join=False)
             elif inputStr == 'q':
                 break
             
@@ -788,7 +782,7 @@ if __name__ == '__main__':
 
     def makeH5File (expSettings,mice):
         #makes a new .h5-file or opens and existing one
-        hdf_path = expSettings.dayFolderPath + 'TextFiles/mice_metadata.h5'
+        hdf_path = cageSettings.dataPath + 'mice_metadata.h5'
         if path.exists(hdf_path):
             with File(hdf_path,'r+') as hdf:
                 mice.addMiceImFromH5(hdf)
@@ -798,11 +792,10 @@ if __name__ == '__main__':
 
     def updateH5File (expSettings,mice):    
         #Updates the existing h5 file, which contains relevant information of each mouse.
-        hdf_path = expSettings.dayFolderPath + 'TextFiles/mice_metadata.h5'
+        hdf_path = cageSettings.dataPath + 'mice_metadata.h5'
         with File(hdf_path,'r+') as hdf:
             for mouse in mice.mouseArray:
                 m = hdf.require_group(str(mouse.tag))
-                #m.attrs.create('tot_headFixes',mouse.tot_headFixes)
                 m.attrs.modify('tot_headFixes',mouse.tot_headFixes)
                 if hasattr(mouse,'ref_im'):
                     m.require_dataset('ref_im',shape=tuple(expSettings.camParamsDict['resolution']+[3]),dtype=np.uint8,data=mouse.ref_im)
@@ -843,7 +836,6 @@ if __name__ == '__main__':
             else:
                 writeToLogFile (expSettings.logFP, thisMouse,'check No Fix Trial')
             # Configure the stimulator and the path for the video
-            #=========passses mouse data to stimulator==============================
             stimStr = stimulator.configStim (thisMouse)
             headFixTime = time()
 
@@ -991,7 +983,6 @@ if __name__ == '__main__':
                 # wait for mouse entry, with occasional timeout to catch keyboard interrupt
                 GPIO.wait_for_edge (cageSettings.tirPin, GPIO.RISING, timeout= kTIMEOUTmS) # wait for entry based on Tag-in-range pin
                 if (GPIO.input (cageSettings.tirPin) == GPIO.HIGH):
-                    #notifier.notify (2, 10, 0)
                     try:
                         tag = tagReader.readTag ()
                     except (IOError, ValueError):
