@@ -43,14 +43,14 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         self.laser_on_time = int(self.configDict.get('laser_on_time', 0))
         
         #Cross-hair Overlay settings
-        self.ratio = self.camera.resolution[0]/self.camera.resized[0]
+        #warnings.filterwarnings("ignore",".*you may find the equivalent alpha format faster*")
         self.overlay_resolution = self.camera.resolution
         self.cross_pos = (np.array(self.camera.resolution)/2).astype(int)
         self.cross_step = int(self.camera.resolution[0]/50)
         self.cross_q = queue(maxsize=0) #Queues the cross-pin changes
         self.coeff = np.asarray (self.configDict.get ('coeff_matrix', None))
 
-        self.headFixTime = float (self.configDict.get ('headFixTime', 15))
+        self.headFixTime = float (self.configDict.get ('headFixTime', 0))
         self.lickWitholdTime = float (self.configDict.get ('lickWitholdTime', 1))
         self.afterStimWitholdTime = float(self.configDict.get ('after_Stim_Withold_Time', 0.2))
         
@@ -180,7 +180,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         if key == keyboard.Key.space:
             self.kb.press(keyboard.Key.backspace)
             self.kb.release(keyboard.Key.backspace)
-            self.image_points.append(np.copy(self.cross_pos/self.ratio))
+            self.image_points.append(np.copy(self.cross_pos))
             self.laser_points.append(np.copy(np.flip(self.pos,axis=0)))
             print('\n\nPosition saved!\n\n')
         if key == keyboard.Key.esc:
@@ -371,6 +371,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             self.pulse(0)
             self.camera.stop_preview()
             self.camera.remove_overlay(self.l3)
+            self.l3.close()
             
 
         #======================Calculation================================
@@ -384,14 +385,9 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         self.coeff = np.mean(np.asarray(self.coeff),axis=0)
 
     def get_ref_im(self):
-        #Save a high-res and low-res reference image whithin the mouse object
-        self.mouse.ref_im_high = np.empty((np.prod(np.asarray(self.camera.resolution)) * 3),dtype=np.uint8)
-        self.camera.capture(self.mouse.ref_im_high,'rgb')
-        self.mouse.ref_im_high = self.mouse.ref_im_high.reshape((self.camera.resolution[0],self.camera.resolution[1],3))
-        
-        self.mouse.ref_im = np.empty((self.camera.resized[0], self.camera.resized[1], 3),dtype=np.uint8)
-        warnings.filterwarnings("ignore",".*you may find the equivalent alpha format faster*")
-        self.camera.capture(self.mouse.ref_im,'rgb',resize=self.camera.resized)
+        #Save a reference image whithin the mouse object
+        self.mouse.ref_im = np.empty((self.camera.resolution[0], self.camera.resolution[1], 3),dtype=np.uint8)
+        self.camera.capture(self.mouse.ref_im,'rgb')
 
     def select_targets(self,mice):
         
@@ -404,10 +400,6 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             plt.show(block=False)
             points = np.around(np.asarray(plt.ginput(n=1,show_clicks=True,timeout=0)))
             plt.close()
-            #To choose multiple points use commented text
-            #xses = map(int,[t[1] for t in points])
-            #yses = map(int,[t[0] for t in points])
-            #return list(xses),list(yses)
             return [int(points[0][1]),int(points[0][0])]
 
         if not hasattr(self,'coeff'):
@@ -415,19 +407,26 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             return None
         else:
             for mouse in mice.mouseArray:
-                print('Mouse: ',mouse.tag)
-                #mouse.targets = {}
-                targets_coords = manual_annot(mouse.ref_im_high)
-                #targets_coords = list(zip(np.array(targets_coords[0]),np.array(targets_coords[1])))
-
-                #for i,j in enumerate(targets_coords):
-                    #target = 'target_'+str(i)
-                    #mouse.targets[target]=np.array(np.asarray(j)/self.ratio).astype(int) #Scale coordinate to desired size
-                mouse.targets=np.array(np.asarray(targets_coords)/self.ratio).astype(int)
-                print('TARGET\tx\ty')
-                print('{0}\t{1}\t{2}'.format('0',mouse.targets[0],mouse.targets[1]))
-                #for key,value in mouse.targets.items():
-                    #print('{0}\t{1}\t{2}'.format(key[-1],value[0],value[1]))
+                if hasattr(mouse,'targets'):
+                    inputStr = input('Certain/All mice already have brain targets.\n0: Select targets for remaining mice\n1: Select targets for all registered mice.\n')
+                    break
+                else:
+                    inputStr = str(1)
+            if inputStr == str(0):
+                for mouse in mice.mouseArray:
+                    if not hasattr(mouse,'targets'):
+                        print('Mouse: ',mouse.tag)
+                        targets_coords = manual_annot(mouse.ref_im)
+                        mouse.targets=np.asarray(targets_coords).astype(int)
+                        print('TARGET\tx\ty')
+                        print('{0}\t{1}\t{2}'.format('0',mouse.targets[0],mouse.targets[1]))
+            if inputStr == str(1):
+                for mouse in mice.mouseArray:
+                    print('Mouse: ',mouse.tag)
+                    targets_coords = manual_annot(mouse.ref_im)
+                    mouse.targets=np.asarray(targets_coords).astype(int)
+                    print('TARGET\tx\ty')
+                    print('{0}\t{1}\t{2}'.format('0',mouse.targets[0],mouse.targets[1]))
 
     def image_registration(self):
         
@@ -442,9 +441,8 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             scale_mat = np.array([[scale,1,1],[1,scale,1]])
             return rot_ext*scale_mat
 
-        trial = np.empty((self.camera.resized[0], self.camera.resized[1], 3),dtype=np.uint8)
-        warnings.filterwarnings("ignore",".*you may find the equivalent alpha format faster*")
-        self.camera.capture(trial,'rgb',resize=self.camera.resized)
+        trial = np.empty((self.camera.resolution[0], self.camera.resolution[1], 3),dtype=np.uint8)
+        self.camera.capture(trial,'rgb')
 
         #Image registration
         #============Could run the registration on a different processor==========
@@ -455,8 +453,8 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
 
         #Transform the target to new position
         self.R = trans_mat(tf['angle'],tf['tvec'][1],tf['tvec'][0],tf['scale'])
-        cent_targ = self.mouse.targets - np.array([int(self.camera.resized[0]/2),int(self.camera.resized[0]/2)]) #translate targets to center of image
-        trans_coord = np.dot(self.R,np.append(cent_targ,1))+np.array([int(self.camera.resized[0]/2),int(self.camera.resized[0]/2)])
+        cent_targ = self.mouse.targets - np.array([int(self.camera.resolution[0]/2),int(self.camera.resolution[0]/2)]) #translate targets to center of image
+        trans_coord = np.dot(self.R,np.append(cent_targ,1))+np.array([int(self.camera.resolution[0]/2),int(self.camera.resolution[0]/2)])
         targ_pos = np.dot(self.coeff,np.append(trans_coord,1))
         print('TARGET\ttx\tty')
         print('{0}\t{1:.01f}\t{2:.01f}'.format('0',trans_coord[0],trans_coord[1]))
@@ -468,7 +466,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
     def run(self):
         #Check if mouse is here for the first time. If yes -> get_ref_im and release mouse again
         if self.mouse.tot_headFixes == 1:
-            print('Take ref im')
+            print('Take reference image')
             self.get_ref_im()
             return
         elif not hasattr(self.mouse,'targets'):
@@ -478,13 +476,13 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         try:
             print('Image registration')
             targ_pos = self.image_registration()
-            print('Move laser to target and capture image to assert correct laser position')
+            print('Moving laser to target and capture image to assert correct laser position')
             self.move_to(targ_pos[1],targ_pos[0],topleft=True,join=True) #Move laser to target and wait until target reached
             ####!!!!!!!!!!!!Timing of pulse doesn't make sense here!!!!!!!!!!!!!!!!!!
-            self.mouse.trial_image = np.empty((self.camera.resized[0], self.camera.resized[1], 3),dtype=np.uint8)
-            self.pulse(200,self.duty_cycle)
-            #self.camera.capture(self.mouse.trial_image,'rgb',resize=self.camera.resized)
-            sleep(0.2)
+            self.mouse.trial_image = np.empty((self.camera.resolution[0], self.camera.resolution[1], 3),dtype=np.uint8)
+            self.pulse(400,self.duty_cycle)
+            self.camera.capture(self.mouse.trial_image,'rgb')
+            sleep(0.4)
             
             self.buzzTimes = []
             self.buzzTypes = []
@@ -571,11 +569,12 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         rewardStr = 'reward'
         buzzStr = 'Buzz:duty=' + str (self.buzz_duty) + ',duration=' + '{:.2f}'.format(self.buzz_dur) + ',frequency=' + '{:.2f}'.format(self.buzz_freq)
         mStr = '{:013}'.format(self.mouse.tag)
+        #outPutStr = ''
         for i in range (0, len (self.buzzTimes)):
-            outPutStr = mStr + '\t' + datetime.fromtimestamp (int (self.buzzTimes [i])).isoformat (' ') + '\t' + buzzStr
+            outPutStr = mStr + '\t' + (datetime.fromtimestamp (int (self.buzzTimes [i]))).isoformat (' ') + '\t' + buzzStr
             print (outPutStr)
         for i in range (0, len (self.rewardTimes)):
-            outPutStr = mStr + '\t' + datetime.fromtimestamp (int (self.rewardTimes [i])).isoformat (' ') + '\t' + rewardStr
+            outPutStr = mStr + '\t' + (datetime.fromtimestamp (int (self.rewardTimes [i]))).isoformat (' ') + '\t' + rewardStr
             print (outPutStr)
         if self.textfp != None:
             for i in range (0, len (self.buzzTimes)):
@@ -589,7 +588,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         
     def tester(self,mice,expSettings):
         while(True):
-            inputStr = input ('m= matching, t= select targets, p= laser tester, a= camera/LED, i= inspect mice, s= speaker, q= quit: ')
+            inputStr = input ('m= matching, t= select targets, p= laser tester, c= motor check, a= camera/LED, i= inspect mice, s= speaker, q= quit: ')
             if inputStr == 'm':
                 self.matcher()
                 expSettings.stimDict.update({'coeff_matrix' : self.coeff.tolist()})
@@ -611,7 +610,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                 GPIO.output(self.cageSettings.ledPin, GPIO.LOW)
             elif inputStr == 'i':
                 #Inspect the mice array
-                print('Mouse\tref-im\ttargets')
+                print('Mouse\t\tref-im\ttargets')
                 for mouse in mice.mouseArray:
                     ref_im='no'
                     targets='no'
@@ -624,6 +623,11 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                 self.speaker.start_train()
                 sleep(2)
                 self.speaker.stop_train()
+            elif inputStr == 'c':
+                x,y = self.pos
+                coords = np.arange(-30,30,30)
+                    
+                self.move(10,10)
             elif inputStr == 'q':
                 break
             
@@ -792,24 +796,24 @@ if __name__ == '__main__':
             with File(hdf_path,'w') as hdf:
                 pass
 
-    def updateH5File (expSettings,mice,camParams):    
+    def updateH5File (expSettings,mice):    
         #Updates the existing h5 file, which contains relevant information of each mouse.
         hdf_path = expSettings.dayFolderPath + 'TextFiles/mice_metadata.h5'
         with File(hdf_path,'r+') as hdf:
             for mouse in mice.mouseArray:
                 m = hdf.require_group(str(mouse.tag))
-                m.attrs.create('tot_headFixes',mouse.tot_headFixes)
+                #m.attrs.create('tot_headFixes',mouse.tot_headFixes)
+                m.attrs.modify('tot_headFixes',mouse.tot_headFixes)
                 if hasattr(mouse,'ref_im'):
-                    m.require_dataset('ref_im',shape=tuple(camParams['resized']+[3]),dtype=np.uint8,data=mouse.ref_im)
-                    m.require_dataset('ref_im_high',shape=tuple(camParams['resolution']+[3]),dtype=np.uint8,data=mouse.ref_im_high)
+                    m.require_dataset('ref_im',shape=tuple(expSettings.camParamsDict['resolution']+[3]),dtype=np.uint8,data=mouse.ref_im)
                 if hasattr(mouse,'targets'):
                     m.require_dataset('targets',shape=(2,),dtype=np.uint8,data=mouse.targets,)
                 t = m.require_group('trial_image')
-                if hasattr(mouse,'trial_image'):
-                    t.create_dataset('trial_'+str(mouse.tot_headFixes),dtype=np.uint8,data=mouse.laser_im)
+                if hasattr(mouse,'trial_image'):               
+                    t.require_dataset('trial_'+str(mouse.tot_headFixes),shape=tuple(expSettings.camParamsDict['resolution']+[3]),dtype=np.uint8,data=mouse.trial_image)
         
 
-    def runTrial (thisMouse, expSettings, cageSettings, camera, rewarder, headFixer, stimulator, UDPTrigger=None):
+    def runTrial (thisMouse, expSettings, cageSettings, rewarder, headFixer, stimulator, UDPTrigger=None):
         """
         Runs a single AutoHeadFix trial, from the mouse making initial contact with the plate
 
@@ -818,7 +822,6 @@ if __name__ == '__main__':
             :param thisMouse: the mouse object representing nouse that is being head-fixed
             :param expSettings: experiment-specific settings, everything you need to know is stored in this object
             :param cageSettings: settings that are expected to stay the same for each setup, including hardware pin-outs for GPIO
-            :param camera: The AHF_Camera object used to record video
             :param rewarder :object of AHF_Rewarder class that runs solenoid to give water rewards
             :param stimulator: object of a subclass of  AHF_Stimulator, which runs experiment, incuding giving rewards
             :param UDPTrigger: used if sending UDP signals to other Pi for behavioural observation
@@ -843,43 +846,26 @@ if __name__ == '__main__':
             #=========passses mouse data to stimulator==============================
             stimStr = stimulator.configStim (thisMouse)
             headFixTime = time()
-            
-            #TODO IMPROVE
-            if camera.AHFvideoFormat == 'rgb':
-                extension = 'raw'
-            else:
-                extension = 'h264'
 
-            video_name = str (thisMouse.tag) + "_" + stimStr + "_" + '%d' % headFixTime + '.' + extension
-            video_name_path = expSettings.dayFolderPath + 'Videos/' + "M" + video_name
-            writeToLogFile (expSettings.logFP, thisMouse, "video:" + video_name)
             # send socket message to start behavioural camera
             if expSettings.hasUDP == True:
                 #MESSAGE = str (thisMouse.tag) + "_" + stimStr + "_" + '%d' % headFixTime
                 MESSAGE = str (thisMouse.tag) + "_" +  "_" + '%d' % headFixTime
                 UDPTrigger.doTrigger (MESSAGE)
                 # start recording and Turn on the blue led
-                camera.start_recording(video_name_path)
-                sleep(expSettings.cameraStartDelay) # wait a bit so camera has time to start before light turns on, for synchrony accross cameras
                 GPIO.output(cageSettings.ledPin, GPIO.HIGH)
                 writeToLogFile (expSettings.logFP, thisMouse, "BrainLEDON")
             else: # turn on the blue light and start the movie
                 GPIO.output(cageSettings.ledPin, GPIO.HIGH)
-                #camera.start_recording(video_name_path)
             stimulator.run () # run whatever stimulus is configured
             if expSettings.hasUDP == True:
                 GPIO.output(cageSettings.ledPin, GPIO.LOW) # turn off the blue LED
                 writeToLogFile (expSettings.logFP, thisMouse, "BrainLEDOFF")
                 sleep(expSettings.cameraStartDelay) #wait again after turning off LED before stopping camera, for synchronization
                 UDPTrigger.doTrigger ("Stop") # stop
-                camera.stop_recording()
             else:
-                #camera.stop_recording()
                 GPIO.output(cageSettings.ledPin, GPIO.LOW) # turn off the blue LED
-            if path.isfile(video_name_path):
-                uid = getpwnam ('pi').pw_uid
-                gid = getgrnam ('pi').gr_gid
-                chown (video_name_path, uid, gid) # we run AutoheadFix as root if using pi PWM, so we expicitly set ownership to pi
+                
             # skeddadleTime gives mouse a chance to disconnect before head fixing again
             skeddadleEnd = time() + expSettings.skeddadleTime
             if expSettings.doHeadFix == True:
@@ -895,7 +881,6 @@ if __name__ == '__main__':
             return True
         except Exception as anError:
             headFixer.releaseMouse()
-            #camera.stop_recording()
             print ('Error in running trial:' + str (anError))
             raise anError
 
@@ -1029,10 +1014,8 @@ if __name__ == '__main__':
                         while GPIO.input (cageSettings.tirPin)== GPIO.HIGH and time() < (entryTime + expSettings.entryRewardDelay):
                             GPIO.wait_for_edge (cageSettings.contactPin, expSettings.contactEdge, timeout= kTIMEOUTmS)
                             if (GPIO.input (cageSettings.contactPin)== expSettings.contactState):
-                                #======================runTrial================================================
-                                runTrial (thisMouse, expSettings, cageSettings, camera, rewarder, headFixer,stimulator, UDPTrigger)
-                                #==================new========================
-                                updateH5File(expSettings,mice,expSettings.camParamsDict)
+                                runTrial (thisMouse, expSettings, cageSettings, rewarder, headFixer,stimulator, UDPTrigger)
+                                updateH5File(expSettings,mice)
                                 giveEntranceReward = False
                                 break
                         if (GPIO.input (cageSettings.tirPin)== GPIO.HIGH) and giveEntranceReward == True:
@@ -1045,7 +1028,8 @@ if __name__ == '__main__':
                         if (GPIO.input (cageSettings.contactPin)== expSettings.noContactState):
                             GPIO.wait_for_edge (cageSettings.contactPin, expSettings.contactEdge, timeout= kTIMEOUTmS)
                         if (GPIO.input (cageSettings.contactPin)== expSettings.contactState):
-                            runTrial (thisMouse, expSettings, cageSettings, camera, rewarder, headFixer, stimulator, UDPTrigger)
+                            runTrial (thisMouse, expSettings, cageSettings, rewarder, headFixer, stimulator, UDPTrigger)
+                            updateH5File(expSettings,mice)
                             expSettings.doHeadFix = expSettings.propHeadFix > random() # set doHeadFix for next contact
                     # either mouse left the chamber or has been in chamber too long
                     if GPIO.input (cageSettings.tirPin)== GPIO.HIGH and time () > entryTime + expSettings.inChamberTimeLimit:
@@ -1125,7 +1109,7 @@ if __name__ == '__main__':
                         valveControl (cageSettings)
                     elif event == 'h' or event == 'H':
                         hardwareTester(cageSettings, tagReader, headFixer, stimulator, mice, expSettings)
-                        updateH5File(expSettings,mice,expSettings.camParamsDict)
+                        updateH5File(expSettings,mice)
                         if cageSettings.contactPolarity == 'RISING':
                             expSettings.contactEdge = GPIO.RISING 
                             expSettings.noContactEdge = GPIO.FALLING
@@ -1156,4 +1140,5 @@ if __name__ == '__main__':
         writeToLogFile(expSettings.logFP, None, 'SeshEnd')
         expSettings.logFP.close()
         expSettings.statsFP.close()
+        camera.close()
         print ('AutoHeadFix Stopped')

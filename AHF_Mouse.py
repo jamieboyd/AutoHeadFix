@@ -124,11 +124,9 @@ class Mice:
         for mouse in self.mouseArray:
             if str(mouse.tag)+'/ref_im' in hdf:
                 mouse.ref_im = hdf[str(mouse.tag)+'/ref_im'][:]
-            if str(mouse.tag)+'/ref_im_high' in hdf:
-                mouse.ref_im_high = hdf[str(mouse.tag)+'/ref_im_high'][:]
             if str(mouse.tag)+'/targets' in hdf:
                 mouse.targets = hdf[str(mouse.tag)+'/targets'][:]
-            mouse.tot_headFixes = hdf[str(mouse.tag)].attrs['tot_headFixes']
+                mouse.tot_headFixes = hdf[str(mouse.tag)].attrs['tot_headFixes']
             
 
     def removeMouseByTag (self, tag):
