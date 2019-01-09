@@ -17,8 +17,7 @@ from AHF_HeadFixer import AHF_HeadFixer
 from AHF_Stimulator import AHF_Stimulator
 from AHF_Rewarder import AHF_Rewarder
 from AHF_Camera import AHF_Camera
-from AHF_ClassAndDictUtils import AHF_class_from_file, AHF_file_exists, AHF_file_from_user, AHF_show_ordered_dict
-from AHF_ClassAndDictUtils import AHF_edit_dict, AHF_obj_fields_to_dict, AHF_dict_to_obj_fields, AHF_dict_to_file
+import AHF_ClassAndDictUtils
 
 class Task:
     """
@@ -36,21 +35,22 @@ class Task:
         
         """
         self.fileName = ''
-        # load experiment settings from passed in file name, if program was started with a task file name 
+        # load experiment settings from passed in file name, as is the case if program was started with a task file name 
         if fileName is not None:
             # file name passed in may or may not start with AFH_task_ and end with .jsn
             nameStr = filename.lstrip ('AHF_task_').rstrip ('.jsn')
-            if AHF_file_exists ('task', nameStr, '.jsn'):
+            if AHF_ClassAndDictUtils.File_exists ('task', nameStr, '.jsn'):
                 self.fileName = 'AHF_task_' +  nameStr + '.jsn'
                 self.loadSettings (self.fileName)
                 return
         try:
-            self.fileName = AHF_file_from_user (nameStr, 'AHF task config file', '.jsn')
+            self.fileName = AHF_ClassAndDictUtils.File_from_user (nameStr, 'AHF task config file', '.jsn')
             self.loadSettings (self.fileName)
         except FileNotFoundError:
             self.fileName = ''
             self.loadSettings (None)
         return
+
 
     def loadSettings (self, fileName):
         """
@@ -65,13 +65,13 @@ class Task:
                 fileErr = True
         # check for any missing settings, all settings will be missing if making a new config, and call setting functions for
         # things like head fixer that are subclassable need some extra work , when either loaded from file or user queried
-        ########## Head Fixer (optoinal) makes its own dictionary #################################
+        ########## Head Fixer (optional) makes its own dictionary #################################
         if not hasattr (self, 'hasHeadFixer') or not hasattr (self, 'headFixerClass') or not hasattr (self, 'headFixerDict'):
             tempInput = input ('Does this setup have a head fixing mechanism installed? (Y or N)')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
                 self.hasHeadFixer = True
-                self.headFixerClass = AHF_HeadFixer.get_HeadFixer_from_user ()
-                self.headFixerDict = AHF_HeadFixer.get_class(self.headFixerClass).config_user_get ()
+                self.headFixerClass = AHF_ClassAndDictUtils.File_from_user ('HeadFixer', 'Head Fixer Class File', '.py')  #AHF_HeadFixer.get_HeadFixer_from_user ()
+                self.headFixerDict = AHF_ClassAndDictUtils.Class_from_file(self.headFixerClass).config_user_get () #AHF_HeadFixer.get_class(self.headFixerClass).config_user_get ()
             else:
                 self.hasHeadFixer = False
                 self.headFixerClass = None

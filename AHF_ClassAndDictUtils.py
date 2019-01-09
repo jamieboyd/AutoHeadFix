@@ -10,12 +10,14 @@ from collections import OrderedDict
 
 
 ##################################################################################
-# methods for base class for getting class names and importing classes
+# methods for getting class names and importing classes from a base class
+##################################################################################
 
-def AHF_class_from_file(fileName):
+
+def Class_from_file(fileName):
     """
     Imports a module from a fileName (stripped of the .py) and returns the class
-
+    
     Assumes the class is named the same as the module. 
     """
     module = __import__(fileName)
@@ -23,7 +25,10 @@ def AHF_class_from_file(fileName):
 
 
 
-def AHF_file_exists (nameTypeStr, nameStr, typeSuffix):
+def File_exists (nameTypeStr, nameStr, typeSuffix):
+    """
+    Returns true if a file with name 'AHF_' + nameTypeStr + '_' + nameStr + typeSuffix exists in current directory
+    """
     findFile = 'AHF_' + nameTypeStr + '_' + nameStr + typeSuffix
     # try to find the file name in current directory and load it
     returnVal = False
@@ -33,7 +38,7 @@ def AHF_file_exists (nameTypeStr, nameStr, typeSuffix):
             break
     return returnVal
 
-def AHF_file_from_user (nameTypeStr, longName, typeSuffix):
+def File_from_user (nameTypeStr, longName, typeSuffix):
     """
     Static method that trawls through current folder looking for python files matching nameTypeStr
     
@@ -82,7 +87,8 @@ def AHF_file_from_user (nameTypeStr, longName, typeSuffix):
 
 ########################################################################################################################
 ## methods for user editing of a dictionary of settings containing strings, integers, floats, lists, tuples, booleans, and dictionaries of those types
-def AHF_show_ordered_dict (objectDict, longName):
+#########################################################################################################################
+def Show_ordered_dict (objectDict, longName):
     """
     Dumps standard dictionary settings into an ordered dictionary, prints settings to screen in a numbered fashion from the ordered dictionary,
     making it easy to select a setting to change. Returns the ordered dictionary, used by edit_dict function
@@ -102,7 +108,7 @@ def AHF_show_ordered_dict (objectDict, longName):
     return showDict
 
 
-def AHF_edit_dict (anyDict, longName):
+def Edit_dict (anyDict, longName):
     """
     Edits values in a passed in dict, in a generic way, not having to know ahead of time the name and type of each setting
     Assumption is made that lists/tuples contain only strings, ints, or float types, and that all members of any list/tuple are same type
@@ -167,7 +173,10 @@ def AHF_edit_dict (anyDict, longName):
             anyDict.update (updatDict)
 
 
-def AHF_obj_fields_to_dict(anObject):
+def Obj_fields_to_dict(anObject):
+    """
+    Returns a dictionary with elements from the fields of the object anObject
+    """
     aDict = {}
     for key, value in anObject.__dict__ :
         if key.startswith ('_') is False and inspect.isroutine (getattr (anObject, key)) is False:
@@ -175,11 +184,19 @@ def AHF_obj_fields_to_dict(anObject):
     return aDict
 
 
-
-def AHF_dict_to_obj_fields (anObject, aDict):
+def Dict_to_obj_fields (anObject, aDict):
+    """
+    Sets attributes for the object anObject from the keys and values of dictionay aDict
+    """
     for key, value in aDict:
         setattr (anObject, key, value)
-def AHF_obj_fields_to_file (anObject, nameTypeStr, nameStr, typeSuffix):
+
+
+        
+def Obj_fields_to_file (anObject, nameTypeStr, nameStr, typeSuffix):
+    """
+    Writes a file containing a json dictionary of all the fields of the object anObject
+    """
     jsonDict = {}
     for key, value in anObject.__dict__ :
         if key.startswith ('_') is False and inspect.isroutine (getattr (anObject, key)) is False:
@@ -193,17 +210,11 @@ def AHF_obj_fields_to_file (anObject, nameTypeStr, nameStr, typeSuffix):
         os.chown (configFile, uid, gid) # we may run as root for pi PWM, so we need to expicitly set ownership
 
 
-def AHF_obj_fields_to_file (anObject, nameTypeStr, nameStr, typeSuffix):
-    configFile = 'AHF_' + nameTypeStr + '_' + nameStr + typeSuffix
-    with open (configFile, 'w') as fp:
-        fp.write (json.dumps (jsonDict, separators = '\n', ":"))
-        fp.close ()
-        uid = pwd.getpwnam ('pi').pw_uid
-        gid = grp.getgrnam ('pi').gr_gid
-        os.chown (configFile, uid, gid) # we may run as root for pi PWM, so we need to expicitly set ownership
         
-
-def AHF_file_to_obj_fields (nameTypeStr, nameStr, longName, typeSuffix, anObject):
+def File_to_obj_fields (nameTypeStr, nameStr, longName, typeSuffix, anObject):
+    """
+    Sets attributes for the object anObject from the keys and values of dictionay aDict loaded from the file
+    """
     filename = 'AHF_' + nameTypeStr + '_' + nameStr + typeSuffix
     errFlag = False
     with open (filename, 'r') as fp:

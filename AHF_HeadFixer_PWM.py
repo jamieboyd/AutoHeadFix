@@ -2,7 +2,6 @@
 #-*-coding: utf-8 -*-
 
 from abc import ABCMeta, abstractmethod
-import AHF_Task
 from AHF_HeadFixer import AHF_HeadFixer
 from time import sleep
 
