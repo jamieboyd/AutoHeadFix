@@ -119,14 +119,21 @@ class Mice:
                 print ('Daily Quick Stats File overwritten.')
         return
 
-    def addMiceImFromH5(self, hdf):
-        #Adds mouse-images from H5 file
-        for mouse in self.mouseArray:
-            if str(mouse.tag)+'/ref_im' in hdf:
-                mouse.ref_im = hdf[str(mouse.tag)+'/ref_im'][:]
-            if str(mouse.tag)+'/targets' in hdf:
-                mouse.targets = hdf[str(mouse.tag)+'/targets'][:]
-                mouse.tot_headFixes = hdf[str(mouse.tag)].attrs['tot_headFixes']
+    def addMiceFromH5(self, hdf, statsfp):
+            
+        #Adds mouse objects to the mice array, initialzing tagID and initial values for rewards from h5 file
+        for tag,mouse_obj in hdf.items():
+            m = {}
+            for attr,value in mouse_obj.attrs.items():
+                m[str(attr)] = value
+            aMouse = Mouse (int(tag), m['entries'], m['entranceRewards'], m['headFixes'], m['headFixRewards'])
+            aMouse.tot_headFixes = m['tot_headFixes']
+            self.addMouse(aMouse, statsfp)
+
+            if 'ref_im' in mouse_obj:
+                aMouse.ref_im = mouse_obj['ref_im'][:]
+            if 'targets' in mouse_obj:
+                aMouse.targets = mouse_obj['targets'][:]
             
 
     def removeMouseByTag (self, tag):

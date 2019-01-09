@@ -412,7 +412,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                     inputStr = str(1)
             if inputStr == str(0):
                 for mouse in mice.mouseArray:
-                    if not hasattr(mouse,'targets'):
+                    if (not hasattr(mouse,'targets') and hasattr(mouse,'ref_im')):
                         print('Mouse: ',mouse.tag)
                         targets_coords = manual_annot(mouse.ref_im)
                         mouse.targets=np.asarray(targets_coords).astype(int)
@@ -420,11 +420,12 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                         print('{0}\t{1}\t{2}'.format('0',mouse.targets[0],mouse.targets[1]))
             if inputStr == str(1):
                 for mouse in mice.mouseArray:
-                    print('Mouse: ',mouse.tag)
-                    targets_coords = manual_annot(mouse.ref_im)
-                    mouse.targets=np.asarray(targets_coords).astype(int)
-                    print('TARGET\tx\ty')
-                    print('{0}\t{1}\t{2}'.format('0',mouse.targets[0],mouse.targets[1]))
+                    if hasattr(mouse,'ref_im'):
+                        print('Mouse: ',mouse.tag)
+                        targets_coords = manual_annot(mouse.ref_im)
+                        mouse.targets=np.asarray(targets_coords).astype(int)
+                        print('TARGET\tx\ty')
+                        print('{0}\t{1}\t{2}'.format('0',mouse.targets[0],mouse.targets[1]))
 
     def image_registration(self):
         
@@ -634,6 +635,7 @@ if __name__ == '__main__':
     from AHF_Camera import AHF_Camera
     from AHF_Notifier import AHF_Notifier
     from RFIDTagReader import TagReader
+    from AHF_Rewarder import AHF_Rewarder
     from AHF_Stimulator import AHF_Stimulator
     from AHF_UDPTrig import AHF_UDPTrig
     from AHF_HardwareTester import hardwareTester
@@ -650,6 +652,10 @@ if __name__ == '__main__':
     from random import random
     from sys import argv,exit
     from h5py import File
+    import numpy as np
+
+    #RPi module
+    import RPi.GPIO as GPIO
 
     def makeDayFolderPath (expSettings, cageSettings):
         """
@@ -729,8 +735,8 @@ if __name__ == '__main__':
             textFilePath = expSettings.dayFolderPath + 'TextFiles/quickStats_' + cageSettings.cageID + '_' + expSettings.dateStr + '.txt'
             if path.exists(textFilePath):
                 expSettings.statsFP = open(textFilePath, 'r+')
-                mice.addMiceFromFile(expSettings.statsFP)
-                mice.show()
+                #mice.addMiceFromFile(expSettings.statsFP)
+                #mice.show()
             else:
                 expSettings.statsFP = open(textFilePath, 'w')
                 expSettings.statsFP.write('Mouse_ID\tentries\tent_rew\thfixes\thf_rew\n')
@@ -780,23 +786,28 @@ if __name__ == '__main__':
             gTubePanicTime = time () + 25920000 # a month from now.
 
 
-    def makeH5File (expSettings,mice):
+    def makeH5File (expSettings,cageSettings,mice):
         #makes a new .h5-file or opens and existing one
-        hdf_path = cageSettings.dataPath + 'mice_metadata.h5'
-        if path.exists(hdf_path):
-            with File(hdf_path,'r+') as hdf:
-                mice.addMiceImFromH5(hdf)
+        expSettings.hdf_path = cageSettings.dataPath + 'mice_metadata.h5'
+        if path.exists(expSettings.hdf_path):
+            with File(expSettings.hdf_path,'r+') as hdf:
+                mice.addMiceFromH5(hdf,expSettings.statsFP)
+                mice.show()
         else:
-            with File(hdf_path,'w') as hdf:
+            with File(expSettings.hdf_path,'w') as hdf:
                 pass
 
-    def updateH5File (expSettings,mice):    
+    def updateH5File (expSettings,cageSettings,mice):    
         #Updates the existing h5 file, which contains relevant information of each mouse.
         hdf_path = cageSettings.dataPath + 'mice_metadata.h5'
         with File(hdf_path,'r+') as hdf:
             for mouse in mice.mouseArray:
                 m = hdf.require_group(str(mouse.tag))
+                m.attrs.modify('headFixes',mouse.headFixes)
                 m.attrs.modify('tot_headFixes',mouse.tot_headFixes)
+                m.attrs.modify('entries',mouse.entries)
+                m.attrs.modify('entranceRewards',mouse.entranceRewards)
+                m.attrs.modify('headFixRewards',mouse.headFixRewards)
                 if hasattr(mouse,'ref_im'):
                     m.require_dataset('ref_im',shape=tuple(expSettings.camParamsDict['resolution']+[3]),dtype=np.uint8,data=mouse.ref_im)
                 if hasattr(mouse,'targets'):
@@ -849,14 +860,16 @@ if __name__ == '__main__':
                 writeToLogFile (expSettings.logFP, thisMouse, "BrainLEDON")
             else: # turn on the blue light and start the movie
                 GPIO.output(cageSettings.ledPin, GPIO.HIGH)
+                GPIO.output(cageSettings.led2Pin, GPIO.HIGH)
             stimulator.run () # run whatever stimulus is configured
             if expSettings.hasUDP == True:
-                GPIO.output(cageSettings.ledPin, GPIO.LOW) # turn off the blue LED
+                GPIO.output(cageSettings.ledPin, GPIO.LOW) # turn off the green LED
                 writeToLogFile (expSettings.logFP, thisMouse, "BrainLEDOFF")
                 sleep(expSettings.cameraStartDelay) #wait again after turning off LED before stopping camera, for synchronization
                 UDPTrigger.doTrigger ("Stop") # stop
             else:
-                GPIO.output(cageSettings.ledPin, GPIO.LOW) # turn off the blue LED
+                GPIO.output(cageSettings.ledPin, GPIO.LOW) # turn off the green LED
+                GPIO.output(cageSettings.led2Pin, GPIO.LOW) # turn off the blue LED
                 
             # skeddadleTime gives mouse a chance to disconnect before head fixing again
             skeddadleEnd = time() + expSettings.skeddadleTime
@@ -892,7 +905,7 @@ if __name__ == '__main__':
     gTubeMaxTime =1
     gMouseAtEntry =0
 
-#Main program
+    #Main program
 
     try:
         # load general settings for this cage, mostly hardware pinouts
@@ -918,10 +931,12 @@ if __name__ == '__main__':
         # make daily Log files and quick stats file
         makeLogFile (expSettings, cageSettings)
         makeQuickStatsFile (expSettings, cageSettings, mice)
+        makeH5File(expSettings,cageSettings,mice)
         # set up the GPIO pins for each for their respective functionalities.
         GPIO.setmode (GPIO.BCM)
         GPIO.setwarnings(False)
         GPIO.setup (cageSettings.ledPin, GPIO.OUT, initial = GPIO.LOW) # turns on brain illumination LED
+        GPIO.setup (cageSettings.led2Pin, GPIO.OUT, initial = GPIO.LOW) # turns on masking stim LED2
         GPIO.setup (cageSettings.tirPin, GPIO.IN)  # Tag-in-range output from RFID tag reader
         GPIO.setup (cageSettings.contactPin, GPIO.IN, pull_up_down=getattr (GPIO, "PUD_" + cageSettings.contactPUD))
         if cageSettings.contactPolarity == 'RISING':
@@ -950,7 +965,7 @@ if __name__ == '__main__':
         # configure camera
         camera = AHF_Camera(expSettings.camParamsDict)
         #Generate h5 file to store mouse-individual data
-        makeH5File(expSettings,mice)
+        makeH5File(expSettings,cageSettings,mice)
         # make UDP Trigger
         if expSettings.hasUDP == True:
             UDPTrigger = AHF_UDPTrig (expSettings.UDPList)
@@ -1006,7 +1021,6 @@ if __name__ == '__main__':
                             GPIO.wait_for_edge (cageSettings.contactPin, expSettings.contactEdge, timeout= kTIMEOUTmS)
                             if (GPIO.input (cageSettings.contactPin)== expSettings.contactState):
                                 runTrial (thisMouse, expSettings, cageSettings, rewarder, headFixer,stimulator, UDPTrigger)
-                                updateH5File(expSettings,mice)
                                 giveEntranceReward = False
                                 break
                         if (GPIO.input (cageSettings.tirPin)== GPIO.HIGH) and giveEntranceReward == True:
@@ -1020,7 +1034,6 @@ if __name__ == '__main__':
                             GPIO.wait_for_edge (cageSettings.contactPin, expSettings.contactEdge, timeout= kTIMEOUTmS)
                         if (GPIO.input (cageSettings.contactPin)== expSettings.contactState):
                             runTrial (thisMouse, expSettings, cageSettings, rewarder, headFixer, stimulator, UDPTrigger)
-                            updateH5File(expSettings,mice)
                             expSettings.doHeadFix = expSettings.propHeadFix > random() # set doHeadFix for next contact
                     # either mouse left the chamber or has been in chamber too long
                     if GPIO.input (cageSettings.tirPin)== GPIO.HIGH and time () > entryTime + expSettings.inChamberTimeLimit:
@@ -1039,6 +1052,7 @@ if __name__ == '__main__':
                         GPIO.add_event_detect (cageSettings.entryBBpin, GPIO.BOTH, entryBBCallback)
                     # after exit, update stats
                     writeToLogFile(expSettings.logFP, thisMouse, 'exit')
+                    updateH5File(expSettings,cageSettings,mice)
                     updateStats (expSettings.statsFP, mice, thisMouse)
                     # after each exit check for a new day
                     if time() > nextDay:
@@ -1100,7 +1114,7 @@ if __name__ == '__main__':
                         valveControl (cageSettings)
                     elif event == 'h' or event == 'H':
                         hardwareTester(cageSettings, tagReader, headFixer, stimulator, mice, expSettings)
-                        updateH5File(expSettings,mice)
+                        updateH5File(expSettings,cageSettings,mice)
                         if cageSettings.contactPolarity == 'RISING':
                             expSettings.contactEdge = GPIO.RISING 
                             expSettings.noContactEdge = GPIO.FALLING

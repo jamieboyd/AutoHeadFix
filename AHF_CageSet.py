@@ -54,6 +54,7 @@ class AHF_CageSet (object):
                 self.contactPolarity = configDict.get ('Contact Polarity') # RISING or FALLING, GPIO.RISING = 31, GPIO.FALLING = 32
                 self.contactPUD = configDict.get ('Contact Pull Up Down') # OFF, DOWN, or UP, GPIO.PUD_OFF=20, GPIO.PUD_DOWN =21, GPIO.PUD_UP=22
                 self.ledPin =  int (configDict.get ('LED Pin'))
+                self.led2Pin =  int (configDict.get ('LED2 Pin'))
                 self.serialPort = configDict.get ('Serial Port')
                 self.dataPath =configDict.get ('Path to Save Data')
                 self.mouseConfigPath = configDict.get ('Mouse Config Path')
