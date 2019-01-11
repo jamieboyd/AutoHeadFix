@@ -58,7 +58,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         self.buzz_pulseProb = float (self.configDict.get ('buzz_pulseProb', 1))
         self.buzz_pin = int(self.configDict.get ('buzz_pin', 27))
         self.buzz_freq = float (self.configDict.get ('buzz_freq', 6000))
-        self.buzz_dur = int (self.configDict.get ('buzz_dur', 0.5))
+        self.buzz_dur = int (self.configDict.get ('buzz_dur', 1))
         self.buzz_duty = float (self.configDict.get ('buzz_duty', 0.5))
         self.buzz_lead = float (self.configDict.get ('buzz_lead', 1))
         self.buzzer=Train (PTSimpleGPIO.MODE_FREQ, self.buzz_pin, 0, self.buzz_freq, self.buzz_duty, self.buzz_dur,PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
@@ -519,11 +519,9 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                 buzzLeadEnd = afterBuzzEndTime + self.buzz_lead
                 if random() < self.buzz_pulseProb: # set up for pulses that get rewarded
                     trialType = 2
-                    print('buzzed')
                     self.buzzer.do_train()
                 else:
                     trialType = 1
-                    print('buzzed')
                     self.buzzer.do_train()
                 #============== Laser pulse after stimulus presentation========================
                 self.pulse(self.laser_on_time,self.duty_cycle)
@@ -586,7 +584,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         
     def tester(self,mice,expSettings):
         while(True):
-            inputStr = input ('m= matching, t= select targets, p= laser tester, c= motor check, a= camera/LED, i= inspect mice, s= speaker, q= quit: ')
+            inputStr = input ('m= matching, t= select targets, v = vib. motor, p= laser tester, c= motor check, a= camera/LED, i= inspect mice, s= speaker, q= quit: ')
             if inputStr == 'm':
                 self.matcher()
                 expSettings.stimDict.update({'coeff_matrix' : self.coeff.tolist()})
@@ -602,10 +600,12 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             elif inputStr == 'a':
                 #Display preview and turn on LED
                 self.camera.start_preview(fullscreen = False, window = tuple(self.camera.AHFpreview))
-                GPIO.output(self.cageSettings.ledPin, GPIO.HIGH)              
+                GPIO.output(self.cageSettings.ledPin, GPIO.HIGH)
+                GPIO.output(self.cageSettings.led2Pin, GPIO.HIGH)
                 input ('adjust camera/LED: Press any key to quit ')
                 self.camera.stop_preview()
                 GPIO.output(self.cageSettings.ledPin, GPIO.LOW)
+                GPIO.output(self.cageSettings.led2Pin, GPIO.LOW)
             elif inputStr == 'i':
                 #Inspect the mice array
                 print('Mouse\t\tref-im\ttargets')
@@ -619,8 +619,10 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                     print(str(mouse.tag)+'\t'+str(ref_im)+'\t'+str(targets))
             elif inputStr == 's':
                 self.speaker.start_train()
-                sleep(2)
+                sleep(3)
                 self.speaker.stop_train()
+            elif inputStr == 'v':
+                self.buzzer.do_train()
             elif inputStr == 'c':
                 self.move_to(np.array([0,0]),topleft=True,join=False)
             elif inputStr == 'q':
