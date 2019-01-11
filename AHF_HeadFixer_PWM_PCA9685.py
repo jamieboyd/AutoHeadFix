@@ -21,9 +21,12 @@ class AHF_HeadFixer_PWM_PCA9685 (AHF_HeadFixer_PWM):
     """
     def __init__(self, task):
         super().__init__(task)
+        self.servoAddress = task.servoAddress
+
+    def setup (self):
         self.pwm = Adafruit_PCA9685.PCA9685 (address=self.servoAddress)
         self.pwm.set_pwm_freq (90) # 40-1000Hz
-        self.releaseMouse()
+        self.self.pwm.set_pwm(0, 0, self.servoReleasedPosition)
 
     def setPWM (self, servoPosition):
         self.pwm.set_pwm(0, 0, servoPosition)

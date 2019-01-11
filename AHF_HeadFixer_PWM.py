@@ -20,6 +20,11 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
         self.servoFixedPosition = task.servoFixedPosition
         self.servoIncrement = int ((task.servoReleasedPosition - task.servoFixedPosition)/5)
 
+    @abstractmethod
+    def setup (self, task):
+        pass
+
+    
     # with progressive head fixing. typical servo values 325 =fixed, 540 = released
     # 8 different levels of fixing tightness
     def fixMouse(self, headFixationType = 8):

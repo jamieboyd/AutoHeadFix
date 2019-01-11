@@ -70,7 +70,7 @@ class Task:
             tempInput = input ('Does this setup have a head fixing mechanism installed? (Y or N)')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
                 self.hasHeadFixer = True
-                self.headFixerClass = AHF_ClassAndDictUtils.File_from_user ('HeadFixer', 'Head Fixer Class File', '.py')  #AHF_HeadFixer.get_HeadFixer_from_user ()
+                self.headFixerClass = AHF_ClassAndDictUtils.File_from_user ('HeadFixer', 'Head Fixer', '.py')  #AHF_HeadFixer.get_HeadFixer_from_user ()
                 self.headFixerDict = AHF_ClassAndDictUtils.Class_from_file(self.headFixerClass).config_user_get () #AHF_HeadFixer.get_class(self.headFixerClass).config_user_get ()
             else:
                 self.hasHeadFixer = False
@@ -79,13 +79,15 @@ class Task:
             fileErr = True
         ################################ Stimulator makes its own dictionary #######################
         if not hasattr (self, 'StimulatorClass') or not hasattr (self, 'StimulatorDict'):
-            self.StimulatorClass = AHF_Stimulator.get_Stimulator_from_user ()
-            self.StimulatorDict = AHF_Stimulator.get_class(self.StimulatorClass).config_user_get ()
+            #self.StimulatorClass = AHF_Stimulator.get_Stimulator_from_user ()
+            #self.StimulatorDict = AHF_Stimulator.get_class(self.StimulatorClass).config_user_get ()
+            self.StimulatorClass = AHF_ClassAndDictUtils.File_from_user ('Stimulator', 'Stimulator', '.py')  #AHF_HeadFixer.get_HeadFixer_from_user ()
+            self.StimulatorDict = AHF_ClassAndDictUtils.Class_from_file(self.StimulatorClass).config_user_get () #AHF_HeadFixer.get_class(self.headFixerClass).config_user_get ()
             fileErr = True
         ################################ Rewarder class makes its own dictionary #######################
         if not hasattr (self, 'RewarderClass') or not hasattr (self, 'RewarderDict'):
-            self.RewarderClass = AHF_Rewarder.get_Rewarder_from_user ()
-            self.RewarderDict = AHF_Rewarder.get_class(self.RewarderClass).config_user_get ()
+            self.RewarderClass = AHF_ClassAndDictUtils.File_from_user ('Rewarder', 'Rewarder', '.py') #AHF_Rewarder.get_Rewarder_from_user ()
+            self.RewarderDict = AHF_ClassAndDictUtils.Class_from_file(self.RewarderClass).config_user_get ()
             fileErr = True
         ################################ Camera (optional) makes its own dictionary of settings ####################
         if not hasattr (self, 'hasCamera') or not hasattr (self, 'cameraClass') or not hasattr (self, 'cameraDict'):

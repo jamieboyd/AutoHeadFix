@@ -2,7 +2,6 @@
 #-*-coding: utf-8 -*-
 
 from AHF_Stimulator import AHF_Stimulator
-from AHF_Rewarder import AHF_Rewarder
 from AHF_Mouse import Mouse
 
 from time import time, localtime,timezone, sleep
