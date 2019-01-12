@@ -59,7 +59,7 @@ def File_from_user (nameTypeStr, longName, typeSuffix):
                 classObj = getattr(moduleObj, moduleObj.__name__)
                 isAbstractClass =inspect.isabstract (classObj)
                 if isAbstractClass == False:
-                    fileList.append (f.lstrip(startStr))
+                    fileList.append (f.lstrip(startStr) + ": " + classObj.about())
                     iFile += 1
             except Exception as e: # exception will be thrown if imported module imports non-existant modules, for instance
                 print (e)
@@ -82,7 +82,7 @@ def File_from_user (nameTypeStr, longName, typeSuffix):
             while ClassNum < 0 or ClassNum > (iFile -1):
                 ClassNum =  int(input (inputStr))
             ClassFile =  fileList[ClassNum]
-        return startStr + ClassFile
+        return startStr + ClassFile.split (':')[0]
 
 
 ########################################################################################################################

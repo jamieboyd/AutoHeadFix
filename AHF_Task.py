@@ -89,6 +89,15 @@ class Task:
             self.RewarderClass = AHF_ClassAndDictUtils.File_from_user ('Rewarder', 'Rewarder', '.py') #AHF_Rewarder.get_Rewarder_from_user ()
             self.RewarderDict = AHF_ClassAndDictUtils.Class_from_file(self.RewarderClass).config_user_get ()
             fileErr = True
+        ############################ TagReader is not subclassable, so does not make its own dictionary ##############
+        if not hasattr (self, 'serialPort'):
+            self.serialPort = input ('Enter serial port for tag reader(likely either /dev/Serial0 or /dev/ttyUSB0):')
+            fileErr = True
+        if not hasattr (self, 'TIRpin'):
+            self.TIRpin = int (input('Enter the GPIO pin connected to the Tag-In-Range pin on the Tag Reader:'))
+            fileErr = True
+
+            
         ################################ Camera (optional) makes its own dictionary of settings ####################
         if not hasattr (self, 'hasCamera') or not hasattr (self, 'cameraClass') or not hasattr (self, 'cameraDict'):
             tempInput = input ('Does this system have a main camera installed (Y or N):')
@@ -106,13 +115,7 @@ class Task:
             self.ContactCheckClass = AHF_ContactCheck.get_ContactCheck_from_user ()
             self.ContactCheckDict = AHF_ContactCheck.get_class(self.ContactCheckClass).config_user_get ()
             fileErr = True
-        ############################ TagReader is not subclassable, so does not make its own dictionary ##############
-        if not hasattr (self, 'serialPort'):
-            self.serialPort = input ('Enter serial port for tag reader(likely either /dev/Serial0 or /dev/ttyUSB0):')
-            fileErr = True
-        if not hasattr (self, 'TIRpin'):
-            self.TIRpin = int (input('Enter the GPIO pin connected to the Tag-In-Range pin on the Tag Reader:'))
-            fileErr = True
+        
         ############################## LickDetector (optional) is not subclassable, so does not make its own dictionary ##############
         if not hasattr (self, 'hasLickDetector') or not hasattr (self, 'lickDetectorIRQ'):
             tempInput = input ('Does this setup have a Lick Detector installed? (Y or N)')

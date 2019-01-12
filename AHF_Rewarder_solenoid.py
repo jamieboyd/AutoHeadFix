@@ -1,10 +1,11 @@
 #! /usr/bin/python
 #-*-coding: utf-8 -*-
 
-from abc import abstractmethod
+from abc import ABCMeta, abstractmethod
 from AHF_Rewarder import AHF_Rewarder
 from time import sleep
-class AHF_Rewarder_solenoid (AHF_Rewarder):
+
+class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
     """
     An abstratct base class to use a solenoid to deliver water rewards using 1 GPIO pin, subclasses use different timing methods
     """
@@ -49,8 +50,6 @@ class AHF_Rewarder_solenoid (AHF_Rewarder):
     def giveReward(self, rewardName):
         pass
 
-    def setCountermandTime (self):
-        self.countermandTime = self.defaultCMtime
 
     @abstractmethod
     def giveRewardCM(self, rewardName):
@@ -68,7 +67,7 @@ class AHF_Rewarder_solenoid (AHF_Rewarder):
     def turnOFF (self):
         pass
 
-    def hardwareTest (self):
+    def hardwareTest (self, rewardDict):
         if not 'hardwareTest' in self.rewards:
            self.addRewardToDict ('hardwareTest', self.testAmount)
         print ('\nReward Solenoid opening for %f %s' % (self.testAmount, self.rewardUnits))
@@ -77,6 +76,7 @@ class AHF_Rewarder_solenoid (AHF_Rewarder):
         inputStr= input('Reward Solenoid closed.\nDo you want to change the Reward Solenoid Pin (currently ' + str (self.rewardPin) + ')?')
         if inputStr[0] == 'y' or inputStr[0] == "Y":
             self.rewardPin = int (input('Enter New Reward Solenoid Pin:' ))
+            rewardDict.update ({'rewardPin': self.rewardPin, 'rewards': self.rewards})
             self.setup()
-        
+                    
 

@@ -15,6 +15,12 @@ class AHF_Rewarder(metaclass = ABCMeta):
 
     
     #################################Abstract methods subclasses must implement #################################################
+    @staticmethod
+    @abstractmethod
+    def about():
+        return ''
+
+
     # gets a congiguration dictionary by querying user
     @staticmethod
     @abstractmethod
@@ -38,15 +44,11 @@ class AHF_Rewarder(metaclass = ABCMeta):
         return 0
 
     @abstractmethod
-    def setCountermandTime (self, countermandTime):
-        pass
-
-    @abstractmethod
     def countermandReward(self):
         return 0
 
     @abstractmethod
-    def hardwareTest (self):
+    def hardwareTest (self, task):
         pass
 
 
@@ -61,8 +63,12 @@ class AHF_Rewarder(metaclass = ABCMeta):
     def addRewardToDict (self, rewardName, rewardSize):
         self.rewards.update ({rewardName : rewardSize})
 
+    
+    def setCountermandTime (self, countermandTime):
+        self.countermandTime = countermandTime
+
     @abstractmethod
-    def hardwareTest (self):
+    def hardwareTest (self, rewardDict):
         pass
 
 

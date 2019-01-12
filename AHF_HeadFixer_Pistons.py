@@ -10,19 +10,22 @@ class AHF_HeadFixer_Pistons(AHF_HeadFixer):
     Head fixer using solenoid-driven pistons to push head bar against front plate
     a single GPIO output triggers a driver of some kind to energize solenoids
     """
-    def __init__(self, settingsDictP):
+    @staticmethod
+    def about():
+        return 'Single GPIO output using RPi.GPIO triggers a driver of some kind to energize solenoids that push headbar'
+    
+    def __init__(self, headFixerDict):
         """
         init data is a single GPIO pi, which will be configured for output
         pin number is copied from task, where it will have been loaded from configDict
         """
-        self.settingsDict = settingsDictP
-        self.pistonsPin = 0
+        self.pistonsPin = headFixerDict.get ('pistonsPin')
         self.setup()
 
     def setup (self):
-        if  self.pistonsPin != 0:
-            GPIO.cleanup(self.pistonsPin)
-        self.pistonsPin = self.settingsDict.get ('pistonsPin')
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setwarnings(False)
+        GPIO.cleanup (self.pistonsPin)
         GPIO.setup (self.pistonsPin, GPIO.OUT, initial = GPIO.LOW)
 
     def fixMouse(self):
@@ -47,13 +50,13 @@ class AHF_HeadFixer_Pistons(AHF_HeadFixer):
         return {'pistonsPin': pin,}
 
     
-    def test (self, task):
+    def hardwareTest (self, headFixDict):
         print ('Pistons Solenoid energizing for 2 sec')
-        GPIO.output(task.pistonsPin, GPIO.HIGH)
+        GPIO.output(self.pistonsPin, GPIO.HIGH)
         sleep (2)
-        GPIO.output(task.pistonsPin, GPIO.LOW)
+        GPIO.output(self.pistonsPin, GPIO.LOW)
         inputStr=input ('Pistons Solenoid de-energized.\nDo you want to change the Pistons Solenoid Pin (currently ' + str(cageSet.pistonsPin) + ')?')
         if inputStr[0] == 'y' or inputStr[0] == "Y":
             self.pistonsPin = int (input('Enter New Pistons Solenoid Pin:'))
-            task.headFixerDict.update ({'pistonsPin': self.pistonsPin})
-            GPIO.setup (self.pistonsPin, GPIO.OUT)
+            headFixDict.update ({'pistonsPin': self.pistonsPin})
+            self.setup()

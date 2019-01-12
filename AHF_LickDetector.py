@@ -10,7 +10,7 @@ import RFIDTagReader
 """
 Adafruit_MPR121 requires the Adafuit MPR121 library which, in turn,
 requires the Adafuit GPIO library
-git clone https://github.com/adafruit/Adafruit_Python_MPR121
+git clone https://github.com/adafruit/Adafruit_Python_MPR121 
 git clone https://github.com/adafruit/Adafruit_Python_GPIO
 
 imports Adafruit_GPIO for the i2c library. The file

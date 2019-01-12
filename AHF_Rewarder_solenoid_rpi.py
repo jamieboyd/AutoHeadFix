@@ -10,7 +10,11 @@ class AHF_Rewarder_solenoid_rpi (AHF_Rewarder_solenoid):
     """
     A class to use a solenoid to deliver water rewards using 1 GPIO pin controlled by RPi.GPIO , using sleep for timing 
     """
+    @staticmethod
+    def about():
+        return 'water rewards by opening a solenoid using 1 GPIO pin, controlled by RPi.GPIO with sleep for timing'
 
+ 
     @staticmethod
     def rewardThread (sleepTime, rewardPin):
         GPIO.output(rewardPin, GPIO.HIGH)

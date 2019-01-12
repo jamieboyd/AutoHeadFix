@@ -11,7 +11,11 @@ class AHF_HeadFixer(metaclass = ABCMeta):
     """
     hasLevels = False
     
-
+    @staticmethod
+    @abstractmethod
+    def about():
+        return ''
+    
     ##################################################################################
     #abstact methods each headfixer class must implement
     #part 1: three main methods of initing, fixing, and releasing
@@ -55,60 +59,20 @@ class AHF_HeadFixer(metaclass = ABCMeta):
         """
         in absence of json configDict, querries user for settings, and returns a dictionary with settings
         """
-        pass
+        return {}
 
 
-    
 
     ##################################################################################
     #abstract methods each headfixer class must implement
     #part 3: hadware tester function
     @abstractmethod
-    def test(self, task):
-        """
-        Called by hardwaretester, runs a harware test for headFixer, verifying that it works
-        gives user a chance to change configuration, and, if changed, saves new configuration info in headFixer dictionary in task
-        """
+    def hardwareTest (self, headFixDict):
         pass
 
     ###################################################################################
-    # methods a headFixer will implement if it hasLevels
-    # we pass the current level of a particular mouse and level up before head fixing
-    # we save the returned new value in the mouse object, for next time
-
-    def level_get_start (self):
-        return 0
-    
-    def level_up (self, baseValue):
-        return baseValue + 0
-
-    def level_down (self, baseValue):
-        return baseVaue - 0
-
+    # method a headFixer will implement if it hasLevels,
     def level_set_level (self, level):
         pass
 
-    ##################################################################################
-    # a simple function to run when run as Main, for all head fixers
-    @staticmethod
-    def funcForMain ():
-        from time import sleep
-        from AHF_HeadFixer import AHF_HeadFixer
-        from AHF_Task import AHF_Task
-        task = AHF_Task(None)
-        task.edit()
-        task.save()
-        headFixer=AHF_HeadFixer.get_class (task.headFixerClass) (task.headFixerDict)
-        print ('Released Position')
-        headFixer.releaseMouse()
-        sleep (1)
-        print ('Fixed Position')
-        headFixer.fixMouse()
-        sleep (1)
-        print ('Released Position')
-        headFixer.releaseMouse()
-
-
-if __name__ == "__main__":
-    AHF_HeadFixer.funcForMain()
 
