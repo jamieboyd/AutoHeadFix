@@ -69,6 +69,7 @@ def main():
         makeLogFile (expSettings, cageSettings)
         makeQuickStatsFile (expSettings, cageSettings, mice)
         makeH5File(expSettings,cageSettings,mice)
+        
         # set up the GPIO pins for each for their respective functionalities.
         GPIO.setmode (GPIO.BCM)
         GPIO.setwarnings(False)
@@ -150,6 +151,7 @@ def main():
                         mice.addMouse (thisMouse, expSettings.statsFP)
                     writeToLogFile(expSettings.logFP, thisMouse, 'entry')
                     thisMouse.entries += 1
+                    updateH5File(expSettings,cageSettings,mice)
                     # if we have entrance reward, first wait for entrance reward or first head-fix, which countermands entry reward
                     if thisMouse.entranceRewards < expSettings.maxEntryRewards:
                         giveEntranceReward = True
@@ -162,8 +164,8 @@ def main():
                                 break
                         if (GPIO.input (cageSettings.tirPin)== GPIO.HIGH) and giveEntranceReward == True:
                             thisMouse.reward (rewarder, 'entrance') # entrance reward was not countermanded by an early headfix
-                            thisMouse.entranceRewards += 1
                             writeToLogFile(expSettings.logFP, thisMouse, 'entryReward')
+                            updateH5File(expSettings,cageSettings,mice)
                     # wait for contacts and run trials till mouse exits or time in chamber exceeded
                     expSettings.doHeadFix = expSettings.propHeadFix > random()
                     while GPIO.input (cageSettings.tirPin)== GPIO.HIGH and time () < entryTime + expSettings.inChamberTimeLimit:
