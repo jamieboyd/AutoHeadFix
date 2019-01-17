@@ -52,7 +52,7 @@ def main():
         # get settings that may vary by experiment, including rewarder, camera parameters, and stimulator
         # More than one of these files can exist, and the user needs to choose one or make one
         # we will add some other  variables to expSettings so we can pass them as a single argument to functions
-        # logFP, statsFP, dateStr, dayFolderPath, doHeadFix, 
+        # logFP, statsFP, dateStr, dayFolderPath, doHeadFix,
         # configFile can be specified if launched from command line, eg, sudo python3 myconfig or sudo python3 AHFexp_myconfig.jsn
         configFile = None
         if argv.__len__() > 1:
@@ -68,7 +68,9 @@ def main():
         # make daily Log files and quick stats file
         makeLogFile (expSettings, cageSettings)
         makeQuickStatsFile (expSettings, cageSettings, mice)
+        #Generate h5 file to store mouse-individual data
         makeH5File(expSettings,cageSettings,mice)
+        updateStats (expSettings.statsFP, mice, thisMouse)
         # set up the GPIO pins for each for their respective functionalities.
         GPIO.setmode (GPIO.BCM)
         GPIO.setwarnings(False)
@@ -77,13 +79,13 @@ def main():
         GPIO.setup (cageSettings.tirPin, GPIO.IN)  # Tag-in-range output from RFID tag reader
         GPIO.setup (cageSettings.contactPin, GPIO.IN, pull_up_down=getattr (GPIO, "PUD_" + cageSettings.contactPUD))
         if cageSettings.contactPolarity == 'RISING':
-            expSettings.contactEdge = GPIO.RISING 
+            expSettings.contactEdge = GPIO.RISING
             expSettings.noContactEdge = GPIO.FALLING
             expSettings.contactState = GPIO.HIGH
             expSettings.noContactState = GPIO.LOW
         else:
             expSettings.contactEdge = GPIO.FALLING
-            expSettings.noContactEdge = GPIO.RISING 
+            expSettings.noContactEdge = GPIO.RISING
             expSettings.contactState = GPIO.LOW
             expSettings.noContactState = GPIO.HIGH
         # make head fixer - does its own GPIO initialization from info in cageSettings
@@ -101,8 +103,6 @@ def main():
         tagReader = TagReader(cageSettings.serialPort, False, None)
         # configure camera
         camera = AHF_Camera(expSettings.camParamsDict)
-        #Generate h5 file to store mouse-individual data
-        makeH5File(expSettings,cageSettings,mice)
         # make UDP Trigger
         if expSettings.hasUDP == True:
             UDPTrigger = AHF_UDPTrig (expSettings.UDPList)
@@ -128,7 +128,7 @@ def main():
         print ('Unexpected error starting AutoHeadFix:', str (anError))
         raise anError
         exit(0)
-    try:    
+    try:
         print ('Waiting for a mouse...')
         while True: #start main loop
             try:
@@ -153,7 +153,7 @@ def main():
                     # if we have entrance reward, first wait for entrance reward or first head-fix, which countermands entry reward
                     if thisMouse.entranceRewards < expSettings.maxEntryRewards:
                         giveEntranceReward = True
-                        expSettings.doHeadFix = expSettings.propHeadFix > random()                      
+                        expSettings.doHeadFix = expSettings.propHeadFix > random()
                         while GPIO.input (cageSettings.tirPin)== GPIO.HIGH and time() < (entryTime + expSettings.entryRewardDelay):
                             GPIO.wait_for_edge (cageSettings.contactPin, expSettings.contactEdge, timeout= kTIMEOUTmS)
                             if (GPIO.input (cageSettings.contactPin)== expSettings.contactState):
@@ -193,7 +193,7 @@ def main():
                     updateStats (expSettings.statsFP, mice, thisMouse)
                     # after each exit check for a new day
                     if time() > nextDay:
-                        # stop lick logging so we dont write to file when it is closed 
+                        # stop lick logging so we dont write to file when it is closed
                         lickDetector.stop_logging ()
                         mice.show()
                         writeToLogFile(expSettings.logFP, None, 'SeshEnd')
@@ -214,7 +214,7 @@ def main():
                     # check for entry beam break while idling between trials
                     if cageSettings.hasEntryBB==True and time() > gTubePanicTime:
                         print ('Some one has been in the entrance of this tube for too long')
-                        # explictly turn off pistons, though they should be off 
+                        # explictly turn off pistons, though they should be off
                         headFixer.releaseMouse()
                         BBentryTime = gTubePanicTime - gTubeMaxTime
                         if expSettings.hasTextMsg == True:
@@ -253,13 +253,13 @@ def main():
                         hardwareTester(cageSettings, tagReader, headFixer, stimulator, mice, expSettings)
                         updateH5File(expSettings,cageSettings,mice)
                         if cageSettings.contactPolarity == 'RISING':
-                            expSettings.contactEdge = GPIO.RISING 
+                            expSettings.contactEdge = GPIO.RISING
                             expSettings.noContactEdge = GPIO.FALLING
                             expSettings.contactState = GPIO.HIGH
                             expSettings.noContactState = GPIO.LOW
                         else:
                             expSettings.contactEdge = GPIO.FALLING
-                            expSettings.noContactEdge = GPIO.RISING 
+                            expSettings.noContactEdge = GPIO.RISING
                             expSettings.contactState = GPIO.LOW
                             expSettings.noContactState = GPIO.HIGH
                     elif event == 'c' or event == 'C':
@@ -310,7 +310,7 @@ def makeDayFolderPath (expSettings, cageSettings):
             chown (expSettings.dayFolderPath + 'Videos/', uid, gid)
     except Exception as e:
             print ("Error maing directories\n", str(e))
-        
+
 
 def makeLogFile (expSettings, cageSettings):
     """
@@ -325,7 +325,7 @@ def makeLogFile (expSettings, cageSettings):
         writeToLogFile (expSettings.logFP, None, 'SeshStart')
     except Exception as e:
             print ("Error maing log file\n", str(e))
-            
+
 def writeToLogFile(logFP, mouseObj, event):
     """
     Writes the time and type of each event to a text log file, and also to the shell
@@ -333,7 +333,7 @@ def writeToLogFile(logFP, mouseObj, event):
     Format of the output string: tag     time_epoch or datetime       event
     The computer-parsable time_epoch is printed to the log file and user-friendly datetime is printed to the shell
     :param logFP: file pointer to the log file
-    :param mouseObj: the mouse for which the event pertains, 
+    :param mouseObj: the mouse for which the event pertains,
     :param event: the type of event to be printed, entry, exit, reward, etc.
     returns: nothing
     """
@@ -353,7 +353,7 @@ def writeToLogFile(logFP, mouseObj, event):
 def makeQuickStatsFile (expSettings, cageSettings, mice):
     """
     makes a new quickStats file for today, or opens an existing file to append.
-    
+
     QuickStats file contains daily totals of rewards and headFixes for each mouse
     :param expSettings: experiment-specific settings, everything you need to know is stored in this object
     :param cageSettings: settings that are expected to stay the same for each setup, including hardware pin-outs for GPIO
@@ -380,7 +380,7 @@ def updateStats (statsFP, mice, mouse):
     """ Updates the quick stats text file after every exit, mostly for the benefit of folks logged in remotely
     :param statsFP: file pointer to the stats file
     :param mice: the array of mouse objects
-    :param mouse: the mouse which just left the chamber 
+    :param mouse: the mouse which just left the chamber
     returns:nothing
     """
     try:
@@ -406,7 +406,7 @@ def entryBBCallback (channel):
             print ('mouse at entrance')
         gMouseAtEntry =True
         gTubePanicTime = time () + gTubeMaxTime
-        
+
     elif GPIO.input (channel) == GPIO.HIGH:  # mouse just left
         if gMouseAtEntry == True:
             print ('Mouse left entrance')
@@ -425,7 +425,7 @@ def makeH5File (expSettings,cageSettings,mice):
         with File(expSettings.hdf_path,'w') as hdf:
             pass
 
-def updateH5File (expSettings,cageSettings,mice):    
+def updateH5File (expSettings,cageSettings,mice):
     #Updates the existing h5 file, which contains relevant information of each mouse.
     hdf_path = cageSettings.dataPath + 'mice_metadata.h5'
     with File(hdf_path,'r+') as hdf:
@@ -441,9 +441,9 @@ def updateH5File (expSettings,cageSettings,mice):
             if hasattr(mouse,'targets'):
                 m.require_dataset('targets',shape=(2,),dtype=np.uint8,data=mouse.targets,)
             t = m.require_group('trial_image')
-            if hasattr(mouse,'trial_image'):               
+            if hasattr(mouse,'trial_image'):
                 t.require_dataset('trial_'+str(mouse.tot_headFixes),shape=tuple(expSettings.camParamsDict['resolution']+[3]),dtype=np.uint8,data=mouse.trial_image)
-    
+
 
 def runTrial (thisMouse, expSettings, cageSettings, rewarder, headFixer, stimulator, UDPTrigger=None):
     """
@@ -498,12 +498,12 @@ def runTrial (thisMouse, expSettings, cageSettings, rewarder, headFixer, stimula
         else:
             GPIO.output(cageSettings.ledPin, GPIO.LOW) # turn off the green LED
             GPIO.output(cageSettings.led2Pin, GPIO.LOW) # turn off the blue LED
-            
+
         # skeddadleTime gives mouse a chance to disconnect before head fixing again
         skeddadleEnd = time() + expSettings.skeddadleTime
         if expSettings.doHeadFix == True:
             headFixer.releaseMouse()
-            sleep (0.5) # need to be mindful that servo motors generate RF, so wait 
+            sleep (0.5) # need to be mindful that servo motors generate RF, so wait
         stimulator.logfile ()
         writeToLogFile (expSettings.logFP, thisMouse,'complete')
         if (GPIO.input (cageSettings.contactPin)== expSettings.contactState):

@@ -31,7 +31,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         self.setup()
 
     def setup (self):
-       
+
         #PWM settings
         self.PWM_mode = int(self.configDict.get('PWM_mode', 0))
         self.PWM_channel = int(self.configDict.get('PWM_channel', 1))
@@ -41,7 +41,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         self.PWM.set_PWM_enable(1,self.PWM_channel,0)
         self.duty_cycle = int(self.configDict.get('duty_cycle', 0))
         self.laser_on_time = int(self.configDict.get('laser_on_time', 0))
-        
+
         #Cross-hair Overlay settings
         #warnings.filterwarnings("ignore",".*you may find the equivalent alpha format faster*")
         self.overlay_resolution = self.camera.resolution
@@ -53,7 +53,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         self.headFixTime = float (self.configDict.get ('headFixTime', 0))
         self.lickWitholdTime = float (self.configDict.get ('lickWitholdTime', 1))
         self.afterStimWitholdTime = float(self.configDict.get ('after_Stim_Withold_Time', 0.2))
-        
+
         #Buzzer settings == Vibmotor
         self.buzz_pulseProb = float (self.configDict.get ('buzz_pulseProb', 1))
         self.buzz_pin = int(self.configDict.get ('buzz_pin', 27))
@@ -78,12 +78,12 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         self.STCP = int(self.configDict.get('STCP', 17))
 
         self.delay = self.configDict.get('motor_delay', 0.03)
-        
+
         GPIO.setup(self.SHCP, GPIO.OUT, initial = GPIO.HIGH)
         GPIO.setup(self.DS, GPIO.OUT, initial = GPIO.LOW)
         GPIO.setup(self.STCP, GPIO.OUT, initial = GPIO.HIGH)
         GPIO.setup(self.Q7S, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
-        
+
         self.mot_q = Queue(maxsize=0) #Queues steper motor commands
         self.phase_queue = Queue(maxsize=0) #Returns the new phase of the motors during the matching
         self.phase = np.array([0,0])
@@ -96,7 +96,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         self.buzzTypes = []
         self.lickWitholdTimes = []
         self.rewardTimes = []
-        
+
 #===================== Utility functions for the stepper motors and laser =================
 
     def unlock(self):
@@ -200,7 +200,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
 
     def update_cross(self,q):
         while True:
-            if not q.empty():    
+            if not q.empty():
                 prod = q.get()
                 if prod is None:
                     return False
@@ -227,7 +227,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             phase_x,phase_y = phase.get()
         else:
             phase_x,phase_y = phase
-        
+
         states = [[1, 0, 0, 0], [1, 1, 0, 0], [0, 1, 0, 0], [0, 1, 1, 0],
                   [0, 0, 1, 0], [0, 0, 1, 1], [0, 0, 0, 1], [1, 0, 0, 1]]
 
@@ -272,7 +272,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             self.feed_byte(byte)
             phase_y = next_phase_y
             sleep(delay)
-            
+
         if topleft == True:
             x = 30
             y = 30
@@ -288,7 +288,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                 sleep(delay)
             self.unlock()
 
-        if mp == True:       
+        if mp == True:
             #Save the phase
             phase.put([phase_x,phase_y])
 
@@ -331,7 +331,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         print('Keys:\tarrow keys\tdelete home end page-down\n')
         print('1.: Move the laser and the cross hairs to at least 3 different points and hit the space key to save a point.')
         print('2.: To exit, hit the esc key.\n\n')
-        
+
         self.laser_points = []
         self.image_points = []
 
@@ -354,7 +354,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             mp = Process(target=self.update_mot, args=(self.mot_q,self.phase_queue,self.delay,False,))
             mp.daemon = True
             mp.start()
-            
+
             #Make object for the keyboard Controller
             self.kb = keyboard.Controller()
 
@@ -370,7 +370,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             self.camera.stop_preview()
             self.camera.remove_overlay(self.l3)
             self.l3.close()
-            
+
 
         #======================Calculation================================
         #Average the coefficient matrix obatained by solving all combinations of triplets.
@@ -388,7 +388,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         self.camera.capture(self.mouse.ref_im,'rgb')
 
     def select_targets(self,mice):
-        
+
         #========================GUI function for the selecting targets=====================
         def manual_annot(img):
             warnings.filterwarnings("ignore",".*GUI is implemented.*")
@@ -428,8 +428,8 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                         print('{0}\t{1}\t{2}'.format('0',mouse.targets[0],mouse.targets[1]))
 
     def image_registration(self):
-        
-        #============Utility function to get the rotation matrix=================  
+
+        #============Utility function to get the rotation matrix=================
         def trans_mat(angle,x,y,scale):
             angle = -1*np.radians(angle)
             scale = 1/scale
@@ -458,7 +458,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         print('TARGET\ttx\tty')
         print('{0}\t{1:.01f}\t{2:.01f}'.format('0',trans_coord[0],trans_coord[1]))
         return targ_pos
-        
+
 
 #=================Main functions called from outside===========================
 
@@ -482,7 +482,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             self.pulse(400,self.duty_cycle)
             self.camera.capture(self.mouse.trial_image,'rgb')
             sleep(0.4)
-            
+
             self.buzzTimes = []
             self.buzzTypes = []
             self.lickWitholdTimes = []
@@ -538,7 +538,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                 else: # animal waited for 0.25 seconds after start of buzzer
                     # wait for licks. Animal SHOULD lick for trialType = 2, SHOULD NOT lick for trialType = 1
                     anyLicks = self.lickDetector.waitForLick_Soft (self.buzz_lead)
-                    if trialType == 2: # 
+                    if trialType == 2: #
                         if anyLicks > 0: # licked when was supposed to lick
                             if time() < buzzLeadEnd:
                                 sleep (buzzLeadEnd - time()) # wait out duration of buzz lead time
@@ -580,8 +580,8 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                 outPutStr = mStr + '\t'  + '{:.2f}'.format (self.rewardTimes [i]) + '\t'  + rewardStr + '\t' +  datetime.fromtimestamp (int (self.rewardTimes [i])).isoformat (' ') + '\n'
                 self.textfp.write(outPutStr)
             self.textfp.flush()
-        
-        
+
+
     def tester(self,mice,expSettings):
         while(True):
             inputStr = input ('m= matching, t= select targets, v = vib. motor, p= laser tester, c= motor check, a= camera/LED, i= inspect mice, s= speaker, q= quit: ')
@@ -627,7 +627,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                 self.move_to(np.array([0,0]),topleft=True,join=False)
             elif inputStr == 'q':
                 break
-            
+
 
 
 if __name__ == '__main__':
@@ -644,7 +644,7 @@ if __name__ == '__main__':
     from AHF_Mouse import Mouse, Mice
     from AHF_HeadFixer import AHF_HeadFixer
     from AHF_LickDetector import AHF_LickDetector, Simple_Logger
-    
+
     #Standard Python modules
     from os import path, makedirs, chown
     from pwd import getpwnam
@@ -684,7 +684,7 @@ if __name__ == '__main__':
                 chown (expSettings.dayFolderPath + 'Videos/', uid, gid)
         except Exception as e:
                 print ("Error maing directories\n", str(e))
-            
+
 
     def makeLogFile (expSettings, cageSettings):
         """
@@ -699,7 +699,7 @@ if __name__ == '__main__':
             writeToLogFile (expSettings.logFP, None, 'SeshStart')
         except Exception as e:
                 print ("Error maing log file\n", str(e))
-                
+
     def writeToLogFile(logFP, mouseObj, event):
         """
         Writes the time and type of each event to a text log file, and also to the shell
@@ -707,7 +707,7 @@ if __name__ == '__main__':
         Format of the output string: tag     time_epoch or datetime       event
         The computer-parsable time_epoch is printed to the log file and user-friendly datetime is printed to the shell
         :param logFP: file pointer to the log file
-        :param mouseObj: the mouse for which the event pertains, 
+        :param mouseObj: the mouse for which the event pertains,
         :param event: the type of event to be printed, entry, exit, reward, etc.
         returns: nothing
         """
@@ -727,7 +727,7 @@ if __name__ == '__main__':
     def makeQuickStatsFile (expSettings, cageSettings, mice):
         """
         makes a new quickStats file for today, or opens an existing file to append.
-        
+
         QuickStats file contains daily totals of rewards and headFixes for each mouse
         :param expSettings: experiment-specific settings, everything you need to know is stored in this object
         :param cageSettings: settings that are expected to stay the same for each setup, including hardware pin-outs for GPIO
@@ -754,7 +754,7 @@ if __name__ == '__main__':
         """ Updates the quick stats text file after every exit, mostly for the benefit of folks logged in remotely
         :param statsFP: file pointer to the stats file
         :param mice: the array of mouse objects
-        :param mouse: the mouse which just left the chamber 
+        :param mouse: the mouse which just left the chamber
         returns:nothing
         """
         try:
@@ -780,7 +780,7 @@ if __name__ == '__main__':
                 print ('mouse at entrance')
             gMouseAtEntry =True
             gTubePanicTime = time () + gTubeMaxTime
-            
+
         elif GPIO.input (channel) == GPIO.HIGH:  # mouse just left
             if gMouseAtEntry == True:
                 print ('Mouse left entrance')
@@ -799,7 +799,7 @@ if __name__ == '__main__':
             with File(expSettings.hdf_path,'w') as hdf:
                 pass
 
-    def updateH5File (expSettings,cageSettings,mice):    
+    def updateH5File (expSettings,cageSettings,mice):
         #Updates the existing h5 file, which contains relevant information of each mouse.
         hdf_path = cageSettings.dataPath + 'mice_metadata.h5'
         with File(hdf_path,'r+') as hdf:
@@ -815,9 +815,9 @@ if __name__ == '__main__':
                 if hasattr(mouse,'targets'):
                     m.require_dataset('targets',shape=(2,),dtype=np.uint8,data=mouse.targets,)
                 t = m.require_group('trial_image')
-                if hasattr(mouse,'trial_image'):               
+                if hasattr(mouse,'trial_image'):
                     t.require_dataset('trial_'+str(mouse.tot_headFixes),shape=tuple(expSettings.camParamsDict['resolution']+[3]),dtype=np.uint8,data=mouse.trial_image)
-        
+
 
     def runTrial (thisMouse, expSettings, cageSettings, rewarder, headFixer, stimulator, UDPTrigger=None):
         """
@@ -872,12 +872,12 @@ if __name__ == '__main__':
             else:
                 GPIO.output(cageSettings.ledPin, GPIO.LOW) # turn off the green LED
                 GPIO.output(cageSettings.led2Pin, GPIO.LOW) # turn off the blue LED
-                
+
             # skeddadleTime gives mouse a chance to disconnect before head fixing again
             skeddadleEnd = time() + expSettings.skeddadleTime
             if expSettings.doHeadFix == True:
                 headFixer.releaseMouse()
-                sleep (0.5) # need to be mindful that servo motors generate RF, so wait 
+                sleep (0.5) # need to be mindful that servo motors generate RF, so wait
             stimulator.logfile ()
             writeToLogFile (expSettings.logFP, thisMouse,'complete')
             if (GPIO.input (cageSettings.contactPin)== expSettings.contactState):
@@ -917,7 +917,7 @@ if __name__ == '__main__':
         # get settings that may vary by experiment, including rewarder, camera parameters, and stimulator
         # More than one of these files can exist, and the user needs to choose one or make one
         # we will add some other  variables to expSettings so we can pass them as a single argument to functions
-        # logFP, statsFP, dateStr, dayFolderPath, doHeadFix, 
+        # logFP, statsFP, dateStr, dayFolderPath, doHeadFix,
         # configFile can be specified if launched from command line, eg, sudo python3 myconfig or sudo python3 AHFexp_myconfig.jsn
         configFile = None
         if argv.__len__() > 1:
@@ -933,7 +933,9 @@ if __name__ == '__main__':
         # make daily Log files and quick stats file
         makeLogFile (expSettings, cageSettings)
         makeQuickStatsFile (expSettings, cageSettings, mice)
+        #Generate h5 file to store mouse-individual data
         makeH5File(expSettings,cageSettings,mice)
+        updateStats (expSettings.statsFP, mice, thisMouse)
         # set up the GPIO pins for each for their respective functionalities.
         GPIO.setmode (GPIO.BCM)
         GPIO.setwarnings(False)
@@ -942,13 +944,13 @@ if __name__ == '__main__':
         GPIO.setup (cageSettings.tirPin, GPIO.IN)  # Tag-in-range output from RFID tag reader
         GPIO.setup (cageSettings.contactPin, GPIO.IN, pull_up_down=getattr (GPIO, "PUD_" + cageSettings.contactPUD))
         if cageSettings.contactPolarity == 'RISING':
-            expSettings.contactEdge = GPIO.RISING 
+            expSettings.contactEdge = GPIO.RISING
             expSettings.noContactEdge = GPIO.FALLING
             expSettings.contactState = GPIO.HIGH
             expSettings.noContactState = GPIO.LOW
         else:
             expSettings.contactEdge = GPIO.FALLING
-            expSettings.noContactEdge = GPIO.RISING 
+            expSettings.noContactEdge = GPIO.RISING
             expSettings.contactState = GPIO.LOW
             expSettings.noContactState = GPIO.HIGH
         # make head fixer - does its own GPIO initialization from info in cageSettings
@@ -966,8 +968,6 @@ if __name__ == '__main__':
         tagReader = TagReader(cageSettings.serialPort, False, None)
         # configure camera
         camera = AHF_Camera(expSettings.camParamsDict)
-        #Generate h5 file to store mouse-individual data
-        makeH5File(expSettings,cageSettings,mice)
         # make UDP Trigger
         if expSettings.hasUDP == True:
             UDPTrigger = AHF_UDPTrig (expSettings.UDPList)
@@ -993,7 +993,7 @@ if __name__ == '__main__':
         print ('Unexpected error starting AutoHeadFix:', str (anError))
         raise anError
         exit(0)
-    try:    
+    try:
         print ('Waiting for a mouse...')
         while True: #start main loop
             try:
@@ -1018,7 +1018,7 @@ if __name__ == '__main__':
                     # if we have entrance reward, first wait for entrance reward or first head-fix, which countermands entry reward
                     if thisMouse.entranceRewards < expSettings.maxEntryRewards:
                         giveEntranceReward = True
-                        expSettings.doHeadFix = expSettings.propHeadFix > random()                      
+                        expSettings.doHeadFix = expSettings.propHeadFix > random()
                         while GPIO.input (cageSettings.tirPin)== GPIO.HIGH and time() < (entryTime + expSettings.entryRewardDelay):
                             GPIO.wait_for_edge (cageSettings.contactPin, expSettings.contactEdge, timeout= kTIMEOUTmS)
                             if (GPIO.input (cageSettings.contactPin)== expSettings.contactState):
@@ -1058,7 +1058,7 @@ if __name__ == '__main__':
                     updateStats (expSettings.statsFP, mice, thisMouse)
                     # after each exit check for a new day
                     if time() > nextDay:
-                        # stop lick logging so we dont write to file when it is closed 
+                        # stop lick logging so we dont write to file when it is closed
                         lickDetector.stop_logging ()
                         mice.show()
                         writeToLogFile(expSettings.logFP, None, 'SeshEnd')
@@ -1079,7 +1079,7 @@ if __name__ == '__main__':
                     # check for entry beam break while idling between trials
                     if cageSettings.hasEntryBB==True and time() > gTubePanicTime:
                         print ('Some one has been in the entrance of this tube for too long')
-                        # explictly turn off pistons, though they should be off 
+                        # explictly turn off pistons, though they should be off
                         headFixer.releaseMouse()
                         BBentryTime = gTubePanicTime - gTubeMaxTime
                         if expSettings.hasTextMsg == True:
@@ -1118,13 +1118,13 @@ if __name__ == '__main__':
                         hardwareTester(cageSettings, tagReader, headFixer, stimulator, mice, expSettings)
                         updateH5File(expSettings,cageSettings,mice)
                         if cageSettings.contactPolarity == 'RISING':
-                            expSettings.contactEdge = GPIO.RISING 
+                            expSettings.contactEdge = GPIO.RISING
                             expSettings.noContactEdge = GPIO.FALLING
                             expSettings.contactState = GPIO.HIGH
                             expSettings.noContactState = GPIO.LOW
                         else:
                             expSettings.contactEdge = GPIO.FALLING
-                            expSettings.noContactEdge = GPIO.RISING 
+                            expSettings.noContactEdge = GPIO.RISING
                             expSettings.contactState = GPIO.LOW
                             expSettings.noContactState = GPIO.HIGH
                     elif event == 'c' or event == 'C':
