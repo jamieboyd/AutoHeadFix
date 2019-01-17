@@ -70,7 +70,7 @@ def main():
         makeQuickStatsFile (expSettings, cageSettings, mice)
         #Generate h5 file to store mouse-individual data
         makeH5File(expSettings,cageSettings,mice)
-        updateStats (expSettings.statsFP, mice, thisMouse)
+        updateStats (expSettings.statsFP, mice)
         # set up the GPIO pins for each for their respective functionalities.
         GPIO.setmode (GPIO.BCM)
         GPIO.setwarnings(False)
@@ -207,6 +207,8 @@ def main():
                         stimulator.nextDay (expSettings.logFP)
                         nextDay += KSECSPERDAY
                         mice.clear ()
+                        updateH5File(expSettings,cageSettings,mice)
+                        updateStats (expSettings.statsFP, mice)
                         # reinitialize lick detector because it can lock up if too many licks when not logging
                         lickDetector.__init__((0,1),26,simpleLogger)
                         lickDetector.start_logging()
@@ -377,25 +379,40 @@ def makeQuickStatsFile (expSettings, cageSettings, mice):
     except Exception as e:
         print ("Error making quickStats file\n", str (e))
 
-def updateStats (statsFP, mice, mouse):
-    """ Updates the quick stats text file after every exit, mostly for the benefit of folks logged in remotely
-    :param statsFP: file pointer to the stats file
-    :param mice: the array of mouse objects
-    :param mouse: the mouse which just left the chamber
-    returns:nothing
-    """
-    try:
-        pos = mouse.arrayPos
-        statsFP.seek (39 + 38 * pos) # calculate this mouse pos, skipping the 39 char header
-        # we are in the right place in the file and new and existing values are zero-padded to the same length, so overwriting should work
-        outPutStr = '{:013}'.format(mouse.tag) + "\t" +  '{:05}'.format(mouse.entries)
-        outPutStr += "\t" +  '{:05}'.format(mouse.entranceRewards) + "\t" + '{:05}'.format(mouse.headFixes)
-        outPutStr +=  "\t" + '{:05}'.format(mouse.headFixRewards) + "\n"
-        statsFP.write (outPutStr)
-        statsFP.flush()
-        statsFP.seek (39 + 38 * mice.nMice()) # leave file position at end of file so when we quit, nothing is truncated
-    except Exception as e:
-        print ("Error writing updating stat file\n", str (e))
+    def updateStats (statsFP, mice, mouse=None):
+        """ Updates the quick stats text file after every exit, mostly for the benefit of folks logged in remotely
+        :param statsFP: file pointer to the stats file
+        :param mice: the array of mouse objects
+        :param mouse: the mouse which just left the chamber
+        returns:nothing
+        """
+        if mouse:
+            try:
+                pos = mouse.arrayPos
+                statsFP.seek (39 + 38 * pos) # calculate this mouse pos, skipping the 39 char header
+                # we are in the right place in the file and new and existing values are zero-padded to the same length, so overwriting should work
+                outPutStr = '{:013}'.format(mouse.tag) + "\t" +  '{:05}'.format(mouse.entries)
+                outPutStr += "\t" +  '{:05}'.format(mouse.entranceRewards) + "\t" + '{:05}'.format(mouse.headFixes)
+                outPutStr +=  "\t" + '{:05}'.format(mouse.headFixRewards) + "\n"
+                statsFP.write (outPutStr)
+                statsFP.flush()
+                statsFP.seek (39 + 38 * mice.nMice()) # leave file position at end of file so when we quit, nothing is truncated
+            except Exception as e:
+                print ("Error writing updating stat file\n", str (e))
+        else:
+            for mouse in mice.mouseArray:
+                try:
+                    pos = mouse.arrayPos
+                    statsFP.seek (39 + 38 * pos) # calculate this mouse pos, skipping the 39 char header
+                    # we are in the right place in the file and new and existing values are zero-padded to the same length, so overwriting should work
+                    outPutStr = '{:013}'.format(mouse.tag) + "\t" +  '{:05}'.format(mouse.entries)
+                    outPutStr += "\t" +  '{:05}'.format(mouse.entranceRewards) + "\t" + '{:05}'.format(mouse.headFixes)
+                    outPutStr +=  "\t" + '{:05}'.format(mouse.headFixRewards) + "\n"
+                    statsFP.write (outPutStr)
+                    statsFP.flush()
+                    statsFP.seek (39 + 38 * mice.nMice()) # leave file position at end of file so when we quit, nothing is truncated
+                except Exception as e:
+                    print ("Error writing updating stat file\n", str (e))
 
 
 def entryBBCallback (channel):
