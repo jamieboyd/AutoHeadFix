@@ -832,6 +832,14 @@ if __name__ == '__main__':
                 t = m.require_group('trial_image')
                 if hasattr(mouse,'trial_image'):
                     t.require_dataset('trial_'+str(mouse.tot_headFixes),shape=tuple(expSettings.camParamsDict['resolution']+[3]),dtype=np.uint8,data=mouse.trial_image)
+                #To keep track of mouse attributes, create 'log' and save all attributes per day
+                h = m.require_group('log')
+                t = h.require_group(str(expSettings.dateStr))
+                t.attrs.modify('headFixes',mouse.headFixes)
+                t.attrs.modify('tot_headFixes',mouse.tot_headFixes)
+                t.attrs.modify('entries',mouse.entries)
+                t.attrs.modify('entranceRewards',mouse.entranceRewards)
+                t.attrs.modify('headFixRewards',mouse.headFixRewards)
 
 
     def runTrial (thisMouse, expSettings, cageSettings, rewarder, headFixer, stimulator, UDPTrigger=None):

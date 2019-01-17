@@ -379,14 +379,28 @@ def makeQuickStatsFile (expSettings, cageSettings, mice):
     except Exception as e:
         print ("Error making quickStats file\n", str (e))
 
-    def updateStats (statsFP, mice, mouse=None):
-        """ Updates the quick stats text file after every exit, mostly for the benefit of folks logged in remotely
-        :param statsFP: file pointer to the stats file
-        :param mice: the array of mouse objects
-        :param mouse: the mouse which just left the chamber
-        returns:nothing
-        """
-        if mouse:
+def updateStats (statsFP, mice, mouse=None):
+    """ Updates the quick stats text file after every exit, mostly for the benefit of folks logged in remotely
+    :param statsFP: file pointer to the stats file
+    :param mice: the array of mouse objects
+    :param mouse: the mouse which just left the chamber
+    returns:nothing
+    """
+    if mouse:
+        try:
+            pos = mouse.arrayPos
+            statsFP.seek (39 + 38 * pos) # calculate this mouse pos, skipping the 39 char header
+            # we are in the right place in the file and new and existing values are zero-padded to the same length, so overwriting should work
+            outPutStr = '{:013}'.format(mouse.tag) + "\t" +  '{:05}'.format(mouse.entries)
+            outPutStr += "\t" +  '{:05}'.format(mouse.entranceRewards) + "\t" + '{:05}'.format(mouse.headFixes)
+            outPutStr +=  "\t" + '{:05}'.format(mouse.headFixRewards) + "\n"
+            statsFP.write (outPutStr)
+            statsFP.flush()
+            statsFP.seek (39 + 38 * mice.nMice()) # leave file position at end of file so when we quit, nothing is truncated
+        except Exception as e:
+            print ("Error writing updating stat file\n", str (e))
+    else:
+        for mouse in mice.mouseArray:
             try:
                 pos = mouse.arrayPos
                 statsFP.seek (39 + 38 * pos) # calculate this mouse pos, skipping the 39 char header
@@ -399,20 +413,6 @@ def makeQuickStatsFile (expSettings, cageSettings, mice):
                 statsFP.seek (39 + 38 * mice.nMice()) # leave file position at end of file so when we quit, nothing is truncated
             except Exception as e:
                 print ("Error writing updating stat file\n", str (e))
-        else:
-            for mouse in mice.mouseArray:
-                try:
-                    pos = mouse.arrayPos
-                    statsFP.seek (39 + 38 * pos) # calculate this mouse pos, skipping the 39 char header
-                    # we are in the right place in the file and new and existing values are zero-padded to the same length, so overwriting should work
-                    outPutStr = '{:013}'.format(mouse.tag) + "\t" +  '{:05}'.format(mouse.entries)
-                    outPutStr += "\t" +  '{:05}'.format(mouse.entranceRewards) + "\t" + '{:05}'.format(mouse.headFixes)
-                    outPutStr +=  "\t" + '{:05}'.format(mouse.headFixRewards) + "\n"
-                    statsFP.write (outPutStr)
-                    statsFP.flush()
-                    statsFP.seek (39 + 38 * mice.nMice()) # leave file position at end of file so when we quit, nothing is truncated
-                except Exception as e:
-                    print ("Error writing updating stat file\n", str (e))
 
 
 def entryBBCallback (channel):
@@ -461,7 +461,14 @@ def updateH5File (expSettings,cageSettings,mice):
             t = m.require_group('trial_image')
             if hasattr(mouse,'trial_image'):
                 t.require_dataset('trial_'+str(mouse.tot_headFixes),shape=tuple(expSettings.camParamsDict['resolution']+[3]),dtype=np.uint8,data=mouse.trial_image)
-
+            #To keep track of mouse attributes, create 'log' and save all attributes per day
+            h = m.require_group('log')
+            t = h.require_group(str(expSettings.dateStr))
+            t.attrs.modify('headFixes',mouse.headFixes)
+            t.attrs.modify('tot_headFixes',mouse.tot_headFixes)
+            t.attrs.modify('entries',mouse.entries)
+            t.attrs.modify('entranceRewards',mouse.entranceRewards)
+            t.attrs.modify('headFixRewards',mouse.headFixRewards)
 
 def runTrial (thisMouse, expSettings, cageSettings, rewarder, headFixer, stimulator, UDPTrigger=None):
     """
