@@ -14,7 +14,8 @@ import os
 from time import time, s leep
 from datetime import datetime
 """
-class AHF_Stimulator (object, metaclass = ABCMeta):
+class AHF_Stimulator (metaclass = ABCMeta):
+
     
     """
     Stimulator does all stimulation and reward during a head fix task
@@ -22,29 +23,30 @@ class AHF_Stimulator (object, metaclass = ABCMeta):
     All events and their timings in a head fix, including rewards, are controlled by a Stimulator.
  
     """
-
-    ##################################################################################
-    # Static methods for base class for getting class names and importing classes
-
+    
+    @staticmethod
+    def about ():
+        return 'about message for this stimulator class goes here'
+  
 
     ##################################################################################
     #abstact methods each stimulator class must implement
     @abstractmethod
-    def __init__ (self, task):
+    def __init__ (self, taskP):
         pass
 
     @abstractmethod
     def setup (self):
         pass
 
-
+    @staticmethod
     @abstractmethod
-    def config_user_get (self):
-        pass
+    def config_user_get ():
+        return {}
     
 
     @abstractmethod
-    def configStim (self, mouse, task):
+    def configStim (self, mouse):
         """
         Called before running each head fix trial, stimulator decides what to do and configures itself
 
@@ -65,9 +67,7 @@ class AHF_Stimulator (object, metaclass = ABCMeta):
         """
         Called at start of each head fix. Gives a reward, increments mouse's reward count, then waits 10 seconds
         """
-        self.rewarder.giveReward ('task')
-        self.mouse.StimulatorRewards += 1
-        sleep (10)
+        pass
 
     @abstractmethod
     def logFile (self):
@@ -78,15 +78,7 @@ class AHF_Stimulator (object, metaclass = ABCMeta):
 
            Or you may wish to override with pass and log from the run method
         """
-        
-        event = 'stim'
-        mStr = '{:013}'.format(self.mouse.tag) + '\t'
-        outPutStr = mStr + datetime.fromtimestamp (int (time())).isoformat (' ') + '\t' + event
-        print (outPutStr)
-        if self.textfp != None:
-            outPutStr = mStr + '{:.2f}'.format (time ()) + '\t' + event
-            self.textfp.write(outPutStr + '\n')
-            self.textfp.flush()
+        pass
             
 
     def nextDay (self, newFP):
@@ -94,7 +86,7 @@ class AHF_Stimulator (object, metaclass = ABCMeta):
             Called when the next day starts. The stimulator is given the new log file pointer. Can do other things as needed
             :param newFP: the file pointer for the new day's log file
         """
-        self.textfp = newFP 
+        pass
 
 
     def quitting (self):

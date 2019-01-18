@@ -8,26 +8,34 @@ from time import time, localtime,timezone, sleep
 from datetime import datetime
 
 class AHF_Stimulator_Rewards (AHF_Stimulator):
+
+    @staticmethod
+    def about():
+        return 'Rewards stimulator gives periodic rewards, no interaction required.'
     
     def __init__ (self, taskP):
         self.task = taskP
-        self.stimDict = self.task.StimulatorDict
+        self.stimDict = taskP.StimulatorDict
+        self.nRewards = int (self.stimDict.get('nRewards', 5))
+        self.rewardInterval = float (self.stimDict.get ('rewardInterval', 2.5))
         self.setup()
 
+        
     def setup (self):
-        self.nRewards = int (self.configDict.get('nRewards', 5))
-        self.rewardInterval = float (self.configDict.get ('rewardInterval', 2.5))
-        self.configDict.update({'nRewards' : self.nRewards, 'rewardInterval' : self.rewardInterval})
+        print ('Rewards stimulator has no hardware setup to do.')
 
 
     @staticmethod
-    def dict_from_user (stimDict):
-        if not 'nRewards' in stimDict:
-            stimDict.update ({'nRewards' : 5})
-        if not 'rewardInterval' in stimDict:
-            stimDict.update ({'rewardInterval' : 5.0})
-        return super(AHF_Stimulator_Rewards, AHF_Stimulator_Rewards).dict_from_user (stimDict)
-        
+    def config_user_get ():
+        nRewards = int (input('Enter the number of rewards you want to give per head fixing session:'))
+        rewardInterval = float (input ('Enter the time interval between rewards:'))
+        return {'nRewards' : nRewards, 'rewardInterval' : rewardInterval}
+
+                
+    def configStim (self, mouse):
+        print ('no config here for rewards')
+        return 'stim'
+
     def run(self):
         timeInterval = self.rewardInterval - self.rewarder.rewardDict.get ('task')
         self.rewardTimes = []
@@ -37,7 +45,7 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
             sleep(timeInterval)
         self.mouse.headFixRewards += self.nRewards
         
-    def logfile (self):
+    def logFile (self):
         event = '\treward'
         mStr = '{:013}'.format(self.mouse.tag) + '\t'
         for rewardTime in self.rewardTimes:
@@ -49,8 +57,25 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
                 self.textfp.write(outPutStr + '\n')
             self.textfp.flush()
 
+    def nextDay (self, newFP):
+        """
+            Called when the next day starts. The stimulator is given the new log file pointer. Can do other things as needed
+            :param newFP: the file pointer for the new day's log file
+        """
+        self.textfp = newFP 
 
 
+    def quitting (self):
+        """
+            Called before AutoHEadFix exits. Gives stimulator chance to do any needed cleanup
+
+            A stimulator may, e.g., open files and wish to close them before exiting, or use hardware that needs to be cleaned up
+        """
+        pass
+
+
+
+"""
 if __name__ == '__main__':
     import RPi.GPIO as GPIO
     try:
@@ -74,6 +99,6 @@ if __name__ == '__main__':
         print ('File not found')
     finally:
         GPIO.cleanup ()
-    
+"""    
 
     

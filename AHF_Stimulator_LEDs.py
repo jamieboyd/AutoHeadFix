@@ -10,16 +10,26 @@ from datetime import datetime
 from random import random
 
 class AHF_Stimulator_LEDs (AHF_Stimulator_Rewards):
+
+
+    @staticmethod
+    def about ():
+        return 'LEDs stimulator flashes LEDs'
+
+
+    
     def __init__(self, task):
         # init of superclass sets number of rewards  and reward interval
         # this class will flash an LED in the center of each inter-reward interval
         # reward, wait rewardInterval/2 - rewardDur, flash, wait rewardInterval/2- flash_time
-        #super().__init__(configDict, rewarder, textfp)
+        super().__init__(taskP)
         self.setup()
 
 
     @staticmethod
-    def config_user_get (self):
+    def config_user_get ():
+        configDict = super(AHF_Stimulator_LEDs, AHF_Stimulator_LEDs).config_user_get ()
+        """
         if not 'left_led_pin' in stimDict:
             stimDict.update ({'left_led_pin' : 18})
         if not 'center_led_pin' in stimDict:
@@ -32,7 +42,10 @@ class AHF_Stimulator_LEDs (AHF_Stimulator_Rewards):
             stimDict.update ({'led_off_time' : 5e-03})
         if not 'train_time' in stimDict:
             stimDict.update ({'train_time' : 0.5})
-        return super(AHF_Stimulator_LEDs, AHF_Stimulator_LEDs).dict_from_user (stimDict)
+        """
+        configDict.update ({'left_led_pin' : 18,'center_led_pin' : 18, 'right_led_pin' : 18})
+        return configDict
+        #super(AHF_Stimulator_LEDs, AHF_Stimulator_LEDs).dict_from_user (stimDict)
 
     def setup (self):
         # 3 leds - left, right, center, controlled by 3 GPIO pins as indicated
@@ -132,16 +145,6 @@ class AHF_Stimulator_LEDs (AHF_Stimulator_Rewards):
                 self.textfp.flush()
 
 
-    def change_config (self, changesDict):
-        #super().change_config (changesDict)
-        self.setup ()
-
-
-    def config_user_get (self):
-        #super().config_from_user ()
-        self.setup ()
-
-
     def logFile (self):
         """
             Called after each head fix, prints more detailed text to the log file, perhaps a line for each event
@@ -160,7 +163,7 @@ class AHF_Stimulator_LEDs (AHF_Stimulator_Rewards):
             self.textfp.write(outPutStr + '\n')
             self.textfp.flush()
             
-
+"""
 if __name__ == '__main__':
     import RPi.GPIO as GPIO
     try:
@@ -184,3 +187,4 @@ if __name__ == '__main__':
         print ('Error:' + str (er))
     finally:
         GPIO.cleanup ()
+"""

@@ -29,39 +29,34 @@ class Task:
     a combined settings file, we don't need a dictionary while thr program is running because the task object can recreate the dict
     with self.__dict__
     """
-    def __init__ (self, fileName):
+    def __init__ (self, fileName = ''):
         """
         Initializes a Task object with hardware settings and experiment settings by calling loadSettings function
         
         """
-        self.fileName = ''
-        # load experiment settings from passed in file name, as is the case if program was started with a task file name 
-        if fileName is not None:
-            # file name passed in may or may not start with AFH_task_ and end with .jsn
-            nameStr = filename.lstrip ('AHF_task_').rstrip ('.jsn')
-            if AHF_ClassAndDictUtils.File_exists ('task', nameStr, '.jsn'):
-                self.fileName = 'AHF_task_' +  nameStr + '.jsn'
-                self.loadSettings (self.fileName)
-                return
-        try:
-            self.fileName = AHF_ClassAndDictUtils.File_from_user (nameStr, 'AHF task config file', '.jsn')
-            self.loadSettings (self.fileName)
-        except FileNotFoundError:
-            self.fileName = ''
-            self.loadSettings (None)
-        return
-
-
-    def loadSettings (self, fileName):
-        """
-        Loads settings from a JSON text file in current folder, unless fileName is None, in which case user is querried
-        for all settings
-        """
         fileErr = False
-        if fileName is not None:
-            self.filename = fileName
-            
-                print ('Unable to open and load task configuration:' + str (e) + '\n let\'s configure a new task.\n')
+        if fileName != '':
+            # file name passed in may or may not start with AFH_task_ and end with .jsn
+            self.fileName = filename.lstrip ('AHF_task_').rstrip ('.jsn')
+            if not AHF_ClassAndDictUtils.File_exists ('task', self.fileName, '.jsn'):
+                self.fileName = ''
+        else:
+            self.fileName = ''
+        # no file passed in, or passed in file could not be found. Get user to choose a file
+        if self.fileName == '':
+            try:
+                self.fileName = AHF_ClassAndDictUtils.File_from_user ('AHF_task', 'Auto Head Fix task configuration', '.jsn')
+                self.fileName = self.filename.lstrip ('AHF_task_').rstrip ('.jsn')
+            except FileNotFoundError:
+                self.fileName = ''
+                print ('Unable to open and load task configuration: let\'s configure a new task.\n')
+                fileErr = True
+        # if we found a file, try to load it
+        if self.fileName != '':
+            try:
+                HF_ClassAndDictUtils.File_to_obj_fields ('task', self.fileName, '.jsn', self)
+            except ValueError as e:
+                print ('Unable to open and fully load task configuration:' + str (e))
                 fileErr = True
         # check for any missing settings, all settings will be missing if making a new config, and call setting functions for
         # things like head fixer that are subclassable need some extra work , when either loaded from file or user queried
@@ -82,7 +77,8 @@ class Task:
             #self.StimulatorClass = AHF_Stimulator.get_Stimulator_from_user ()
             #self.StimulatorDict = AHF_Stimulator.get_class(self.StimulatorClass).config_user_get ()
             self.StimulatorClass = AHF_ClassAndDictUtils.File_from_user ('Stimulator', 'Stimulator', '.py')  #AHF_HeadFixer.get_HeadFixer_from_user ()
-            self.StimulatorDict = AHF_ClassAndDictUtils.Class_from_file(self.StimulatorClass).config_user_get () #AHF_HeadFixer.get_class(self.headFixerClass).config_user_get ()
+            stimClass = AHF_ClassAndDictUtils.Class_from_file(self.StimulatorClass)
+            self.StimulatorDict = stimClass.config_user_get ();print (self.StimulatorDict)
             fileErr = True
         ################################ Rewarder class makes its own dictionary #######################
         if not hasattr (self, 'RewarderClass') or not hasattr (self, 'RewarderDict'):

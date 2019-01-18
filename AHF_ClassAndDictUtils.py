@@ -57,6 +57,7 @@ def File_from_user (nameTypeStr, longName, typeSuffix):
                 moduleObj=__import__ (f)
                 #print ('module=' + str (moduleObj))
                 classObj = getattr(moduleObj, moduleObj.__name__)
+                print (classObj)
                 isAbstractClass =inspect.isabstract (classObj)
                 if isAbstractClass == False:
                     fileList.append (f.lstrip(startStr) + ": " + classObj.about())
@@ -211,7 +212,7 @@ def Obj_fields_to_file (anObject, nameTypeStr, nameStr, typeSuffix):
 
 
         
-def File_to_obj_fields (nameTypeStr, nameStr, longName, typeSuffix, anObject):
+def File_to_obj_fields (nameTypeStr, nameStr, typeSuffix, anObject):
     """
     Sets attributes for the object anObject from the keys and values of dictionay aDict loaded from the file
     """
