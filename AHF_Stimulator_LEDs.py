@@ -14,38 +14,36 @@ class AHF_Stimulator_LEDs (AHF_Stimulator_Rewards):
 
     @staticmethod
     def about ():
-        return 'LEDs stimulator flashes LEDs'
-
-
-    
-    def __init__(self, task):
-        # init of superclass sets number of rewards  and reward interval
-        # this class will flash an LED in the center of each inter-reward interval
-        # reward, wait rewardInterval/2 - rewardDur, flash, wait rewardInterval/2- flash_time
-        super().__init__(taskP)
-        self.setup()
+        return 'LEDs stimulator flashes one of 3 LEDs (left, right, center) between rewards.'
 
 
     @staticmethod
     def config_user_get ():
         configDict = super(AHF_Stimulator_LEDs, AHF_Stimulator_LEDs).config_user_get ()
-        """
-        if not 'left_led_pin' in stimDict:
-            stimDict.update ({'left_led_pin' : 18})
-        if not 'center_led_pin' in stimDict:
-            stimDict.update ({'center_led_pin' : 18})
-        if not 'right_led_pin' in stimDict:
-            stimDict.update ({'right_led_pin' : 18})
-        if not 'led_on_time' in stimDict:
-            stimDict.update ({'led_on_time' : 5e-03})
-        if not 'led_off_time' in stimDict:
-            stimDict.update ({'led_off_time' : 5e-03})
-        if not 'train_time' in stimDict:
-            stimDict.update ({'train_time' : 0.5})
-        """
-        configDict.update ({'left_led_pin' : 18,'center_led_pin' : 18, 'right_led_pin' : 18})
-        return configDict
-        #super(AHF_Stimulator_LEDs, AHF_Stimulator_LEDs).dict_from_user (stimDict)
+        left_led_pin = int (input('Enter the number of GPIO pin used for left LED:'))
+        center_led_pin = int (input('Enter the number of GPIO pin used for center LED:'))
+        right_led_pin = int (input('Enter the number of GPIO pin used for right LED:'))
+        led_on_time = float (input ('Enter the ON time in seconds for each flash in the train:'))
+        led_off_time = float (input ('Enter the OFF time in seconds between each flash in the train:'))
+        train_time = float (input ('Enter the total time in seconds for each train of flashes:'))
+        configDict.update ({'left_led_pin' : left_led_pin, 'center_led_pin' : center_led_pin, 'right_led_pin' : right_led_pin})
+        configDict.update ({'led_on_time' : led_on_time, 'led_off_time' : led_off_time, 'train_time' : train_time})
+        return configDict                                   
+    
+    
+    def __init__(self, taskP):
+        # init of superclass sets number of rewards  and reward interval
+        # this class will flash an LED in the center of each inter-reward interval
+        # reward, wait rewardInterval/2 - rewardDur, flash, wait rewardInterval/2- flash_time
+        super().__init__(taskP)
+        self.left_led_pin = int (self.stimDict.get('left_led_pin', 17))
+        self.center_led_pin = int (self.stimDict.get('center_led_pin', 18))
+        self.right_led_pin = int (self.stimDict.get('right_led_pin', 19))
+        self.led_on_time = float (self.stimDict.get('led_on_time', 5e-03))
+        self.led_off_time = float (self.stimDict.get('led_off_time', 5e-03))
+        self.train_time = float (self.stimDict.get('train_time', 100e-03))
+        self.setup()
+
 
     def setup (self):
         # 3 leds - left, right, center, controlled by 3 GPIO pins as indicated

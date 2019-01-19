@@ -203,7 +203,8 @@ def htloop (task):
             elif inputStr == 'k': # licK detretctor, run tests from lick detetor
                 task.lickDetector.test (task)
             elif inputStr == 's':
-                pass # for now
+                stimClass = AHF_ClassAndDictUtils.Class_from_file(task.StimulatorClass)
+                stimclass.hardwareTest (task)
             elif inputStr == 'l': # l for LED trigger
                 print ('\nLED turning ON for 2 seconds.')
                 GPIO.output(task.ledPin, 1)

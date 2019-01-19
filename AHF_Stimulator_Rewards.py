@@ -12,6 +12,14 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
     @staticmethod
     def about():
         return 'Rewards stimulator gives periodic rewards, no interaction required.'
+
+
+    @staticmethod
+    def config_user_get ():
+        nRewards = int (input('Enter the number of rewards you want to give per head fixing session:'))
+        rewardInterval = float (input ('Enter the time interval between rewards:'))
+        return {'nRewards' : nRewards, 'rewardInterval' : rewardInterval}
+    
     
     def __init__ (self, taskP):
         self.task = taskP
@@ -24,12 +32,6 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
     def setup (self):
         print ('Rewards stimulator has no hardware setup to do.')
 
-
-    @staticmethod
-    def config_user_get ():
-        nRewards = int (input('Enter the number of rewards you want to give per head fixing session:'))
-        rewardInterval = float (input ('Enter the time interval between rewards:'))
-        return {'nRewards' : nRewards, 'rewardInterval' : rewardInterval}
 
                 
     def configStim (self, mouse):
@@ -73,6 +75,9 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
         """
         pass
 
+
+    def hardwareTest (self, task):
+        
 
 
 """

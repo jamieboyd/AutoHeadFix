@@ -5,15 +5,7 @@ from abc import ABCMeta, abstractmethod
 import os
 import inspect
 
-"""
-from AHF_LickDetector import LickDetector
-from AHF_Mouse import Mouse
-import time
-import json
-import os
-from time import time, s leep
-from datetime import datetime
-"""
+
 class AHF_Stimulator (metaclass = ABCMeta):
 
     
@@ -80,7 +72,7 @@ class AHF_Stimulator (metaclass = ABCMeta):
         """
         pass
             
-
+    @abstractmethod
     def nextDay (self, newFP):
         """
             Called when the next day starts. The stimulator is given the new log file pointer. Can do other things as needed
@@ -89,6 +81,7 @@ class AHF_Stimulator (metaclass = ABCMeta):
         pass
 
 
+    @abstractmethod
     def quitting (self):
         """
             Called before AutoHEadFix exits. Gives stimulator chance to do any needed cleanup
@@ -97,6 +90,9 @@ class AHF_Stimulator (metaclass = ABCMeta):
         """
         pass
 
+    @abstractmethod
+    def hardwareTest (self, task):
+        pass
 
 
 if __name__ == '__main__':
