@@ -51,7 +51,6 @@ class Task:
         if self.fileName == '':
             try:
                 self.fileName = AHF_ClassAndDictUtils.File_from_user ('task', 'Auto Head Fix task configuration', '.jsn')
-                #self.fileName = self.filename.lstrip ('AHF_task_').rstrip ('.jsn')
             except FileNotFoundError:
                 self.fileName = ''
                 print ('Unable to open and load task configuration: let\'s configure a new task.\n')
@@ -67,54 +66,47 @@ class Task:
         # things like head fixer that are subclassable need some extra work , when either loaded from file or user queried
         ########## Head Fixer (optional) makes its own dictionary #################################
         if not hasattr (self, 'hasHeadFixer') or not hasattr (self, 'headFixerClass') or not hasattr (self, 'headFixerDict'):
-            tempInput = input ('Does this setup have a head fixing mechanism installed? (Y or N)')
+            tempInput = input ('Does this setup have a head fixing mechanism installed? (Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
                 self.hasHeadFixer = True
-                self.headFixerClass = AHF_ClassAndDictUtils.File_from_user ('HeadFixer', 'Head Fixer', '.py')  #AHF_HeadFixer.get_HeadFixer_from_user ()
-                self.headFixerDict = AHF_ClassAndDictUtils.Class_from_file(self.headFixerClass).config_user_get () #AHF_HeadFixer.get_class(self.headFixerClass).config_user_get ()
+                self.HeadFixerClass = AHF_ClassAndDictUtils.File_from_user ('HeadFixer', 'Head Fixer', '.py') 
+                self.HeadFixerDict = AHF_ClassAndDictUtils.Class_from_file('HeadFixer', self.HeadFixerClass).config_user_get ()
             else:
                 self.hasHeadFixer = False
-                self.headFixerClass = None
-                self.headFixerDict = {}
+                self.HeadFixerClass = None
+                self.HeadFixerDict = {}
             fileErr = True
-        ################################ Stimulator makes its own dictionary #######################
+        ################################ Stimulator (Obligatory) makes its own dictionary #######################
         if not hasattr (self, 'StimulatorClass') or not hasattr (self, 'StimulatorDict'):
-            #self.StimulatorClass = AHF_Stimulator.get_Stimulator_from_user ()
-            #self.StimulatorDict = AHF_Stimulator.get_class(self.StimulatorClass).config_user_get ()
-            self.StimulatorClass = AHF_ClassAndDictUtils.File_from_user ('Stimulator', 'Stimulator', '.py')  #AHF_HeadFixer.get_HeadFixer_from_user ()
-            stimClass = AHF_ClassAndDictUtils.Class_from_file(self.StimulatorClass)
-            self.StimulatorDict = stimClass.config_user_get ();print (self.StimulatorDict)
+            self.StimulatorClass = AHF_ClassAndDictUtils.File_from_user ('Stimulator', 'Stimulator', '.py')
+            self.StimulatorDict = AHF_ClassAndDictUtils.Class_from_file('Stimulator', self.StimulatorClass).config_user_get ()
             fileErr = True
-        ################################ Rewarder class makes its own dictionary #######################
+        ################################ Rewarder (Obligatory) class makes its own dictionary #######################
         if not hasattr (self, 'RewarderClass') or not hasattr (self, 'RewarderDict'):
-            self.RewarderClass = AHF_ClassAndDictUtils.File_from_user ('Rewarder', 'Rewarder', '.py') #AHF_Rewarder.get_Rewarder_from_user ()
-            self.RewarderDict = AHF_ClassAndDictUtils.Class_from_file(self.RewarderClass).config_user_get ()
+            self.RewarderClass = AHF_ClassAndDictUtils.File_from_user ('Rewarder', 'Rewarder', '.py')
+            self.RewarderDict = AHF_ClassAndDictUtils.Class_from_file('Rewarder', self.RewarderClass).config_user_get ()
             fileErr = True
-        ############################ TagReader is not subclassable, so does not make its own dictionary ##############
-        if not hasattr (self, 'serialPort'):
-            self.serialPort = input ('Enter serial port for tag reader(likely either /dev/Serial0 or /dev/ttyUSB0):')
+        ############################ TagReader (Obligatory) makes its own dictionary ##############
+         if not hasattr (self, 'TagReaderClass') or not hasattr (self, 'TagReaderDict'):
+            self.TagReaderClass = AHF_ClassAndDictUtils.File_from_user ('TagReader', 'RFID TagReader', '.py')
+            self.TagReaderDict = AHF_ClassAndDictUtils.Class_from_file('TagReader', self.TagReaderClass).config_user_get ()
             fileErr = True
-        if not hasattr (self, 'TIRpin'):
-            self.TIRpin = int (input('Enter the GPIO pin connected to the Tag-In-Range pin on the Tag Reader:'))
-            fileErr = True
-
-            
         ################################ Camera (optional) makes its own dictionary of settings ####################
         if not hasattr (self, 'hasCamera') or not hasattr (self, 'cameraClass') or not hasattr (self, 'cameraDict'):
             tempInput = input ('Does this system have a main camera installed (Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
                 self.hasCamera = True
-                self.cameraClass = AHF_Camera.get_Camera_from_user ()
-                self.cameraDict = AHF_Camera.get_class(self.CameraClass).config_user_get ()
+                self.CameraClass = AHF_ClassAndDictUtils.File_from_user ('Camera', 'main camera', '.py')
+                self.CameraDict = AHF_ClassAndDictUtils.Class_from_file('Camera', self.CameraClass).config_user_get ()
             else:
                 self.hasCamera=False
                 self.cameraClass = None
                 self.cameraDict = {}
             fileErr = True
-        ############################# ContactCheck makes its own dictionary of settings ###################
+        ############################# ContactCheck (Obligatory) makes its own dictionary of settings ###################
         if not hasattr (self, 'ContactCheckClass') or not hasattr (self, 'ContactCheckDict'):
             self.ContactCheckClass = AHF_ClassAndDictUtils.File_from_user ('ContactCheck', 'Contact Checker', '.py')
-            self.ContactCheckDict = AHF_ClassAndDictUtils.Class_from_file(self.ContactCheckClass).config_user_get ()
+            self.ContactCheckDict = AHF_ClassAndDictUtils.Class_from_file('ContactCheck', self.ContactCheckClass).config_user_get ()
             fileErr = True
        
         ############################## LickDetector (optional) is not subclassable, so does not make its own dictionary ##############
@@ -131,18 +123,7 @@ class Task:
         if not hasattr (self, 'LEDpin'):
             self.LEDpin = int (input ('Enter the GPIO pin connected to the blue LED for camera illumination:'))
             fileErr = True
-        """
-        #### The entry beam break is not implemented in current systems, so is commented out for now
-        if not hasattr(self, 'hasEntryBB') or not hasattr (self, 'entryBBpin'):
-            tempInput = input ('Does this setup have a beam break installed at the tube enty way? (Y or N)')
-            if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.hasEntryBB = True
-                self.entryBBpin = int (input ('Enter the GPIO pin connected to the entry beam break'))
-            else:
-                self.hasEntryBB = False
-                self.entryBBpin = 0
-            fileErr = True
-        """
+            
          ####### settings for experiment configuration ########  
         if not hasattr (self, 'cageID'):
             self.cageID = input('Enter a name for the cage ID:')

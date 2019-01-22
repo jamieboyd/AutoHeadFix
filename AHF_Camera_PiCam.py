@@ -6,10 +6,66 @@ from picamera import PiCamera
 from time import sleep
 
 class AHF_Camera_PiCam (AHF_Camera):
-    """
-    AHF_Camera uses PiCamera to run the standard Raspberry Pi camera
-    """
 
+    @staticmethod
+    def about ():
+        return 'uses picamera.PiCamera to run the standard Raspberry Pi camera'
+
+    def config_user_get ():
+        paramDict = {}
+        # resolution
+        resolution = paramDict.get ('resolution', (640, 480))
+        tempInput = input ('set X,Y resolution (currently ' + str (resolution) + ') to :')
+        if tempInput != '':
+            resolution = tuple (int(x) for x in tempInput.split (','))
+        paramDict.update ({'resolution' : resolution})
+        # framerate
+        frameRate = paramDict.get ('framerate', 30)
+        tempInput = input ('Set Frame rate in Hz of recorded movie (currently ' + str (frameRate) + ') to :')
+        if tempInput != '':
+            frameRate = float (tempInput)
+        paramDict.update ({'framerate' : frameRate})
+        # ISO
+        iso = paramDict.get ('iso', 200)
+        tempInput = input ('Set ISO for video, or 0 to auto set gains (currently ' + str (iso) + ') to :')
+        if tempInput != '':
+            iso = int (tempInput)
+        paramDict.update ({'iso' : iso})
+        # shutter speed
+        shutter_speed = paramDict.get ('shutter_speed', 30000)
+        tempInput = input ('Set Shutter speed (in microseconds) for recorded video (currently ' + str (shutter_speed) + ') to :')
+        if tempInput != '':
+            shutter_speed= int (tempInput)
+        paramDict.update ({'shutter_speed' : shutter_speed})
+        # videoFormat
+        videoFormat = paramDict.get ('format', 'h264' )
+        tempInput = input ('Set Video format for recording movies (currently ' + videoFormat + ') to :')
+        if tempInput != '':
+            videoFormat = tempInput
+        paramDict.update ({'format' : videoFormat})
+        # quality
+        quality = paramDict.get ('quality', 20)
+        tempInput = input ('Set Video quality for h264 movies, best=1, worst =40,0 for auto (currently ' + str (quality) + ') to :')
+        if tempInput != '':
+            quality = int (tempInput)
+        paramDict.update ({'quality' : quality})
+        # preview window
+        previewWin = paramDict.get ('previewWin', (0,0,640,480))
+        tempInput = input ('Set video preview window, left, top, right, bottom, (currently ' + str(previewWin) + ') to :')
+        if tempInput != '':
+            previewWin = tuple (int(x) for x in tempInput.split (','))
+        paramDict.update ({'previewWin' : previewWin})
+        # white balance
+        whiteBalance = paramDict.get ('whiteBalance', False)
+        tempInput = input ('Set white balancing for video, 1 for True, or 0 for Flase (currently ' + str (whiteBalance) + ') to :')
+        if tempInput !='':
+            tempInput = bool (int (tempInput))
+        paramDict.update ({'whiteBalance' : whiteBalance})
+        # return already modified dictionary, needed when making a new dictionary
+        return paramDict
+
+
+        
     def __init__(self, paramDict):
         """
         Initializes an AHF_Camera object from a dictonary and sets the gain as appropriate
@@ -24,7 +80,8 @@ class AHF_Camera_PiCam (AHF_Camera):
         :param paramDict.previewWin: set the size of the preview window, in pixels a tuple of (left, top, right, bottom) coordinates. default = (0,0,640,480)
         :raises PiCameraError: error raised by superclass PiCamera if camera is not found, or can't be initialized
         """
-        # init superClass
+        self.paramDict = paramDict
+        # init PiCamera
         try:
             self.piCam = PiCamera()
         except Exception as anError:

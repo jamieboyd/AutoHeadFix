@@ -6,7 +6,7 @@ from datetime import datetime
 import RPi.GPIO as GPIO
 import Adafruit_MPR121.MPR121 as MPR121
 from array import array
-import RFIDTagReader
+
 """
 Adafruit_MPR121 requires the Adafuit MPR121 library which, in turn,
 requires the Adafuit GPIO library

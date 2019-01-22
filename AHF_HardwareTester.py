@@ -1,15 +1,15 @@
 #! /usr/bin/python3
 #-*-coding: utf-8 -*-
 
-
+from AHF_Task import Task
+from AHF_HeadFixer import AHF_HeadFixer
+from AHF_Stimulator import AHF_Stimulator
+from AHF_Rewarder import AHF_Rewarder
+from AHF_Camera import AHF_Camera
+from AHF_TagReader import AHF_TagReader
 import RPi.GPIO as GPIO
 from time import sleep, time
-import RFIDTagReader
-from AHF_HeadFixer import AHF_HeadFixer
-from AHF_Rewarder import AHF_Rewarder
-from AHF_Task import Task
-from PTSimpleGPIO import PTSimpleGPIO, Pulse
-from PTCountermandPulse import CountermandPulse
+
 
 if __name__ == '__main__':
     def hardwareTester ():
@@ -27,6 +27,7 @@ if __name__ == '__main__':
         GPIO.setwarnings(False)
         # set up pin that turns on brain illumination LED
         GPIO.setup (task.ledPin, GPIO.OUT, initial = GPIO.LOW)
+
         # set up pin for ascertaining mouse contact, ready for head fixing
         GPIO.setup (task.contactPin, GPIO.IN, pull_up_down=getattr (GPIO, "PUD_" + task.contactPUD))
         # set up entry beam break pin, if we have it
@@ -39,6 +40,7 @@ if __name__ == '__main__':
         headFixer=AHF_HeadFixer.get_class (task.headFixerName) (task)
         setattr (task, 'headFixer', headFixer)
         # initialize TagReader
+        tagReader = 
         try:
             tagReader = RFIDTagReader.TagReader (task.serialPort, True,timeOutSecs = None, kind='ID')
             tagReader.installCallBack (task.tirPin)

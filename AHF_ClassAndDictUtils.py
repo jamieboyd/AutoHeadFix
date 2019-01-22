@@ -17,12 +17,13 @@ import json
 ##################################################################################
 
 
-def Class_from_file(fileName):
+def Class_from_file(nameTypeStr, nameStr):
     """
     Imports a module from a fileName (stripped of the .py) and returns the class
     
     Assumes the class is named the same as the module. 
     """
+    fileName = 'AHF_' + nameTypeStr + '_' + nameStr
     module = __import__(fileName)
     return getattr(module, fileName)
 
@@ -52,11 +53,12 @@ def File_from_user (nameTypeStr, longName, typeSuffix):
     iFile=0
     fileList = []
     startStr = 'AHF_' + nameTypeStr + '_'
-    strlen = len (startStr)
+    startlen = len (startStr)
+    endLn = len (typeSuffix)
     #print (os.listdir(os.curdir))
     for f in os.listdir(os.curdir):
         if f.startswith (startStr) and f.endswith (typeSuffix):
-            fname = f[strlen :-4]
+            fname = f[startlen :-endLn]
             if typeSuffix != '.py':
                 fileList.append (fname)
                 iFile += 1
