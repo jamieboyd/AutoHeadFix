@@ -30,6 +30,7 @@ if __name__ == '__main__':
         GPIO.setup (task.ledPin, GPIO.OUT, initial = GPIO.LOW)
         # initialize rewarder
         rewarder = AHF_ClassAndDictUtils.Class_from_file('Rewarder', task.RewarderClass) (task.RewarderDict)
+        setattr (task, 'rewarder', rewarder)
         #Class_from_file(nameTypeStr, nameStr)
         #AHF_Rewarder.get_class (task.RewarderName) (task)
         
@@ -39,7 +40,7 @@ if __name__ == '__main__':
         if task.hasEntryBeamBreak:
             GPIO.setup (task.entryBBpin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         
-        setattr (task, 'rewarder', rewarder)
+        
         # initialize head fixer object
         headFixer=AHF_HeadFixer.get_class (task.headFixerName) (task)
         setattr (task, 'headFixer', headFixer)

@@ -129,7 +129,7 @@ class Task:
             self.cageID = input('Enter a name for the cage ID:')
             fileErr = True
         if not hasattr (self, 'dataPath'):
-            self.dataPth = input ('Enter the path to the directory where the data will be saved:')
+            self.dataPath = input ('Enter the path to the directory where the data will be saved:')
             fileErr = True
         if not hasattr (self, 'mouseConfigPath'):
             self.mouseConfigPath = input ('Enter the path to the directory where mouse configuration data can be loaded:')
@@ -205,7 +205,7 @@ class Task:
                 newConfig.rstrip('.jsn')
             newConfig = ''.join([c for c in newConfig if c.isalpha() or c.isdigit() or c=='_'])
             self.fileName = newConfig
-        AHF_ClassAndDictUtils.Obj_fields_to_file (self, 'AHF_task_', newConfig, '.jsn')
+        AHF_ClassAndDictUtils.Obj_fields_to_file (self, 'task', newConfig, '.jsn')
 
     def showSettings (self):
         """
@@ -213,15 +213,15 @@ class Task:
         change. Returns the ordered dictionary, used by editSettings function
         """
         print ('*************** Current Program Settings *******************')
-        showDict = OrderedDict()
+        showDict = collections.OrderedDict()
         itemDict = {}
         nP = 0
-        for key, value in self.__dict__ :
+        for key, value in sorted(self.__dict__.items()) :
         #for key, value in inspect.getmembers(self):
             if key.startswith ('_') is False and inspect.isroutine (getattr (self, key)) is False:
                 showDict.update ({nP:{key: value}})
                 nP += 1
-        for ii in range (0, np):
+        for ii in range (0, nP):
             itemDict.update (showDict [ii])
             kvp = itemDict.popitem()
             print(str (ii) +') ', kvp [0], ' = ', kvp [1])
@@ -278,7 +278,7 @@ class Task:
                             
 
 if __name__ == '__main__':
-    task = Task (None)
+    task = Task ('')
     task.showSettings()
 
 

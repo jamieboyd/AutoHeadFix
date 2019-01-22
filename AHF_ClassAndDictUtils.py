@@ -249,7 +249,5 @@ def File_to_obj_fields (nameTypeStr, nameStr, typeSuffix, anObject):
     for key, value in configDict.items():
         try:
             setattr (anObject, key, value)
-        except ValueError:
-            errFlag = True
-    if errFlag:
-        raise ValueError
+        except ValueError as e:
+            print ('Error:%s' % str (e))
