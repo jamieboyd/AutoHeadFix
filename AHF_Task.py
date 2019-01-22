@@ -17,6 +17,7 @@ from AHF_HeadFixer import AHF_HeadFixer
 from AHF_Stimulator import AHF_Stimulator
 from AHF_Rewarder import AHF_Rewarder
 from AHF_Camera import AHF_Camera
+from AHF_TagReader import AHF_TagReader
 import AHF_ClassAndDictUtils
 
 class Task:
