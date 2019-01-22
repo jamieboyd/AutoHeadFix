@@ -77,7 +77,7 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
 
 
     def hardwareTest (self, task):
-        
+        pass
 
 
 """

@@ -1,31 +1,33 @@
 #! /usr/bin/python3
 #-*-coding: utf-8 -*-
-from abc import ABCMeta, abstractmethod
-import os
-import inspect
+
 from AHF_ContactCheck import AHF_ContactCheck
 import RPi.GPIO as GPIO
 
 class AHF_ContactCheck_BeamBreak (AHF_ContactCheck):
 
+
+    @staticmethod
+    def about ():
+        return 'Beam-Break contact checker for Adafruit IR Beam Break Sensors'
+    
     @staticmethod
     def config_user_get ():
-        contactDict={}
         contactPin = int (input ('Enter the GPIO pin connected to the IR beam-breaker:'))
-        contactDict.update ('contactPin': contactPin)
+        contactDict={'contactPin': contactPin}
         return contactDict
 
 
     def __init__ (self, ContactCheckDict):
         self.contactDict = ContactCheckDict
-        self.contactPin = 0
+        self.contactPin = self.contactDict.get ('contactPin', 21)
         self.setup()
 
 
     def setup (self):
-        if self.contactPin != 0:
-            GPIO.cleanup (self.contactPin)
-        self.contactPin =contactDict.get('contactPin')
+        GPIO.setmode (GPIO.BCM)
+        GPIO.setwarnings(False)
+        GPIO.cleanup (self.contactPin)
         GPIO.setup (self.contactPin, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 
 
@@ -40,5 +42,9 @@ class AHF_ContactCheck_BeamBreak (AHF_ContactCheck):
             return False
         else:
             return True
+
+
+    def hardwareTest (self):
+        pass
 
         

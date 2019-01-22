@@ -37,7 +37,11 @@ class Task:
         fileErr = False
         if fileName != '':
             # file name passed in may or may not start with AFH_task_ and end with .jsn
-            self.fileName = filename.lstrip ('AHF_task_').rstrip ('.jsn')
+            self.fileName = filename
+            if self.fileName.startswith ('AHF_task_'):
+                self.fileName = self.filename.lstrip ('AHF_task_')
+            if self.fileName.endswith ('.jsn'):
+                self.filename = self.fileName.rstrip ('.jsn')
             if not AHF_ClassAndDictUtils.File_exists ('task', self.fileName, '.jsn'):
                 self.fileName = ''
         else:
@@ -108,10 +112,10 @@ class Task:
             fileErr = True
         ############################# ContactCheck makes its own dictionary of settings ###################
         if not hasattr (self, 'ContactCheckClass') or not hasattr (self, 'ContactCheckDict'):
-            self.ContactCheckClass = AHF_ContactCheck.get_ContactCheck_from_user ()
-            self.ContactCheckDict = AHF_ContactCheck.get_class(self.ContactCheckClass).config_user_get ()
+            self.ContactCheckClass = AHF_ClassAndDictUtils.File_from_user ('ContactCheck', 'Contact Checker', '.py')
+            self.ContactCheckDict = AHF_ClassAndDictUtils.Class_from_file(self.ContactCheckClass).config_user_get ()
             fileErr = True
-        
+       
         ############################## LickDetector (optional) is not subclassable, so does not make its own dictionary ##############
         if not hasattr (self, 'hasLickDetector') or not hasattr (self, 'lickDetectorIRQ'):
             tempInput = input ('Does this setup have a Lick Detector installed? (Y or N)')
@@ -205,19 +209,21 @@ class Task:
         :returns: nothing
         """
         # get name for new config file and massage it a bit
-        if self.fileName != '':
-            inputStr = 'Enter a name to save task settings, or enter to use current name, \'' + self.fileName.lstrip('AHF_task_').rstrip ('.jsn') + '\':'
-            newConfig = input (inputStr)
+        if self.fileName == '':
+            promptStr = 'Enter a name to save task settings as file:'
         else:
-            newConfig = input ('Enter a name to save task settings as file:')
-        # file name passed in may or may not start with AFHconf_ and end with .jsn
-        newConfig = newconfig.lstrip('AHF_task_').rstrip ('.jsn')
-        newConfig = ''.join([c for c in newConfig if c.isalpha() or c.isdigit() or c=='_'])
-        sekf.fileName = 'AHF_task_' + newConfig + '.jsn'
-        # make a dictionary of pretty much all attributes and write it to disk with json dmps
-        jsonDict = AHF_obj_fields_to_dict(self)
-        AHF_dict_to_file (jsonDict, 'task', newConfig, '.jsn')
-
+            promptStr = 'Enter a name to save task settings, or enter to use current name, \'' + self.fileName + '\':'
+        newConfig = input (promptStr)
+        if self.fileName == '' and newConfig == '':
+            newConfig = self.fileName
+        else:
+            if newConfig.startswith ('AHF_task_'):
+                newConfig.lstrip ('AHF_task_')
+            if newConfig.endswith ('.jsn'):
+                newConfig.rstrip('.jsn')
+            newConfig = ''.join([c for c in newConfig if c.isalpha() or c.isdigit() or c=='_'])
+            self.fileName = newConfig
+        AHF_ClassAndDictUtils.Obj_fields_to_file (self, 'AHF_task_', newConfig, '.jsn')
 
     def showSettings (self):
         """

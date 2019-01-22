@@ -160,6 +160,10 @@ class AHF_Stimulator_LEDs (AHF_Stimulator_Rewards):
             outPutStr = mStr + '{:.2f}'.format (time ()) + '\t' + event
             self.textfp.write(outPutStr + '\n')
             self.textfp.flush()
+
+
+    def hardwareTest (self, task):
+        pass
             
 """
 if __name__ == '__main__':

@@ -3,8 +3,11 @@
 import abc
 from abc import ABCMeta, abstractmethod
 import os
+import pwd
+import grp
 import inspect
 from collections import OrderedDict
+import json
 
 # methods for classes and dictionaries
 
@@ -52,19 +55,26 @@ def File_from_user (nameTypeStr, longName, typeSuffix):
     #print (os.listdir(os.curdir))
     for f in os.listdir(os.curdir):
         if f.startswith (startStr) and f.endswith (typeSuffix):
-            f= f.rstrip(typeSuffix)
-            try:
-                moduleObj=__import__ (f)
-                #print ('module=' + str (moduleObj))
-                classObj = getattr(moduleObj, moduleObj.__name__)
-                print (classObj)
-                isAbstractClass =inspect.isabstract (classObj)
-                if isAbstractClass == False:
-                    fileList.append (f.lstrip(startStr) + ": " + classObj.about())
-                    iFile += 1
-            except Exception as e: # exception will be thrown if imported module imports non-existant modules, for instance
-                print (e)
-                continue     
+            fname = f.rstrip(typeSuffix)
+            if typeSuffix != '.py':
+                print (fname, 'before')
+                fname= fname.lstrip(startStr)
+                print (fname, 'after')
+                fileList.append (fname)
+                iFile += 1
+            else:
+                try:
+                    moduleObj=__import__ (fname)
+                    #print ('module=' + str (moduleObj))
+                    classObj = getattr(moduleObj, moduleObj.__name__)
+                    #print (classObj)
+                    isAbstractClass =inspect.isabstract (classObj)
+                    if isAbstractClass == False:
+                        fileList.append (fname.lstrip(startStr) + ": " + classObj.about())
+                        iFile += 1
+                except Exception as e: # exception will be thrown if imported module imports non-existant modules, for instance
+                    print (e)
+                    continue     
     if iFile == 0:
         print ('Could not find any %s files in the current directory' % longName)
         raise FileNotFoundError
@@ -199,12 +209,12 @@ def Obj_fields_to_file (anObject, nameTypeStr, nameStr, typeSuffix):
     Writes a file containing a json dictionary of all the fields of the object anObject
     """
     jsonDict = {}
-    for key, value in anObject.__dict__ :
+    for key, value in anObject.__dict__.items():
         if key.startswith ('_') is False and inspect.isroutine (getattr (anObject, key)) is False:
             jsonDict.update({key: value})
     configFile = 'AHF_' + nameTypeStr + '_' + nameStr + typeSuffix
     with open (configFile, 'w') as fp:
-        fp.write (json.dumps (jsonDict, ":", separators = '\n'))
+        fp.write (json.dumps (jsonDict, separators = ('\n', '='), sort_keys=True))
         fp.close ()
         uid = pwd.getpwnam ('pi').pw_uid
         gid = grp.getgrnam ('pi').gr_gid

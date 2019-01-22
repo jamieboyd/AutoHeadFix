@@ -6,70 +6,10 @@ import inspect
 
 class AHF_ContactCheck (metaclass = ABCMeta):
 
-        ##################################################################################
-    # Static methods for base class for getting class names and importing classes
     @staticmethod
-    def get_class(fileName):
-        """
-        Imports a module from a fileName (stripped of the .py) and returns the class
+    def about ():
+        return 'about message for this contact checker class goes here'
 
-        Assumes the class is named the same as the module. 
-        """
-        module = __import__(fileName)
-        return getattr(module, fileName)
-
-
-    @staticmethod
-    def get_ContactCheck_from_user ():
-        """
-        Static method that trawls through current folder looking for ContactCheck class python files
-        
-        Allows user to choose from the list of files found. Files are recognized by names starting
-        with 'AHF_ContactCheck_' and ending with '.py'
-        Raises: FileNotFoundError if no stimulator class files found
-        """
-        iFile=0
-        files = ''
-        #print (os.listdir(os.curdir))
-        for f in os.listdir(os.curdir):
-            if f.startswith ('AHF_ContactCheck_') and f.endswith ('.py'):
-                f= f.rstrip  ('.py')
-                #print ('file = ' + str (f))
-                try:
-                    moduleObj=__import__ (f)
-                    #print ('module=' + str (moduleObj))
-                    classObj = getattr(moduleObj, moduleObj.__name__)
-                    #print ('class obj = ' + str (classObj))
-                    isAbstractClass =inspect.isabstract (classObj)
-                    if isAbstractClass == False:
-                        if iFile > 0:
-                            files += ';'
-                        files += f
-                        iFile += 1
-                except Exception as e: # exception will be thrown if imported module imports non-existant modules, for instance
-                    print (e)
-                    continue     
-        if iFile == 0:
-            print ('Could not find any AHF_ContactCheck_ files in the current or enclosing directory')
-            raise FileNotFoundError
-        else:
-            if iFile == 1:
-                ContactCheckFile =  files.split('.')[0]
-                print ('ContactCheck file found: ' + ContactCheckFile)
-                ContactCheckFile =  files.split('.')[0]
-            else:
-                inputStr = '\nEnter a number from 0 to ' + str (iFile -1) + ' to Choose a ContactCheck class:\n'
-                ii=0
-                for file in files.split(';'):
-                    inputStr += str (ii) + ': ' + file + '\n'
-                    ii +=1
-                inputStr += ':'
-                ContactCheckNum = -1
-                while ContactCheckNum < 0 or ContactCheckNum > (iFile -1):
-                    ContactCheckNum =  int(input (inputStr))
-                ContactCheckFile =  files.split(';')[ContactCheckNum]
-                ContactCheckFile =  ContactCheckFile.split('.')[0]
-            return ContactCheckFile
 
     @staticmethod
     @abstractmethod
@@ -97,6 +37,8 @@ class AHF_ContactCheck (metaclass = ABCMeta):
     @abstractmethod
     def hardwareTest (self):
         pass
+
+
 
 
     def showSettings (self):
