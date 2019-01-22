@@ -42,7 +42,7 @@ def File_exists (nameTypeStr, nameStr, typeSuffix):
             break
     return returnVal
 
-def File_from_user (nameTypeStr, longName, typeSuffix):
+def File_from_user (nameTypeStr, longName, typeSuffix, makeNew = False):
     """
     Static method that trawls through current folder looking for python files matching nameTypeStr
     
@@ -80,21 +80,32 @@ def File_from_user (nameTypeStr, longName, typeSuffix):
         print ('Could not find any %s files in the current directory' % longName)
         raise FileNotFoundError
     else:
-        if iFile == 1:
+        if not makeNew and iFile ==1:
             ClassFile =  fileList[0]
-            print ('Class file found: ' + ClassFile)
+            print ('One %s file found: %s' % (longName, ClassFile)) 
+            return ClassFile.split (':')[0]
         else:
-            inputStr = '\nEnter a number from 0 to {} to Choose a {} class:\n'.format((iFile -1), longName)
+            if makeNew:
+                inputStr = '\nEnter a number from 1 to {} to choose a {} file or 0 to make a new file:\n'.format(iFile, longName)
+            else:
+                inputStr = '\nEnter a number from 1 to {} to choose a {} file:\n'.format(iFile, longName)
             ii=0
             for file in fileList:
-                inputStr += str (ii) + ': ' + file + '\n'
+                inputStr += str (ii + 1) + ': ' + file + '\n'
                 ii +=1
             inputStr += ':'
-            ClassNum = -1
-            while ClassNum < 0 or ClassNum > (iFile -1):
-                ClassNum =  int(input (inputStr))
-            ClassFile =  fileList[ClassNum]
-        return ClassFile.split (':')[0]
+            ClassNum = -2
+            if makeNew:
+                while ClassNum < 0 or ClassNum > iFile:
+                    ClassNum =  int(input (inputStr))
+            else:
+                while ClassNum < 1 or ClassNum > iFile:
+                    ClassNum =  int(input (inputStr))
+            if ClassNum ==0:
+                raise FileNotFoundError
+            else:
+                ClassFile =  fileList[ClassNum -1]
+                return ClassFile.split (':')[0]
 
 
 ########################################################################################################################

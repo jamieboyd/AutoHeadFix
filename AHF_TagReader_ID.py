@@ -1,7 +1,9 @@
 #! /usr/bin/python
 #-*-coding: utf-8 -*-
 
-import RFID_TagReader
+from AHF_TagReader import AHF_TagReader
+
+import RFIDTagReader
 
 class AHF_TagReader_ID (AHF_TagReader):
 
@@ -33,4 +35,4 @@ class AHF_TagReader_ID (AHF_TagReader):
         return RFIDTagReader.globalTag
 
     def hardwareTest (self):
-
+        pass

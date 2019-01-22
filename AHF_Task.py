@@ -38,7 +38,7 @@ class Task:
         fileErr = False
         if fileName != '':
             # file name passed in may or may not start with AFH_task_ and end with .jsn
-            self.fileName = filename
+            self.fileName = fileName
             if self.fileName.startswith ('AHF_task_'):
                 self.fileName = self.filename[9:]
             if self.fileName.endswith ('.jsn'):
@@ -50,10 +50,10 @@ class Task:
         # no file passed in, or passed in file could not be found. Get user to choose a file
         if self.fileName == '':
             try:
-                self.fileName = AHF_ClassAndDictUtils.File_from_user ('task', 'Auto Head Fix task configuration', '.jsn')
+                self.fileName = AHF_ClassAndDictUtils.File_from_user ('task', 'Auto Head Fix task configuration', '.jsn', True)
             except FileNotFoundError:
                 self.fileName = ''
-                print ('Unable to open and load task configuration: let\'s configure a new task.\n')
+                print ('Let\'s configure a new task.\n')
                 fileErr = True
         # if we found a file, try to load it
         if self.fileName != '':
@@ -87,7 +87,7 @@ class Task:
             self.RewarderDict = AHF_ClassAndDictUtils.Class_from_file('Rewarder', self.RewarderClass).config_user_get ()
             fileErr = True
         ############################ TagReader (Obligatory) makes its own dictionary ##############
-         if not hasattr (self, 'TagReaderClass') or not hasattr (self, 'TagReaderDict'):
+        if not hasattr (self, 'TagReaderClass') or not hasattr (self, 'TagReaderDict'):
             self.TagReaderClass = AHF_ClassAndDictUtils.File_from_user ('TagReader', 'RFID TagReader', '.py')
             self.TagReaderDict = AHF_ClassAndDictUtils.Class_from_file('TagReader', self.TagReaderClass).config_user_get ()
             fileErr = True

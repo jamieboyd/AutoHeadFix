@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 #-*-coding: utf-8 -*-
 
+import AHF_ClassAndDictUtils
 from AHF_Task import Task
 from AHF_HeadFixer import AHF_HeadFixer
 from AHF_Stimulator import AHF_Stimulator
@@ -21,26 +22,29 @@ if __name__ == '__main__':
         tagReader, headFixer, rewarder, stimulator, lick detetctor
         """
         # when run as __main__, user chooses exp config file
-        task = Task(None)
+        task = Task('')
         # set up GPIO to use BCM mode for GPIO pin numbering
         GPIO.setmode (GPIO.BCM)
         GPIO.setwarnings(False)
         # set up pin that turns on brain illumination LED
         GPIO.setup (task.ledPin, GPIO.OUT, initial = GPIO.LOW)
-
+        # initialize rewarder
+        rewarder = AHF_ClassAndDictUtils.Class_from_file('Rewarder', task.RewarderClass) (task.RewarderDict)
+        #Class_from_file(nameTypeStr, nameStr)
+        #AHF_Rewarder.get_class (task.RewarderName) (task)
+        
         # set up pin for ascertaining mouse contact, ready for head fixing
         GPIO.setup (task.contactPin, GPIO.IN, pull_up_down=getattr (GPIO, "PUD_" + task.contactPUD))
         # set up entry beam break pin, if we have it
         if task.hasEntryBeamBreak:
             GPIO.setup (task.entryBBpin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        # initialize rewarder
-        rewarder = AHF_Rewarder.get_class (task.RewarderName) (task)
+        
         setattr (task, 'rewarder', rewarder)
         # initialize head fixer object
         headFixer=AHF_HeadFixer.get_class (task.headFixerName) (task)
         setattr (task, 'headFixer', headFixer)
         # initialize TagReader
-        tagReader = 
+        #tagReader = 
         try:
             tagReader = RFIDTagReader.TagReader (task.serialPort, True,timeOutSecs = None, kind='ID')
             tagReader.installCallBack (task.tirPin)
