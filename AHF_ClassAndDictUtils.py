@@ -52,25 +52,24 @@ def File_from_user (nameTypeStr, longName, typeSuffix):
     iFile=0
     fileList = []
     startStr = 'AHF_' + nameTypeStr + '_'
+    strlen = len (startStr)
     #print (os.listdir(os.curdir))
     for f in os.listdir(os.curdir):
         if f.startswith (startStr) and f.endswith (typeSuffix):
-            fname = f.rstrip(typeSuffix)
+            fname = f[strlen :-4]
             if typeSuffix != '.py':
-                print (fname, 'before')
-                fname= fname.lstrip(startStr)
-                print (fname, 'after')
                 fileList.append (fname)
                 iFile += 1
+                #print (fname)
             else:
                 try:
-                    moduleObj=__import__ (fname)
+                    moduleObj=__import__ (f.rstrip(typeSuffix))
                     #print ('module=' + str (moduleObj))
                     classObj = getattr(moduleObj, moduleObj.__name__)
                     #print (classObj)
                     isAbstractClass =inspect.isabstract (classObj)
                     if isAbstractClass == False:
-                        fileList.append (fname.lstrip(startStr) + ": " + classObj.about())
+                        fileList.append (fname + ": " + classObj.about())
                         iFile += 1
                 except Exception as e: # exception will be thrown if imported module imports non-existant modules, for instance
                     print (e)
@@ -93,7 +92,7 @@ def File_from_user (nameTypeStr, longName, typeSuffix):
             while ClassNum < 0 or ClassNum > (iFile -1):
                 ClassNum =  int(input (inputStr))
             ClassFile =  fileList[ClassNum]
-        return startStr + ClassFile.split (':')[0]
+        return ClassFile.split (':')[0]
 
 
 ########################################################################################################################
@@ -231,9 +230,10 @@ def File_to_obj_fields (nameTypeStr, nameStr, typeSuffix, anObject):
     with open (filename, 'r') as fp:
         data = fp.read()
         data=data.replace('\n', ',')
+        data=data.replace('=', ':')
         configDict = json.loads(data)
         fp.close()
-    for key, value in configDict:
+    for key, value in configDict.items():
         try:
             setattr (anObject, key, value)
         except ValueError:

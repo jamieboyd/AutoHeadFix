@@ -39,7 +39,7 @@ class Task:
             # file name passed in may or may not start with AFH_task_ and end with .jsn
             self.fileName = filename
             if self.fileName.startswith ('AHF_task_'):
-                self.fileName = self.filename.lstrip ('AHF_task_')
+                self.fileName = self.filename[9:]
             if self.fileName.endswith ('.jsn'):
                 self.filename = self.fileName.rstrip ('.jsn')
             if not AHF_ClassAndDictUtils.File_exists ('task', self.fileName, '.jsn'):
@@ -49,8 +49,8 @@ class Task:
         # no file passed in, or passed in file could not be found. Get user to choose a file
         if self.fileName == '':
             try:
-                self.fileName = AHF_ClassAndDictUtils.File_from_user ('AHF_task', 'Auto Head Fix task configuration', '.jsn')
-                self.fileName = self.filename.lstrip ('AHF_task_').rstrip ('.jsn')
+                self.fileName = AHF_ClassAndDictUtils.File_from_user ('task', 'Auto Head Fix task configuration', '.jsn')
+                #self.fileName = self.filename.lstrip ('AHF_task_').rstrip ('.jsn')
             except FileNotFoundError:
                 self.fileName = ''
                 print ('Unable to open and load task configuration: let\'s configure a new task.\n')
@@ -58,7 +58,7 @@ class Task:
         # if we found a file, try to load it
         if self.fileName != '':
             try:
-                HF_ClassAndDictUtils.File_to_obj_fields ('task', self.fileName, '.jsn', self)
+                AHF_ClassAndDictUtils.File_to_obj_fields ('task', self.fileName, '.jsn', self)
             except ValueError as e:
                 print ('Unable to open and fully load task configuration:' + str (e))
                 fileErr = True
