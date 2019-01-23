@@ -7,8 +7,8 @@ import RFIDTagReader
 
 class AHF_TagReader_ID (AHF_TagReader):
 
-    gTIME_OUT_SECS = 0.05
-    gDO_CHECK_SUM = True
+    TIME_OUT_SECS = 0.05
+    DO_CHECK_SUM = True
     
     @staticmethod
     def about ():
@@ -17,7 +17,7 @@ class AHF_TagReader_ID (AHF_TagReader):
     @staticmethod
     def config_user_get ():
         serialPort = input ('Enter port used by tag reader, "/dev/serial0\" if conected to Pi serial port, or "/dev/ttyUSB0" if connected to a USB breakout:')
-        TIRpin = input ('Enter the GPIO pin connected to the Tag-In-Range pin of the Tag Reader:')
+        TIRpin = int (input ('Enter the GPIO pin connected to the Tag-In-Range pin of the Tag Reader:'))
         configDict = {'serialPort' : serialPort, 'TIRpin' : TIRpin}
         return configDict
 
@@ -28,8 +28,8 @@ class AHF_TagReader_ID (AHF_TagReader):
         self.setup ()
 
     def setup (self):
-        self.tagReader =RFIDTagReader.TagReader (self.serialPort, doChecksum = gDO_CHECK_SUM, timeOutSecs = gTIME_OUT_SECS, kind='ID')
-        self.tagReader.installCallBack (self.tirPin)
+        self.tagReader =RFIDTagReader.TagReader (self.serialPort, doChecksum = AHF_TagReader_ID.DO_CHECK_SUM, timeOutSecs = AHF_TagReader_ID.TIME_OUT_SECS, kind='ID')
+        self.tagReader.installCallBack (self.TIRpin)
 
     def readTag (self):
         return RFIDTagReader.globalTag
