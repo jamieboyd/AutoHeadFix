@@ -465,8 +465,6 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
     def run(self):
         ref_path = self.cageSettings.dataPath+'sample_im/'+datetime.fromtimestamp (int (time())).isoformat ('-')+'_'+str(self.mouse.tag)+'.jpg'
         self.camera.capture(ref_path)
-        sleep(0.3)
-        self.get_ref_im()
         self.buzzTimes = []
         self.buzzTypes = []
         self.lickWitholdTimes = []
@@ -834,8 +832,8 @@ if __name__ == '__main__':
     def backup_H5 (expSettings,cageSettings):
         expSettings.hdf_backup_path = cageSettings.dataPath + 'mice_metadata_backup.h5'
         if path.exists(expSettings.hdf_path):
-            with File(expSettings.hdf_backup_path,'r+') as hdf:
-                with File(expSettings.hdf_path,'w') as hdfb:
+            with File(expSettings.hdf_path,'r+') as hdf:
+                with File(expSettings.hdf_backup_path,'w') as hdfb:
                     for key, items in hdf.items():
                         hdf.copy(key,hdfb)
         else:
@@ -1076,7 +1074,7 @@ if __name__ == '__main__':
                         mice.addMouse (thisMouse, expSettings.statsFP)
                     writeToLogFile(expSettings.logFP, thisMouse, 'entry')
                     thisMouse.entries += 1
-                    updateH5File(expSettings,cageSettings,mice)
+                    #updateH5File(expSettings,cageSettings,mice)
                     # if we have entrance reward, first wait for entrance reward or first head-fix, which countermands entry reward
                     if thisMouse.entranceRewards < expSettings.maxEntryRewards:
                         giveEntranceReward = True
@@ -1090,7 +1088,7 @@ if __name__ == '__main__':
                         if (GPIO.input (cageSettings.tirPin)== GPIO.HIGH) and giveEntranceReward == True:
                             thisMouse.reward (rewarder, 'entrance') # entrance reward was not countermanded by an early headfix
                             writeToLogFile(expSettings.logFP, thisMouse, 'entryReward')
-                            updateH5File(expSettings,cageSettings,mice)
+                            #updateH5File(expSettings,cageSettings,mice)
                     # wait for contacts and run trials till mouse exits or time in chamber exceeded
                     expSettings.doHeadFix = expSettings.propHeadFix > random()
                     while GPIO.input (cageSettings.tirPin)== GPIO.HIGH and time () < entryTime + expSettings.inChamberTimeLimit:
