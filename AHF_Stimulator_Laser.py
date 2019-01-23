@@ -463,6 +463,20 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
 #=================Main functions called from outside===========================
 
     def run(self):
+        ref_path = self.cageSettings.dataPath+'sample_im/'+datetime.fromtimestamp (int (time())).isoformat ('-')+'_'+str(self.mouse.tag)+'.jpg'
+        self.camera.capture(ref_path)
+        self.buzzTimes = []
+        self.buzzTypes = []
+        self.lickWitholdTimes = []
+        self.rewardTimes = []
+        endTime = time() + self.headFixTime
+        self.camera.start_preview(fullscreen = False, window = tuple(self.camera.AHFpreview))
+        while time() < endTime:
+                sleep(5.1)
+                self.rewardTimes.append (time())
+                self.rewarder.giveReward('task')
+        self.camera.stop_preview()
+        '''
         #Check if mouse is here for the first time. If yes -> get_ref_im and release mouse again
         if self.mouse.tot_headFixes == 1:
             print('Take reference image')
@@ -561,6 +575,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         finally:
             #Move laser back to zero position at the end of the trial
             self.move_to(np.array([0,0]),topleft=True,join=False)
+        '''
 
     def logfile (self):
         rewardStr = 'reward'
