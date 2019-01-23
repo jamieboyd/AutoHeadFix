@@ -23,7 +23,10 @@ def Class_from_file(nameTypeStr, nameStr):
     
     Assumes the class is named the same as the module. 
     """
-    fileName = 'AHF_' + nameTypeStr + '_' + nameStr
+    if nameTypeStr == '':
+        fileName = nameStr
+    else:
+        fileName = 'AHF_' + nameTypeStr + '_' + nameStr
     module = __import__(fileName)
     return getattr(module, fileName)
 

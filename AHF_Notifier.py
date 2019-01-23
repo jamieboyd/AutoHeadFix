@@ -8,9 +8,17 @@ class AHF_Notifier:
     AHF_Notifier needs requests module, which is not installed by default.
     The best way to install python modules is with pip. Assuming you are using Python 3:
     sudo apt-get install python3-pip
-    sudo pip-3.2 install requests
+    sudo pip-3 install requests
     """
-    def __init__ (self, cageID_p, phoneList_p, textBeltKey_p):
+
+    @staticmethod
+    def config_user_get():
+        phoneList =tuple (input('Phone numbers to receive a text message if mouse is in chamber too long:').split(','))
+        textBeltKey = input ('Enter the textBelt code (c\'mon it\'s only 65 characters):')
+        NotifierDict = {'phoneList': phoneList, 'textBeltKey' : textBeltKey)
+        return NotifierDict
+
+    def __init__ (self, NotifierDict):
         """Makes a new AHF_Notifier object
         
         The notifier will send text messages to a tuple of phone numbers using a web service, textbelt.com
@@ -23,9 +31,10 @@ class AHF_Notifier:
         return: nothing
         """
         self.URL = 'http://textbelt.com/text'
-        self.cageID = str (cageID_p)
-        self.phoneList = phoneList_p
-        self.textBeltKey = textBeltKey_p
+        self.cageID = str (NotifierDict.cageID)
+        self.phoneList = NotifierDict.phoneList
+        self.textBeltKey = NotifierDict.textBeltKey
+        self.NotifierDict = NotifierDict
 
     def notify (self, tag, durationSecs, isStuck):
         """

@@ -65,16 +65,14 @@ class Task:
         # check for any missing settings, all settings will be missing if making a new config, and call setting functions for
         # things like head fixer that are subclassable need some extra work , when either loaded from file or user queried
         ########## Head Fixer (optional) makes its own dictionary #################################
-        if not hasattr (self, 'hasHeadFixer') or not hasattr (self, 'headFixerClass') or not hasattr (self, 'headFixerDict'):
+        if not hasattr (self, 'headFixerClass') or not hasattr (self, 'headFixerDict'):
             tempInput = input ('Does this setup have a head fixing mechanism installed? (Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.hasHeadFixer = True
                 self.HeadFixerClass = AHF_ClassAndDictUtils.File_from_user ('HeadFixer', 'Head Fixer', '.py') 
                 self.HeadFixerDict = AHF_ClassAndDictUtils.Class_from_file('HeadFixer', self.HeadFixerClass).config_user_get ()
             else:
-                self.hasHeadFixer = False
                 self.HeadFixerClass = None
-                self.HeadFixerDict = {}
+                self.HeadFixerDict = None
             fileErr = True
         ################################ Stimulator (Obligatory) makes its own dictionary #######################
         if not hasattr (self, 'StimulatorClass') or not hasattr (self, 'StimulatorDict'):
@@ -92,16 +90,14 @@ class Task:
             self.TagReaderDict = AHF_ClassAndDictUtils.Class_from_file('TagReader', self.TagReaderClass).config_user_get ()
             fileErr = True
         ################################ Camera (optional) makes its own dictionary of settings ####################
-        if not hasattr (self, 'hasCamera') or not hasattr (self, 'cameraClass') or not hasattr (self, 'cameraDict'):
+        if not hasattr (self, 'cameraClass') or not hasattr (self, 'cameraDict'):
             tempInput = input ('Does this system have a main camera installed (Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.hasCamera = True
                 self.CameraClass = AHF_ClassAndDictUtils.File_from_user ('Camera', 'main camera', '.py')
                 self.CameraDict = AHF_ClassAndDictUtils.Class_from_file('Camera', self.CameraClass).config_user_get ()
             else:
-                self.hasCamera=False
                 self.cameraClass = None
-                self.cameraDict = {}
+                self.cameraDict = None
             fileErr = True
         ############################# ContactCheck (Obligatory) makes its own dictionary of settings ###################
         if not hasattr (self, 'ContactCheckClass') or not hasattr (self, 'ContactCheckDict'):
@@ -110,18 +106,16 @@ class Task:
             fileErr = True
        
         ############################## LickDetector (optional) is not subclassable, so does not make its own dictionary ##############
-        if not hasattr (self, 'hasLickDetector') or not hasattr (self, 'lickDetectorIRQ'):
+        if not hasattr (self, 'lickDetectorIRQ'):
             tempInput = input ('Does this setup have a Lick Detector installed? (Y or N)')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.hasLickDetector = True
                 self.lickDetectorIRQ = int (input ('Enter the GPIO pin connected to the IRQ pin for the Lick Detector'))
             else:
-                self.hasLickDetector = False
                 self.lickDetectorIRQ = 0
             fileErr = True
-        ############################ Remaining hardware things are single GPIO pins that are not defined in classes ###########
+        ############################ A single GPIO pin for brain illumination ###########
         if not hasattr (self, 'LEDpin'):
-            self.LEDpin = int (input ('Enter the GPIO pin connected to the blue LED for camera illumination:'))
+            self.LEDpin = int (input ('Enter the GPIO pin connected to the blue LED for brain camera illumination:'))
             fileErr = True
             
          ####### settings for experiment configuration ########  
@@ -151,28 +145,21 @@ class Task:
         if not hasattr (self, 'inChamberTimeLimit'):
             self.inChamberTimeLimit = float(input('In-Chamber duration limit, seconds, before stopping head-fix trials:'))
         ############################ text messaging using textbelt service (Optional) not sunbclassable ######################
-        if not hasattr (self, 'hasTextMsg') or not hasattr (self, 'phoneList') or not hasattr (self, 'textBeltKey'):
+        if not hasattr (self, 'NotifierDict'):
             tempInput = input ('Send text messages if mouse exceeds criterion time in chamber?(Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.hasTextMsg = True
-                self.phoneList =tuple (input('Phone numbers to receive a text message if mouse is in chamber too long:').split(','))
-                self.textBeltKey = input ('Enter the textBelt code (c\'mon it\'s only 65 characters):')
+                self.NotifierDict = AHF_ClassAndDictUtils.Class_from_file('', 'AHF_Notifier').config_user_get()
+                self.NotifierDict.update ({'cageID' : self.cageID})
             else:
-                self.hasTextMsg = False
-                self.phoneList = ()
-                self.textBeltKey = ''
+                self.NotifierDict = None
             fileErr = True
         ####################################### UDP triggers for alerting other computers (Optional) not subclassable ######################3
-        if not hasattr(self, 'hasUDP') or not hasattr (self, 'UDPList') or not hasattr (self,'UDPstartDelay') :
+        if not hasattr (self, 'UDPdict'):
             tempInput = input ('Send UDP triggers to start tasks on secondary computers (Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.hasUDP = True
-                self.UDPList =tuple (input('IP addresses of Pis running secondary cameras:').split (','))
-                self.UDPstartDelay = float (input ('Delay in seconds between sending UDP and toggling blue LED.'))
+                self.UDPDict = AHF_ClassAndDictUtils.Class_from_file('', 'AHF_UDPTrig').config_user_get()
             else:
-                self.hasUDP = False
-                self.UDPList = ()
-                self.UDPstartDelay = 0
+                self.UDPDict = None
             fileErr = True
        
         # if some of the paramaters were set by user, give option to save

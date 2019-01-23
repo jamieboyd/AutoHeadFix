@@ -12,15 +12,22 @@ class AHF_UDPTrig:
     AHF_UDPTrig uses the socket module to do the UDP stuff, but it should be part of
     the default install
     """
+
+    @staticmethod
+    def config_from_user ():
+        IPlist =tuple (input('IP addresses of Pis running secondary cameras:').split (','))
+        LEDdelay = float (input ('Delay in seconds between sending UDP and toggling blue LED.'))
+        UDPdict = {'IPlist' : IPlist, 'LEDdelay' : LEDdelay}
+        return UDPdict
     
-    def __init__ (self, UDPlist_p):
+    def __init__ (self, UDPdict):
         """Makes a new AHF_UDPtrig object using passed in list of ip addresses.
 
         stores UDPlist in the new object
         sets hasUDP to false if object creation fails because of network error, else True
         """
         try: 
-            self.UDPlist = UDPlist_p
+            self.UDPlist = UDPdict.get ('IPlist')
             self.sock=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.sock.bind (('', UDP_PORT))
             hasUDP= True
@@ -35,7 +42,7 @@ class AHF_UDPTrig:
         """
         try:
             for address in self.UDPlist:
-              self.sock.sendto (bytes (message, "utf-8"),(address, UDP_PORT))
+                self.sock.sendto (bytes (message, "utf-8"),(address, UDP_PORT))
         except socket.error as e:
             print ('AHF_UDPTrig failed to send a message: ' + str (e))
 
@@ -52,7 +59,8 @@ class AHF_UDPTrig:
 #for testing purposes
 if __name__ == '__main__':
     hasUDP = True
-    trigger = AHF_UDPTrig (('142.103.107.241','142.103.107.239'))
+    UDPdict = {'IPlist' : ('192.168.0.136',), 'LEDdelay' : 2}
+    trigger = AHF_UDPTrig (UDPdict)
    
     if hasUDP == True:
         message = 'hello_from_AHF_UDPTrig'
