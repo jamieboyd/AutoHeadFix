@@ -500,25 +500,6 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
 #=================Main functions called from outside===========================
 
     def run(self):
-        ref_path = self.cageSettings.dataPath+'sample_im/'+datetime.fromtimestamp (int (time())).isoformat ('-')+'_'+str(self.mouse.tag)+'.jpg'
-        self.camera.capture(ref_path)
-        self.buzzTimes = []
-        self.buzzTypes = []
-        self.lickWitholdTimes = []
-        self.rewardTimes = []
-        self.camera.start_preview(fullscreen = False, window = tuple(self.camera.AHFpreview))
-        endTime = time() + self.headFixTime
-        while time() < endTime:
-            anyLicks = self.lickDetector.waitForLick_Soft (self.lickWitholdTime, startFromZero=True)
-            if anyLicks == 0:
-                self.buzzTimes.append (time())
-                self.buzzer.do_train()
-                sleep (self.buzz_lead)
-                self.rewardTimes.append (time())
-                self.rewarder.giveReward('task')
-        self.camera.stop_preview()
-
-        '''
         #Check if mouse is here for the first time. If yes -> get_ref_im and release mouse again
         if self.mouse.tot_headFixes == 1:
             print('Take reference image')
@@ -617,7 +598,6 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         finally:
             #Move laser back to zero position at the end of the trial
             self.move_to(np.array([0,0]),topleft=True,join=False)
-        '''
 
     def logfile (self):
         rewardStr = 'reward'
@@ -638,12 +618,43 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                 self.textfp.write(outPutStr)
             self.textfp.flush()
 
+    def change_config(self,settings):
+        print('Currently, settings can not be changed from this menu.')
+
+    def inspect_mice(self,mice,cageSettings):
+        #Inspect the mice array
+        print('Mouse\t\tref-im\ttargets\theadFixStyle')
+        for mouse in mice.mouseArray:
+            ref_im='no'
+            targets='no'
+            if hasattr(mouse,'ref_im'):
+                ref_im='yes'
+            if hasattr(mouse,'targets'):
+                targets='yes'
+            print(str(mouse.tag)+'\t'+str(ref_im)+'\t'+str(targets)+'\t'+mouse.headFixStyle)
+        inputStr =  input ('Do you want to change headFixStyle?')
+        if inputStr[0] == 'y' or inputStr[0] == "Y":
+            while True:
+                inputStr =  int(input ('Type the tagID of mouse to change headFixStyle:'))
+                for mouse in self.mouseArray:
+                    if mouse.tag == inputStr:
+                        inputStr = int(input('Change headFixStyle to:\n0: fix\n1: loose\n'))
+                        if inputStr == 0:
+                            mouse.headFixStyle = 0
+                        elif inputStr == 1:
+                            mouse.headFixStyle = 1
+
+                inputStr = input('Change value of another mouse?')
+                if inputStr[0] == 'y' or inputStr[0] == "Y":
+                    continue
+                else:
+                    break
 
     def tester(self,mice,expSettings):
         #Tester function called from the hardwareTester. Includes Stimulator
         #specific hardware tester.
         while(True):
-            inputStr = input ('m= matching, t= select targets, v = vib. motor, p= laser tester, c= motor check, a= camera/LED, i= inspect mice, s= speaker, q= quit: ')
+            inputStr = input ('m= matching, t= select targets, v = vib. motor, p= laser tester, c= motor check, a= camera/LED, s= speaker, q= quit: ')
             if inputStr == 'm':
                 self.matcher()
                 expSettings.stimDict.update({'coeff_matrix' : self.coeff.tolist()})
@@ -665,17 +676,6 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                 self.camera.stop_preview()
                 GPIO.output(self.cageSettings.ledPin, GPIO.LOW)
                 GPIO.output(self.cageSettings.led2Pin, GPIO.LOW)
-            elif inputStr == 'i':
-                #Inspect the mice array
-                print('Mouse\t\tref-im\ttargets')
-                for mouse in mice.mouseArray:
-                    ref_im='no'
-                    targets='no'
-                    if hasattr(mouse,'ref_im'):
-                        ref_im='yes'
-                    if hasattr(mouse,'targets'):
-                        targets='yes'
-                    print(str(mouse.tag)+'\t'+str(ref_im)+'\t'+str(targets))
             elif inputStr == 's':
                 self.speaker.start_train()
                 sleep(3)

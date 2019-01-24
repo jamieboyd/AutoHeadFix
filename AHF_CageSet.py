@@ -18,9 +18,10 @@ class AHF_CageSet (object):
        :headFixer: str - name of class used for HeadFixing, can be pistons, or servo-motor with pi PWM or AdaFruit I2C PWM driver
        :pistons Pin: int - connected to solenoids that drive pistons for head fixing, (only if using pistons)
        :Servo Address: int- servo address of AdaFruit I2C PWM driver (only if using adafruit servo)
-       : PWM CHannel: int- PWM channel (0 or 1) if using pi PWM 
+       : PWM CHannel: int- PWM channel (0 or 1) if using pi PWM
        :servoReleased: int - position of server to release mouse, (only if using adafruit servo)
        :servoFixed: int - position of servo to fix mouse (only if using servo)
+       :servoLoose: int - position of servo to loose fix mouse (only if using servo)
        :rewardPin: int - connected to solenoid for delivering water reward
        :tirPin: int - tag in-range pin for the ID tag reader
        :contactMode: str - BeamBreak, or ContactCheck

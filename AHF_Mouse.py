@@ -5,7 +5,7 @@ class Mouse:
     """
     Class to hold information about each mouse, each mouse gets its own object
     """
-    def __init__(self, tag, entries, entranceRewards, headFixes, headFixRewards):
+    def __init__(self, tag, entries, entranceRewards, headFixes, headFixRewards, headFixStyle):
         """
         Makes a new mouse object, initializing with RFID tag and entrance and reward info
 
@@ -16,6 +16,8 @@ class Mouse:
         :param entranceRewards: number of entrance rewards mouse has been given
         :param headFixes: number of head fixes for this mouse
         :param headFixRewards: number of head fix rewards mouse has earned
+        :param tot_headFixes: number of total head fixes for this mouse
+        :param headFixStyle: 0 is 'fix' and '1' is 'loose' head fix
 
         """
         self.tag = tag
@@ -24,6 +26,7 @@ class Mouse:
         self.headFixes = headFixes
         self.tot_headFixes = headFixes
         self.headFixRewards = headFixRewards
+        self.headFixStyle = headFixStyle
         self.stimResultsDict = {}
 
     def clear (self):
@@ -38,7 +41,7 @@ class Mouse:
         if self.stimResultsDict is not None:
             for key in self.stimResultsDict:
                 self.stimResultsDict [key] = 0
-    
+
     def reward (self, rewarder, rewardName):
         """
         Gives a reward to the mouse and increments the reward count for task or entries
@@ -50,8 +53,8 @@ class Mouse:
             self.entranceRewards +=1
         elif rewardName == 'task':
             self.headFixRewards += 1
-            
-        
+
+
     def show (self):
         """
         Prints all the data for this mouse, including any stimResults info
@@ -120,13 +123,13 @@ class Mice:
         return
 
     def addMiceFromH5(self, hdf, statsfp):
-            
+
         #Adds mouse objects to the mice array, initialzing tagID and initial values for rewards from h5 file
         for tag,mouse_obj in hdf.items():
             m = {}
             for attr,value in mouse_obj.attrs.items():
                 m[str(attr)] = value
-            aMouse = Mouse (int(tag), m['entries'], m['entranceRewards'], m['headFixes'], m['headFixRewards'])
+            aMouse = Mouse (int(tag), m['entries'], m['entranceRewards'], m['headFixes'], m['headFixRewards'], m['headFixStyle'])
             aMouse.tot_headFixes = m['tot_headFixes']
             self.addMouse(aMouse, statsfp)
 
@@ -134,7 +137,7 @@ class Mice:
                 aMouse.ref_im = mouse_obj['ref_im'][:]
             if 'targets' in mouse_obj:
                 aMouse.targets = mouse_obj['targets'][:]
-            
+
 
     def removeMouseByTag (self, tag):
         """
@@ -163,12 +166,12 @@ class Mice:
         """
         for mouse in self.mouseArray:
             mouse.clear()
- 
+
 
     def getMouseFromTag (self, tag):
         """
         Finds the mouse with the given tag number from the array of mice
-        
+
         :param tag: the tag ID of the  mouse to find
         :returns: the mouse object with the given tag
         """

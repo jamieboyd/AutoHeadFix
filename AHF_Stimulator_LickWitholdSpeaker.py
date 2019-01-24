@@ -17,8 +17,8 @@ a drop of water is delivered. If no licking within the 1 second period, no water
 delivered, the mouse has 2 seconds to lick without speakr sounding. The cycle then repeats.
 
 
-The mouse can get as many drops of water as can fit in the trial time. If the mouse does not manage to 
-complete a trial correctly, it will get no water in the trial. 
+The mouse can get as many drops of water as can fit in the trial time. If the mouse does not manage to
+complete a trial correctly, it will get no water in the trial.
 
 total trial time default = 30 seconds
 time they need to go without licking default = 2
@@ -49,8 +49,8 @@ class AHF_Stimulator_LickWitholdSpeaker (AHF_Stimulator_LickNoLick):
     speakerFreq_def = 300
     speakerDuty_def = 0.8
     speakerOffForReward_def = 1.5   #time for consuming reward withot getting buzzed at
-    
-    def __init__ (self, configDict, rewarder, lickDetector,textfp):
+
+    def __init__ (self, cageSettings, configDict, rewarder, lickDetector,textfp, camera):
         super().__init__(configDict, rewarder, lickDetector, textfp)
         self.speakerPin=int(self.configDict.get ('speaker_pin', AHF_Stimulator_LickWitholdSpeaker.speakerPin_def))
         self.speakerFreq=float(self.configDict.get ('speaker_freq', AHF_Stimulator_LickWitholdSpeaker.speakerFreq_def))
@@ -81,8 +81,13 @@ class AHF_Stimulator_LickWitholdSpeaker (AHF_Stimulator_LickNoLick):
     def run(self):
         """
         every time lickWitholdtime passes with no licks, make a buzz then give a reward after buzz_lead time.
-        turn on speaker 
+        turn on speaker
         """
+        #============Testing purposes==========================
+        ref_path = self.cageSettings.dataPath+'sample_im/'+datetime.fromtimestamp (int (time())).isoformat ('-')+'_'+str(self.mouse.tag)+'.jpg'
+        self.camera.capture(ref_path)
+        self.camera.start_preview(fullscreen = False, window = tuple(self.camera.AHFpreview))
+        #===================================================
         self.buzzTimes = []
         self.buzzTypes = []
         self.lickWitholdTimes = []
@@ -127,11 +132,12 @@ class AHF_Stimulator_LickWitholdSpeaker (AHF_Stimulator_LickNoLick):
         # make sure to turn off buzzer at end of loop when we exit
         if speakerIsOn == True:
             self.speaker.stop_train()
+        self.camera.stop_preview()
 
 
 
     def logfile (self):
-        
+
         rewardStr = 'reward'
         buzz2Str = 'Buzz:N=' + str (self.buzz_num) + ',length=' + '{:.2f}'.format(self.buzz_len) + ',period=' + '{:.2f}'.format (self.buzz_period)
         buzz1Str = 'Buzz:N=1,length=' + '{:.2f}'.format (self.pulseDuration) + ',period=' + '{:.2f}'.format (self.pulseDuration + self.pulseDelay)
@@ -154,10 +160,10 @@ class AHF_Stimulator_LickWitholdSpeaker (AHF_Stimulator_LickNoLick):
                 buzzStr = buzz1Str + ',GO=-3'
             elif self.buzzTypes [i] == -4:
                 buzzStr = buzz1Str + ',GO=-4'
-            
+
             outPutStr = mStr + '\t' + datetime.fromtimestamp (int (self.buzzTimes [i])).isoformat (' ') + '\t' + lickWitholdStr + buzzStr
             print (outPutStr)
-            
+
         if self.textfp != None:
             iReward =0
             for i in range (0, len (self.buzzTypes)):
