@@ -1,3 +1,10 @@
+'''
+This Stimulator is subclassed from Rewards. It captures a reference image for each
+mouse and includes a user interface to select targets on reference images.
+The Stimulator directs and pulses a laser to selected targets for optogenetic
+stimulation/inhibition.
+'''
+
 #AHF-specific moudules
 from AHF_Stimulator_LickNoLick import AHF_Stimulator_LickNoLick
 from PTSimpleGPIO import PTSimpleGPIO, Infinite_train, Train
@@ -41,18 +48,23 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         self.PWM.set_PWM_enable(1,self.PWM_channel,0)
         self.duty_cycle = int(self.configDict.get('duty_cycle', 0))
         self.laser_on_time = int(self.configDict.get('laser_on_time', 0))
+        '''
+        Info: The laser is controlled using the PTPWM class, which employs a hardsware
+        pulse-width modulator to change the laser intensity. Read PWM Thread documentation
+        for further information.
+        '''
 
         #Cross-hair Overlay settings
-        #warnings.filterwarnings("ignore",".*you may find the equivalent alpha format faster*")
         self.overlay_resolution = self.camera.resolution
         self.cross_pos = (np.array(self.camera.resolution)/2).astype(int)
         self.cross_step = int(self.camera.resolution[0]/50)
-        self.cross_q = queue(maxsize=0) #Queues the cross-pin changes
+        self.cross_q = queue(maxsize=0) #Queues the cross-hair changes.
         self.coeff = np.asarray (self.configDict.get ('coeff_matrix', None))
-
-        self.headFixTime = float (self.configDict.get ('headFixTime', 0))
-        self.lickWitholdTime = float (self.configDict.get ('lickWitholdTime', 1))
-        self.afterStimWitholdTime = float(self.configDict.get ('after_Stim_Withold_Time', 0.2))
+        '''
+        Info: A cross-hair is used as an overlay to the picamera preview. Commands
+        to move the cross-hair are queued in a python queue, which is processed by
+        a separate thread. An existing coefficient matrix is loaded from the settings.
+        '''
 
         #Buzzer settings == Vibmotor
         self.buzz_pulseProb = float (self.configDict.get ('buzz_pulseProb', 1))
@@ -62,15 +74,17 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         self.buzz_duty = float (self.configDict.get ('buzz_duty', 0.5))
         self.buzz_lead = float (self.configDict.get ('buzz_lead', 1))
         self.buzzer=Train (PTSimpleGPIO.MODE_FREQ, self.buzz_pin, 0, self.buzz_freq, self.buzz_duty, self.buzz_dur,PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
-        print('passed buzzer')
+        print('Debug: passed buzzer')
+
         #Speaker Settings == Buzzer
         self.speakerPin=int(self.configDict.get ('speaker_pin', 25))
         self.speakerFreq=float(self.configDict.get ('speaker_freq', 6000))
         self.speakerDuty = float(self.configDict.get ('speaker_duty', 0.5))
         self.speakerOffForReward = float(self.configDict.get ('speaker_OffForReward', 1.5))
         self.speaker=Infinite_train (PTSimpleGPIO.MODE_FREQ, self.speakerPin, self.speakerFreq, self.speakerDuty,  PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
-        print('passed speaker')
-        #Stepper settings
+        print('Debug: passed speaker')
+
+        #Stepper motor settings
         #Shift register controlled by 4 GPIOs
         self.DS = int(self.configDict.get('DS', 4))
         self.Q7S = int(self.configDict.get('Q7S', 6))
@@ -84,12 +98,24 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         GPIO.setup(self.STCP, GPIO.OUT, initial = GPIO.HIGH)
         GPIO.setup(self.Q7S, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
 
-        self.mot_q = Queue(maxsize=0) #Queues steper motor commands
+        self.mot_q = Queue(maxsize=0) #Queues stepper motor commands
         self.phase_queue = Queue(maxsize=0) #Returns the new phase of the motors during the matching
         self.phase = np.array([0,0])
         self.pos = np.array([0,0])
         self.laser_points = []
         self.image_points = []
+        '''
+        Info: New stepper commands are queued (self.mot_q) and processed on
+        another processor.
+        Main program keeps track of the phase of the stepper motors and queues
+        (self.phase_queue) the recent phase to make it available for the another
+        processor.
+        '''
+
+        #Experiment settings
+        self.headFixTime = float (self.configDict.get ('headFixTime', 0))
+        self.lickWitholdTime = float (self.configDict.get ('lickWitholdTime', 1))
+        self.afterStimWitholdTime = float(self.configDict.get ('after_Stim_Withold_Time', 0.2))
 
         #Mouse scores
         self.buzzTimes = []
@@ -97,9 +123,10 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         self.lickWitholdTimes = []
         self.rewardTimes = []
 
-#===================== Utility functions for the stepper motors and laser =================
+#============== Utility functions for the stepper motors and laser =================
 
     def unlock(self):
+        #De-energize the motors by toggling 0 into all shift registers
         GPIO.output(self.DS,0)
         for i in range(8):
             GPIO.output(self.SHCP,0)
@@ -108,6 +135,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         GPIO.output(self.STCP,1)
 
     def feed_byte(self,byte):
+        #Toggle a byte into the shjft registers
         for j in reversed(byte):
             GPIO.output(self.DS,j)
             GPIO.output(self.SHCP,0)
@@ -116,9 +144,9 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         GPIO.output(self.STCP,1)
 
     def get_state(self):
+        # Read out serial output and store state. Feed state back into shift reg.
         # Create empty array to store the state
         state = np.empty(8,dtype=int)
-        # Read out serial output and store info
         for j in reversed(range(8)):
             out = GPIO.input(self.Q7S)
             np.put(state,j,out)
@@ -136,6 +164,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             return 0
 
     def get_arrow_dir(self,key):
+        # return direction of stepper motor step and cross-hair step.
         if hasattr(key,'char'):
             self.kb.press(keyboard.Key.backspace)
             self.kb.release(keyboard.Key.backspace)
@@ -160,6 +189,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             return 0,0,0,0
 
     def on_press(self,key):
+        # Callback function, which responds to keyboard strokes.
         di = self.get_arrow_dir(key)
         if any(np.asarray(di[:2])!=0):
             self.mot_q.put(di[:2]) #Queue the motor command
@@ -189,6 +219,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                 pass
 
     def make_cross(self):
+        #Define a simple cross-hair and add it as an overlay to the preview
         cross = np.zeros((self.overlay_resolution[0],self.overlay_resolution[0],3),dtype=np.uint8)
         cross[self.cross_pos[0],:,:] = 0xff
         cross[:,self.cross_pos[1],:] = 0xff
@@ -199,7 +230,9 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                             window = self.camera.AHFpreview)
 
     def update_cross(self,q):
+        #Callback function, which processes changes in the cross-hair position.
         while True:
+            #Repeatedly check wether queue has something to process
             if not q.empty():
                 prod = q.get()
                 if prod is None:
@@ -214,6 +247,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                     pass
 
     def update_mot(self,mot_q,phase_queue,delay,topleft):
+        #Callback funtion to process new motor steps. Runs on a different processor.
         while True:
             if not mot_q.empty():
                 x,y = mot_q.get()
@@ -222,7 +256,9 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                 self.phase = self.phase%8
                 self.pos += np.array([x,y])
 
+
     def move(self,x,y,phase,delay,topleft,mp):
+        #Main function, which moves stepper motors by x and y.
         if mp == True:
             phase_x,phase_y = phase.get()
         else:
@@ -287,12 +323,12 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                 phase_y = next_phase_y
                 sleep(delay)
             self.unlock()
-
         if mp == True:
             #Save the phase
             phase.put([phase_x,phase_y])
 
     def move_to(self,new_pos,topleft=True,join=False):
+        #High-level function, which invokes self.move to run on another processor
         steps = np.around(new_pos).astype(int)-self.pos
         mp = Process(target=self.move, args=(steps[0],steps[1],self.phase,self.delay,topleft,False,))
         self.phase += steps%8
@@ -314,16 +350,10 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             print('Duration must be below 1000 ms.')
 
 
-#==== Utility functions: Matching of coord systems, target selection and image registration ====
+#==== High-level Utility functions: Matching of coord systems, target selection and image registration ====
 
     def matcher(self):
-        #Matcher gets called through the crtl-c menu.
-        def solver(image_points,laser_points):
-            #Takes 3 points defined in laser- and image-coordinates and returns the coefficient matrix
-            a=np.column_stack((image_points,np.array([1,1,1])))
-            b1=laser_points[:,0]
-            b2=laser_points[:,1]
-            return np.vstack((np.linalg.solve(a, b1),np.linalg.solve(a, b2)))
+        #GUI to select three points using the matching aid tool.
 
         print('\nINSTRUCTION\n')
         print('Move:\tLaser\t\tcross hairs')
@@ -373,6 +403,14 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
 
 
         #======================Calculation================================
+
+        def solver(image_points,laser_points):
+            #Takes 3 points defined in laser- and image-coordinates and returns the coefficient matrix
+            a=np.column_stack((image_points,np.array([1,1,1])))
+            b1=laser_points[:,0]
+            b2=laser_points[:,1]
+            return np.vstack((np.linalg.solve(a, b1),np.linalg.solve(a, b2)))
+
         #Average the coefficient matrix obatained by solving all combinations of triplets.
         if len(list(set([x[0] for x in self.laser_points])))>=3:
             self.coeff = []
@@ -388,8 +426,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         self.camera.capture(self.mouse.ref_im,'rgb')
 
     def select_targets(self,mice):
-
-        #========================GUI function for the selecting targets=====================
+        #GUI function for the selecting targets
         def manual_annot(img):
             warnings.filterwarnings("ignore",".*GUI is implemented.*")
             fig = plt.figure(figsize=(10,10))
@@ -428,9 +465,9 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                         print('{0}\t{1}\t{2}'.format('0',mouse.targets[0],mouse.targets[1]))
 
     def image_registration(self):
-
-        #============Utility function to get the rotation matrix=================
+        #Runs at the beginning of a new trial
         def trans_mat(angle,x,y,scale):
+            #Utility function to get the transformation matrix
             angle = -1*np.radians(angle)
             scale = 1/scale
             x = -1*x
@@ -444,7 +481,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         self.camera.capture(trial,'rgb')
 
         #Image registration
-        #============Could run the registration on a different processor==========
+        #IMPROVE: Could run the registration on a different processor
         warnings.filterwarnings("ignore",".*the returned array has changed*")
         tf = ird.similarity(self.mouse.ref_im[:,:,0],trial[:,:,0],numiter=3)
         print('scale\tangle\tty\ttx')
@@ -469,13 +506,18 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         self.buzzTypes = []
         self.lickWitholdTimes = []
         self.rewardTimes = []
-        endTime = time() + self.headFixTime
         self.camera.start_preview(fullscreen = False, window = tuple(self.camera.AHFpreview))
+        endTime = time() + self.headFixTime
         while time() < endTime:
-                sleep(5.1)
+            anyLicks = self.lickDetector.waitForLick_Soft (self.lickWitholdTime, startFromZero=True)
+            if anyLicks == 0:
+                self.buzzTimes.append (time())
+                self.buzzer.do_train()
+                sleep (self.buzz_lead)
                 self.rewardTimes.append (time())
                 self.rewarder.giveReward('task')
         self.camera.stop_preview()
+
         '''
         #Check if mouse is here for the first time. If yes -> get_ref_im and release mouse again
         if self.mouse.tot_headFixes == 1:
@@ -598,6 +640,8 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
 
 
     def tester(self,mice,expSettings):
+        #Tester function called from the hardwareTester. Includes Stimulator
+        #specific hardware tester.
         while(True):
             inputStr = input ('m= matching, t= select targets, v = vib. motor, p= laser tester, c= motor check, a= camera/LED, i= inspect mice, s= speaker, q= quit: ')
             if inputStr == 'm':

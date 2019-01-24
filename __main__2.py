@@ -71,6 +71,7 @@ def main():
         #Generate h5 file to store mouse-individual data
         makeH5File(expSettings,cageSettings,mice)
         updateStats (expSettings.statsFP, mice)
+        backup_H5 (expSettings,cageSettings)
         # set up the GPIO pins for each for their respective functionalities.
         GPIO.setmode (GPIO.BCM)
         GPIO.setwarnings(False)
@@ -150,7 +151,7 @@ def main():
                         mice.addMouse (thisMouse, expSettings.statsFP)
                     writeToLogFile(expSettings.logFP, thisMouse, 'entry')
                     thisMouse.entries += 1
-                    updateH5File(expSettings,cageSettings,mice)
+                    #updateH5File(expSettings,cageSettings,mice)
                     # if we have entrance reward, first wait for entrance reward or first head-fix, which countermands entry reward
                     if thisMouse.entranceRewards < expSettings.maxEntryRewards:
                         giveEntranceReward = True
@@ -164,7 +165,7 @@ def main():
                         if (GPIO.input (cageSettings.tirPin)== GPIO.HIGH) and giveEntranceReward == True:
                             thisMouse.reward (rewarder, 'entrance') # entrance reward was not countermanded by an early headfix
                             writeToLogFile(expSettings.logFP, thisMouse, 'entryReward')
-                            updateH5File(expSettings,cageSettings,mice)
+                            #updateH5File(expSettings,cageSettings,mice)
                     # wait for contacts and run trials till mouse exits or time in chamber exceeded
                     expSettings.doHeadFix = expSettings.propHeadFix > random()
                     while GPIO.input (cageSettings.tirPin)== GPIO.HIGH and time () < entryTime + expSettings.inChamberTimeLimit:
@@ -209,6 +210,7 @@ def main():
                         mice.clear ()
                         updateH5File(expSettings,cageSettings,mice)
                         updateStats (expSettings.statsFP, mice)
+                        backup_H5 (expSettings,cageSettings)
                         # reinitialize lick detector because it can lock up if too many licks when not logging
                         lickDetector.__init__((0,1),26,simpleLogger)
                         lickDetector.start_logging()
@@ -443,10 +445,19 @@ def makeH5File (expSettings,cageSettings,mice):
         with File(expSettings.hdf_path,'w') as hdf:
             pass
 
+def backup_H5 (expSettings,cageSettings):
+    expSettings.hdf_backup_path = cageSettings.dataPath + 'mice_metadata_backup.h5'
+    if path.exists(expSettings.hdf_path):
+        with File(expSettings.hdf_path,'r+') as hdf:
+            with File(expSettings.hdf_backup_path,'w') as hdfb:
+                for key, items in hdf.items():
+                    hdf.copy(key,hdfb)
+    else:
+        print("mice_metadata.h5 doesn't exist.")
+
 def updateH5File (expSettings,cageSettings,mice):
     #Updates the existing h5 file, which contains relevant information of each mouse.
-    hdf_path = cageSettings.dataPath + 'mice_metadata.h5'
-    with File(hdf_path,'r+') as hdf:
+    with File(expSettings.hdf_path,'r+') as hdf:
         for mouse in mice.mouseArray:
             m = hdf.require_group(str(mouse.tag))
             m.attrs.modify('headFixes',mouse.headFixes)
@@ -455,12 +466,22 @@ def updateH5File (expSettings,cageSettings,mice):
             m.attrs.modify('entranceRewards',mouse.entranceRewards)
             m.attrs.modify('headFixRewards',mouse.headFixRewards)
             if hasattr(mouse,'ref_im'):
-                m.require_dataset('ref_im',shape=tuple(expSettings.camParamsDict['resolution']+[3]),dtype=np.uint8,data=mouse.ref_im)
+                ref = m.require_dataset('ref_im',shape=tuple(expSettings.camParamsDict['resolution']+[3]),dtype=np.uint8,data=mouse.ref_im)
+                ref.attrs.modify('CLASS', np.string_('IMAGE'))
+                ref.attrs.modify('IMAGE_VERSION', np.string_('1.2'))
+                ref.attrs.modify('IMAGE_SUBCLASS', np.string_('IMAGE_TRUECOLOR'))
+                ref.attrs.modify('INTERLACE_MODE', np.string_('INTERLACE_PIXEL'))
+                ref.attrs.modify('IMAGE_MINMAXRANGE', [0,255])
             if hasattr(mouse,'targets'):
                 m.require_dataset('targets',shape=(2,),dtype=np.uint8,data=mouse.targets,)
             t = m.require_group('trial_image')
             if hasattr(mouse,'trial_image'):
-                t.require_dataset('trial_'+str(mouse.tot_headFixes),shape=tuple(expSettings.camParamsDict['resolution']+[3]),dtype=np.uint8,data=mouse.trial_image)
+                tr = t.require_dataset('trial_'+str(mouse.tot_headFixes),shape=tuple(expSettings.camParamsDict['resolution']+[3]),dtype=np.uint8,data=mouse.trial_image)
+                tr.attrs.modify('CLASS', np.string_('IMAGE'))
+                tr.attrs.modify('IMAGE_VERSION', np.string_('1.2'))
+                tr.attrs.modify('IMAGE_SUBCLASS', np.string_('IMAGE_TRUECOLOR'))
+                tr.attrs.modify('INTERLACE_MODE', np.string_('INTERLACE_PIXEL'))
+                tr.attrs.modify('IMAGE_MINMAXRANGE', [0,255])
             #To keep track of mouse attributes, create 'log' and save all attributes per day
             h = m.require_group('log')
             t = h.require_group(str(expSettings.dateStr))
