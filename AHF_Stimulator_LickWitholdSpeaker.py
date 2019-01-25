@@ -160,6 +160,39 @@ class AHF_Stimulator_LickWitholdSpeaker (AHF_Stimulator_LickNoLick):
             elif inputStr == 'q':
                 break
 
+    def inspect_mice(self,mice,cageSettings):
+        #Inspect the mice array
+        print('MouseID\t\theadFixStyle')
+        for mouse in mice.mouseArray:
+            headFixStyle = 'fix'
+            if mouse.headFixStyle == 1:
+                headFixStyle = 'loose'
+            elif mouse.headFixStyle == 2:
+                headFixStyle = 'nofix'
+            print(str(mouse.tag)+'\t'+headFixStyle)
+        while(True):
+            inputStr = input ('c= headFixStyle, q= quit: ')
+            if inputStr == 'c':
+                while(True):
+                    inputStr =  int(input ('Type the tagID of mouse to change headFixStyle:'))
+                    for mouse in mice.mouseArray:
+                        if mouse.tag == inputStr:
+                            inputStr = int(input('Change headFixStyle to:\n0: fix\n1: loose\n2: nofix\n'))
+                            if inputStr == 0:
+                                mouse.headFixStyle = 0
+                            elif inputStr == 1:
+                                mouse.headFixStyle = 1
+                            elif inputStr == 2:
+                                mouse.headFixStyle = 2
+
+                    inputStr = input('Change value of another mouse?')
+                    if inputStr[0] == 'y' or inputStr[0] == "Y":
+                        continue
+                    else:
+                        break
+            elif inputStr == 'q':
+                break
+
 
     def logfile (self):
 

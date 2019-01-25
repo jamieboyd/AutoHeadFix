@@ -658,6 +658,8 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                         break
             elif inputStr == 't':
                 self.select_targets(mice)
+            elif inputStr == 'q':
+                break
 
     def tester(self,expSettings):
         #Tester function called from the hardwareTester. Includes Stimulator
