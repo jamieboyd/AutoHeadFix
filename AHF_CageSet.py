@@ -113,7 +113,7 @@ class AHF_CageSet (object):
         AHF_HeadFixer.get_class (self.headFixer).configDict_set (self, jsonDict)
         jsonDict.update ({'Reward Pin':self.rewardPin, 'Tag In Range Pin':self.tirPin, 'Contact Pin':self.contactPin})
         jsonDict.update ({'Contact Polarity':self.contactPolarity, 'Contact Pull Up Down':self.contactPUD})
-        jsonDict.update ({'LED Pin' : self.ledPin, 'Serial Port' : self.serialPort, 'Path to Save Data':self.dataPath, 'Mouse Config Path':self.mouseConfigPath})
+        jsonDict.update ({'LED Pin' : self.ledPin, 'LED2 Pin' : self.led2Pin,'Serial Port' : self.serialPort, 'Path to Save Data':self.dataPath, 'Mouse Config Path':self.mouseConfigPath})
         jsonDict.update ({'Has Entry Beam Break':self.hasEntryBB})
         if self.hasEntryBB == True:
             jsonDict.update ({'Entry Beam Break Pin':self.entryBBpin})

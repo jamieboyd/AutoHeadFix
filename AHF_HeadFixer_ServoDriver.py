@@ -51,7 +51,7 @@ class AHF_HeadFixer_ServoDriver (AHF_HeadFixer):
 
     @staticmethod
     def config_show(cageSet):
-        return 'ServoDriver I2C Address, in Hexadecimal, default is 0x40 =' + str(cageSet.servoAddress) + '\n\tReleased Servo Position=' + str(cageSet.servoReleasedPosition) + '\n\tFixed Servo Position=' + str(cageSet.servoFixedPosition + '\n\tLoose Servo Position=' + str(cageSet.servoLoosePosition)
+        return 'ServoDriver I2C Address, in Hexadecimal, default is 0x40 =' + str(cageSet.servoAddress) + '\n\tReleased Servo Position=' + str(cageSet.servoReleasedPosition) + '\n\tFixed Servo Position=' + str(cageSet.servoFixedPosition) + '\n\tLoose Servo Position=' + str(cageSet.servoLoosePosition)
 
     def test (self, cageSet):
         print ('ServoDriver moving to loose Head-Fixed position for 2 seconds')
