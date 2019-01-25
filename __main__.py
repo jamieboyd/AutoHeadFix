@@ -521,6 +521,8 @@ def runTrial (thisMouse, expSettings, cageSettings, rewarder, headFixer, stimula
                 headFixer.fixMouse()
             elif thisMouse.headFixStyle == 1:
                 headFixer.loosefixMouse()
+            elif thisMouse.headFixStyle == 2:
+                pass
             sleep(0.4) # wait a bit for things to settle, then re-check contacts
             if GPIO.input(cageSettings.contactPin) == expSettings.noContactState:
                 # release mouse if no contact... :(
