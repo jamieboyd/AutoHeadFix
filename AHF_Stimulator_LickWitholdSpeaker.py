@@ -44,6 +44,9 @@ from time import time, sleep
 from datetime import datetime
 from random import random
 
+#RPi module
+import RPi.GPIO as GPIO
+
 class AHF_Stimulator_LickWitholdSpeaker (AHF_Stimulator_LickNoLick):
     speakerPin_def = 25
     speakerFreq_def = 300
@@ -51,7 +54,7 @@ class AHF_Stimulator_LickWitholdSpeaker (AHF_Stimulator_LickNoLick):
     speakerOffForReward_def = 1.5   #time for consuming reward withot getting buzzed at
 
     def __init__ (self, cageSettings, configDict, rewarder, lickDetector,textfp, camera):
-        super().__init__(configDict, rewarder, lickDetector, textfp)
+        super().__init__(cageSettings, configDict, rewarder, lickDetector, textfp, camera)
         self.speakerPin=int(self.configDict.get ('speaker_pin', AHF_Stimulator_LickWitholdSpeaker.speakerPin_def))
         self.speakerFreq=float(self.configDict.get ('speaker_freq', AHF_Stimulator_LickWitholdSpeaker.speakerFreq_def))
         self.speakerDuty = float(self.configDict.get ('speaker_duty', AHF_Stimulator_LickWitholdSpeaker.speakerDuty_def))
@@ -122,7 +125,7 @@ class AHF_Stimulator_LickWitholdSpeaker (AHF_Stimulator_LickNoLick):
             self.buzzTimes.append (time())
             afterBuzzEndTime= time() + 0.5
             buzzLeadEnd = afterBuzzEndTime + self.buzz_lead
-            self.buzzer1.do_train()
+            self.buzzer.do_train()
             # sleep for a bit, then give reward
             sleep (1.0)
             self.rewardTimes.append (time())
@@ -134,6 +137,28 @@ class AHF_Stimulator_LickWitholdSpeaker (AHF_Stimulator_LickNoLick):
             self.speaker.stop_train()
         self.camera.stop_preview()
 
+    def tester(self,expSettings):
+        #Tester function called from the hardwareTester. Includes Stimulator
+        #specific hardware tester.
+        while(True):
+            inputStr = input ('v = vib. motor, a= camera/LED, s= speaker, q= quit: ')
+            if inputStr == 'a':
+                #Display preview and turn on LED
+                self.camera.start_preview(fullscreen = False, window = tuple(self.camera.AHFpreview))
+                GPIO.output(self.cageSettings.ledPin, GPIO.HIGH)
+                GPIO.output(self.cageSettings.led2Pin, GPIO.HIGH)
+                input ('adjust camera/LED: Press any key to quit ')
+                self.camera.stop_preview()
+                GPIO.output(self.cageSettings.ledPin, GPIO.LOW)
+                GPIO.output(self.cageSettings.led2Pin, GPIO.LOW)
+            elif inputStr == 's':
+                self.speaker.start_train()
+                sleep(3)
+                self.speaker.stop_train()
+            elif inputStr == 'v':
+                self.buzzer.do_train()
+            elif inputStr == 'q':
+                break
 
 
     def logfile (self):

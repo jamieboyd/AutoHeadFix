@@ -261,8 +261,7 @@ def main():
                     elif event == 'v' or event== "V":
                         valveControl (cageSettings)
                     elif event == 'h' or event == 'H':
-                        hardwareTester(cageSettings, tagReader, headFixer, stimulator, mice, expSettings)
-                        updateH5File(expSettings,cageSettings,mice)
+                        hardwareTester(cageSettings, tagReader, headFixer, stimulator, expSettings)
                         if cageSettings.contactPolarity == 'RISING':
                             expSettings.contactEdge = GPIO.RISING
                             expSettings.noContactEdge = GPIO.FALLING
@@ -276,6 +275,7 @@ def main():
                     elif event == 'm' or event == 'M':
                         mice.show()
                         stimulator.inspect_mice(mice,cageSettings)
+                        updateH5File(expSettings,cageSettings,mice)
                     elif event == 'c' or event == 'C':
                         camParams = camera.adjust_config_from_user ()
                     elif event == 'e' or event == 'E':

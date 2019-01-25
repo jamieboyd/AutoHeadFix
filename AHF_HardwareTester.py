@@ -32,16 +32,16 @@ if __name__ == '__main__':
             tagReader = AHF_TagReader (cageSet.serialPort, True)
         except IOError:
             tagReader = None
-        htloop (cageSet, tagReader, headFixer, stimulator, mice, expSettings)
+        htloop (cageSet, tagReader, headFixer, stimulator, expSettings)
 else:
-    def hardwareTester (cageSet, tagReader, headFixer, stimulator, mice, expSettings):
+    def hardwareTester (cageSet, tagReader, headFixer, stimulator, expSettings):
         """
         Hardware Tester for Auto Head Fixing, allows you to verify the various hardware bits are working
         """
-        htloop (cageSet, tagReader, headFixer, stimulator, mice, expSettings)
+        htloop (cageSet, tagReader, headFixer, stimulator, expSettings)
         
 
-def htloop (cageSet, tagReader, headFixer, stimulator, mice, expSettings):
+def htloop (cageSet, tagReader, headFixer, stimulator, expSettings):
     """
     Presents a menu asking user to choose a bit of hardware to test, and runs the tests
 
@@ -211,7 +211,7 @@ def htloop (cageSet, tagReader, headFixer, stimulator, mice, expSettings):
                     cageSet.ledPin = int (input('Enter New LED Pin:'))
                     GPIO.setup (cageSet.ledPin, GPIO.OUT, initial = GPIO.LOW)
             elif inputStr == 's':
-                stimulator.tester(mice,expSettings)
+                stimulator.tester(expSettings)
             elif inputStr == 'h':
                 cageSet.show()
             elif inputStr=='v':

@@ -239,7 +239,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                     return False
                 next_pos = self.cross_pos + np.array(prod)
                 #Make sure the cross remains within the boundaries given by the overlay
-                if not any((any(next_pos<0),any(next_pos>=np.array(self.camera.AHFpreview[2:])))):
+                if not any((any(next_pos<0),any(next_pos>=np.array(self.overlay_resolution)))):
                     self.cross_pos = next_pos
                     self.camera.remove_overlay(self.l3)
                     self.make_cross()
@@ -498,8 +498,10 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
 
 
 #=================Main functions called from outside===========================
-
     def run(self):
+        sleep(3)
+        print('............dummy run...................')
+        '''
         #Check if mouse is here for the first time. If yes -> get_ref_im and release mouse again
         if self.mouse.tot_headFixes == 1:
             print('Take reference image')
@@ -598,7 +600,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         finally:
             #Move laser back to zero position at the end of the trial
             self.move_to(np.array([0,0]),topleft=True,join=False)
-
+            '''
     def logfile (self):
         rewardStr = 'reward'
         buzzStr = 'Buzz:duty=' + str (self.buzz_duty) + ',duration=' + '{:.2f}'.format(self.buzz_dur) + ',frequency=' + '{:.2f}'.format(self.buzz_freq)
@@ -618,49 +620,50 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                 self.textfp.write(outPutStr)
             self.textfp.flush()
 
-    def change_config(self,settings):
-        print('Currently, settings can not be changed from this menu.')
-
     def inspect_mice(self,mice,cageSettings):
         #Inspect the mice array
-        print('Mouse\t\tref-im\ttargets\theadFixStyle')
+        print('MouseID\t\tref-im\ttargets\theadFixStyle')
         for mouse in mice.mouseArray:
             ref_im='no'
             targets='no'
+            headFixStyle = 'fix'
             if hasattr(mouse,'ref_im'):
                 ref_im='yes'
             if hasattr(mouse,'targets'):
                 targets='yes'
-            print(str(mouse.tag)+'\t'+str(ref_im)+'\t'+str(targets)+'\t'+mouse.headFixStyle)
-        inputStr =  input ('Do you want to change headFixStyle?')
-        if inputStr[0] == 'y' or inputStr[0] == "Y":
-            while True:
-                inputStr =  int(input ('Type the tagID of mouse to change headFixStyle:'))
-                for mouse in self.mouseArray:
-                    if mouse.tag == inputStr:
-                        inputStr = int(input('Change headFixStyle to:\n0: fix\n1: loose\n'))
-                        if inputStr == 0:
-                            mouse.headFixStyle = 0
-                        elif inputStr == 1:
-                            mouse.headFixStyle = 1
+            if mouse.headFixStyle == 1:
+                headFixStyle = 'loose'
+            print(str(mouse.tag)+'\t'+str(ref_im)+'\t'+str(targets)+'\t'+headFixStyle)
+        while(True):
+            inputStr = input ('c= headFixStyle, t= select targets, q= quit: ')
+            if inputStr == 'c':
+                while(True):
+                    inputStr =  int(input ('Type the tagID of mouse to change headFixStyle:'))
+                    for mouse in mice.mouseArray:
+                        if mouse.tag == inputStr:
+                            inputStr = int(input('Change headFixStyle to:\n0: fix\n1: loose\n'))
+                            if inputStr == 0:
+                                mouse.headFixStyle = 0
+                            elif inputStr == 1:
+                                mouse.headFixStyle = 1
 
-                inputStr = input('Change value of another mouse?')
-                if inputStr[0] == 'y' or inputStr[0] == "Y":
-                    continue
-                else:
-                    break
+                    inputStr = input('Change value of another mouse?')
+                    if inputStr[0] == 'y' or inputStr[0] == "Y":
+                        continue
+                    else:
+                        break
+            elif inputStr == 't':
+                self.select_targets(mice)
 
-    def tester(self,mice,expSettings):
+    def tester(self,expSettings):
         #Tester function called from the hardwareTester. Includes Stimulator
         #specific hardware tester.
         while(True):
-            inputStr = input ('m= matching, t= select targets, v = vib. motor, p= laser tester, c= motor check, a= camera/LED, s= speaker, q= quit: ')
+            inputStr = input ('m= matching, v = vib. motor, p= laser tester, c= motor check, a= camera/LED, s= speaker, q= quit: ')
             if inputStr == 'm':
                 self.matcher()
                 expSettings.stimDict.update({'coeff_matrix' : self.coeff.tolist()})
                 expSettings.save()
-            elif inputStr == 't':
-                self.select_targets(mice)
             elif inputStr == 'p':
                 self.camera.start_preview(fullscreen = False, window = tuple(self.camera.AHFpreview))
                 self.pulse(1000,self.duty_cycle)
