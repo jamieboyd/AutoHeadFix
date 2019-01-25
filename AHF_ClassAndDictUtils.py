@@ -23,12 +23,18 @@ def Class_from_file(nameTypeStr, nameStr):
     
     Assumes the class is named the same as the module. 
     """
-    if nameTypeStr == '':
-        fileName = nameStr
+    if nameStr == '':
+        fileName = 'AHF_' + nameTypeStr
     else:
         fileName = 'AHF_' + nameTypeStr + '_' + nameStr
     module = __import__(fileName)
     return getattr(module, fileName)
+
+
+
+def Super_of_class (aClass):
+    inheritList = aClass.mro()
+    return inheritList [len(inheritList)-2]
 
 
 
@@ -44,6 +50,38 @@ def File_exists (nameTypeStr, nameStr, typeSuffix):
             returnVal =  True
             break
     return returnVal
+
+
+
+
+def Subclass_from_user(aSuperClass):
+    iFile=0
+    fileList = []
+    classList = []
+    for f in os.listdir(os.curdir):
+        try:
+            moduleObj=__import__ (f.rstrip('.py'))
+            #print ('module=' + str (moduleObj))
+            classObj = getattr(moduleObj, moduleObj.__name__)
+            #print (classObj)
+            if inspect.isabstract (classObj) == False and Super_of_class (classObj) == aSuperClass:
+                fileList.append (str(classObj) + ": " + classObj.about())
+                classList.append (classObj)
+                iFile += 1
+        except Exception as e: # exception will be thrown if imported module imports non-existant modules, for instance
+            #print (e)
+            continue
+    inputStr = '\nEnter a number from 1 to {} to choose a {} sub-class:\n'.format(iFile, aSuperClass)
+    ii=0
+    for file in fileList:
+        inputStr += str (ii + 1) + ': ' + file + '\n'
+        ii +=1
+    inputStr += ':'
+    classNum =0
+    while classNum < 1 or classNum > iFile:
+        classNum =  int(input (inputStr))
+    return classList[classNum -1]
+    
 
 def File_from_user (nameTypeStr, longName, typeSuffix, makeNew = False):
     """

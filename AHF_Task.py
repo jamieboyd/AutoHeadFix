@@ -68,16 +68,16 @@ class Task:
         if not hasattr (self, 'headFixerClass') or not hasattr (self, 'headFixerDict'):
             tempInput = input ('Does this setup have a head fixing mechanism installed? (Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.HeadFixerClass = AHF_ClassAndDictUtils.File_from_user ('HeadFixer', 'Head Fixer', '.py') 
-                self.HeadFixerDict = AHF_ClassAndDictUtils.Class_from_file('HeadFixer', self.HeadFixerClass).config_user_get ()
+                self.HeadFixerClass = AHF_ClassAndDictUtils.Class_from_file('HeadFixer', AHF_ClassAndDictUtils.File_from_user ('HeadFixer', 'Head Fixer Class', '.py'))
+                self.HeadFixerDict = self.HeadFixerClass.config_user_get ()
             else:
                 self.HeadFixerClass = None
                 self.HeadFixerDict = None
             fileErr = True
         ################################ Stimulator (Obligatory) makes its own dictionary #######################
         if not hasattr (self, 'StimulatorClass') or not hasattr (self, 'StimulatorDict'):
-            self.StimulatorClass = AHF_ClassAndDictUtils.File_from_user ('Stimulator', 'Stimulator', '.py')
-            self.StimulatorDict = AHF_ClassAndDictUtils.Class_from_file('Stimulator', self.StimulatorClass).config_user_get ()
+            self.StimulatorClass = AHF_ClassAndDictUtils.Class_from_file('Stimulator', AHF_ClassAndDictUtils.File_from_user ('Stimulator', 'Experiment Stimulator lass', '.py'))
+            self.StimulatorDict = self.StimulatorClass.config_user_get ()
             fileErr = True
         ################################ Rewarder (Obligatory) class makes its own dictionary #######################
         if not hasattr (self, 'RewarderClass') or not hasattr (self, 'RewarderDict'):
@@ -148,7 +148,7 @@ class Task:
         if not hasattr (self, 'NotifierDict'):
             tempInput = input ('Send text messages if mouse exceeds criterion time in chamber?(Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.NotifierDict = AHF_ClassAndDictUtils.Class_from_file('', 'AHF_Notifier').config_user_get()
+                self.NotifierDict = AHF_ClassAndDictUtils.Class_from_file('AHF_Notifier', '').config_user_get()
                 self.NotifierDict.update ({'cageID' : self.cageID})
             else:
                 self.NotifierDict = None
@@ -157,7 +157,7 @@ class Task:
         if not hasattr (self, 'UDPdict'):
             tempInput = input ('Send UDP triggers to start tasks on secondary computers (Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.UDPDict = AHF_ClassAndDictUtils.Class_from_file('', 'AHF_UDPTrig').config_user_get()
+                self.UDPDict = AHF_ClassAndDictUtils.Class_from_file('AHF_UDPTrig', '').config_user_get()
             else:
                 self.UDPDict = None
             fileErr = True
@@ -187,7 +187,7 @@ class Task:
             newConfig = self.fileName
         else:
             if newConfig.startswith ('AHF_task_'):
-                newConfig.lstrip ('AHF_task_')
+                newConfig = newConfig [9 :]
             if newConfig.endswith ('.jsn'):
                 newConfig.rstrip('.jsn')
             newConfig = ''.join([c for c in newConfig if c.isalpha() or c.isdigit() or c=='_'])
@@ -229,7 +229,8 @@ class Task:
                 itemKey = kvp [0]
                 itemValue = kvp [1]
                 ### do special settings, subclassed things with extra user input needed #####
-                ### these classes use same patterns of static functions to get class names and settings dictionaries
+                ### these classes use same utility functions to get class names and settings dictionaries
+        
                 if itemKey == 'RewarderClass':
                     self.RewarderClass = AHF_Rewarder.get_Rewarder_from_user ()
                 elif itemKey == 'RewarderDict':
@@ -266,7 +267,7 @@ class Task:
 
 if __name__ == '__main__':
     task = Task ('')
-    task.showSettings()
+    task.editSettings()
 
 
 """       

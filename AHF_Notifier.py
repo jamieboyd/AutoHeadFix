@@ -15,7 +15,7 @@ class AHF_Notifier:
     def config_user_get():
         phoneList =tuple (input('Phone numbers to receive a text message if mouse is in chamber too long:').split(','))
         textBeltKey = input ('Enter the textBelt code (c\'mon it\'s only 65 characters):')
-        NotifierDict = {'phoneList': phoneList, 'textBeltKey' : textBeltKey)
+        NotifierDict = {'phoneList': phoneList, 'textBeltKey' : textBeltKey}
         return NotifierDict
 
     def __init__ (self, NotifierDict):

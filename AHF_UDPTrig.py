@@ -14,7 +14,7 @@ class AHF_UDPTrig:
     """
 
     @staticmethod
-    def config_from_user ():
+    def config_user_get ():
         IPlist =tuple (input('IP addresses of Pis running secondary cameras:').split (','))
         LEDdelay = float (input ('Delay in seconds between sending UDP and toggling blue LED.'))
         UDPdict = {'IPlist' : IPlist, 'LEDdelay' : LEDdelay}

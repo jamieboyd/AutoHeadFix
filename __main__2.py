@@ -3,8 +3,6 @@
 
 #library imports
 import RPi.GPIO as GPIO
-import RFIDTagReader
-from PTCountermandPulse import CountermandPulse
 
 # local files, part of AutoHeadFix
 from AHF_Task import AHF_Task
