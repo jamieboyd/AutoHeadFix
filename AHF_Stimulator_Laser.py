@@ -67,13 +67,12 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         '''
 
         #Buzzer settings == Vibmotor
-        self.buzz_pulseProb = float (self.configDict.get ('buzz_pulseProb', 1))
+        #self.buzz_pulseProb = float (self.configDict.get ('buzz_pulseProb', 1))
         self.buzz_pin = int(self.configDict.get ('buzz_pin', 27))
-        self.buzz_freq = float (self.configDict.get ('buzz_freq', 6000))
-        self.buzz_dur = int (self.configDict.get ('buzz_dur', 1))
-        self.buzz_duty = float (self.configDict.get ('buzz_duty', 0.5))
-        self.buzz_lead = float (self.configDict.get ('buzz_lead', 1))
-        self.buzzer=Train (PTSimpleGPIO.MODE_FREQ, self.buzz_pin, 0, self.buzz_freq, self.buzz_duty, self.buzz_dur,PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
+        self.buzz_num = int (self.configDict.get ('buzz_num', 2))
+        self.buzz_len = float (self.configDict.get ('buzz_len', 0.1))
+        self.buzz_period = float (self.configDict.get ('buzz_period', 0.2))
+        self.buzzer=Train (PTSimpleGPIO.MODE_PULSES, self.buzz_pin, 0, self.buzz_len, (self.buzz_period - self.buzz_len), self.buzz_num,PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
         print('Debug: passed buzzer')
 
         #Speaker Settings == Buzzer
@@ -603,7 +602,8 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             '''
     def logfile (self):
         rewardStr = 'reward'
-        buzzStr = 'Buzz:duty=' + str (self.buzz_duty) + ',duration=' + '{:.2f}'.format(self.buzz_dur) + ',frequency=' + '{:.2f}'.format(self.buzz_freq)
+        buzzStr = 'Buzz:N=' + str (self.buzz_num) + ',length=' + '{:.2f}'.format(self.buzz_len) + ',period=' + '{:.2f}'.format (self.buzz_period)
+        #buzzStr = 'Buzz:duty=' + str (self.buzz_duty) + ',duration=' + '{:.2f}'.format(self.buzz_dur) + ',frequency=' + '{:.2f}'.format(self.buzz_freq)
         mStr = '{:013}'.format(self.mouse.tag)
         for i in range (0, len (self.buzzTimes)):
             outPutStr = mStr + '\t' + (datetime.fromtimestamp (int (self.buzzTimes [i]))).isoformat (' ') + '\t' + buzzStr
@@ -620,9 +620,9 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                 self.textfp.write(outPutStr)
             self.textfp.flush()
 
-    def inspect_mice(self,mice,cageSettings):
+    def inspect_mice(self,mice,cageSettings,expSettings):
         #Inspect the mice array
-        print('MouseID\t\tref-im\ttargets\theadFixStyle')
+        print('MouseID\t\tref-im\ttargets\theadFixStyle\tstimType')
         for mouse in mice.mouseArray:
             ref_im='no'
             targets='no'
@@ -635,9 +635,10 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                 headFixStyle = 'loose'
             elif mouse.headFixStyle == 2:
                 headFixStyle = 'nofix'
-            print(str(mouse.tag)+'\t'+str(ref_im)+'\t'+str(targets)+'\t'+headFixStyle)
+            stimType = expSettings.stimulator[mouse.stimType][15:]
+            print(str(mouse.tag) + '\t' + str(ref_im) + '\t' + str(targets) +'\t' + headFixStyle + '\t\t' + stimType)
         while(True):
-            inputStr = input ('c= headFixStyle, t= select targets, q= quit: ')
+            inputStr = input ('c= headFixStyle, t= select targets, s= stimType, q= quit: ')
             if inputStr == 'c':
                 while(True):
                     inputStr =  int(input ('Type the tagID of mouse to change headFixStyle:'))
@@ -656,6 +657,23 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                         continue
                     else:
                         break
+            elif inputStr == 's':
+                while(True):
+                    inputStr =  int(input ('Type the tagID of mouse to change stimType:'))
+                    for mouse in mice.mouseArray:
+                        if mouse.tag == inputStr:
+                            print('Following stimTypes are available:')
+                            for i,j in enumerate(expSettings.stimulator):
+                                print(str(i)+': '+j[15:])
+                            inputStr = int(input('Change stimType to:'))
+                            mouse.stimType = inputStr
+
+                    inputStr = input('Change value of another mouse?')
+                    if inputStr[0] == 'y' or inputStr[0] == "Y":
+                        continue
+                    else:
+                        break
+                    
             elif inputStr == 't':
                 self.select_targets(mice)
             elif inputStr == 'q':

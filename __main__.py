@@ -121,9 +121,10 @@ def main():
         lickDetector = AHF_LickDetector ((0,1),26,simpleLogger)
         sleep(1)
         lickDetector.start_logging ()
-        # make stimulator
-        stimulator = AHF_Stimulator.get_class (expSettings.stimulator)(cageSettings, expSettings.stimDict, rewarder, lickDetector, expSettings.logFP, camera)
-        expSettings.stimDict = stimulator.configDict
+        # make stimulator(s)
+        stimulator = [AHF_Stimulator.get_class (i)(cageSettings, expSettings.stimDict, rewarder, lickDetector, expSettings.logFP, camera) for i in expSettings.stimulator]
+        #Stimdict is chosen from the first stimulator
+        expSettings.stimDict = stimulator[0].configDict
         # Entry beam breaker
         if cageSettings.hasEntryBB==True:
             GPIO.setup (cageSettings.entryBBpin, GPIO.IN, pull_up_down = GPIO.PUD_UP)
@@ -153,7 +154,7 @@ def main():
                     thisMouse = mice.getMouseFromTag (tag)
                     if thisMouse is None:
                         # try to open mouse config file to initialize mouse data
-                        thisMouse=Mouse(tag,1,0,0,0,0)
+                        thisMouse=Mouse(tag,1,0,0,0,0,0)
                         mice.addMouse (thisMouse, expSettings.statsFP)
                     writeToLogFile(expSettings.logFP, thisMouse, 'entry')
                     thisMouse.entries += 1
@@ -165,7 +166,7 @@ def main():
                         while GPIO.input (cageSettings.tirPin)== GPIO.HIGH and time() < (entryTime + expSettings.entryRewardDelay):
                             GPIO.wait_for_edge (cageSettings.contactPin, expSettings.contactEdge, timeout= kTIMEOUTmS)
                             if (GPIO.input (cageSettings.contactPin)== expSettings.contactState):
-                                runTrial (thisMouse, expSettings, cageSettings, rewarder, headFixer,stimulator, UDPTrigger)
+                                runTrial (thisMouse, expSettings, cageSettings, rewarder, headFixer,stimulator[thisMouse.stimType], UDPTrigger)
                                 giveEntranceReward = False
                                 break
                         if (GPIO.input (cageSettings.tirPin)== GPIO.HIGH) and giveEntranceReward == True:
@@ -178,7 +179,7 @@ def main():
                         if (GPIO.input (cageSettings.contactPin)== expSettings.noContactState):
                             GPIO.wait_for_edge (cageSettings.contactPin, expSettings.contactEdge, timeout= kTIMEOUTmS)
                         if (GPIO.input (cageSettings.contactPin)== expSettings.contactState):
-                            runTrial (thisMouse, expSettings, cageSettings, rewarder, headFixer, stimulator, UDPTrigger)
+                            runTrial (thisMouse, expSettings, cageSettings, rewarder, headFixer, stimulator[thisMouse.stimType], UDPTrigger)
                             expSettings.doHeadFix = expSettings.propHeadFix > random() # set doHeadFix for next contact
                     # either mouse left the chamber or has been in chamber too long
                     if GPIO.input (cageSettings.tirPin)== GPIO.HIGH and time () > entryTime + expSettings.inChamberTimeLimit:
@@ -211,7 +212,8 @@ def main():
                         makeLogFile (expSettings, cageSettings)
                         simpleLogger.logFP = expSettings.logFP
                         makeQuickStatsFile (expSettings, cageSettings, mice)
-                        stimulator.nextDay (expSettings.logFP)
+                        for i in stimulator:
+                            i.nextDay (expSettings.logFP)
                         nextDay += KSECSPERDAY
                         mice.clear ()
                         updateH5File(expSettings,cageSettings,mice)
@@ -274,21 +276,26 @@ def main():
                             expSettings.noContactState = GPIO.HIGH
                     elif event == 'm' or event == 'M':
                         mice.show()
-                        stimulator.inspect_mice(mice,cageSettings)
+                        for i,j in enumerate(expSettings.stimulator):
+                            print('\t'+str(i)+': '+str(j))
+                        inputStr = input ('Which stimulator-specific inspection method would you like to run?')
+                        stimulator[int(inputStr)].inspect_mice(mice,cageSettings,expSettings)
                         updateH5File(expSettings,cageSettings,mice)
                     elif event == 'c' or event == 'C':
                         camParams = camera.adjust_config_from_user ()
                     elif event == 'e' or event == 'E':
                         modCode = expSettings.edit_from_user ()
-                        if modCode & 2:
-                           stimulator = AHF_Stimulator.get_class (expSettings.stimulator)(cageSettings, expSettings.stimDict, rewarder, lickDetector, expSettings.logFP, camera)
+                        if modCode >= 2:
+                            stimulator[modCode-2] = AHF_Stimulator.get_class (expSettings.stimulator[modCode-2])(cageSettings, expSettings.stimDict, rewarder, lickDetector, expSettings.logFP, camera)
                         if modCode & 1:
-                            stimulator.change_config (expSettings.stimDict)
+                            for stim in stimulator:
+                                i.change_config (expSettings.stimDict)
     except Exception as anError:
         print ('AutoHeadFix error:' + str (anError))
         raise anError
     finally:
-        stimulator.quitting()
+        for stim in stimulator:
+            stim.quitting()
         GPIO.output(cageSettings.ledPin, False)
         headFixer.releaseMouse()
         GPIO.output(cageSettings.rewardPin, False)
@@ -475,6 +482,7 @@ def updateH5File (expSettings,cageSettings,mice):
             m.attrs.modify('entranceRewards',mouse.entranceRewards)
             m.attrs.modify('headFixRewards',mouse.headFixRewards)
             m.attrs.modify('headFixStyle',mouse.headFixStyle)
+            m.attrs.modify('stimType',mouse.stimType)
             if hasattr(mouse,'ref_im'):
                 ref = m.require_dataset('ref_im',shape=tuple(expSettings.camParamsDict['resolution']+[3]),dtype=np.uint8,data=mouse.ref_im)
                 ref.attrs.modify('CLASS', np.string_('IMAGE'))
@@ -537,6 +545,7 @@ def runTrial (thisMouse, expSettings, cageSettings, rewarder, headFixer, stimula
         else:
             writeToLogFile (expSettings.logFP, thisMouse,'check No Fix Trial')
         # Configure the stimulator and the path for the video
+        #Might be a way to finetune the trial for each mouse
         stimStr = stimulator.configStim (thisMouse)
         headFixTime = time()
 

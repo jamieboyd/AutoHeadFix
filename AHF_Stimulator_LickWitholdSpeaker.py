@@ -160,18 +160,19 @@ class AHF_Stimulator_LickWitholdSpeaker (AHF_Stimulator_LickNoLick):
             elif inputStr == 'q':
                 break
 
-    def inspect_mice(self,mice,cageSettings):
+    def inspect_mice(self,mice,cageSettings,expSettings):
         #Inspect the mice array
-        print('MouseID\t\theadFixStyle')
+        print('MouseID\t\theadFixStyle\tstimType')
         for mouse in mice.mouseArray:
             headFixStyle = 'fix'
             if mouse.headFixStyle == 1:
                 headFixStyle = 'loose'
             elif mouse.headFixStyle == 2:
                 headFixStyle = 'nofix'
-            print(str(mouse.tag)+'\t'+headFixStyle)
+            stimType = expSettings.stimulator[mouse.stimType][15:]
+            print(str(mouse.tag)+'\t'+headFixStyle + '\t\t' + stimType)
         while(True):
-            inputStr = input ('c= headFixStyle, q= quit: ')
+            inputStr = input ('c= headFixStyle, s= stimType, q= quit: ')
             if inputStr == 'c':
                 while(True):
                     inputStr =  int(input ('Type the tagID of mouse to change headFixStyle:'))
@@ -190,6 +191,24 @@ class AHF_Stimulator_LickWitholdSpeaker (AHF_Stimulator_LickNoLick):
                         continue
                     else:
                         break
+
+            elif inputStr == 's':
+                while(True):
+                    inputStr =  int(input ('Type the tagID of mouse to change stimType:'))
+                    for mouse in mice.mouseArray:
+                        if mouse.tag == inputStr:
+                            print('Following stimTypes are available:')
+                            for i,j in enumerate(expSettings.stimulator):
+                                print(str(i)+': '+j[15:])
+                            inputStr = int(input('Change stimType to:'))
+                            mouse.stimType = inputStr
+
+                    inputStr = input('Change value of another mouse?')
+                    if inputStr[0] == 'y' or inputStr[0] == "Y":
+                        continue
+                    else:
+                        break
+                    
             elif inputStr == 'q':
                 break
 

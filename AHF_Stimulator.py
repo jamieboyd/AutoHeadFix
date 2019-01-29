@@ -142,7 +142,7 @@ class AHF_Stimulator (object):
         """
         pass
 
-    def inspect_mice (self,mice,cageSettings):
+    def inspect_mice (self,mice,cageSettings,expSettings):
         """
             Helper function to show stimulator specific mouse data.
         """
