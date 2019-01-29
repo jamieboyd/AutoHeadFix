@@ -161,7 +161,7 @@ def Show_ordered_dict (objectDict, longName):
     Dumps standard dictionary settings into an ordered dictionary, prints settings to screen in a numbered fashion from the ordered dictionary,
     making it easy to select a setting to change. Returns the ordered dictionary, used by edit_dict function
     """
-    print ('*************** Current %s Settings *******************' % longName)
+    print ('\n*************** Current %s Settings *******************' % longName)
     showDict = OrderedDict()
     itemDict = {}
     nP = 0
@@ -173,6 +173,7 @@ def Show_ordered_dict (objectDict, longName):
         itemDict.update (showDict [ii])
         kvp = itemDict.popitem()
         print(str (ii) +') ', kvp [0], ' = ', kvp [1])
+    print ('**********************************\n')
     return showDict
 
 
@@ -197,6 +198,24 @@ def Edit_dict (anyDict, longName):
             kvp = itemDict.popitem()
             itemKey = kvp [0]
             itemValue = kvp [1]
+            if itemKey.endswith ('Class'):
+                    baseName = itemKey.rstrip ('Class')
+                    newClassName = CAD.File_from_user (baseName, baseName, '.py')
+                    newClass = CAD.Class_from_file (baseName, newClassName)
+                    setattr (self, itemKey, newClass)
+                    # new class needs  new dict
+                    dictName = baseName + 'Dict'
+                    newDict = newClass.config_user_get ()
+                    setattr (self, dictName, newDict)
+                elif itemKey.endswith ('Dict'):
+                    baseName = itemKey.rstrip ('Dict')
+                    theClass = getattr (self, baseName + 'Class')
+                    if theClass is None:
+                        newClassName = CAD.File_from_user (baseName, baseName, '.py')
+                        newClass = CAD.Class_from_file (baseName, newClassName)
+                        setattr (self, baseName + 'Class', newClass)
+                    setattr (self, itemKey, newClass)
+                    setattr (self, itemKey, newClass.config_user_get ())
             if type (itemValue) is str:
                 inputStr = input ('Enter a new text value for %s, currently %s:' % (itemKey, str (itemValue)))
                 updatDict = {itemKey: inputStr}

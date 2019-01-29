@@ -203,13 +203,16 @@ class Task:
         Prints settings to screen in a numbered fashion from an ordered dictionary, making it easy to select a setting to
         change. Returns the ordered dictionary, used by editSettings function
         """
+        return CAD.Show_ordered_dict (sorted(self.__dict__.items()), 'Auto Head Fix Task')
+        """
+        sorted(self.__dict__.items())
         print ('\n*************** Current Program Settings *******************')
         showDict = collections.OrderedDict()
         itemDict = {}
         nP = 0
         for key, value in sorted(self.__dict__.items()) :
         #for key, value in inspect.getmembers(self):
-            if key.startswith ('_') is False and inspect.isroutine (getattr (self, key)) is False:
+            if key.startswith ('_') is False and type (self,:
                 showDict.update ({nP:{key: value}})
                 nP += 1
         for ii in range (0, nP):
@@ -218,12 +221,12 @@ class Task:
             print(str (ii + 1) +') ', kvp [0], ' = ', kvp [1])
         print ('**********************************\n')
         return showDict
-    
+        """
 
     def editSettings (self):
         itemDict = {}
         while True:
-            showDict = self.showSettings()
+            showDict = CAD.Show_ordered_dict (sorted(self.__dict__.items()), 'Auto Head Fix Task')
             inputNum = int (input ('Enter number of setting to edit, or 0 to exit:'))
             if inputNum == 0:
                 break
@@ -277,7 +280,9 @@ class Task:
 if __name__ == '__main__':
     task = Task ('')
     task.editSettings()
-
+    response = input ('Save new/updated settings to a task configuration file?')
+    if response [0] == 'y' or response [0] == 'Y':
+        task.saveSettings ()
 
 """       
                 
