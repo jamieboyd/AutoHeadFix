@@ -13,11 +13,11 @@ import json
 import os
 import pwd
 import grp
-from AHF_HeadFixer import AHF_HeadFixer
-from AHF_Stimulator import AHF_Stimulator
-from AHF_Rewarder import AHF_Rewarder
-from AHF_Camera import AHF_Camera
-from AHF_TagReader import AHF_TagReader
+#from AHF_HeadFixer import AHF_HeadFixer
+#from AHF_Stimulator import AHF_Stimulator
+#from AHF_Rewarder import AHF_Rewarder
+#from AHF_Camera import AHF_Camera
+#from AHF_TagReader import AHF_TagReader
 import AHF_ClassAndDictUtils as CAD
 
 class Task:
@@ -144,7 +144,7 @@ class Task:
             fileErr = True
         if not hasattr (self, 'inChamberTimeLimit'):
             self.inChamberTimeLimit = float(input('In-Chamber duration limit, seconds, before stopping head-fix trials:'))
-        ############################ text messaging using textbelt service (Optional) not subclassable ######################
+        ############################ text messaging using textbelt service (Optional) only 1 subclass so far ######################
         if not hasattr (self, 'NotifierDict'):
             tempInput = input ('Send text messages if mouse exceeds criterion time in chamber?(Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
@@ -155,14 +155,15 @@ class Task:
                 self.NotifierClass = None
                 self.NotifierDict = None
             fileErr = True
-        ####################################### UDP triggers for alerting other computers (Optional) not subclassable ######################3
-        if not hasattr (self, 'UDPTrigDict'):
-            tempInput = input ('Send UDP triggers to start tasks on secondary computers (Y or N):')
+        ####################################### triggers for alerting other computers (Optional) only 1 subclass so far ######################3
+        if not hasattr (self, 'TriggerDict'):
+            tempInput = input ('Send triggers to start tasks on secondary computers (Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.UDPTrigClass = CAD.Class_from_file('UDPTrig', '')
-                self.UDPTrigDict = self.UDPTrigClass.config_user_get()
+                self.TriggerClass = CAD.Class_from_file('UDPTrig', '')
+                self.TriggerDict = self.TriggerClass.config_user_get()
             else:
-                self.UDPTrigDict = None
+                self.TriggerClass = None
+                self.TriggerDict = None
             fileErr = True
        
         # if some of the paramaters were set by user, give option to save

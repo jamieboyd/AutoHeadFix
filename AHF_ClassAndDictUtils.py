@@ -297,7 +297,10 @@ def File_to_obj_fields (nameTypeStr, nameStr, typeSuffix, anObject):
     for key, value in configDict.items():
         try:
             if type (value) is str and key.endswith('Class'):
-                setattr (anObject, key, Class_from_file(value[4:], ''))
+                if value.startswith ('AHF_'):
+                    setattr (anObject, key, Class_from_file(value[4:], ''))
+                else:
+                    setattr (anObject, key, None)
             else:
                 setattr (anObject, key, value)
         except ValueError as e:
