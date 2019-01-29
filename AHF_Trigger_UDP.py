@@ -14,6 +14,10 @@ class AHF_UDPTrig:
     """
 
     @staticmethod
+    def about():
+        return 'Sends/receives trigger signals over UDP as to another pi to start/stop recording.'
+
+    @staticmethod
     def config_user_get ():
         IPlist =tuple (input('IP addresses of Pis running secondary cameras:').split (','))
         LEDdelay = float (input ('Delay in seconds between sending UDP and toggling blue LED.'))
