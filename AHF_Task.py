@@ -18,7 +18,7 @@ from AHF_Stimulator import AHF_Stimulator
 from AHF_Rewarder import AHF_Rewarder
 from AHF_Camera import AHF_Camera
 from AHF_TagReader import AHF_TagReader
-import AHF_ClassAndDictUtils
+import AHF_ClassAndDictUtils as CAD
 
 class Task:
     """
@@ -43,14 +43,14 @@ class Task:
                 self.fileName = self.filename[9:]
             if self.fileName.endswith ('.jsn'):
                 self.filename = self.fileName.rstrip ('.jsn')
-            if not AHF_ClassAndDictUtils.File_exists ('task', self.fileName, '.jsn'):
+            if not CAD.File_exists ('task', self.fileName, '.jsn'):
                 self.fileName = ''
         else:
             self.fileName = ''
         # no file passed in, or passed in file could not be found. Get user to choose a file
         if self.fileName == '':
             try:
-                self.fileName = AHF_ClassAndDictUtils.File_from_user ('task', 'Auto Head Fix task configuration', '.jsn', True)
+                self.fileName = CAD.File_from_user ('task', 'Auto Head Fix task configuration', '.jsn', True)
             except FileNotFoundError:
                 self.fileName = ''
                 print ('Let\'s configure a new task.\n')
@@ -58,17 +58,17 @@ class Task:
         # if we found a file, try to load it
         if self.fileName != '':
             try:
-                AHF_ClassAndDictUtils.File_to_obj_fields ('task', self.fileName, '.jsn', self)
+                CAD.File_to_obj_fields ('task', self.fileName, '.jsn', self)
             except ValueError as e:
                 print ('Unable to open and fully load task configuration:' + str (e))
                 fileErr = True
         # check for any missing settings, all settings will be missing if making a new config, and call setting functions for
         # things like head fixer that are subclassable need some extra work , when either loaded from file or user queried
         ########## Head Fixer (optional) makes its own dictionary #################################
-        if not hasattr (self, 'headFixerClass') or not hasattr (self, 'headFixerDict'):
+        if not hasattr (self, 'HeadFixerClass') or not hasattr (self, 'HeadFixerDict'):
             tempInput = input ('Does this setup have a head fixing mechanism installed? (Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.HeadFixerClass = AHF_ClassAndDictUtils.Class_from_file('HeadFixer', AHF_ClassAndDictUtils.File_from_user ('HeadFixer', 'Head Fixer Class', '.py'))
+                self.HeadFixerClass =  CAD.Class_from_file('HeadFixer', CAD.File_from_user ('HeadFixer', 'Head Fixer Class', '.py'))
                 self.HeadFixerDict = self.HeadFixerClass.config_user_get ()
             else:
                 self.HeadFixerClass = None
@@ -76,33 +76,33 @@ class Task:
             fileErr = True
         ################################ Stimulator (Obligatory) makes its own dictionary #######################
         if not hasattr (self, 'StimulatorClass') or not hasattr (self, 'StimulatorDict'):
-            self.StimulatorClass = AHF_ClassAndDictUtils.Class_from_file('Stimulator', AHF_ClassAndDictUtils.File_from_user ('Stimulator', 'Experiment Stimulator lass', '.py'))
+            self.StimulatorClass = CAD.Class_from_file('Stimulator', CAD.File_from_user ('Stimulator', 'Experiment Stimulator Class', '.py'))
             self.StimulatorDict = self.StimulatorClass.config_user_get ()
             fileErr = True
         ################################ Rewarder (Obligatory) class makes its own dictionary #######################
         if not hasattr (self, 'RewarderClass') or not hasattr (self, 'RewarderDict'):
-            self.RewarderClass = AHF_ClassAndDictUtils.File_from_user ('Rewarder', 'Rewarder', '.py')
-            self.RewarderDict = AHF_ClassAndDictUtils.Class_from_file('Rewarder', self.RewarderClass).config_user_get ()
+            self.RewarderClass = CAD.Class_from_file('Rewarder', CAD.File_from_user ('Rewarder', 'Rewarder', '.py'))
+            self.RewarderDict = self.RewarderClass.config_user_get ()
             fileErr = True
         ############################ TagReader (Obligatory) makes its own dictionary ##############
         if not hasattr (self, 'TagReaderClass') or not hasattr (self, 'TagReaderDict'):
-            self.TagReaderClass = AHF_ClassAndDictUtils.File_from_user ('TagReader', 'RFID TagReader', '.py')
-            self.TagReaderDict = AHF_ClassAndDictUtils.Class_from_file('TagReader', self.TagReaderClass).config_user_get ()
+            self.TagReaderClass = CAD.Class_from_file('TagReader', CAD.File_from_user ('TagReader', 'RFID-Tag Reader', '.py'))
+            self.TagReaderDict = self.TagReaderClass.config_user_get ()
             fileErr = True
         ################################ Camera (optional) makes its own dictionary of settings ####################
         if not hasattr (self, 'cameraClass') or not hasattr (self, 'cameraDict'):
             tempInput = input ('Does this system have a main camera installed (Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.CameraClass = AHF_ClassAndDictUtils.File_from_user ('Camera', 'main camera', '.py')
-                self.CameraDict = AHF_ClassAndDictUtils.Class_from_file('Camera', self.CameraClass).config_user_get ()
+                self.CameraClass = CAD.Class_from_file(CAD.File_from_user ('Camera', 'main camera', '.py'))
+                self.CameraDict = self.CameraClass.config_user_get ()
             else:
                 self.cameraClass = None
                 self.cameraDict = None
             fileErr = True
         ############################# ContactCheck (Obligatory) makes its own dictionary of settings ###################
         if not hasattr (self, 'ContactCheckClass') or not hasattr (self, 'ContactCheckDict'):
-            self.ContactCheckClass = AHF_ClassAndDictUtils.File_from_user ('ContactCheck', 'Contact Checker', '.py')
-            self.ContactCheckDict = AHF_ClassAndDictUtils.Class_from_file('ContactCheck', self.ContactCheckClass).config_user_get ()
+            self.ContactCheckClass = CAD.Class_from_file('ContactCheck', CAD.File_from_user ('ContactCheck', 'Contact Checker', '.py'))
+            self.ContactCheckDict = self.ContactCheckClass.config_user_get ()
             fileErr = True
        
         ############################## LickDetector (optional) is not subclassable, so does not make its own dictionary ##############
@@ -137,29 +137,32 @@ class Task:
             fileErr = True
         if not hasattr (self, 'propHeadFix'):
             self.propHeadFix= float (input('Enter proportion (0 to 1) of trials that are head-fixed:'))
-            self.propHeadFix = min (1, max (0, self.propHeadFix)) # make sure proportion is bewteen 0 and 1
+            self.propHeadFix = float (min (1, max (0, self.propHeadFix))) # make sure proportion is bewteen 0 and 1
             fileErr = True
         if not hasattr (self, 'skeddadleTime'):
             self.skeddadleTime = float (input ('Enter time, in seconds, for mouse to get head off the contacts when session ends:'))
             fileErr = True
         if not hasattr (self, 'inChamberTimeLimit'):
             self.inChamberTimeLimit = float(input('In-Chamber duration limit, seconds, before stopping head-fix trials:'))
-        ############################ text messaging using textbelt service (Optional) not sunbclassable ######################
+        ############################ text messaging using textbelt service (Optional) not subclassable ######################
         if not hasattr (self, 'NotifierDict'):
             tempInput = input ('Send text messages if mouse exceeds criterion time in chamber?(Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.NotifierDict = AHF_ClassAndDictUtils.Class_from_file('AHF_Notifier', '').config_user_get()
+                self.NotifierClass = CAD.Class_from_file('Notifier', '')
+                self.NotifierDict = self.NotifierClass.config_user_get()
                 self.NotifierDict.update ({'cageID' : self.cageID})
             else:
+                self.NotifierClass = None
                 self.NotifierDict = None
             fileErr = True
         ####################################### UDP triggers for alerting other computers (Optional) not subclassable ######################3
-        if not hasattr (self, 'UDPdict'):
+        if not hasattr (self, 'UDPTrigDict'):
             tempInput = input ('Send UDP triggers to start tasks on secondary computers (Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.UDPDict = AHF_ClassAndDictUtils.Class_from_file('AHF_UDPTrig', '').config_user_get()
+                self.UDPTrigClass = CAD.Class_from_file('UDPTrig', '')
+                self.UDPTrigDict = self.UDPTrigClass.config_user_get()
             else:
-                self.UDPDict = None
+                self.UDPTrigDict = None
             fileErr = True
        
         # if some of the paramaters were set by user, give option to save
@@ -192,14 +195,14 @@ class Task:
                 newConfig.rstrip('.jsn')
             newConfig = ''.join([c for c in newConfig if c.isalpha() or c.isdigit() or c=='_'])
             self.fileName = newConfig
-        AHF_ClassAndDictUtils.Obj_fields_to_file (self, 'task', newConfig, '.jsn')
+        CAD.Obj_fields_to_file (self, 'task', newConfig, '.jsn')
 
     def showSettings (self):
         """
         Prints settings to screen in a numbered fashion from an ordered dictionary, making it easy to select a setting to
         change. Returns the ordered dictionary, used by editSettings function
         """
-        print ('*************** Current Program Settings *******************')
+        print ('\n*************** Current Program Settings *******************')
         showDict = collections.OrderedDict()
         itemDict = {}
         nP = 0
@@ -211,7 +214,7 @@ class Task:
         for ii in range (0, nP):
             itemDict.update (showDict [ii])
             kvp = itemDict.popitem()
-            print(str (ii) +') ', kvp [0], ' = ', kvp [1])
+            print(str (ii + 1) +') ', kvp [0], ' = ', kvp [1])
         print ('**********************************\n')
         return showDict
     
@@ -220,44 +223,49 @@ class Task:
         itemDict = {}
         while True:
             showDict = self.showSettings()
-            inputNum = int (input ('Enter number of setting to edit, or -1 to exit:'))
+            inputNum = int (input ('Enter number of setting to edit, or 0 to exit:'))
             if inputNum == 0:
                 break
             else:
-                itemDict.update (showDict [inputNum])
+                itemDict.update (showDict [inputNum -1])
                 kvp = itemDict.popitem()
                 itemKey = kvp [0]
                 itemValue = kvp [1]
                 ### do special settings, subclassed things with extra user input needed #####
                 ### these classes use same utility functions to get class names and settings dictionaries
-        
-                if itemKey == 'RewarderClass':
-                    self.RewarderClass = AHF_Rewarder.get_Rewarder_from_user ()
-                elif itemKey == 'RewarderDict':
-                    self.RewarderDict = AHF_Rewarder.get_class(self.RewarderClass).config_user_get()
-                elif itemkey == 'headFixerClass':
-                    self.headFixerClass = AHF_HeadFixer.get_HeadFixer_from_user ()
-                elif itemKey == 'headFixerDict':
-                    self.headFixerDict = AHF_HeadFixer.get_class(self.headFixerClass).config_user_get ()
-                elif itemKey == 'StimulatorClass': 
-                    self.StimulatorClass = AHF_Stimulator.get_Stimulator_from_user ()
-                elif itemKey == 'StimulatorDict':
-                    self.StimulatorDict = AHF_Stimulator.get_class(self.StimulatorClass).config_user_get ()
+                if itemKey.endswith ('Class'):
+                    baseName = itemKey.rstrip ('Class')
+                    newClassName = CAD.File_from_user (baseName, baseName, '.py')
+                    newClass = CAD.Class_from_file (baseName, newClassName)
+                    setattr (self, itemKey, newClass)
+                    # new class needs  new dict
+                    dictName = baseName + 'Dict'
+                    newDict = newClass.config_user_get ()
+                    setattr (self, dictName, newDict)
+                elif itemKey.endswith ('Dict'):
+                    baseName = itemKey.rstrip ('Dict')
+                    theClass = getattr (self, baseName + 'Class')
+                    if theClass is None:
+                        newClassName = CAD.File_from_user (baseName, baseName, '.py')
+                        newClass = CAD.Class_from_file (baseName, newClassName)
+                        setattr (self, baseName + 'Class', newClass)
+                    setattr (self, itemKey, newClass)
+                    setattr (self, itemKey, newClass.config_user_get ())
                 #####  other settings can be handled in a more generic way ##########################
                 elif type (itemValue) is str:
-                    inputStr = input ('Enter a new text value for %s, currently %s:' % itemKey, str (itemValue))
+                    inputStr = input ('Enter a new text value for %s, currently %s:' % (itemKey, str (itemValue)))
                     setattr (self, itemKey, inputStr)
                 elif type (itemValue) is int:
-                    inputStr = input ('Enter a new integer value for %s, currently %s:' % itemKey, str (itemValue))
+                    inputStr = input ('Enter a new integer value for %s, currently %s:' % (itemKey, str (itemValue)))
                     setattr (self, itemKey, int (inputStr))
                 elif type (itemValue) is float:
-                    inputStr = input ('Enter a new floating point value for %s, currently %s:' % itemKey, str (itemValue))
+                    inputStr = input ('Enter a new floating point value for %s, currently %s:' % (itemKey, str (itemValue)))
                     setattr (self, itemKey, float (inputStr))
                 elif type (itemValue) is tuple:
-                    inputStr = input ('Enter a new comma separated list for %s, currently %s:' % itemKey, str (itemValue))
+                    inputStr = input ('Enter a new comma separated list for %s, currently %s:' % (itemKey, str (itemValue)))
                     setattr (self, itemkey, tuple (inputStr.split(',')))
                 elif type (itemVale) is bool:
-                    inputStr = input ('%s, True for or False?, currently %s:' % itemKey, str (itemValue))
+                    inputStr = input ('%s, True for or False?, currently %s:' % (itemKey, str (itemValue)))
                     if inputStr [0] == 'T' or inputStr [0] == 't':
                         setattr (self, itemkey, True)
                     else:

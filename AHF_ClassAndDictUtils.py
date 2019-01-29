@@ -21,7 +21,7 @@ def Class_from_file(nameTypeStr, nameStr):
     """
     Imports a module from a fileName (stripped of the .py) and returns the class
     
-    Assumes the class is named the same as the module. 
+    Assumes the class is named the same as the module. To get 
     """
     if nameStr == '':
         fileName = 'AHF_' + nameTypeStr
@@ -52,12 +52,12 @@ def File_exists (nameTypeStr, nameStr, typeSuffix):
     return returnVal
 
 
-
-
 def Subclass_from_user(aSuperClass):
     iFile=0
     fileList = []
     classList = []
+    superclassName = aSuperClass.__name__
+    
     for f in os.listdir(os.curdir):
         try:
             moduleObj=__import__ (f.rstrip('.py'))
@@ -65,22 +65,26 @@ def Subclass_from_user(aSuperClass):
             classObj = getattr(moduleObj, moduleObj.__name__)
             #print (classObj)
             if inspect.isabstract (classObj) == False and Super_of_class (classObj) == aSuperClass:
-                fileList.append (str(classObj) + ": " + classObj.about())
+                fileList.append (classObj.__name__.lstrip(superclassName)  + ": " + classObj.about())
                 classList.append (classObj)
                 iFile += 1
         except Exception as e: # exception will be thrown if imported module imports non-existant modules, for instance
             #print (e)
             continue
-    inputStr = '\nEnter a number from 1 to {} to choose a {} sub-class:\n'.format(iFile, aSuperClass)
-    ii=0
-    for file in fileList:
-        inputStr += str (ii + 1) + ': ' + file + '\n'
-        ii +=1
-    inputStr += ':'
-    classNum =0
-    while classNum < 1 or classNum > iFile:
-        classNum =  int(input (inputStr))
-    return classList[classNum -1]
+    if iFile == 0:
+        print ('Could not find any %s files in the current directory' % superclassName)
+        raise FileNotFoundError
+    else:
+        inputStr = '\nEnter a number from 1 to {} to choose a {} sub-class:\n'.format(iFile, superclassName)
+        ii=0
+        for file in fileList:
+            inputStr += str (ii + 1) + ': ' + file + '\n'
+            ii +=1
+        inputStr += ':'
+        classNum =0
+        while classNum < 1 or classNum > iFile:
+            classNum =  int(input (inputStr))
+        return classList[classNum -1]
     
 
 def File_from_user (nameTypeStr, longName, typeSuffix, makeNew = False):
@@ -178,7 +182,7 @@ def Edit_dict (anyDict, longName):
     Assumption is made that lists/tuples contain only strings, ints, or float types, and that all members of any list/tuple are same type
     """
     while True:
-        orderedDict = AHF_show_ordered_dict (anyDict, longName)
+        orderedDict = Show_ordered_dict (anyDict, longName)
         updatDict = {}
         inputStr = input ('Enter number of setting to edit, or -1 to exit:')
         try:
@@ -232,7 +236,7 @@ def Edit_dict (anyDict, longName):
                 else:
                     updatDict = {itemKey: False}
             elif type (itemValue) is dict:
-                AHF_edit_dict (itemValue, itemKey)
+                Edit_dict (itemValue, itemKey)
                 anyDict[itemKey].update (itemValue)
             anyDict.update (updatDict)
 
@@ -263,8 +267,11 @@ def Obj_fields_to_file (anObject, nameTypeStr, nameStr, typeSuffix):
     """
     jsonDict = {}
     for key, value in anObject.__dict__.items():
-        if key.startswith ('_') is False and inspect.isroutine (getattr (anObject, key)) is False:
-            jsonDict.update({key: value})
+        if inspect.isclass(value):
+            jsonDict.update({key: value.__name__})
+        else:
+            if key.startswith ('_') is False:
+                jsonDict.update({key: value})
     configFile = 'AHF_' + nameTypeStr + '_' + nameStr + typeSuffix
     with open (configFile, 'w') as fp:
         fp.write (json.dumps (jsonDict, separators = ('\n', '='), sort_keys=True))
@@ -289,6 +296,9 @@ def File_to_obj_fields (nameTypeStr, nameStr, typeSuffix, anObject):
         fp.close()
     for key, value in configDict.items():
         try:
-            setattr (anObject, key, value)
+            if type (value) is str and key.endswith('Class'):
+                setattr (anObject, key, Class_from_file(value[4:], ''))
+            else:
+                setattr (anObject, key, value)
         except ValueError as e:
             print ('Error:%s' % str (e))
