@@ -133,7 +133,8 @@ class Mice:
             aMouse = Mouse (int(tag), m['entries'], m['entranceRewards'], m['headFixes'], m['headFixRewards'], m['headFixStyle'], m['stimType'])
             aMouse.tot_headFixes = m['tot_headFixes']
             self.addMouse(aMouse, statsfp)
-
+            if 'genotype' in mouse_obj.attrs:
+                aMouse.genotype = m['genotype']
             if 'ref_im' in mouse_obj:
                 aMouse.ref_im = mouse_obj['ref_im'][:]
             if 'targets' in mouse_obj:

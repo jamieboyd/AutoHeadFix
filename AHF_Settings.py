@@ -170,6 +170,7 @@ class AHF_Settings (object):
                 self.cameraStartDelay = float (configDict.get('cameraStartDelay'))
             self.camParamsDict = configDict.get('camParams', {})
             self.stimulator = configDict.get('stimulator')
+            self.genotype = configDict.get('genotype',0)
             self.stimDict = configDict.get('stimParams')
 
 

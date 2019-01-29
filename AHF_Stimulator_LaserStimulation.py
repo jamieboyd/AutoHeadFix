@@ -32,7 +32,7 @@ import warnings
 #RPi module
 import RPi.GPIO as GPIO
 
-class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
+class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
     def __init__ (self, cageSettings, configDict, rewarder, lickDetector, textfp, camera):
         super().__init__(cageSettings, configDict, rewarder, lickDetector, textfp, camera)
         self.setup()
@@ -622,7 +622,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
 
     def inspect_mice(self,mice,cageSettings,expSettings):
         #Inspect the mice array
-        print('MouseID\t\tref-im\ttargets\theadFixStyle\tstimType')
+        print('MouseID\t\tref-im\ttargets\theadFixStyle\tstimType\t\tgenotype')
         for mouse in mice.mouseArray:
             ref_im='no'
             targets='no'
@@ -635,8 +635,15 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                 headFixStyle = 'loose'
             elif mouse.headFixStyle == 2:
                 headFixStyle = 'nofix'
+            if hasattr(mouse, 'genotype'):
+                if mouse.genotype == 0:
+                    genotype = 'inhibitory'
+                elif mouse.genotype == 1:
+                    genotype = 'excitatory'
+            else:
+                genotype = 'no genotype'
             stimType = expSettings.stimulator[mouse.stimType][15:]
-            print(str(mouse.tag) + '\t' + str(ref_im) + '\t' + str(targets) +'\t' + headFixStyle + '\t\t' + stimType)
+            print(str(mouse.tag) + '\t' + str(ref_im) + '\t' + str(targets) +'\t' + headFixStyle + '\t\t' + stimType + '\t' + genotype)
         while(True):
             inputStr = input ('c= headFixStyle, t= select targets, s= stimType, q= quit: ')
             if inputStr == 'c':
