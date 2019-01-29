@@ -636,10 +636,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
             elif mouse.headFixStyle == 2:
                 headFixStyle = 'nofix'
             if hasattr(mouse, 'genotype'):
-                if mouse.genotype == 0:
-                    genotype = 'inhibitory'
-                elif mouse.genotype == 1:
-                    genotype = 'excitatory'
+                genotype = expSettings.genotype[mouse.genotype]
             else:
                 genotype = 'no genotype'
             stimType = expSettings.stimulator[mouse.stimType][15:]
@@ -680,7 +677,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
                         continue
                     else:
                         break
-                    
+
             elif inputStr == 't':
                 self.select_targets(mice)
             elif inputStr == 'q':
