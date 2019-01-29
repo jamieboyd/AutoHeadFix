@@ -5,7 +5,7 @@ class Mouse:
     """
     Class to hold information about each mouse, each mouse gets its own object
     """
-    def __init__(self, tag, entries, entranceRewards, headFixes, headFixRewards, headFixStyle):
+    def __init__(self, tag, entries, entranceRewards, headFixes, headFixRewards, headFixStyle, stimType):
         """
         Makes a new mouse object, initializing with RFID tag and entrance and reward info
 
@@ -28,6 +28,7 @@ class Mouse:
         self.headFixRewards = headFixRewards
         self.headFixStyle = headFixStyle
         self.stimResultsDict = {}
+        self.stimType = stimType
 
     def clear (self):
         """
@@ -129,7 +130,7 @@ class Mice:
             m = {}
             for attr,value in mouse_obj.attrs.items():
                 m[str(attr)] = value
-            aMouse = Mouse (int(tag), m['entries'], m['entranceRewards'], m['headFixes'], m['headFixRewards'], m['headFixStyle'])
+            aMouse = Mouse (int(tag), m['entries'], m['entranceRewards'], m['headFixes'], m['headFixRewards'], m['headFixStyle'], m['stimType'])
             aMouse.tot_headFixes = m['tot_headFixes']
             self.addMouse(aMouse, statsfp)
 

@@ -39,7 +39,7 @@ else:
         Hardware Tester for Auto Head Fixing, allows you to verify the various hardware bits are working
         """
         htloop (cageSet, tagReader, headFixer, stimulator, expSettings)
-        
+
 
 def htloop (cageSet, tagReader, headFixer, stimulator, expSettings):
     """
@@ -60,7 +60,7 @@ def htloop (cageSet, tagReader, headFixer, stimulator, expSettings):
     q = quit: quits the program
     """
     if cageSet.contactPolarity == 'RISING':
-          contactEdge = GPIO.RISING 
+          contactEdge = GPIO.RISING
           noContactEdge = GPIO.FALLING
           contactState = GPIO.HIGH
           noContactState = GPIO.LOW
@@ -166,13 +166,13 @@ def htloop (cageSet, tagReader, headFixer, stimulator, expSettings):
                             cageSet.contactPUD='UP'
                     GPIO.setup (cageSet.contactPin, GPIO.IN, pull_up_down=getattr (GPIO, "PUD_" + cageSet.contactPUD))
                     if cageSet.contactPolarity =='RISING':
-                        contactEdge = GPIO.RISING 
+                        contactEdge = GPIO.RISING
                         noContactEdge = GPIO.FALLING
                         contactState = GPIO.HIGH
                         noContactState = GPIO.LOW
                     else:
                         contactEdge = GPIO.FALLING
-                        noContactEdge = GPIO.RISING 
+                        noContactEdge = GPIO.RISING
                         contactState = GPIO.LOW
                         noContactState = GPIO.HIGH
             elif inputStr == 'e': # beam break at enty
@@ -198,7 +198,7 @@ def htloop (cageSet, tagReader, headFixer, stimulator, expSettings):
                     if inputStr[0] == 'y' or inputStr[0] == "Y":
                         cageSet.entryBBpin= int (input ('Enter the GPIO pin connected to the tube entry IR beam-breaker:'))
                         GPIO.setup (cageSet.entryBBpin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-                
+
             elif inputStr == 'f': # head Fixer, run test from headFixer class
                 headFixer.test(cageSet)
             elif inputStr == 'l': # l for LED trigger
@@ -211,7 +211,10 @@ def htloop (cageSet, tagReader, headFixer, stimulator, expSettings):
                     cageSet.ledPin = int (input('Enter New LED Pin:'))
                     GPIO.setup (cageSet.ledPin, GPIO.OUT, initial = GPIO.LOW)
             elif inputStr == 's':
-                stimulator.tester(expSettings)
+                for i,j in enumerate(expSettings.stimulator):
+                    print('\t'+str(i)+': '+str(j))
+                inputStr = input ('Which stimulator tester would you like to run?')
+                stimulator[int(inputStr)].tester(expSettings)
             elif inputStr == 'h':
                 cageSet.show()
             elif inputStr=='v':

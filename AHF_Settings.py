@@ -198,10 +198,12 @@ class AHF_Settings (object):
         if self.hasUDP == True:
             print ('\t9_a:List of ip addresses for UDP = ' + str(self.UDPList))
             print ('\t9_b:Camera start to LED ON delay (secs) =' + str (self.cameraStartDelay))
-        print ('10:Stimulator = ' + self.stimulator)
+        print ('10:Stimulator_')
+        for i,j in enumerate(self.stimulator):
+            print ('\t10_'+str(i)+': + j)
         i =0
         for key in sorted (self.stimDict.keys()):
-            print ('\t10_' + chr (97 + i) + ": " + key + ' = ' + str (self.stimDict[key]))
+            print ('\t11_' + chr (97 + i) + ": " + key + ' = ' + str (self.stimDict[key]))
             i+=1
 
 
@@ -211,7 +213,7 @@ class AHF_Settings (object):
         """
         Allows user to edit experiment settings, including stimulator settings, but not camera settings
 
-        user can either change the stimulaotr, or reconfigure it, but not both
+        user can either change the stimulator, or reconfigure it, but not both
         :returns: code for mods - bit 0 = 1 is set if stimulator config is changed, bit 1 =2 is set if stimulator is changed
         """
         #
@@ -256,10 +258,7 @@ class AHF_Settings (object):
                 self.UDPList =tuple (input('IP addresses of Pis running secondary cameras:').split (','))
             elif editNum == '9b':
                 self.cameraStartDelay = float (input ('Delay in seconds between sending UDP and toggling blue LED.'))
-            elif editNum == '10':
-                self.stimulator = AHF_Stimulator.get_stimulator_from_user ()
-                editVal = editVal | 2
-            elif editNum.split('_')[0] == '10':
+            elif editNum.split('_')[0] == '11':
                 editVal = editVal | 1
                 selectedKey = ord (editNum.split ('_')[1]) -97
                 i=0
@@ -269,8 +268,12 @@ class AHF_Settings (object):
                         self.stimDict.update ({key : newValue})
                         break
                     i+=1
-            else:
-                print("Key hasn't been added to the editor... Please contact Dr. Yuri Nater for help.")
+            for i in range(len(self.stimulator)):
+                if editNum == '10_'+str(i):
+                    self.stimulator[i] = AHF_Stimulator.get_stimulator_from_user ()
+                    editVal = editVal | i+2
+                    break
+
         return editVal
 
 
