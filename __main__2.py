@@ -29,10 +29,18 @@ def main():
     Ctrl-C is used to enter a menu-driven mode where settings can be altered.
     """
     try:
-        configFile = None
+        configFile = ''
         if argv.__len__() > 1:
             configFile = argv [1]
-        task = Task (configFile)
+            task = Task (configFile)
+        else:
+            task = Task ('')
+            response = input ('Edit settings loaded from %s?' % task.fileName)
+            if response [0] == 'y' or response [0] == 'Y':
+                task.editSettings()
+                response = input ('Save new/updated settings to a task configuration file?')
+                if response [0] == 'y' or response [0] == 'Y':
+                    task.saveSettings ()
         assert (hasattr (task, 'LEDpin') # quick debug check that task got loaded
         # initialize GPIO, and initialize pins for the simple sub-tasks; more complex sub-tasks have their own code for initializing
         GPIO.setmode (GPIO.BCM)
