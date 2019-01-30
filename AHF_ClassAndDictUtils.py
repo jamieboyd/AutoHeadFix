@@ -9,9 +9,10 @@ import inspect
 from collections import OrderedDict
 import json
 
-# methods for classes and dictionaries
+"""
+methods for transferring structured data between JSON text files <-> dictionaries <-> object fields
 
-
+"""
 ##################################################################################
 # methods for getting class names and importing classes from a base class
 ##################################################################################

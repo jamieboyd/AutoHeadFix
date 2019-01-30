@@ -15,7 +15,7 @@ class AHF_TagReader_ID (AHF_TagReader):
         return 'ID Innovations RFID-Tag Reader on serial port with GPIO Tag-in-Range Pin'
 
     @staticmethod
-    def config_user_get ():
+    def config_user_get (paramDict = {}):
         serialPort = input ('Enter port used by tag reader, "/dev/serial0\" if conected to Pi serial port, or "/dev/ttyUSB0" if connected to a USB breakout:')
         TIRpin = int (input ('Enter the GPIO pin connected to the Tag-In-Range pin of the Tag Reader:'))
         configDict = {'serialPort' : serialPort, 'TIRpin' : TIRpin}

@@ -90,7 +90,7 @@ class Task:
             self.TagReaderDict = self.TagReaderClass.config_user_get ()
             fileErr = True
         ################################ Camera (optional) makes its own dictionary of settings ####################
-        if not hasattr (self, 'cameraClass') or not hasattr (self, 'cameraDict'):
+        if not hasattr (self, 'CameraClass') or not hasattr (self, 'CameraDict'):
             tempInput = input ('Does this system have a main camera installed (Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
                 self.CameraClass = CAD.Class_from_file(CAD.File_from_user ('Camera', 'main camera', '.py'))
@@ -172,7 +172,25 @@ class Task:
             if response [0] == 'y' or response [0] == 'Y':
                 self.saveSettings ()
                 
-                
+
+    def setup (self):
+        # head fixer
+        if self.HeadFixerClass is not None:
+            self.HeadFixer = self.HeadFixerClass (self.HeadFixerDict)
+        else:
+            self.HeadFixer = None
+        # stimulator
+        if self.StimulatorClass is not None:
+            self.Stimulator = self.StimulatorClass (self.StimulatorDict)
+        else:
+            self.Stimulator = None
+        # camera
+        if self.CameraClass is not None:
+            self.Camera= self.cameraClass (self.cameraDict)
+        else:
+            self.Camera = None
+
+    
     def saveSettings(self):
         """
         Saves current configuration stored in the task object into AHF_task_*.jsn

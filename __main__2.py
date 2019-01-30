@@ -20,7 +20,6 @@ or callling sleep and maybe missing the thing we were waiting for, we loop using
 kTIMEOUTmS = 50
 
 
-
 def main():
     """
     The main function for the AutoHeadFix program.
@@ -31,8 +30,7 @@ def main():
     try:
         configFile = ''
         if argv.__len__() > 1:
-            configFile = argv [1]
-            task = Task (configFile)
+            task = Task (argv [1])
         else:
             task = Task ('')
             response = input ('Edit settings loaded from %s?' % task.fileName)
@@ -41,12 +39,21 @@ def main():
                 response = input ('Save new/updated settings to a task configuration file?')
                 if response [0] == 'y' or response [0] == 'Y':
                     task.saveSettings ()
-        assert (hasattr (task, 'LEDpin') # quick debug check that task got loaded
-        # initialize GPIO, and initialize pins for the simple sub-tasks; more complex sub-tasks have their own code for initializing
+        assert (hasattr (task, 'LEDpin')) # quick debug check that task got loaded
+        # initialize GPIO
         GPIO.setmode (GPIO.BCM)
         GPIO.setwarnings(False)
-        # set up pin that turns on brain illumination LED
+        # set up pin that turns on brain illumination LED, the only GPIO we have not put in a class
         GPIO.setup (task.LEDpin, GPIO.OUT, initial = GPIO.LOW)
+        #initialize sub-tasks have their own classes and dictionaries for initializing
+        task.setup ()
+        
+        
+        # rewarder - not optional
+        task.Rewarder = task.RewarderClass (task.RewarderDict)
+        # tag reader - not optional
+        task.TagReader = task.TagReaderClass(task.TagReaderDict)
+        #
         # set up pin for ascertaining mouse contact, ready for head fixing
         GPIO.setup (task.contactPin, GPIO.IN, pull_up_down=getattr (GPIO, task.contactPUD))
         # set up countermandable pulse for water solenoid
