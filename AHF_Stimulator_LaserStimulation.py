@@ -498,11 +498,8 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
 
 #=================Main functions called from outside===========================
     def run(self):
-        sleep(3)
-        print('............dummy run...................')
-        '''
         #Check if mouse is here for the first time. If yes -> get_ref_im and release mouse again
-        if self.mouse.tot_headFixes == 1:
+        if not hasattr(mouse,'ref_im'):
             print('Take reference image')
             self.get_ref_im()
             return
@@ -517,9 +514,10 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
             self.move_to(np.flipud(targ_pos),topleft=True,join=True) #Move laser to target and wait until target reached
             ####!!!!!!!!!!!!Timing of pulse doesn't make sense here!!!!!!!!!!!!!!!!!!
             self.mouse.trial_image = np.empty((self.camera.resolution[0], self.camera.resolution[1], 3),dtype=np.uint8)
-            self.pulse(400,self.duty_cycle)
+            self.pulse(self.laser_on_time,self.duty_cycle)
             self.camera.capture(self.mouse.trial_image,'rgb')
             sleep(0.4)
+            self.rewarder.giveReward('task')
 
             self.buzzTimes = []
             self.buzzTypes = []
@@ -531,7 +529,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
             # outer loop runs trials until time is up
             while time() < endTime:
                 # setup to start a trial, witholding licking for lickWitholdRandom secs till buzzer
-                lickWitholdRandom = self.lickWitholdTime + (0.5 - random())
+                lickWitholdRandom = self.lickWitholdTime #+ (0.5 - random())
                 lickWitholdEnd = time() + lickWitholdRandom
                 # inner loop keeps resetting lickWitholdEnd time until  a succsful withhold
                 while time() < lickWitholdEnd and time() < endTime:
@@ -551,55 +549,28 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
                     break
                 # at this point, mouse has just witheld licking for lickWitholdTime
                 self.lickWitholdTimes.append (lickWitholdRandom)
-                # Give a buzz and monitor for no licking in next approx 0.25 secs (afterStimWitholdTime)
+                # Give a buzz.
                 self.buzzTimes.append (time())
-                afterBuzzEndTime= time() + self.afterStimWitholdTime
+                afterBuzzEndTime= time() + 0.5
                 buzzLeadEnd = afterBuzzEndTime + self.buzz_lead
-                if random() < self.buzz_pulseProb: # set up for pulses that get rewarded
-                    trialType = 2
-                    self.buzzer.do_train()
-                else:
-                    trialType = 1
-                    self.buzzer.do_train()
-                #============== Laser pulse after stimulus presentation========================
+                #============== Laser pulse instead of stimulus presentation========================
                 self.pulse(self.laser_on_time,self.duty_cycle)
-                # wait for licks - there shouldn't be any for afterStimWitholdTime (approx 0.25 secods) after start of train
-                anyLicks = self.lickDetector.waitForLick_Soft (self.afterStimWitholdTime)
-                if anyLicks > 0: # licked before 0.75 second after buzzer wait period
-                    self.speaker.start_train()  # turn on speaker and start over
-                    speakerIsOn = True
-                    if trialType == 2:
-                        self.buzzTypes.append (-4)
-                    else:
-                        self.buzzTypes.append (-3)
-                    continue
-                else: # animal waited for 0.25 seconds after start of buzzer
-                    # wait for licks. Animal SHOULD lick for trialType = 2, SHOULD NOT lick for trialType = 1
-                    anyLicks = self.lickDetector.waitForLick_Soft (self.buzz_lead)
-                    if trialType == 2: #
-                        if anyLicks > 0: # licked when was supposed to lick
-                            if time() < buzzLeadEnd:
-                                sleep (buzzLeadEnd - time()) # wait out duration of buzz lead time
-                            self.rewardTimes.append (time())
-                            self.rewarder.giveReward('task')
-                            self.buzzTypes.append (2)
-                            OffForRewardEnd = time() + self.speakerOffForReward
-                        else: #did not lick when was supposed to lick
-                            self.buzzTypes.append (-2)
-                    else:   # we gave a NO-LICK trial
-                        if anyLicks > 0: # licked when was NOT supposed to lick
-                            self.buzzTypes.append (-1)
-                            self.speaker.start_train()
-                            speakerIsOn = True
-                        else: # did not lick when was not supposed to lick
-                            self.buzzTypes.append (1)
+                #self.buzzer.do_train()
+                # sleep for a bit, then give reward
+                sleep (0.5)
+                self.rewardTimes.append (time())
+                self.rewarder.giveReward('task')
+                self.buzzTypes.append (2)
+                OffForRewardEnd = time() + self.speakerOffForReward
             # make sure to turn off buzzer at end of loop when we exit
             if speakerIsOn == True:
                 self.speaker.stop_train()
+            self.camera.stop_preview()
+
         finally:
             #Move laser back to zero position at the end of the trial
             self.move_to(np.array([0,0]),topleft=True,join=False)
-            '''
+
     def logfile (self):
         rewardStr = 'reward'
         buzzStr = 'Buzz:N=' + str (self.buzz_num) + ',length=' + '{:.2f}'.format(self.buzz_len) + ',period=' + '{:.2f}'.format (self.buzz_period)
