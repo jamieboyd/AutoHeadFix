@@ -159,23 +159,102 @@ def File_from_user (nameTypeStr, longName, typeSuffix, makeNew = False):
 def Show_ordered_dict (objectDict, longName):
     """
     Dumps standard dictionary settings into an ordered dictionary, prints settings to screen in a numbered fashion from the ordered dictionary,
-    making it easy to select a setting to change. Returns the ordered dictionary, used by edit_dict function
+    making it easy to select a setting to change. Returns an  ordered dictionary of {number: (key:value),} used by edit_dict function
     """
     print ('\n*************** Current %s Settings *******************' % longName)
     showDict = OrderedDict()
     itemDict = {}
     nP = 0
-    for key in objectDict :
+    for key in sorted (objectDict) :
         value = objectDict.get (key)
         showDict.update ({nP:{key: value}})
         nP += 1
     for ii in range (0, nP):
         itemDict.update (showDict [ii])
         kvp = itemDict.popitem()
-        print(str (ii) +') ', kvp [0], ' = ', kvp [1])
+        print(str (ii + 1) +') ', kvp [0], ' = ', kvp [1])
     print ('**********************************\n')
     return showDict
 
+
+
+def Edit_Obj_fields (anObject, longName):
+    
+    while True:
+        showDict = Show_ordered_dict (anObject.__dict__, longName)
+        inputStr = input ('Enter number of setting to edit, or 0 to exit:')
+        try:
+            inputNum = int (inputStr)
+        except ValueError as e:
+            print ('enter a NUMBER for setting, please: %s\n' % str(e))
+            continue
+        if inputNum == 0:
+            break
+        else:
+            itemDict = {}
+            itemDict.update (showDict [inputNum -1]) #itemDict = OrderedDict.get (inputNum -1)
+            kvp = itemDict.popitem()
+            itemKey = kvp [0]
+            itemValue = kvp [1]
+            if itemKey.endswith ('Class'):
+                baseName = itemKey.rstrip ('Class')
+                #newClassName = File_from_user (baseName, baseName, '.py')
+                newClass = Class_from_file (baseName, File_from_user (baseName, baseName, '.py'))
+                setattr (anObject, itemKey, newClass)
+                # new class needs  new dict
+                dictName = baseName + 'Dict'
+                #newDict = newClass.config_user_get ()
+                setattr (anObject, baseName + 'Dict', newClass.config_user_get ())
+            elif itemKey.endswith ('Dict'):
+                baseName = itemKey.rstrip ('Dict')
+                theClass = getattr (anObject, baseName + 'Class')
+                if theClass is None:
+                    #newClassName = File_from_user (baseName, baseName, '.py')
+                    theClass = Class_from_file (baseName, File_from_user (baseName, baseName, '.py'))
+                    setattr (anObject, baseName + 'Class', theClass)
+                setattr (anObject, itemKey, theClass.config_user_get ())
+            elif type (itemValue) is str:
+                inputStr = input ('Enter a new text value for %s, currently %s:' % (itemKey, str (itemValue)))
+                setattr (anObject, itemKey, inputStr)# updatDict = {itemKey: inputStr}
+            elif type (itemValue) is int:
+                inputStr = input ('Enter a new integer value for %s, currently %s:' % (itemKey, str (itemValue)))
+                setattr (anObject, itemKey, int (inputStr))# updatDict = {itemKey: int (inputStr)}
+            elif type (itemValue) is float:
+                inputStr = input ('Enter a new floating point value for %s, currently %s:' % (itemKey, str (itemValue)))
+                setattr (anObject, itemKey, float (inputStr)) #updatDict = {itemKey: float (inputStr)}
+            elif type (itemValue) is tuple or itemValue is list:
+                outputList = []
+                if type (itemValue [0]) is str:
+                    inputStr = input ('Enter a new comma separated list of strings for %s, currently %s:' % (itemKey, str (itemValue)))
+                    outputList = list (inputStr.split(','))
+                elif type (itemValue [0]) is int:
+                    inputStr = input ('Enter a new comma separated list of integer values for %s, currently %s:' % (itemKey, str (itemValue)))
+                    for string in inputStr.split(','):
+                        try:
+                            outputList.append (int (string))
+                        except ValueError:
+                            continue
+                elif type (itemValue [0]) is float:
+                    inputStr = input ('Enter a new comma separated list of floating point values for %s, currently %s:' % (itemKey, str (itemValue)))
+                    for string in inputStr.split(','):
+                        try:
+                            outputList.append (float (string))
+                        except ValueError:
+                            continue
+                if type (itemValue) is tuple:
+                    setattr (anObject, itemKey, tuple (outputList)) #updatDict = {itemKey: tuple (outputList)}
+                else:
+                    setattr (anObject, itemKey, outputList) # updatDict = {itemKey: outputList}
+            elif type (itemValue) is bool:
+                inputStr = input ('%s, True for or False?, currently %s:' % (itemKey, str (itemValue)))
+                if inputStr [0] == 'T' or inputStr [0] == 't':
+                    setattr (anObject, itemKey, True)  # updatDict = {itemKey: True}
+                else:
+                    setattr (anObject, itemKey, False) #updatDict = {itemKey: False}
+            elif type (itemValue) is dict:
+                Edit_dict (itemValue, itemKey)
+                setattr (anObject, itemKey, itemValue)
+            
 
 def Edit_dict (anyDict, longName):
     """
@@ -185,37 +264,19 @@ def Edit_dict (anyDict, longName):
     while True:
         orderedDict = Show_ordered_dict (anyDict, longName)
         updatDict = {}
-        inputStr = input ('Enter number of setting to edit, or -1 to exit:')
+        inputStr = input ('Enter number of setting to edit, or 0 to exit:')
         try:
             inputNum = int (inputStr)
         except ValueError as e:
             print ('enter a NUMBER for setting, please: %s\n' % str(e))
             continue
-        if inputNum < 0:
+        if inputNum == 0:
             break
         else:
-            itemDict = orderedDict.get (inputNum)
+            itemDict = orderedDict.get (inputNum -1)
             kvp = itemDict.popitem()
             itemKey = kvp [0]
             itemValue = kvp [1]
-            if itemKey.endswith ('Class'):
-                    baseName = itemKey.rstrip ('Class')
-                    newClassName = CAD.File_from_user (baseName, baseName, '.py')
-                    newClass = CAD.Class_from_file (baseName, newClassName)
-                    setattr (self, itemKey, newClass)
-                    # new class needs  new dict
-                    dictName = baseName + 'Dict'
-                    newDict = newClass.config_user_get ()
-                    setattr (self, dictName, newDict)
-                elif itemKey.endswith ('Dict'):
-                    baseName = itemKey.rstrip ('Dict')
-                    theClass = getattr (self, baseName + 'Class')
-                    if theClass is None:
-                        newClassName = CAD.File_from_user (baseName, baseName, '.py')
-                        newClass = CAD.Class_from_file (baseName, newClassName)
-                        setattr (self, baseName + 'Class', newClass)
-                    setattr (self, itemKey, newClass)
-                    setattr (self, itemKey, newClass.config_user_get ())
             if type (itemValue) is str:
                 inputStr = input ('Enter a new text value for %s, currently %s:' % (itemKey, str (itemValue)))
                 updatDict = {itemKey: inputStr}

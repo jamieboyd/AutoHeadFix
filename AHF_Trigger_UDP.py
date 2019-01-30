@@ -1,18 +1,18 @@
 #! /usr/bin/python
 #-*-coding: utf-8 -*-
 
-
+from AHF_Trigger import AHF_Trigger
 import socket
 
-UDP_PORT = 5007	# special open port 
-class AHF_UDPTrig:
+
+class AHF_Trigger_UDP (AHF_Trigger):
     """
     Sends/receives UDP signals as to another pi to start/stop recording
 
     AHF_UDPTrig uses the socket module to do the UDP stuff, but it should be part of
     the default install
     """
-
+    UDP_PORT = 5007	# special open port 
     @staticmethod
     def about():
         return 'Sends/receives trigger signals over UDP as to another pi to start/stop recording.'
@@ -33,7 +33,7 @@ class AHF_UDPTrig:
         try: 
             self.UDPlist = UDPdict.get ('IPlist')
             self.sock=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self.sock.bind (('', UDP_PORT))
+            self.sock.bind (('', AHF_Trigger_UDP.UDP_PORT))
             hasUDP= True
         except socket.error:
             hasUDP = False
@@ -46,7 +46,7 @@ class AHF_UDPTrig:
         """
         try:
             for address in self.UDPlist:
-                self.sock.sendto (bytes (message, "utf-8"),(address, UDP_PORT))
+                self.sock.sendto (bytes (message, "utf-8"),(address, AHF_Trigger_UDP.UDP_PORT))
         except socket.error as e:
             print ('AHF_UDPTrig failed to send a message: ' + str (e))
 

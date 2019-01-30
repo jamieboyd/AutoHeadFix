@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 import os
 import inspect
 
-class AHF_UDPTrig(metaclass = ABCMeta):
+class AHF_Trigger(metaclass = ABCMeta):
     """
     Sends/receives signals as to another pi to start/stop recording
 

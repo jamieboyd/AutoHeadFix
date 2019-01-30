@@ -82,18 +82,21 @@ class AHF_Camera_PiCam (AHF_Camera):
         """
         self.paramDict = paramDict
         # init PiCamera
+        self.setup()
+
+    def setup (self):
         try:
             self.piCam = PiCamera()
         except Exception as anError:
             print ("Error initializing camera.." + str (anError))
             raise anError
-        # set fields in  super-class
+        # set fields in Picamera
         self.piCam.resolution = paramDict.get ('resolution', (640, 480))
         self.piCam.framerate = paramDict.get ('framerate', 30)
         self.piCam.iso = paramDict.get ('iso', 0)
         self.piCam.shutter_speed = paramDict.get ('shutter_speed', 30000)
-        # set fields that are in AFF_Camera class
-        self.piCam.AHFvideoFormat = paramDict.get ('format', 'h264')
+        # set fields that are in AHF_Camera class
+        self.AHFvideoFormat = paramDict.get ('format', 'h264')
         self.piCam.AHFvideoQuality = paramDict.get ('quality', 20)
         self.piCam.AHFframerate= paramDict.get ('framerate', 30)
         self.piCam.AHFpreview = paramDict.get('previewWin', (0,0,640,480))
