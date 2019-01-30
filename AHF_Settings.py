@@ -137,6 +137,7 @@ class AHF_Settings (object):
             configDict['cameraStartDelay'] = self.cameraStartDelay
         configDict['camParams'] = self.camParamsDict
         configDict['stimulator'] = self.stimulator
+        configDict['genotype'] = self.genotype
         configDict['stimParams'] = self.stimDict
 
 

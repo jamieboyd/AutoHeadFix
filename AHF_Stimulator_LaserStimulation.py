@@ -499,7 +499,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
 #=================Main functions called from outside===========================
     def run(self):
         #Check if mouse is here for the first time. If yes -> get_ref_im and release mouse again
-        if not hasattr(mouse,'ref_im'):
+        if not hasattr(self.mouse,'ref_im'):
             print('Take reference image')
             self.get_ref_im()
             return
@@ -514,9 +514,9 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
             self.move_to(np.flipud(targ_pos),topleft=True,join=True) #Move laser to target and wait until target reached
             ####!!!!!!!!!!!!Timing of pulse doesn't make sense here!!!!!!!!!!!!!!!!!!
             self.mouse.trial_image = np.empty((self.camera.resolution[0], self.camera.resolution[1], 3),dtype=np.uint8)
-            self.pulse(self.laser_on_time,self.duty_cycle)
+            self.pulse(250,self.duty_cycle)
             self.camera.capture(self.mouse.trial_image,'rgb')
-            sleep(0.4)
+            sleep(0.25)
             self.rewarder.giveReward('task')
 
             self.buzzTimes = []
@@ -552,7 +552,6 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
                 # Give a buzz.
                 self.buzzTimes.append (time())
                 afterBuzzEndTime= time() + 0.5
-                buzzLeadEnd = afterBuzzEndTime + self.buzz_lead
                 #============== Laser pulse instead of stimulus presentation========================
                 self.pulse(self.laser_on_time,self.duty_cycle)
                 #self.buzzer.do_train()
