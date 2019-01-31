@@ -13,11 +13,6 @@ import json
 import os
 import pwd
 import grp
-#from AHF_HeadFixer import AHF_HeadFixer
-#from AHF_Stimulator import AHF_Stimulator
-#from AHF_Rewarder import AHF_Rewarder
-#from AHF_Camera import AHF_Camera
-#from AHF_TagReader import AHF_TagReader
 import AHF_ClassAndDictUtils as CAD
 
 class Task:
@@ -105,7 +100,7 @@ class Task:
             self.ContactCheckDict = self.ContactCheckClass.config_user_get ()
             fileErr = True
         ############################ NOT just A single GPIO pin for brain illumination, unless you want that ###########
-        if not hasattr (self, 'BrainLightClass'):=or not hasattr (self, 'BrainLightDict'):
+        if not hasattr (self, 'BrainLightClass') or not hasattr (self, 'BrainLightDict'):
             self.BrainLightClass = CAD.Class_from_file('BrainLight', CAD.File_from_user ('BrainLight', 'Brain illuminator', '.py'))
             self.BrainLightDict = self.BrainLightClass.config_user_get ()
             fileErr = True
@@ -215,7 +210,7 @@ class Task:
         else:
             promptStr = 'Enter a name to save task settings, or enter to use current name, \'' + self.fileName + '\':'
         newConfig = input (promptStr)
-        if self.fileName == '' and newConfig == '':
+        if self.fileName != '' and newConfig == '':
             newConfig = self.fileName
         else:
             if newConfig.startswith ('AHF_task_'):

@@ -7,6 +7,79 @@
 <H1>Notes for AHF version 3</H1>
 <h2>Settings</h2>
 <p>Cage settings and Experiment settings will no longer be kept in separate files, but will be stored in a single file and loaded together into one dictionary, and used to initialize a single object called task. That way, only one object has to be passed around. Individual variables for things like GPIO pin numbers will not be created, functions will refer to task.GPIOpin. Try to remove disconnect between changing, saving hardware settings in the JSON files and in the task dictionary in the running program.</p>
+<p>Every bit of funtionality that needs to save any settings or initialize any data is subclassed from an abstract base class. This is for added flexibility, and to organize all the code along the same lines for better readibility and to reduce code duplication. If all the classes follow the same conventions, they cna be manipulated with the same utility functions, found in AHF_ClassAndDictUtils.py, and the hardware tester functionality can simlpy call the hardware tester function for each class. Even the simple blue light to illuminate the brain has been made into a class and subclassed. It serves as a good example of what is involved. The base class for all AHF classes that follow  the pattern is AHF_Base
+<pre>
+class AHF_Base (metaclass = ABCMeta):
+
+    @staticmethod
+    @abstractmethod
+    def about():
+        """
+        Returns a brief message describing your sub-class, used when asking user to pick a sub-class of this class
+        """
+        return 'A description of your sub-class goes here'
+    
+    @staticmethod
+    @abstractmethod
+    def config_user_get (starterDict = {}):
+        """
+        static method that querries user for settings, with default responses from starterDict,
+        and returns starterDict with settings as edited by the user.
+
+        """
+        return starterDict
+
+
+    def __init__(self, settingsDict):
+        """
+        Initialization of a subclass object may be just making a link to the settings dict
+        and running setup so this does not need to be an abtract function
+        """
+        self.settingsDict = settingsDict
+        self.setup ()
+
+
+    @abstractmethod
+    def setup (self):
+        """
+        does hardware initialization of  with (possibly updated) info in self.settingsDict
+        Run by __init__, or can be run  separately after editing the settingsDict
+        """
+        pass
+
+
+    @abstractmethod
+    def hardwareTest (self):
+        """
+        Tests functionality, gives user a chance to change settings
+        """
+        pass
+</pre>
+
+The base class for functionality to control illumination for imaging is now AHF_BrainLight:
+</pre>
+from AHF_Base import AHF_Base
+
+class AHF_BrainLight (AHF_Base):
+
+    @abstractmethod
+    def onForStim (self):
+        """
+        Runs when headFixing starts, illuminating the brain or whatever needs illuminating
+        """
+        pass
+
+    @abstractmethod
+    def offForStim (self):
+        """
+        Runs when headFixing ends, turning off whatever was turned on
+        """
+        pass
+</pre>
+The only functions that need to be explicitly added are those that deal explicitly with the job of AHF_BrainLight, namely, turning on and off  lights for illumination. Subclasses of AHF_BrainLight will still need to provide setup, hardwareTest, and other functions, and these must follow the signatures of those described in AHF_Base.
+
+The other classes are organized similarly, with an __init__ that just copies the dictionary, the setup function that actually runs the setup code that does GPIO hardware init, etc. , the config_user_get function that can create a settings dictionary before an object is initialized, and a hardwareTest function that tests the hardware and gives the user a chance to edit the object's settings dictionary, and then runs the setup function. Note that the settings dictionary is created in the Task object, and passed to the __init__ function, which uses the passed in dictionary, not making a fresh copy.  That way, editing the settings through the hardwareTest, for instance, will edit the dictionary that is kept by the Task object. </p>
+
 <p>What experiment information needs to be separate for each mouse? The Stimulator class will define a lot of task specific stuff, each mouse will have an entry for a stimulator dictionary containing information specific to that mouse. Other things:
 Reward sizes
 number of entry rewards

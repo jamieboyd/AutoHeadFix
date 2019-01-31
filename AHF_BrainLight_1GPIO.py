@@ -35,7 +35,6 @@ class AHF_BrainLight_1GPIO (AHF_BrainLight):
         GPIO.setmode(GPIO.BCM)
         GPIO.setup (self.ledPin, GPIO.OUT)
 
-
     def hardwareTest (self):
         self.onForStim()
         print ('Turning blue LED ON for two seconds....')

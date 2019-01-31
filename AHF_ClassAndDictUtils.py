@@ -9,6 +9,7 @@ import inspect
 from collections import OrderedDict
 import json
 
+from AHF_Base import AHF_Base
 """
 methods for
 choosing classes and getting classes from files based on AHF naming conventions and/or on inheritance
@@ -37,8 +38,7 @@ def Class_from_file(nameTypeStr, nameStr):
 
 def Super_of_class (aClass):
     inheritList = aClass.mro()
-    return inheritList [len(inheritList)-2]
-
+    return inheritList [len(inheritList)-3]
 
 
 def File_exists (nameTypeStr, nameStr, typeSuffix):
@@ -187,7 +187,7 @@ def Show_ordered_object (anObject, longName):
     nP = 0
     fields = sorted (inspect.getmembers (anObject))
     for item in fields:
-       if not (inspect.ismethod (item [1]) or isinstance(item[1].__class__ ,  ABCMeta) or item[0].startswith ('_')):
+       if not (inspect.isroutine (item [1]) or isinstance(item[1],  AHF_Base) or item[0].startswith ('_')):
             showDict.update ({nP:{item [0]: item [1]}})
             nP +=1
     # print to screen 
@@ -202,7 +202,6 @@ def Show_ordered_object (anObject, longName):
 def Edit_Obj_fields (anObject, longName):
     
     while True:
-        #showDict = Show_ordered_dict (anObject.__dict__, longName)
         showDict = Show_ordered_object (anObject, longName)
         inputStr = input ('Enter number of setting to edit, or 0 to exit:')
         try:
@@ -218,7 +217,7 @@ def Edit_Obj_fields (anObject, longName):
             kvp = itemDict.popitem()
             itemKey = kvp [0]
             itemValue = kvp [1]
-            if itemKey.endswith ('Class'):
+            if itemKey.endswith ('Class') and (itemValue is None or isinstance(itemValue,  ABCMeta)):
                 baseName = itemKey.rstrip ('Class')
                 #newClassName = File_from_user (baseName, baseName, '.py')
                 newClass = Class_from_file (baseName, File_from_user (baseName, baseName, '.py'))
@@ -227,7 +226,7 @@ def Edit_Obj_fields (anObject, longName):
                 dictName = baseName + 'Dict'
                 #newDict = newClass.config_user_get ()
                 setattr (anObject, baseName + 'Dict', newClass.config_user_get ())
-            elif itemKey.endswith ('Dict'):
+            elif itemKey.endswith ('Dict') and (itemValue is None or type (itemValue) is dict):
                 baseName = itemKey.rstrip ('Dict')
                 theClass = getattr (anObject, baseName + 'Class')
                 if theClass is None:
@@ -360,12 +359,14 @@ def Obj_fields_to_file (anObject, nameTypeStr, nameStr, typeSuffix):
     Writes a file containing a json dictionary of all the fields of the object anObject
     """
     jsonDict = {}
-    for key, value in anObject.__dict__.items():
-        if inspect.isclass(value):
-            jsonDict.update({key: value.__name__})
-        else:
-            if key.startswith ('_') is False:
-                jsonDict.update({key: value})
+    fields = sorted (inspect.getmembers (anObject))
+    for item in fields:
+        if not (inspect.isroutine (item [1]) or isinstance(item[1] ,  AHF_Base) or item[0].startswith ('_')):
+            if inspect.isclass(item [1]):
+                jsonDict.update({item[0]: item[1].__name__})
+            else:
+                jsonDict.update({item [0]: item[1]})
+
     configFile = 'AHF_' + nameTypeStr + '_' + nameStr + typeSuffix
     with open (configFile, 'w') as fp:
         fp.write (json.dumps (jsonDict, separators = ('\n', '='), sort_keys=True, skipkeys = True))
