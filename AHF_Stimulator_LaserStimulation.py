@@ -476,13 +476,13 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
             scale_mat = np.array([[scale,1,1],[1,scale,1]])
             return rot_ext*scale_mat
 
-        trial = np.empty((self.camera.resolution[0], self.camera.resolution[1], 3),dtype=np.uint8)
-        self.camera.capture(trial,'rgb')
+        self.mouse.trial_image = np.empty((self.camera.resolution[0], self.camera.resolution[1], 3),dtype=np.uint8)
+        self.camera.capture(self.mouse.trial_image,'rgb')
 
         #Image registration
         #IMPROVE: Could run the registration on a different processor
         warnings.filterwarnings("ignore",".*the returned array has changed*")
-        tf = ird.similarity(self.mouse.ref_im[:,:,0],trial[:,:,0],numiter=3)
+        tf = ird.similarity(self.mouse.ref_im[:,:,0],self.mouse.trial_image[:,:,0],numiter=3)
         print('scale\tangle\tty\ttx')
         print('{0:.3}\t{1:.3}\t{2:.3}\t{3:.3}'.format(tf['scale'],tf['angle'],tf['tvec'][0],tf['tvec'][1]))
 
@@ -512,10 +512,9 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
             targ_pos = self.image_registration()
             print('Moving laser to target and capture image to assert correct laser position')
             self.move_to(np.flipud(targ_pos),topleft=True,join=True) #Move laser to target and wait until target reached
-            ####!!!!!!!!!!!!Timing of pulse doesn't make sense here!!!!!!!!!!!!!!!!!!
-            self.mouse.trial_image = np.empty((self.camera.resolution[0], self.camera.resolution[1], 3),dtype=np.uint8)
+            self.mouse.laser_spot = np.empty((self.camera.resolution[0], self.camera.resolution[1], 3),dtype=np.uint8)
             self.pulse(250,self.duty_cycle)
-            self.camera.capture(self.mouse.trial_image,'rgb')
+            self.camera.capture(self.mouse.laser_spot,'rgb')
             sleep(0.25)
             self.rewarder.giveReward('task')
 

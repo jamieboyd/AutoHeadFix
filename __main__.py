@@ -500,6 +500,13 @@ def updateH5File (expSettings,cageSettings,mice):
                 tr.attrs.modify('IMAGE_SUBCLASS', np.string_('IMAGE_TRUECOLOR'))
                 tr.attrs.modify('INTERLACE_MODE', np.string_('INTERLACE_PIXEL'))
                 tr.attrs.modify('IMAGE_MINMAXRANGE', [0,255])
+            if hasattr(mouse,'laser_spot'):
+                ls = t.require_dataset('trial_'+str(mouse.tot_headFixes)+'_laser_spot',shape=tuple(expSettings.camParamsDict['resolution']+[3]),dtype=np.uint8,data=mouse.trial_image)
+                ls.attrs.modify('CLASS', np.string_('IMAGE'))
+                ls.attrs.modify('IMAGE_VERSION', np.string_('1.2'))
+                ls.attrs.modify('IMAGE_SUBCLASS', np.string_('IMAGE_TRUECOLOR'))
+                ls.attrs.modify('INTERLACE_MODE', np.string_('INTERLACE_PIXEL'))
+                ls.attrs.modify('IMAGE_MINMAXRANGE', [0,255])
             #To keep track of mouse attributes, create 'log' and save all attributes per day
             h = m.require_group('log')
             t = h.require_group(str(expSettings.dateStr))
