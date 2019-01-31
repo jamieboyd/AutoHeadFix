@@ -10,7 +10,9 @@ from collections import OrderedDict
 import json
 
 """
-methods for transferring structured data between JSON text files <-> dictionaries <-> object fields
+methods for
+choosing classes and getting classes from files based on AHF naming conventions and/or on inheritance
+transferring structured data between JSON text files <-> dictionaries <-> object fields
 
 """
 ##################################################################################
@@ -178,11 +180,30 @@ def Show_ordered_dict (objectDict, longName):
     return showDict
 
 
+def Show_ordered_object (anObject, longName):
+    print ('\n*************** Current %s Settings *******************' % longName)
+    showDict = OrderedDict()
+    itemDict = {}
+    nP = 0
+    fields = sorted (inspect.getmembers (anObject))
+    for item in fields:
+       if not (inspect.ismethod (item [1]) or isinstance(item[1].__class__ ,  ABCMeta) or item[0].startswith ('_')):
+            showDict.update ({nP:{item [0]: item [1]}})
+            nP +=1
+    # print to screen 
+    for ii in range (0, nP):
+        itemDict.update (showDict.get (ii))
+        kvp = itemDict.popitem()
+        print(str (ii + 1) +') ', kvp [0], ' = ', kvp [1])
+    print ('**********************************\n')
+    return showDict
+
 
 def Edit_Obj_fields (anObject, longName):
     
     while True:
-        showDict = Show_ordered_dict (anObject.__dict__, longName)
+        #showDict = Show_ordered_dict (anObject.__dict__, longName)
+        showDict = Show_ordered_object (anObject, longName)
         inputStr = input ('Enter number of setting to edit, or 0 to exit:')
         try:
             inputNum = int (inputStr)
@@ -322,15 +343,7 @@ def Edit_dict (anyDict, longName):
             anyDict.update (updatDict)
 
 
-def Obj_fields_to_dict(anObject):
-    """
-    Returns a dictionary with elements from the fields of the object anObject
-    """
-    aDict = {}
-    for key, value in anObject.__dict__ :
-        if key.startswith ('_') is False and inspect.isroutine (getattr (anObject, key)) is False:
-            aDict.update({key: value})
-    return aDict
+
 
 
 def Dict_to_obj_fields (anObject, aDict):
@@ -355,7 +368,7 @@ def Obj_fields_to_file (anObject, nameTypeStr, nameStr, typeSuffix):
                 jsonDict.update({key: value})
     configFile = 'AHF_' + nameTypeStr + '_' + nameStr + typeSuffix
     with open (configFile, 'w') as fp:
-        fp.write (json.dumps (jsonDict, separators = ('\n', '='), sort_keys=True))
+        fp.write (json.dumps (jsonDict, separators = ('\n', '='), sort_keys=True, skipkeys = True))
         fp.close ()
         uid = pwd.getpwnam ('pi').pw_uid
         gid = grp.getgrnam ('pi').gr_gid

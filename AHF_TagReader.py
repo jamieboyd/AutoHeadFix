@@ -1,6 +1,5 @@
 #! /usr/bin/python
 #-*-coding: utf-8 -*-
-
 from abc import ABCMeta, abstractmethod
 
 class AHF_TagReader (metaclass = ABCMeta):
@@ -12,7 +11,7 @@ class AHF_TagReader (metaclass = ABCMeta):
     
     @staticmethod
     @abstractmethod
-    def config_user_get ():
+    def config_user_get (starterDict = {}):
         return {}
 
 

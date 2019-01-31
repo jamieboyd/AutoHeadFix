@@ -3,9 +3,12 @@
 
 from AHF_Stimulator import AHF_Stimulator
 from AHF_Mouse import Mouse
+#! /usr/bin/python3
+#-*-coding: utf-8 -*-
 
 from time import time, localtime,timezone, sleep
 from datetime import datetime
+from AHF_Stimulator import AHF_Stimulator
 
 class AHF_Stimulator_Rewards (AHF_Stimulator):
 

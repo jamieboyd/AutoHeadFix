@@ -104,8 +104,34 @@ class Task:
             self.ContactCheckClass = CAD.Class_from_file('ContactCheck', CAD.File_from_user ('ContactCheck', 'Contact Checker', '.py'))
             self.ContactCheckDict = self.ContactCheckClass.config_user_get ()
             fileErr = True
-       
-        ############################## LickDetector (optional) is not subclassable, so does not make its own dictionary ##############
+        ############################ NOT just A single GPIO pin for brain illumination, unless you want that ###########
+        if not hasattr (self, 'BrainLightClass'):=or not hasattr (self, 'BrainLightDict'):
+            self.BrainLightClass = CAD.Class_from_file('BrainLight', CAD.File_from_user ('BrainLight', 'Brain illuminator', '.py'))
+            self.BrainLightDict = self.BrainLightClass.config_user_get ()
+            fileErr = True
+
+        ############################ text messaging using textbelt service (Optional) only 1 subclass so far ######################
+        if not hasattr (self, 'NotifierDict'):
+            tempInput = input ('Send text messages if mouse exceeds criterion time in chamber?(Y or N):')
+            if tempInput [0] == 'y' or tempInput [0] == 'Y':
+                self.NotifierClass = CAD.Class_from_file('Notifier', '')
+                self.NotifierDict = self.NotifierClass.config_user_get()
+                self.NotifierDict.update ({'cageID' : self.cageID})
+            else:
+                self.NotifierClass = None
+                self.NotifierDict = None
+            fileErr = True
+        ####################################### triggers for alerting other computers (Optional) only 1 subclass so far ######################3
+        if not hasattr (self, 'TriggerDict'):
+            tempInput = input ('Send triggers to start tasks on secondary computers (Y or N):')
+            if tempInput [0] == 'y' or tempInput [0] == 'Y':
+                self.TriggerClass = CAD.Class_from_file('UDPTrig', '')
+                self.TriggerDict = self.TriggerClass.config_user_get()
+            else:
+                self.TriggerClass = None
+                self.TriggerDict = None
+            fileErr = True
+        ############################## LickDetector (optional) only 1 subclass so far ##############
         if not hasattr (self, 'lickDetectorIRQ'):
             tempInput = input ('Does this setup have a Lick Detector installed? (Y or N)')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
@@ -113,10 +139,7 @@ class Task:
             else:
                 self.lickDetectorIRQ = 0
             fileErr = True
-        ############################ A single GPIO pin for brain illumination ###########
-        if not hasattr (self, 'LEDpin'):
-            self.LEDpin = int (input ('Enter the GPIO pin connected to the blue LED for brain camera illumination:'))
-            fileErr = True
+
             
          ####### settings for experiment configuration ########  
         if not hasattr (self, 'cageID'):
@@ -144,27 +167,7 @@ class Task:
             fileErr = True
         if not hasattr (self, 'inChamberTimeLimit'):
             self.inChamberTimeLimit = float(input('In-Chamber duration limit, seconds, before stopping head-fix trials:'))
-        ############################ text messaging using textbelt service (Optional) only 1 subclass so far ######################
-        if not hasattr (self, 'NotifierDict'):
-            tempInput = input ('Send text messages if mouse exceeds criterion time in chamber?(Y or N):')
-            if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.NotifierClass = CAD.Class_from_file('Notifier', '')
-                self.NotifierDict = self.NotifierClass.config_user_get()
-                self.NotifierDict.update ({'cageID' : self.cageID})
-            else:
-                self.NotifierClass = None
-                self.NotifierDict = None
-            fileErr = True
-        ####################################### triggers for alerting other computers (Optional) only 1 subclass so far ######################3
-        if not hasattr (self, 'TriggerDict'):
-            tempInput = input ('Send triggers to start tasks on secondary computers (Y or N):')
-            if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.TriggerClass = CAD.Class_from_file('UDPTrig', '')
-                self.TriggerDict = self.TriggerClass.config_user_get()
-            else:
-                self.TriggerClass = None
-                self.TriggerDict = None
-            fileErr = True
+ 
        
         # if some of the paramaters were set by user, give option to save
         if fileErr: 
@@ -174,22 +177,29 @@ class Task:
                 
 
     def setup (self):
-        # head fixer
+        # head fixer (optional)
         if self.HeadFixerClass is not None:
             self.HeadFixer = self.HeadFixerClass (self.HeadFixerDict)
-        else:
-            self.HeadFixer = None
         # stimulator
         if self.StimulatorClass is not None:
-            self.Stimulator = self.StimulatorClass (self.StimulatorDict)
-        else:
-            self.Stimulator = None
+            self.Stimulator = self.StimulatorClass (self)
         # camera
         if self.CameraClass is not None:
             self.Camera= self.cameraClass (self.cameraDict)
-        else:
-            self.Camera = None
-
+        # TagReader 
+        if self.TagReaderClass is not None:
+            self.TagReader = self.TagReaderClass (self.TagReaderDict)
+        # Rewarder
+        if self.RewarderClass is not None:
+            self.Rewarder = self.RewarderClass (self.RewarderDict)
+        # Notifier
+        if self.NotifierClass is not None:
+            self.Notifier = self.NotifierClass (self.NotifierDict)
+        # Trigger
+        if self.TriggerClass is not None:
+            self.Trigger = self.TriggerClass(self.TriggerDict)
+        
+            
     
     def saveSettings(self):
         """
@@ -221,7 +231,7 @@ class Task:
         Prints settings to screen in a numbered fashion from an ordered dictionary, making it easy to select a setting to
         change. Returns the ordered dictionary, used by editSettings function
         """
-        return CAD.Show_ordered_dict (self.__dict__, 'Auto Head Fix Task')
+        return CAD.Show_ordered_object (self, 'Auto Head Fix Task')
     
 
     def editSettings (self):
@@ -231,8 +241,5 @@ class Task:
 if __name__ == '__main__':
     task = Task ('')
     task.editSettings()
-    response = input ('Save new/updated settings to a task configuration file?')
-    if response [0] == 'y' or response [0] == 'Y':
-        task.saveSettings ()
-
+    task.setup ()
 
