@@ -4,7 +4,7 @@
 from abc import ABCMeta, abstractmethod
 from AHF_Base import AHF_Base
 
-class AHF_BrainLight (AHF_Base):
+class AHF_BrainLight (AHF_Base, metaclass = ABCMeta):
 
     @abstractmethod
     def onForStim (self):

@@ -47,7 +47,14 @@ class AHF_Base (metaclass = ABCMeta):
         """
         pass
 
-
+    @abstractmethod
+    def setdown (self):
+        """
+        oppposite of setup. Releases any hardware resouces. can be run before editing settings so GPIO
+        pins can be reused, for example
+        """
+        pass
+	
     @abstractmethod
     def hardwareTest (self):
         """

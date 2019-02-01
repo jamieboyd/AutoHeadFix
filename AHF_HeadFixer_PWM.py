@@ -10,29 +10,42 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
     Abstract class for PWM-based head fixers for servo motors. As long as your subclass maps your PWM range onto
     the appropriate pulse width for the servo, you should be good to go.
     """
-    hasLevels = False
+    hasLevels = True
     numLevels =8
-    ##################################################################################
-    #part 1: three main methods of initing, fixing, and releasing, only initing is different for different PWM methods
-    def __init__(self, headFixerDict):
-        self.servoReleasedPosition = headFixerDict.get ('servoReleasedPosition')
-        self.servoFixedPosition = headFixerDict.get ('servoFixedPosition')
-        self.servoIncrement = (self.servoFixedPosition - self.servoReleasedPosition)/self.numLevels
-        self.level = self.numLevels
-        
+    
+
+    @staticmethod
     @abstractmethod
-    def setup (self, task):
-        pass
+    def config_user_get (starterDict = {}):
+        servoReleasedPosition = starterDict.get ('servoReleasedPosition', 540)
+        response = input("Set Servo Released Position (0-4095: currently %d): " % servoReleasedPosition)
+        if response != '':
+            servoReleasedPosition = int(response)
+        servoFixedPosition = starterDict.get ('servoFixedPosition', 325)
+        response = input("Set Servo Fixed Position (0-4095: currently %d): " % servoFixedPosition)
+        if response != '':
+            servoFixedPosition = int(response)
+        starterDict.update ({'servoReleasedPosition' : servoReleasedPosition, 'servoFixedPosition' : servoFixedPosition})
+        return starterDict
 
     
-    # with progressive head fixing. typical servo values 325 =fixed, 540 = released
+    @abstractmethod
+    def setup (self):
+        self.servoReleasedPosition = self.settingsDict.get ('servoReleasedPosition')
+        self.servoFixedPosition = self.settingsDict.get ('servoFixedPosition')
+        if self.__class__.hasLevels:
+            self.servoIncrement = (self.servoFixedPosition - self.servoReleasedPosition)/self.__class__.numLevels
+    
     # self.numLevels different levels of fixing tightness, with 0 being released position
-    def fixMouse(self):
-        self.setPWM (int(self.servoReleasedPosition + (self.servoIncrement * self.level)))
-                
-            
+    def fixMouse(self, mouse = None):
+        if self.__class__.hasLevels and hasattr (mouse, 'HeadFixLevel'):
+            self.setPWM (int(self.servoReleasedPosition + (self.servoIncrement * mouse.HeadFixLevel)))
+        else:
+            self.setPWM (self.servoFixedPosition)
+
     def releaseMouse(self):
         self.setPWM (self.servoReleasedPosition)
+
 
     # each PWM subclass must implement its own code to set the pulse width
     @abstractmethod
@@ -40,33 +53,16 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
         pass
 
 
-    def level_set_level (self, level):
-        self.level = min (self.numLevels, max (0, level))
-  
-    ##################################################################################
-    #abstact methods each PWM headfixer class must implement
-    #part 2: static functions for reading, editing, and saving ConfigDict from/to cageSet
-       
-    @staticmethod
-    def config_user_get ():
-        servoReleasedPosition = int(input("Servo Released Position (0-4095): "))
-        servoFixedPosition = int(input("Servo Fixed Position (0-4095): "))
-        return {'servoReleasedPosition' : servoReleasedPosition, 'servoFixedPosition' : servoFixedPosition}
-
-    
-    def hardwareTest (self, headFixDict):
+    # hardware test overwritten to just modify fixed and released servo positions, other settings not likely to change
+    def hardwareTest (self):
         print ('servo moving to Head-Fixed position for 3 seconds')
         self.fixMouse()
         sleep (3)
         print ('servo moving to Released position')
         self.releaseMouse()
-        inputStr= input('Do you want to change fixed position, currently ' + str (self.servoFixedPosition) + ', or released position, currently ' + str(self.servoReleasedPosition) + ':')
+        inputStr= input('Do you want to change fixed position (currently %d) or released position (currently %d)? ' % (self.servoFixedPosition ,self.servoReleasedPosition))
         if inputStr[0] == 'y' or inputStr[0] == "Y":
-            self.servoFixedPosition = int (input('Enter New servo Fixed Position:'))
-            self.servoReleasedPosition = int (input('Enter New servo Released Position:'))
-            self.servoIncrement = (self.servoFixedPosition - self.servoReleasedPosition)/self.numLevels
-            headFixDict.update({'servoReleasedPosition' : servoReleasedPosition, 'servoFixedPosition' : servoFixedPosition})
-    
+            self.settingsDict = AHF_HeadFixer_PWM.config_user_get (self.settingsDict)
+            self.servoReleasedPosition = self.settingsDict.get ('servoReleasedPosition')
+            self.servoFixedPosition = self.settingsDict.get ('servoFixedPosition')
 
-if __name__ == "__main__":
-    AHF_HeadFixer.funcForMain()
