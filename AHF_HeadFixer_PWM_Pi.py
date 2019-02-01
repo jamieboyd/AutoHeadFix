@@ -6,7 +6,8 @@ import ptPWM
 from time import sleep
 
 class AHF_HeadFixer_PWM_Pi (AHF_HeadFixer_PWM):
-
+    defaultChannel = 1
+    
     @staticmethod
     def about():
         return 'uses ptPWM module to drive Pi\'s own PWM peripheral to control servo motor to push head bar' 
@@ -14,8 +15,8 @@ class AHF_HeadFixer_PWM_Pi (AHF_HeadFixer_PWM):
     @staticmethod
     def config_user_get (starterDict = {}):
         starterDict.update (AHF_HeadFixer_PWM.config_user_get(starterDict))
-        pwmChan = starterDict.get('pwmChan', 1)
-        response = input ("PWM channel to use for servo: (1 on GPIO-18 or 2 on GPIO-19, currently %d): " %pwmChan)
+        pwmChan = starterDict.get('pwmChan', AHF_HeadFixer_PWM_Pi.defaultChannel)
+        response = input ("PWM channel to use for servo: (1 on GPIO-18 or 2 on GPIO-19, currently %d): " % pwmChan)
         if response != '':
             pwmChan = int (response)
         starterDict.update ({'pwmChan': pwmChan})

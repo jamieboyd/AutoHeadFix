@@ -10,6 +10,7 @@ class AHF_HeadFixer_Pistons(AHF_HeadFixer):
     Head fixer using solenoid-driven pistons to push head bar against front plate
     a single GPIO output triggers a driver of some kind to energize solenoids
     """
+    defaultPin = 12
     @staticmethod
     def about():
         return 'Single GPIO output triggers driver that energize solenoids that push headbar'
@@ -18,7 +19,7 @@ class AHF_HeadFixer_Pistons(AHF_HeadFixer):
         """
         Querries user for pin number for piston, returns dictionary 
         """
-        pin = starterDict.get('pistonsPin', 12)
+        pin = starterDict.get('pistonsPin', AHF_HeadFixer_Pistons.defaultPin)
         response = input ('Enter the GPIO pin connected to the Head Fixing pistons, currently %d:' % pin)
         if response != '':
             pin = int (response)

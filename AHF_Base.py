@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 #-*-coding: utf-8 -*-
 from abc import ABCMeta, abstractmethod
-
+import AHF_ClassAndDictUtils as CAD
 class AHF_Base (metaclass = ABCMeta):
 
     @staticmethod
@@ -23,12 +23,12 @@ class AHF_Base (metaclass = ABCMeta):
         return starterDict
 
 
-    def __init__(self, settingsDict):
+    def __init__(self, task):
         """
         Initialization of a subclass object may be just making a link to the settings dict
         and running setup so this does not need to be an abtract function
         """
-        self.settingsDict = settingsDict
+        self.settingsDict = getattr (task, self.__class__.name.rstrip('Class') + 'Dict')
         self.setup ()
 
 

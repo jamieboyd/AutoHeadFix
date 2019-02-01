@@ -14,11 +14,11 @@ git clone https://github.com/adafruit/Adafruit_Python_PCA9685.git
 import Adafruit_PCA9685
 from AHF_HeadFixer_PWM import AHF_HeadFixer_PWM
 
-
 class AHF_HeadFixer_PWM_PCA9685 (AHF_HeadFixer_PWM):
     """
     inherits from AHF_HeadFixer_PWM
     """
+    defaultAddress = 0x40
     @staticmethod
     def about():
         return 'PCA9685 servo driver over i2c controls a servo motor to push head bar'
@@ -27,7 +27,7 @@ class AHF_HeadFixer_PWM_PCA9685 (AHF_HeadFixer_PWM):
     @staticmethod
     def config_user_get (starterDict = {}):
         starterDict.update (AHF_HeadFixer_PWM.config_user_get(starterDict))
-        servoAddress = starterDict.get ('servoAddress', 0x40)
+        servoAddress = starterDict.get ('servoAddress', AHF_HeadFixer_PWM_PCA9685.defaultAddress)
         response = input("Enter Servo I2C Address, in Hexadecimal, currently 0x%x: " % servoAddress)
         if response != '':
             servoAddress = int (response, 16)

@@ -5,7 +5,7 @@ from time import time, sleep
 from AHF_ContactCheck import AHF_ContactCheck
 
 class AHF_ContactCheck_Elec (AHF_ContactCheck):
-
+    defaultPin = 21
     @staticmethod
     def about ():
         return 'Simple electrical contact check with pull-up or pull-down resistor.'
@@ -13,7 +13,7 @@ class AHF_ContactCheck_Elec (AHF_ContactCheck):
     @staticmethod
     def config_user_get (starterDict = {}):
         # GPIO pin used for contact check
-        contactPin = starterDict.get ('contactPin', 21)
+        contactPin = starterDict.get ('contactPin', AHF_ContactCheck_Elec.defaultPin)
         response = input ('Enter the GPIO pin connected to the electrical contact, currently %d:' % contactPin)
         if response != '':
             contactPin = int (response)
