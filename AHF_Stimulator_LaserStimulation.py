@@ -609,7 +609,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
             else:
                 genotype = 'no genotype'
             stimType = expSettings.stimulator[mouse.stimType][15:]
-            print(str(mouse.tag) + '\t' + str(ref_im) + '\t' + str(targets) +'\t' + headFixStyle + '\t\t' + stimType + '\t' + genotype)
+            print(str(mouse.tag) + '\t' + str(ref_im) + '\t' + str(targets) +'\t' + headFixStyle + '\t\t' + stimType + '\t\t' + genotype)
         while(True):
             inputStr = input ('c= headFixStyle, t= select targets, s= stimType, q= quit: ')
             if inputStr == 'c':
