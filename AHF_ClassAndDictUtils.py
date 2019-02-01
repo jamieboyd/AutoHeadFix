@@ -9,7 +9,6 @@ import inspect
 from collections import OrderedDict
 import json
 
-from AHF_Base import AHF_Base
 """
 methods for
 choosing classes and getting classes from files based on AHF naming conventions and/or on inheritance
@@ -34,6 +33,9 @@ def Class_from_file(nameTypeStr, nameStr):
     module = __import__(fileName)
     return getattr(module, fileName)
 
+
+def Super_of_object (anObject):
+    return Super_of_class (anObject.__class__).__name__
 
 
 def Super_of_class (aClass):

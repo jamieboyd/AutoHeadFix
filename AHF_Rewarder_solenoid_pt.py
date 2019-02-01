@@ -15,7 +15,8 @@ class AHF_Rewarder_solenoid_pt (AHF_Rewarder_solenoid):
 
 
     def setup (self):
-       self.cmPulse = CountermandPulse (self.rewardPin, 0, 0, self.rewards.get('entry'), 1)
+        super().setup()
+        self.cmPulse = CountermandPulse (self.rewardPin, 0, 0, self.rewards.get('entry'), 1)
 
 
     def giveReward(self, rewardName):

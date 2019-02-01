@@ -10,7 +10,6 @@ class AHF_Rewarder(AHF_Base, metaclass = ABCMeta):
     """
     rewardUnits = ''
     testAmount = 0
-    countermand = 0 # 0 = no reward, or reward countermanded; 1 = waiting for delay; 2 = giving reward, too late to countermand
     defaultCMtime = 2
 
 

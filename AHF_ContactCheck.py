@@ -1,9 +1,11 @@
 #! /usr/bin/python3
 #-*-coding: utf-8 -*-
 
+from abc import ABCMeta, abstractmethod
+
 from AHF_Base import AHF_Base
 
-class AHF_ContactCheck (AHF_Base):
+class AHF_ContactCheck (AHF_Base, metaclass = ABCMeta):
 
     @abstractmethod
     def checkContact(self):
@@ -37,6 +39,6 @@ class AHF_ContactCheck (AHF_Base):
             result = input ('Would you like to edit settings for contact check, Y or N?')
             if result[0] == 'Y' or result [0] == 'y':
                 self.setdown ()
-                self.settingsDict = self.__class__.config_user_get (self.settingsDict)
+                self.settingsDict = self.config_user_get (self.settingsDict)
                 self.setup()                         
 

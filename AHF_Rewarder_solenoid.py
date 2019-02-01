@@ -7,49 +7,43 @@ from time import sleep
 
 class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
     """
-    An abstratct base class to use a solenoid to deliver water rewards using 1 GPIO pin, subclasses use different timing methods
+    An abstract base class to use a solenoid to deliver water rewards using 1 GPIO pin, subclasses use different timing methods
     """
     rewardUnits = 'Seconds'
-    testAmount = 1
+    testAmount = 1.0
+    defaultPin = 13
+    defaultEntry = 0.2
+    defaultTask = 0.4
     
     @staticmethod
-    def config_user_get():
-        rewarderDict={}
-        rewardPin = int (input('Enter the GPIO pin used by the water delivery solenoid:'))
-        rewarderDict.update({'rewardPin': rewardPin})
-        rewards = {}
-        entry = float (input ('Enter solenoid opening duration, in seconds, for entry rewards:'))
-        rewards.update({'entry' : entry})
-        task = float (input ('Enter solenoid opening duration,in seconds, for task rewards:'))
-        rewards.update({'task' : task})
-        rewarderDict.update ({'rewards' : rewards})
-        return rewarderDict
+    def config_user_get(starterDict = {}):
+        rewardPin = starterDict.get ('rewardPin', AHF_Rewarder_solenoid.defaultPin)
+        response = input('Enter the GPIO pin used by the water delivery solenoid (currently %d): ' % rewardPin)
+        if response != '':
+            rewardPin = int (response)
+        rewards = starterDict.get ('rewards', {})
+        entry = rewards.get ('entry', AHF_Rewarder_solenoid.defaultEntry)
+        response = input ('Enter solenoid opening duration, in seconds, for entry rewards, (currently %.2f): ' % AHF_Rewarder_solenoid.defaultEntry)
+        if response != '':
+            entry = float (response)
+        task = rewards.get ('task', AHF_Rewarder_solenoid.defaultTask)
+        response = input ('Enter solenoid opening duration, in seconds, for task rewards, (currently %.2f): ' % AHF_Rewarder_solenoid.defaultTask)
+        if response != '':
+            task = float (response)
+        rewards.update({'entry' : entry, 'task' : task, 'test' : AHF_Rewarder_solenoid.testAmount})
+        starterDict.update ({'rewardPin': rewardPin, 'rewards' : rewards})
+        return starterDict
 
-
-    def __init__ (self, rewarderDict):
-        """
-        Makes a new Rewarder object with a GPIO pin and defined opening times for task and entry rewards
-        Init inits the dictionary, and setup sets up the GPIO. If we we change GPIO, call setup
-        """
-        self.rewardPin = rewarderDict.get('rewardPin')
-        self.rewards = rewarderDict.get ('rewards')
-        if self.rewards is None:
-            self.rewards = {'entry':0.1, 'task':0.3}
-        else:
-            self.rewards.setdefault ('entry', 0.1)
-            self.rewards.setdefault ('task', 0.3)
-        self.rewards.update ({'rewards':self.rewards})
-        self.countermandTime = self.defaultCMtime
-        self.setup ()
 
     @abstractmethod
     def setup (self):
-        pass
+        self.rewardPin = self.settingsDict.get('rewardPin')
+        self.rewards = self.settingsDict.get ('rewards')
+        self.countermandTime = self.defaultCMtime
 
     @abstractmethod
     def giveReward(self, rewardName):
         pass
-
 
     @abstractmethod
     def giveRewardCM(self, rewardName):
@@ -67,13 +61,11 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
     def turnOFF (self):
         pass
 
-    def hardwareTest (self, rewardDict):
-        if not 'hardwareTest' in self.rewards:
-           self.addRewardToDict ('hardwareTest', self.testAmount)
-        print ('\nReward Solenoid opening for %f %s' % (self.testAmount, self.rewardUnits))
-        self.giveReward('hardwareTest')
+    def hardwareTest (self):
+        print ('\nReward Solenoid opening for %.2f %s' % (self.testAmount, self.rewardUnits))
+        self.giveReward('test')
         sleep (self.testAmount)
-        inputStr= input('Reward Solenoid closed.\nDo you want to change the Reward Solenoid Pin (currently ' + str (self.rewardPin) + ')?')
+        inputStr= input('Reward Solenoid closed.\nDo you want to change the Reward Solenoid Pin (currently %d)? ' % self.rewardPin)
         if inputStr[0] == 'y' or inputStr[0] == "Y":
             self.rewardPin = int (input('Enter New Reward Solenoid Pin:' ))
             rewardDict.update ({'rewardPin': self.rewardPin, 'rewards': self.rewards})

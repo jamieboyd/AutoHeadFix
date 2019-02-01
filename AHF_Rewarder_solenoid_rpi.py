@@ -33,10 +33,11 @@ class AHF_Rewarder_solenoid_rpi (AHF_Rewarder_solenoid):
         
 
     def setup (self):
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setwarnings(False)
-        GPIO.cleanup (self.rewardPin)
+        super().setup()
         GPIO.setup(self.rewardPin, GPIO.OUT)
+
+    def setdown (self):
+        GPIO.cleanup(self.rewardPin)
 
     def giveReward(self, rewardName):
         """

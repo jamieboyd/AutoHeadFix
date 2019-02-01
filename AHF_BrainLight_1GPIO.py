@@ -2,10 +2,12 @@
 #-*-coding: utf-8 -*-
 import RPi.GPIO as GPIO
 from time import sleep
-
+from _thread import start_new_thread
 from AHF_BrainLight import AHF_BrainLight
 
 class AHF_BrainLight_1GPIO (AHF_BrainLight):
+    
+    defaultPin = 23 # default GPIO pin number
 
     @staticmethod
     def about():
@@ -13,48 +15,41 @@ class AHF_BrainLight_1GPIO (AHF_BrainLight):
     
     @staticmethod
     def config_user_get (starterDict = {}):
-        ledPin = starterDict.get ('ledPin', 23)
+        AHF_BrainLight.config_user_get (starterDict)
+        ledPin = starterDict.get ('ledPin', AHF_BrainLight_1GPIO.defaultPin)
         result = input('Enter the GPIO pin connected to the blue LED for brain camera illumination, currently %d:' % ledPin)
         if result != '':
             ledPin = int(result)
         starterDict.update ({'ledPin':ledPin})
         return starterDict
 
-    def __init__(self, settingsDictP):
-        """
-        initialization of a brain lighter, reading data from a settings dictionary
-        """
-        self.settingsDict = settingsDictP
-        self.setup()
-
     def setup (self):
         """
         does hardware initialization of a brain lighter with (possibly updated) info in self.settingsDict
         """
         self.ledPin = self.settingsDict.get ('ledPin')
-        GPIO.setmode(GPIO.BCM)
+        self.ledDelay = self.settingsDict.get ('ledDelay')
         GPIO.setup (self.ledPin, GPIO.OUT)
+
+    @staticmethod
+    def onThread (sleepTime, ledPin):
+        sleep (sleepTime)
+        GPIO.output (ledPin, GPIO.HIGH)
+
 
     def setdown (self):
         GPIO.cleanup (self.ledPin)
 
-    def hardwareTest (self):
-        self.onForStim()
-        print ('Turning blue LED ON for two seconds....')
-        sleep (2)
-        print ('Turning blue LED OFF.')
-        self.offForStim ()
-        result = input ('Do you wish to edit brain light settings?')
-        if result [0] == 'y' or result [0] == 'Y':
-            self.setdown ()
-            self.settingsDict.update(AHF_BrainLight_1GPIO.config_user_get (self.settingsDict))
-            self.setup ()
 
     def onForStim (self):
-        GPIO.output (self.ledPin, GPIO.HIGH)
-
+        if self.ledDelay > 0:
+            start_new_thread (self.onThread, (self.ledDelay,self.ledPin))
+        else:
+            GPIO.output (self.ledPin, GPIO.HIGH)
 
     def offForStim (self):
+        if self.ledDelay > 0:
+            sleep (self.ledDelay)
         GPIO.output (self.ledPin, GPIO.LOW)
 
 
