@@ -1,10 +1,10 @@
 #! /usr/bin/python3
 #-*-coding: utf-8 -*-
 from abc import ABCMeta, abstractmethod
-import os
-import inspect
 
-class AHF_Rewarder(metaclass = ABCMeta):
+from AHF_Base import AHF_Base
+
+class AHF_Rewarder(AHF_Base, metaclass = ABCMeta):
     """
     Base class for all rewarder classs. Other rewarders subclass from this, or from one of its subclasses
     """
@@ -13,27 +13,6 @@ class AHF_Rewarder(metaclass = ABCMeta):
     countermand = 0 # 0 = no reward, or reward countermanded; 1 = waiting for delay; 2 = giving reward, too late to countermand
     defaultCMtime = 2
 
-    
-    #################################Abstract methods subclasses must implement #################################################
-    @staticmethod
-    @abstractmethod
-    def about():
-        return ''
-
-
-    # gets a congiguration dictionary by querying user
-    @staticmethod
-    @abstractmethod
-    def config_user_get ():
-        return {}
-
-    @abstractmethod
-    def __init__ (self, rewardDict):
-        self.rewardDict={}
-
-    @abstractmethod
-    def setup (self):
-        pass
 
     @abstractmethod
     def giveReward(self, rewardName):
@@ -48,11 +27,6 @@ class AHF_Rewarder(metaclass = ABCMeta):
         return 0
 
     @abstractmethod
-    def hardwareTest (self, task):
-        pass
-
-
-    @abstractmethod
     def turnON (self):
         pass
 
@@ -63,7 +37,6 @@ class AHF_Rewarder(metaclass = ABCMeta):
     def addRewardToDict (self, rewardName, rewardSize):
         self.rewards.update ({rewardName : rewardSize})
 
-    
     def setCountermandTime (self, countermandTime):
         self.countermandTime = countermandTime
 

@@ -34,11 +34,10 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
         self.servoReleasedPosition = self.settingsDict.get ('servoReleasedPosition')
         self.servoFixedPosition = self.settingsDict.get ('servoFixedPosition')
         if self.__class__.hasLevels:
-            self.servoIncrement = (self.servoFixedPosition - self.servoReleasedPosition)/self.__class__.numLevels
+            self.servoIncrement = (self.servoFixedPosition - self.servoReleasedPosition)/self.numLevels
     
-    # self.numLevels different levels of fixing tightness, with 0 being released position
     def fixMouse(self, mouse = None):
-        if self.__class__.hasLevels and hasattr (mouse, 'HeadFixLevel'):
+        if self.hasLevels and hasattr (mouse, 'HeadFixLevel'):
             self.setPWM (int(self.servoReleasedPosition + (self.servoIncrement * mouse.HeadFixLevel)))
         else:
             self.setPWM (self.servoFixedPosition)
@@ -53,7 +52,7 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
         pass
 
 
-    # hardware test overwritten to just modify fixed and released servo positions, other settings not likely to change
+    # Head-Fixer hardware test overwritten to just modify fixed and released servo positions, other settings not likely to change
     def hardwareTest (self):
         print ('servo moving to Head-Fixed position for 3 seconds')
         self.fixMouse()
