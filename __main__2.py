@@ -1,23 +1,23 @@
 #! /usr/bin/python3
 #-*-coding: utf-8 -*-
 
-#library imports
-import RPi.GPIO as GPIO
+from time import time, localtime,timezone, sleep
+from datetime import datetime, timedelta
 
-# local files, part of AutoHeadFix
+# Task configures and controls sub-tasks for hardware and stimulators
 from AHF_Task import AHF_Task
 
 """
 when we start a new day, in 24 hr format, so 7 is 7 AM and 19 is 7 PM. We close the text files
 and open new ones for the day.
 """
-kDAYSTARTHOUR =13
+kDAYSTARTHOUR =19
 
 """
 constant for time outs when waiting on an event - instead of waiting for ever, and missing, e.g., keyboard event,
 or callling sleep and maybe missing the thing we were waiting for, we loop using wait_for_edge with a timeout
 """
-kTIMEOUTmS = 50
+kTIMEOUTSECS = 50e-03
 
 
 def main():
@@ -33,50 +33,23 @@ def main():
             task = Task (argv [1])
         else:
             task = Task ('')
-            response = input ('Edit settings loaded from %s?' % task.fileName)
-            if response [0] == 'y' or response [0] == 'Y':
-                task.editSettings()
-                response = input ('Save new/updated settings to a task configuration file?')
-                if response [0] == 'y' or response [0] == 'Y':
-                    task.saveSettings ()
-        assert (hasattr (task, 'LEDpin')) # quick debug check that task got loaded
-        # initialize GPIO
-        GPIO.setmode (GPIO.BCM)
-        GPIO.setwarnings(False)
-        # set up pin that turns on brain illumination LED, the only GPIO we have not put in a class
-        GPIO.setup (task.LEDpin, GPIO.OUT, initial = GPIO.LOW)
-        #initialize sub-tasks have their own classes and dictionaries for initializing
+            task.editSettings ()
         task.setup ()
-        
-        
-        # rewarder - not optional
-        task.Rewarder = task.RewarderClass (task.RewarderDict)
-        # tag reader - not optional
-        task.TagReader = task.TagReaderClass(task.TagReaderDict)
-        #
-        # set up pin for ascertaining mouse contact, ready for head fixing
-        GPIO.setup (task.contactPin, GPIO.IN, pull_up_down=getattr (GPIO, task.contactPUD))
-        # set up countermandable pulse for water solenoid
-        rewarder = PTCountermandPulse (task.rewardPin, 0, 0, task.entranceRewardTime, 1)
-        setattr (task, 'rewarder', rewarder)
-        # make head fixer - does its own GPIO initialization from info in task
-        if task.hasHeadFixer:
-            headFixer=AHF_HeadFixer.get_class (task.headFixerClass) (task.headFixerDict)
-            setattr (task, 'headFixer', headFixer)
-        # set up tag reader with callback on tag_in_range_pin
-        # the callback will set RFIDTagReader.globalTag
-        tagReader =RFIDTagReader.TagReader (task.serialPort, doChecksum = True, timeOutSecs = 0.05, kind='ID')
-        tagReader.installCallBack (task.TIRpin)
-        setattr(task, 'tagReader', tagReader)
-        
-        now = datetime.fromtimestamp (int (time()))
-        startTime = datetime (now.year, now.month, now.day, KDAYSTARTHOUR,0,0)
-        #set 
-        # Loop with a brief sleep, waiting for a tag to be read.
+    except Exception as e:
+        print ('Error initializing hardware' + str (e))
+        raise e
+    assert (hasattr (task, 'BrainLightClass')) # quick debug check that task got loaded
+
+    TagReader = task.TagReader
+    
+    # calculate time for saving files for each day
+    now = datetime.fromtimestamp (int (time()))
+    nextDay = datetime (now.year, now.month, now.day, KDAYSTARTHOUR,0,0) + timedelta (hours=24)
+    # Loop with a brief sleep, waiting for a tag to be read.
         while True:
             try:
                 print ('Waiting for a mouse....')
-                while RFIDTagReader.globalTag == 0:
+                while task.TagReader.readTag == 0:
                     sleep (kTIMEOUTSECS)
                     if datetime.fromtimestamp (int (time())) > nextDay:
                         newDay (task)

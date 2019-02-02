@@ -9,6 +9,8 @@ import inspect
 from collections import OrderedDict
 import json
 
+from AHF_Base import AHF_Base
+
 """
 methods for
 choosing classes and getting classes from files based on AHF naming conventions and/or on inheritance

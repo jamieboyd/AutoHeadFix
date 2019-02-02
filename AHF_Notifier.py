@@ -38,6 +38,10 @@ class AHF_Notifier (AHF_Base, metaclass = ABCMeta):
         try:
             self.notify (msgStr)
         except exception as e:
+            print ('An error ocurred:' + str (e))
+        response = input ('Do you wish to change Notifier settings? ')
+        if response [0] =='Y' or response [0] == 'y':
+            self.settingsDict = self.config_user_get (self.settingsDict)
             
             
         

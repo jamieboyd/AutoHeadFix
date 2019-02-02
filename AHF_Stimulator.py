@@ -5,6 +5,7 @@ from abc import ABCMeta, abstractmethod
 import os
 import inspect
 
+from AHF_Base import AHF_Base
 
 class AHF_Stimulator (metaclass = ABCMeta):
 
@@ -21,20 +22,9 @@ class AHF_Stimulator (metaclass = ABCMeta):
         return 'about message for this stimulator class goes here'
   
 
-    ##################################################################################
-    #abstact methods each stimulator class must implement
-    @abstractmethod
-    def __init__ (self, taskP):
-        pass
-
     @abstractmethod
     def setup (self):
         pass
-
-    @staticmethod
-    @abstractmethod
-    def config_user_get ():
-        return {}
     
 
     @abstractmethod
@@ -53,7 +43,7 @@ class AHF_Stimulator (metaclass = ABCMeta):
 
         self.mouse = mouse
         return 'stim'
-         
+
     @abstractmethod
     def run (self):
         """

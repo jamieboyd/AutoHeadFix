@@ -14,7 +14,8 @@ import os
 import pwd
 import grp
 import AHF_ClassAndDictUtils as CAD
-
+from abc import ABCMeta
+import RPi.GPIO as GPIO
 class Task:
     """
     The plan is to copy all variables from settings, user, into a single object
@@ -172,30 +173,16 @@ class Task:
                 
 
     def setup (self):
-        # head fixer (optional)
-        if self.HeadFixerClass is not None:
-            self.HeadFixer = self.HeadFixerClass (self.HeadFixerDict)
-        # stimulator
-        if self.StimulatorClass is not None:
-            self.Stimulator = self.StimulatorClass (self)
-        # camera
-        if self.CameraClass is not None:
-            self.Camera= self.cameraClass (self.cameraDict)
-        # TagReader 
-        if self.TagReaderClass is not None:
-            self.TagReader = self.TagReaderClass (self.TagReaderDict)
-        # Rewarder
-        if self.RewarderClass is not None:
-            self.Rewarder = self.RewarderClass (self.RewarderDict)
-        # Notifier
-        if self.NotifierClass is not None:
-            self.Notifier = self.NotifierClass (self.NotifierDict)
-        # Trigger
-        if self.TriggerClass is not None:
-            self.Trigger = self.TriggerClass(self.TriggerDict)
-        
+        GPIO.setmode (GPIO.BCM)
+        GPIO.setwarnings(False)
+        fields = sorted (inspect.getmembers (self))
+        for item in fields:
+            if isinstance(item [1],  ABCMeta):
+                baseName = item [0].rstrip ('Class')
+                classDict = getattr (self, baseName + 'Dict')
+                setattr (self, baseName, item [1](classDict))
+
             
-    
     def saveSettings(self):
         """
         Saves current configuration stored in the task object into AHF_task_*.jsn
