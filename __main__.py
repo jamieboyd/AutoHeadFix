@@ -21,7 +21,6 @@ from datetime import datetime
 from random import random
 from sys import argv,exit
 from h5py import File
-import numpy as np
 
 #RPi module
 import RPi.GPIO as GPIO
@@ -202,7 +201,7 @@ def main():
                         GPIO.add_event_detect (cageSettings.entryBBpin, GPIO.BOTH, entryBBCallback)
                     # after exit, update stats
                     writeToLogFile(expSettings.logFP, thisMouse, 'exit')
-                    updateH5File(expSettings,cageSettings,mice)
+                    updateH5File(expSettings,cageSettings,mice,stimulator)
                     updateStats (expSettings.statsFP, mice, thisMouse)
                     # after each exit check for a new day
                     if time() > nextDay:
@@ -220,7 +219,7 @@ def main():
                             i.nextDay (expSettings.logFP)
                         nextDay += KSECSPERDAY
                         mice.clear ()
-                        updateH5File(expSettings,cageSettings,mice)
+                        updateH5File(expSettings,cageSettings,mice,stimulator)
                         updateStats (expSettings.statsFP, mice)
                         backup_H5 (expSettings,cageSettings)
                         # reinitialize lick detector because it can lock up if too many licks when not logging
@@ -284,7 +283,7 @@ def main():
                             print('\t'+str(i)+': '+str(j))
                         inputStr = input ('Which stimulator-specific inspection method would you like to run?')
                         stimulator[int(inputStr)].inspect_mice(mice,cageSettings,expSettings)
-                        updateH5File(expSettings,cageSettings,mice)
+                        updateH5File(expSettings,cageSettings,mice,stimulator)
                     elif event == 'c' or event == 'C':
                         camParams = camera.adjust_config_from_user ()
                     elif event == 'e' or event == 'E':
@@ -475,7 +474,7 @@ def backup_H5 (expSettings,cageSettings):
     else:
         print("mice_metadata.h5 doesn't exist.")
 
-def updateH5File (expSettings,cageSettings,mice):
+def updateH5File (expSettings,cageSettings,mice,stimulator):
     #Updates the existing h5 file, which contains relevant information of each mouse.
     with File(expSettings.hdf_path,'r+') as hdf:
         for mouse in mice.mouseArray:
@@ -487,30 +486,8 @@ def updateH5File (expSettings,cageSettings,mice):
             m.attrs.modify('headFixRewards',mouse.headFixRewards)
             m.attrs.modify('headFixStyle',mouse.headFixStyle)
             m.attrs.modify('stimType',mouse.stimType)
-            if hasattr(mouse,'ref_im'):
-                ref = m.require_dataset('ref_im',shape=tuple(expSettings.camParamsDict['resolution']+[3]),dtype=np.uint8,data=mouse.ref_im)
-                ref.attrs.modify('CLASS', np.string_('IMAGE'))
-                ref.attrs.modify('IMAGE_VERSION', np.string_('1.2'))
-                ref.attrs.modify('IMAGE_SUBCLASS', np.string_('IMAGE_TRUECOLOR'))
-                ref.attrs.modify('INTERLACE_MODE', np.string_('INTERLACE_PIXEL'))
-                ref.attrs.modify('IMAGE_MINMAXRANGE', [0,255])
-            if hasattr(mouse,'targets'):
-                m.require_dataset('targets',shape=(2,),dtype=np.uint8,data=mouse.targets,)
-            t = m.require_group('trial_image')
-            if hasattr(mouse,'trial_image'):
-                tr = t.require_dataset('trial_'+str(mouse.tot_headFixes),shape=tuple(expSettings.camParamsDict['resolution']+[3]),dtype=np.uint8,data=mouse.trial_image)
-                tr.attrs.modify('CLASS', np.string_('IMAGE'))
-                tr.attrs.modify('IMAGE_VERSION', np.string_('1.2'))
-                tr.attrs.modify('IMAGE_SUBCLASS', np.string_('IMAGE_TRUECOLOR'))
-                tr.attrs.modify('INTERLACE_MODE', np.string_('INTERLACE_PIXEL'))
-                tr.attrs.modify('IMAGE_MINMAXRANGE', [0,255])
-            if hasattr(mouse,'laser_spot'):
-                ls = t.require_dataset('trial_'+str(mouse.tot_headFixes)+'_laser_spot',shape=tuple(expSettings.camParamsDict['resolution']+[3]),dtype=np.uint8,data=mouse.laser_spot)
-                ls.attrs.modify('CLASS', np.string_('IMAGE'))
-                ls.attrs.modify('IMAGE_VERSION', np.string_('1.2'))
-                ls.attrs.modify('IMAGE_SUBCLASS', np.string_('IMAGE_TRUECOLOR'))
-                ls.attrs.modify('INTERLACE_MODE', np.string_('INTERLACE_PIXEL'))
-                ls.attrs.modify('IMAGE_MINMAXRANGE', [0,255])
+            # Run stimulator specific updater
+            stimulator.h5updater (mouse,m)
             #To keep track of mouse attributes, create 'log' and save all attributes per day
             h = m.require_group('log')
             t = h.require_group(str(expSettings.dateStr))

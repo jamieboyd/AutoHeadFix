@@ -148,6 +148,12 @@ class AHF_Stimulator (object):
         """
         pass
 
+    def h5updater (self,mouse,h5):
+        """
+            updates stimulator specific data to h5 file
+        """
+        pass
+
     @staticmethod
     def get_class(fileName):
         """

@@ -686,3 +686,29 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
                 self.move_to(np.array([0,0]),topleft=True,join=False)
             elif inputStr == 'q':
                 break
+
+        def h5updater (self,mouse,h5):
+            if hasattr(mouse,'ref_im'):
+                ref = h5.require_dataset('ref_im',shape=tuple(expSettings.camParamsDict['resolution']+[3]),dtype=np.uint8,data=mouse.ref_im)
+                ref.attrs.modify('CLASS', np.string_('IMAGE'))
+                ref.attrs.modify('IMAGE_VERSION', np.string_('1.2'))
+                ref.attrs.modify('IMAGE_SUBCLASS', np.string_('IMAGE_TRUECOLOR'))
+                ref.attrs.modify('INTERLACE_MODE', np.string_('INTERLACE_PIXEL'))
+                ref.attrs.modify('IMAGE_MINMAXRANGE', [0,255])
+            if hasattr(mouse,'targets'):
+                h5.require_dataset('targets',shape=(2,),dtype=np.uint8,data=mouse.targets,)
+            t = h5.require_group('trial_image')
+            if hasattr(mouse,'trial_image'):
+                tr = t.require_dataset('trial_'+str(mouse.tot_headFixes),shape=tuple(expSettings.camParamsDict['resolution']+[3]),dtype=np.uint8,data=mouse.trial_image)
+                tr.attrs.modify('CLASS', np.string_('IMAGE'))
+                tr.attrs.modify('IMAGE_VERSION', np.string_('1.2'))
+                tr.attrs.modify('IMAGE_SUBCLASS', np.string_('IMAGE_TRUECOLOR'))
+                tr.attrs.modify('INTERLACE_MODE', np.string_('INTERLACE_PIXEL'))
+                tr.attrs.modify('IMAGE_MINMAXRANGE', [0,255])
+            if hasattr(mouse,'laser_spot'):
+                ls = t.require_dataset('trial_'+str(mouse.tot_headFixes)+'_laser_spot',shape=tuple(expSettings.camParamsDict['resolution']+[3]),dtype=np.uint8,data=mouse.laser_spot)
+                ls.attrs.modify('CLASS', np.string_('IMAGE'))
+                ls.attrs.modify('IMAGE_VERSION', np.string_('1.2'))
+                ls.attrs.modify('IMAGE_SUBCLASS', np.string_('IMAGE_TRUECOLOR'))
+                ls.attrs.modify('INTERLACE_MODE', np.string_('INTERLACE_PIXEL'))
+                ls.attrs.modify('IMAGE_MINMAXRANGE', [0,255])
