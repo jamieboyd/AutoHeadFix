@@ -124,7 +124,7 @@ def htloop (cageSet, tagReader, headFixer, stimulator, expSettings):
             elif inputStr == 'r': # r for reward solenoid
                 print ('Reward Solenoid opening for 1 sec')
                 GPIO.output(cageSet.rewardPin, 1)
-                sleep(1.0)
+                sleep(60.0)
                 GPIO.output(cageSet.rewardPin, 0)
                 inputStr= input('Reward Solenoid closed.\nDo you want to change the Reward Solenoid Pin (currently ' + str (cageSet.rewardPin) + ')?')
                 if inputStr[0] == 'y' or inputStr[0] == "Y":

@@ -486,8 +486,8 @@ def updateH5File (expSettings,cageSettings,mice,stimulator):
             m.attrs.modify('headFixRewards',mouse.headFixRewards)
             m.attrs.modify('headFixStyle',mouse.headFixStyle)
             m.attrs.modify('stimType',mouse.stimType)
-            # Run stimulator specific updater
-            stimulator.h5updater (mouse,m)
+            # Run mouse-stimulator specific updater
+            stimulator[mouse.stimType].h5updater (mouse,m)
             #To keep track of mouse attributes, create 'log' and save all attributes per day
             h = m.require_group('log')
             t = h.require_group(str(expSettings.dateStr))
