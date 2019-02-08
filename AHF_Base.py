@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 #-*-coding: utf-8 -*-
+
 from abc import ABCMeta, abstractmethod
 
 import AHF_ClassAndDictUtils as CAD

@@ -1,9 +1,9 @@
 #! /usr/bin/python
 #-*-coding: utf-8 -*-
 from time import time, sleep
-from AHF_TagReader import AHF_TagReader
 
 import RFIDTagReader
+from AHF_TagReader import AHF_TagReader
 
 class AHF_TagReader_ID (AHF_TagReader):
 
