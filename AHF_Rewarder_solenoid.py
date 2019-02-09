@@ -67,8 +67,8 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
         sleep (self.testAmount)
         inputStr= input('Reward Solenoid closed.\nDo you want to change the Reward Solenoid Pin (currently %d)? ' % self.rewardPin)
         if inputStr[0] == 'y' or inputStr[0] == "Y":
-            self.rewardPin = int (input('Enter New Reward Solenoid Pin:' ))
-            rewardDict.update ({'rewardPin': self.rewardPin, 'rewards': self.rewards})
-            self.setup()
+            self.setdown ()
+            self.settingsDict = self.config_user_get (self.settingsDict)
+            self.setup() 
                     
 

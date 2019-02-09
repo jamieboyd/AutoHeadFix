@@ -7,7 +7,7 @@ import inspect
 
 from AHF_Base import AHF_Base
 
-class AHF_Stimulator (metaclass = ABCMeta):
+class AHF_Stimulator (AHF_Base, metaclass = ABCMeta):
 
     
     """
@@ -16,73 +16,24 @@ class AHF_Stimulator (metaclass = ABCMeta):
     All events and their timings in a head fix, including rewards, are controlled by a Stimulator.
  
     """
-    
-    @staticmethod
-    def about ():
-        return 'about message for this stimulator class goes here'
   
 
     @abstractmethod
-    def setup (self):
-        pass
-    
-
-    @abstractmethod
-    def configStim (self, mouse):
-        """
-        Called before running each head fix trial, stimulator decides what to do and configures itself
-
-        You may wish to different things for different mice, and to store data about stim presentations in the mouse object
-        returns: a short string representing stim configuration, used to generate movie file name
-        :param mouse: the object representing the mouse that is currently head-fixed
-        """
-        if 'stimCount' in mouse.stimResultsDict:
-            mouse.stimResultsDict.update ({'stimCount' : mouse.stimResultsDict.get('stimCount') + 1})
-        else:
-            mouse.stimResultsDict.update({'stimCount' : 1})
-
-        self.mouse = mouse
-        return 'stim'
-
-    @abstractmethod
-    def run (self):
+    def run (self, mouse):
         """
         Called at start of each head fix. Gives a reward, increments mouse's reward count, then waits 10 seconds
         """
         pass
 
-    @abstractmethod
-    def logFile (self):
-        """
-            Called after each head fix, prints more detailed text to the log file, perhaps a line for each event
-
-           You may wish to use the same format as writeToLogFile function in __main__.py
-
-           Or you may wish to override with pass and log from the run method
-        """
-        pass
             
     @abstractmethod
-    def nextDay (self, newFP):
+    def nextDay (self):
         """
             Called when the next day starts. The stimulator is given the new log file pointer. Can do other things as needed
             :param newFP: the file pointer for the new day's log file
         """
         pass
 
-
-    @abstractmethod
-    def quitting (self):
-        """
-            Called before AutoHEadFix exits. Gives stimulator chance to do any needed cleanup
-
-            A stimulator may, e.g., open files and wish to close them before exiting, or use hardware that needs to be cleaned up
-        """
-        pass
-
-    @abstractmethod
-    def hardwareTest (self, task):
-        pass
 
 
 if __name__ == '__main__':

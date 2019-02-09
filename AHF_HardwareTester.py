@@ -1,6 +1,11 @@
 #! /usr/bin/python3
 #-*-coding: utf-8 -*-
 
+from collections import OrderedDict
+import inspect
+from AHF_Task import Task
+from AHF_Base import AHF_Base
+
 def Show_testable_objects (anObject):
     print ('\n*************** Testable Auto Head Fix Objects *******************')
     showDict = OrderedDict()
@@ -8,7 +13,7 @@ def Show_testable_objects (anObject):
     nP = 0
     fields = sorted (inspect.getmembers (anObject))
     for item in fields:
-       if isinstance(item[1], AHF_Base) and hasattr (item[1], hardwareTest):
+       if isinstance(item[1], AHF_Base) and hasattr (item[1], 'hardwareTest'):
             showDict.update ({nP:{item [0]: item [1]}})
             nP +=1
     # print to screen 

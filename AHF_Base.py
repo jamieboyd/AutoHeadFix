@@ -31,26 +31,23 @@ class AHF_Base (metaclass = ABCMeta):
         return starterDict
 
 
-    def __init__(self, task):
+    def __init__(self, taskP, settingsDictP):
         """
         Initialization of a subclass object may be just making a link to the settings dict and running setup
         so this does not need to be an abtract function - your class can use as is
-        __init__ may be passed just the settings dict or maybe the entire Task including the settings dict
-        Class names and need to start with AHF_ and if the whole Task is apssed, the dictionary must
-        follow convention, named for the class with 'Dict' appended. 
+        __init__ will be passed both the settings dict andthe entire Task including the settings dict
+        Class names need to start with AHF_ and the dictionary must follow convention, named for the class with 'Dict' appended. 
         
         """
-        if hasattr (task, CAD.Super_of_object (self).lstrip('AHF_') + 'Dict'):
-            self.settingsDict = getattr (task, CAD.Super_of_object (self).lstrip('AHF_') + 'Dict')
-        else:
-            self.settingsDict = task
+        self.task=taskP
+        self.settingsDict = settingsDictP
         self.setup ()
 
 
     @abstractmethod
     def setup (self):
         """
-        does hardware initialization of  with (possibly updated) info in self.settingsDict
+        does hardware initialization with (possibly updated) info in self.settingsDict
         Run by __init__, or can be run  separately after editing the settingsDict
         """
         pass
@@ -59,9 +56,15 @@ class AHF_Base (metaclass = ABCMeta):
     def setdown (self):
         """
         oppposite of setup. Releases any hardware resouces. can be run before editing settings so GPIO
-        pins can be reused, for example. This strategy should be used in hardwareTest
+        pins can be reused, for example. This strategy should be used in hardwareTest method.  
         """
         pass
+
+    def __del__ (self):
+        """
+        For clean up purposes, releases hardware resources with setdown method
+        """
+        self.setdown ()
 
 
     @abstractmethod

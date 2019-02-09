@@ -51,7 +51,7 @@ def MPR_Callback (channel):
         if (touches & pinBitVal) and not (gLickDetector.prevTouches & pinBitVal):
             gLickDetector.lickArray [i] +=1
             if gLickDetector.isLogging:
-                gLickDetector.dataLogger.writeToLogFile(gLickDetector.globalTag, 'Lick:' + str (i))
+                gLickDetector.dataLogger.writeToLogFile(gLickDetector.tagReader.readTag(), 'Lick:' + str (i))
         pinBitVal *= 2
     gLickDetector.prevTouches = touches
     
@@ -105,7 +105,10 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
         self.mpr121.set_thresholds (self.defaultTouchThresh,self.defaultUntouchThresh)
          # state of touches from one invocation to next, used in callback to separate touches from untouches
         self.prevTouches = self.mpr121.touched()
-        self.dataLogger =None
+        if hasattr (self.task, 'DataLogger'):
+            self.dataLogger = self.task.DataLogger
+        else:
+            self.dataLogger = None
         self.isLogging = False
         self.lickArray = array ('i', [0]*self.numTouchChannels)
         # set up global lick detector with callback

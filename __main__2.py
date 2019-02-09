@@ -38,10 +38,8 @@ def main():
     except Exception as e:
         print ('Error initializing hardware' + str (e))
         raise e
-    assert (hasattr (task, 'BrainLightClass')) # quick debug check that task got loaded
+    assert (hasattr (task, 'BrainLight')) # quick debug check that task got loaded and setup ran
 
-    TagReader = task.TagReader
-    
     # calculate time for saving files for each day
     now = datetime.fromtimestamp (int (time()))
     nextDay = datetime (now.year, now.month, now.day, KDAYSTARTHOUR,0,0) + timedelta (hours=24)
@@ -52,7 +50,7 @@ def main():
                 while task.TagReader.readTag == 0:
                     sleep (kTIMEOUTSECS)
                     if datetime.fromtimestamp (int (time())) > nextDay:
-                        newDay (task)
+                        task.DataLogger.newDay ()
                 # a Tag has been read
                 thisMouse = mice.getMouseFromTag (RFIDTagReader.globalTag)
                 entryTime = time()

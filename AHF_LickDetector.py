@@ -35,8 +35,7 @@ class AHF_LickDetector (AHF_Base, metaclass = ABCMeta):
         pass
     
 
-    def addDataLogger (self, globalTag, dataLogger):
-        self.globaltag = globalTag
+    def addDataLogger (self, dataLogger):
         if dataLogger is None: 
             self.dataLogger = Simple_Logger (None)
         else:

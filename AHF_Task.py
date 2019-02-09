@@ -21,7 +21,7 @@ class Task:
     The plan is to copy all variables from settings, user, into a single object
     The object will have fields for things loaded from hardware config dictionary and experiment config dictionary
     as well as fields for objects created when program runs (headFixer, TagReader, rewarder, camera, stimulator)
-    Objects that are created from subclassable objects will have a dictionary of their own as an entry in the main dictionay
+    Objects that are created will have a dictionary of their own as an entry in the main dictionay
     Using the same names in the object fields as in the dictionary, and only loading one dictionary from
     a combined settings file, we don't need a dictionary while thr program is running because the task object can recreate the dict
     with self.__dict__
@@ -105,10 +105,9 @@ class Task:
             self.BrainLightClass = CAD.Class_from_file('BrainLight', CAD.File_from_user ('BrainLight', 'Brain illuminator', '.py'))
             self.BrainLightDict = self.BrainLightClass.config_user_get ()
             fileErr = True
-
         ############################ text messaging using textbelt service (Optional) only 1 subclass so far ######################
-        if not hasattr (self, 'NotifierDict'):
-            tempInput = input ('Send text messages if mouse exceeds criterion time in chamber?(Y or N):')
+        if not hasattr (self, 'NotifierClass') or not hasattr (self, 'NotifierDict'):
+            tempInput = input ('Send notifications if mouse exceeds criterion time in chamber?(Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
                 self.NotifierClass = CAD.Class_from_file('Notifier', '')
                 self.NotifierDict = self.NotifierClass.config_user_get()
@@ -118,36 +117,30 @@ class Task:
                 self.NotifierDict = None
             fileErr = True
         ####################################### triggers for alerting other computers (Optional) only 1 subclass so far ######################3
-        if not hasattr (self, 'TriggerDict'):
+        if not hasattr (self, 'TriggerClass') or not hasattr (self, 'TriggerDict'):
             tempInput = input ('Send triggers to start tasks on secondary computers (Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.TriggerClass = CAD.Class_from_file('UDPTrig', '')
+                self.TriggerClass = CAD.Class_from_file('Trigger', '')
                 self.TriggerDict = self.TriggerClass.config_user_get()
             else:
                 self.TriggerClass = None
                 self.TriggerDict = None
             fileErr = True
         ############################## LickDetector (optional) only 1 subclass so far ##############
-        if not hasattr (self, 'lickDetectorIRQ'):
+        if not hasattr (self, 'LickDetectorClass') or not hasattr (self, 'LickDetectorDict'):
             tempInput = input ('Does this setup have a Lick Detector installed? (Y or N)')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.lickDetectorIRQ = int (input ('Enter the GPIO pin connected to the IRQ pin for the Lick Detector'))
+                self.LickDetectorClass = CAD.Class_from_file('LickDetector', '')
+                self.LickDetectorDict = self.LickDetectorClass.config_user_get()
             else:
-                self.lickDetectorIRQ = 0
+                self.LickDetectorClass = None
+                self.LickDetectorDict = None
             fileErr = True
 
             
          ####### settings for experiment configuration ########  
-        if not hasattr (self, 'cageID'):
-            self.cageID = input('Enter a name for the cage ID:')
-            fileErr = True
-        if not hasattr (self, 'dataPath'):
-            self.dataPath = input ('Enter the path to the directory where the data will be saved:')
-            fileErr = True
-        if not hasattr (self, 'mouseConfigPath'):
-            self.mouseConfigPath = input ('Enter the path to the directory where mouse configuration data can be loaded:')
-            #### the reward and head-fix proportion settings can also be set on a per-mouse bassis
-            ### these provide default values
+        #### these can also be set on a per-mouse bassis
+        ### these provide default values
         if not hasattr (self, 'maxEntryRewards'):
             self.maxEntryRewards = int (input ('Enter maximum number of entry rewards that will be given per day:'))
             fileErr = True
@@ -163,7 +156,9 @@ class Task:
             fileErr = True
         if not hasattr (self, 'inChamberTimeLimit'):
             self.inChamberTimeLimit = float(input('In-Chamber duration limit, seconds, before stopping head-fix trials:'))
- 
+        if not hasattr (self, 'mouseConfigPath'):
+            self.mouseConfigPath = input ('Enter the path to the directory where mouse configuration data can be loaded:')
+
        
         # if some of the paramaters were set by user, give option to save
         if fileErr: 
@@ -180,7 +175,7 @@ class Task:
             if isinstance(item [1],  ABCMeta):
                 baseName = item [0].rstrip ('Class')
                 classDict = getattr (self, baseName + 'Dict')
-                setattr (self, baseName, item [1](classDict))
+                setattr (self, baseName, item [1](self, classDict))
 
             
     def saveSettings(self):
@@ -221,7 +216,15 @@ class Task:
                              
 
 if __name__ == '__main__':
+    import AHF_HardwareTester as hwtest
     task = Task ('')
     task.editSettings()
+    response = input ('Save settings to file?')
+    if response [0] == 'Y' or response [0] == 'y':
+        task.saveSettings ()
     task.setup ()
+    hwtest.hardwareTester (task)
+    response = input ('Save settings to file?')
+    if response [0] == 'Y' or response [0] == 'y':
+        task.saveSettings ()
 
