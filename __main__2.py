@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 
 # Task configures and controls sub-tasks for hardware and stimulators
 from AHF_Task import AHF_Task
+# hardware tester can be called from menu pulled up by keyboard interrupt
+from AHF_HardwareTester import hardwareTester
 
 """
 when we start a new day, in 24 hr format, so 7 is 7 AM and 19 is 7 PM. We close the text files
@@ -66,13 +68,39 @@ def main():
                         expSettings.doHeadFix = expSettings.propHeadFix > random() # set doHeadFix for next contact
 
             except KeyboardInterrupt:
-                GPIO.output(cageSettings.ledPin, GPIO.LOW)
-                headFixer.releaseMouse()
-                GPIO.output(cageSettings.rewardPin, GPIO.LOW)
-                lickDetector.stop_logging () 
+                if hasattr (task, 'LickDetector'):
+                    task.lickDetector.stop_logging ()
+                inputStr = '\n************** Auto Head Fix Manager ********************\n'
+                inputStr += 'Enter:\nR to return to head fix trials\nQ to quit\nV to run rewarder (valve) control'
+                inputStr += '\nH for hardware tester\nT for task configuration\nL to log a note'
+                inputStr += '\nS to edit Stimulator settings:\n: '
+                while True:
+                    event = input (inputStr)
+                        if event == 'r' or event == "R":
+                            if hasattr (task, 'LickDetector'):
+                                task.lickDetector.start_logging ()
+                            break
+                        elif event == 'q' or event == 'Q':
+                            return
+                        elif event == 'v' or event== "V":
+                            task.Rewarder.rewardControl()
+                        elif event == 'h' or event == 'H':
+                            task.hardwareTester ()
+                        elif event == 'L' or event == 'l':
+                            logEvent = input ('Enter your log message\n: ')
+                            task.DataLogger.logEvent (0, 'logMsg:%s' % logEvent)
+                        elif event == 'T' or event == 't':
+                            task.editSettings()
+                            response = input ('Save edited settings to file?')
+                            if response [0] == 'Y' or response [0] == 'y':
+                                task.saveSettings ()
+                            task.setup ()
+                        elif event =- 'S' or event == 's':
+                            task.Stimulator.settingsDict = task.Stimulator.config_user_get (task.Stimulator.settingsDict):
+                            task.Stimulator.setup()
 
     except Exception as anError:
-        print ('AutoHeadFix error:' + str (anError))
+        print ('Auto Head Fix error:' + str (anError))
         raise anError
     finally:
         stimulator.quitting()

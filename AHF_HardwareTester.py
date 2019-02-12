@@ -59,6 +59,9 @@ def htloop (task):
             kvp = itemDict.popitem()
             itemValue = kvp [1]
             itemValue.hardwareTest ()
+    response = input ('Save changes in settings to a file?')
+    if response [0] == 'Y' or response [0] == 'y':
+        task.saveSettings ()
 
 if __name__ == '__main__':
     hardwareTester()

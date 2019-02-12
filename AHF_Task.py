@@ -16,6 +16,7 @@ import grp
 import AHF_ClassAndDictUtils as CAD
 from abc import ABCMeta
 import RPi.GPIO as GPIO
+
 class Task:
     """
     The plan is to copy all variables from settings, user, into a single object
@@ -213,18 +214,55 @@ class Task:
 
     def editSettings (self):
         CAD.Edit_Obj_fields (self,  'Auto Head Fix Task')
+        
+        
+    def Show_testable_objects (self):
+        print ('\n*************** Testable Auto Head Fix Objects *******************')
+        showDict = OrderedDict()
+        itemDict = {}
+        nP = 0
+        fields = sorted (inspect.getmembers (self))
+        for item in fields:
+           if isinstance(item[1], AHF_Base) and hasattr (item[1], 'hardwareTest'):
+                showDict.update ({nP:{item [0]: item [1]}})
+                nP +=1
+        # print to screen 
+        for ii in range (0, nP):
+            itemDict.update (showDict.get (ii))
+            kvp = itemDict.popitem()
+            print(str (ii + 1) +') ', kvp [0], ' = ', kvp [1])
+        print ('**********************************\n')
+        return showDict
+
+
+    def hardwareTester (self):
+        while True:
+            showDict = Show_testable_objects ()
+            inputStr = input ('Enter number of object to test, or 0 to exit:')
+            try:
+                inputNum = int (inputStr)
+            except ValueError as e:
+                print ('enter a NUMBER for testing, please: %s\n' % str(e))
+                continue
+            if inputNum == 0:
+                break
+            else:
+                itemDict = {}
+                itemDict.update (showDict [inputNum -1]) #itemDict = OrderedDict.get (inputNum -1)
+                kvp = itemDict.popitem()
+                itemValue = kvp [1]
+                itemValue.hardwareTest ()
+        response = input ('Save changes in settings to a file?')
+        if response [0] == 'Y' or response [0] == 'y':
+            self.saveSettings ()
                              
 
 if __name__ == '__main__':
-    import AHF_HardwareTester as hwtest
     task = Task ('')
     task.editSettings()
     response = input ('Save settings to file?')
     if response [0] == 'Y' or response [0] == 'y':
         task.saveSettings ()
     task.setup ()
-    hwtest.hardwareTester (task)
-    response = input ('Save settings to file?')
-    if response [0] == 'Y' or response [0] == 'y':
-        task.saveSettings ()
+    task.hardwareTester ()
 

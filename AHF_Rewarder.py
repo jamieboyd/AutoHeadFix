@@ -40,8 +40,37 @@ class AHF_Rewarder(AHF_Base, metaclass = ABCMeta):
         self.countermandTime = countermandTime
 
     @abstractmethod
-    def hardwareTest (self, rewardDict):
+    def hardwareTest (self):
         pass
+        
+    def rewardControl (self):
+        """
+        Opens and closes valve, as for testing, or draining the lines
+
+        when run as a module, valveControl assumes GPIO is setup as defined in cageSet and offers to open/close water
+        delivery solenoid. ValveControl takes an instance of AHF_CageSet as a paramater and assumes
+        that the GPIO pin connected to the water delivery solenoid us as defined in the cageSet, and
+        that GPIO is already setup.
+        param:cageSet: an instance of AHF_CageSet describing which pin is used for water reward solenoid
+        returns:nothing
+        """
+        try:
+            while (True):
+                s = input("1 to open, 0 to close, q to quit: ")
+                if s == '1':
+                    self.turnON ()
+                    print ("Rewarder is ON (open)")
+                elif s == '0':
+                    self.turnOFF ()
+                    print ("Rewarder is OFF (closed)")
+                elif s == 'q':
+                    print ("RewardControl quitting.")
+                    break
+                else:
+                    print ("I understand 1 for open, 0 for close, q for quit.")
+        except KeyboardInterrupt:
+            print ("RewardControl quitting.")
+            
 
 
 
