@@ -5,12 +5,13 @@ from AHF_Camera import AHF_Camera
 from picamera import PiCamera
 from time import sleep
 
-class AHF_Camera_PiCam (AHF_Camera):
+class AHF_Camera_PiCam (AHF_Camera, picamera):
 
     @staticmethod
     def about ():
         return 'uses picamera.PiCamera to run the standard Raspberry Pi camera'
-
+        
+    @staticmethod
     def config_user_get ():
         # resolution
         resolution = (640, 480)

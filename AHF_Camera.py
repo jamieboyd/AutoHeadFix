@@ -3,39 +3,12 @@
 from abc import ABCMeta, abstractmethod
 import os
 import inspect
+from AHF_Base import AHF_Base
 
-class AHF_Camera(metaclass = ABCMeta):
+class AHF_Camera(AHF_Base, metaclass = ABCMeta):
     """
     AHF_Camera is the base class for the main brain imaging camera used in Auto Head Fix
     """
-
-    @staticmethod
-    def about ():
-        return 'about message for this Main Brain Camera class goes here'
-        
-    @staticmethod
-    @abstractmethod
-    def config_user_get ():
-        """
-        Querries user for settings for the Camera class and returns a dictionary of those settings
-        """
-        return {}
-
-        
-    ##################################################################################
-    #abstact methods each Camera class must implement
-    #part 1: three main methods of initing
-    @abstractmethod
-    def __init__(self, CameraDict):
-        """
-        reads camera dict
-        """
-        pass
-
-    @abstractmethod
-    def setup (self):
-        pass
-
 
     def set_params (self, paramDict):
         """
