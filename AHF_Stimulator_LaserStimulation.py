@@ -330,13 +330,14 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
         #High-level function, which invokes self.move to run on another processor
         steps = np.around(new_pos).astype(int)-self.pos
         mp = Process(target=self.move, args=(steps[0],steps[1],self.phase,self.delay,topleft,False,))
-        self.phase += steps%8
-        self.phase = self.phase%8
-        self.pos += steps
         mp.daemon = True
         mp.start()
         if join:
             mp.join()
+        #Calculate next phase
+        self.phase += steps%8
+        self.phase = self.phase%8
+        self.pos += steps
 
     def pulse(self,duration,duty_cycle=0):
         if duration<=1000:
