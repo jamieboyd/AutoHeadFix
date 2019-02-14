@@ -292,7 +292,7 @@ def main():
                             stimulator[modCode-2] = AHF_Stimulator.get_class (expSettings.stimulator[modCode-2])(cageSettings, expSettings.stimDict, rewarder, lickDetector, expSettings.logFP, camera)
                         if modCode & 1:
                             for stim in stimulator:
-                                i.change_config (expSettings.stimDict)
+                                stim.change_config (expSettings.stimDict)
     except Exception as anError:
         print ('AutoHeadFix error:' + str (anError))
         raise anError

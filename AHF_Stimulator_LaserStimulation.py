@@ -41,7 +41,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
 
         #PWM settings
         self.PWM_mode = int(self.configDict.get('PWM_mode', 0))
-        self.PWM_channel = int(self.configDict.get('PWM_channel', 1))
+        self.PWM_channel = int(self.configDict.get('PWM_channel', 2))
         self.array = array('i',(0 for i in range(1000)))
         self.PWM = PTPWM(1,1000,1000,0,(int(1E6/1000)),1000,2) #PWM object
         self.PWM.add_channel(self.PWM_channel,0,self.PWM_mode,0,0,self.array)
