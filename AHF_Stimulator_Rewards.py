@@ -31,7 +31,13 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
             stimDict.update ({'rewardInterval' : 5.0})
         return super(AHF_Stimulator_Rewards, AHF_Stimulator_Rewards).dict_from_user (stimDict)
         
-    def run(self):
+    def run(self,doHeadFix):
+        
+        #================ Debug ====================
+        ref_path = self.cageSettings.dataPath+'sample_im/'+datetime.fromtimestamp (int (time())).isoformat ('-')+'_'+str(self.mouse.tag)+'.jpg'
+        self.camera.capture(ref_path)
+        self.camera.start_preview(fullscreen = False, window = tuple(self.camera.AHFpreview))
+        
         timeInterval = self.rewardInterval - self.rewarder.rewardDict.get ('task')
         self.rewardTimes = []
         for reward in range(self.nRewards):
@@ -39,6 +45,8 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
             self.rewarder.giveReward('task')
             sleep(timeInterval)
         self.mouse.headFixRewards += self.nRewards
+
+        self.camera.stop_preview()
 
     def inspect_mice(self,mice,cageSettings,expSettings):
         #Inspect the mice array

@@ -548,7 +548,7 @@ def runTrial (thisMouse, expSettings, cageSettings, rewarder, headFixer, stimula
         else: # turn on the blue light and start the movie
             GPIO.output(cageSettings.ledPin, GPIO.HIGH)
             GPIO.output(cageSettings.led2Pin, GPIO.HIGH)
-        stimulator.run () # run whatever stimulus is configured
+        stimulator.run (expSettings.doHeadFix) # run whatever stimulus is configured
         if expSettings.hasUDP == True:
             GPIO.output(cageSettings.ledPin, GPIO.LOW) # turn off the green LED
             writeToLogFile (expSettings.logFP, thisMouse, "BrainLEDOFF")

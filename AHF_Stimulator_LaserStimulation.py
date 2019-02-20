@@ -498,28 +498,41 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
 
 
 #=================Main functions called from outside===========================
-    def run(self):
-        #Check if mouse is here for the first time. If yes -> get_ref_im and release mouse again
-        if not hasattr(self.mouse,'ref_im'):
-            print('Take reference image')
-            self.get_ref_im()
-            return
-        elif not hasattr(self.mouse,'targets'):
-            print('Select targets')
-            #If targets haven't been choosen -> release mouse again
-            return
-        try:
-            print('Image registration')
-            targ_pos = self.image_registration()
-            print('Moving laser to target and capture image to assert correct laser position')
-            self.move_to(np.flipud(targ_pos),topleft=True,join=True) #Move laser to target and wait until target reached
-            self.mouse.laser_spot = np.empty((self.camera.resolution[0], self.camera.resolution[1], 3),dtype=np.uint8)
-            self.pulse(250,self.duty_cycle)
-            self.camera.capture(self.mouse.laser_spot,'rgb')
-            sleep(0.25)
-            self.rewarder.giveReward('task')
+    def run(self,doHeadFix):
+        if doHeadFix:
+            if not hasattr(self.mouse,'ref_im'):
+                print('Take reference image')
+                self.get_ref_im()
+            elif not hasattr(self.mouse,'targets'):
+                print('Select targets')
+                #If targets haven't been choosen -> release mouse again
+                return
 
-            self.buzzTimes = []
+            try:
+                # Run this only if headfixed
+                self.rewarder.giveReward('task')
+                print('Image registration')
+                targ_pos = self.image_registration()
+                print('Moving laser to target and capture image to assert correct laser position')
+                self.move_to(np.flipud(targ_pos),topleft=True,join=True) #Move laser to target and wait until target reached
+                self.mouse.laser_spot = np.empty((self.camera.resolution[0], self.camera.resolution[1], 3),dtype=np.uint8)
+                self.pulse(250,self.duty_cycle)
+                self.camera.capture(self.mouse.laser_spot,'rgb')
+                sleep(0.25)
+                self.rewarder.giveReward('task')
+            finally:
+                self.move_to(np.array([0,0]),topleft=True,join=False)
+            
+        timeInterval = self.rewardInterval - self.rewarder.rewardDict.get ('task')
+        self.rewardTimes = []
+        for reward in range(self.nRewards):
+            self.rewardTimes.append (time())
+            self.rewarder.giveReward('task')
+            sleep(timeInterval)
+        self.mouse.headFixRewards += self.nRewards
+
+
+        ''' self.buzzTimes = []
             self.buzzTypes = []
             self.lickWitholdTimes = []
             self.rewardTimes = []
@@ -564,11 +577,10 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
             # make sure to turn off buzzer at end of loop when we exit
             if speakerIsOn == True:
                 self.speaker.stop_train()
-            self.camera.stop_preview()
 
         finally:
             #Move laser back to zero position at the end of the trial
-            self.move_to(np.array([0,0]),topleft=True,join=False)
+            self.move_to(np.array([0,0]),topleft=True,join=False)'''
 
     def logfile (self):
         rewardStr = 'reward'

@@ -81,16 +81,11 @@ class AHF_Stimulator_LickWitholdSpeaker (AHF_Stimulator_LickNoLick):
         return super(AHF_Stimulator_LickWitholdSpeaker, AHF_Stimulator_LickWitholdSpeaker).dict_from_user (stimDict)
 
 
-    def run(self):
+    def run(self,doHeadFix):
         """
         every time lickWitholdtime passes with no licks, make a buzz then give a reward after buzz_lead time.
         turn on speaker
         """
-        #============Testing purposes==========================
-        ref_path = self.cageSettings.dataPath+'sample_im/'+datetime.fromtimestamp (int (time())).isoformat ('-')+'_'+str(self.mouse.tag)+'.jpg'
-        self.camera.capture(ref_path)
-        self.camera.start_preview(fullscreen = False, window = tuple(self.camera.AHFpreview))
-        #===================================================
         self.buzzTimes = []
         self.buzzTypes = []
         self.lickWitholdTimes = []

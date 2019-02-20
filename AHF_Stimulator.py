@@ -92,7 +92,7 @@ class AHF_Stimulator (object):
         return 'stim'
 
 
-    def run (self):
+    def run (self,doHeadFix):
         """
         Called at start of each head fix. Gives a reward, increments mouse's reward count, then waits 10 seconds
         """

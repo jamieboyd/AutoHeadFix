@@ -122,9 +122,9 @@ def htloop (cageSet, tagReader, headFixer, stimulator, expSettings):
                                 cageSet.tirPin = int (input('Enter New tag-in-range Pin:'))
                                 GPIO.setup (cageSet.tirPin, GPIO.IN)
             elif inputStr == 'r': # r for reward solenoid
-                print ('Reward Solenoid opening for 1 sec')
+                print ('Reward Solenoid opening for 3 sec')
                 GPIO.output(cageSet.rewardPin, 1)
-                sleep(60.0)
+                sleep(3.0)
                 GPIO.output(cageSet.rewardPin, 0)
                 inputStr= input('Reward Solenoid closed.\nDo you want to change the Reward Solenoid Pin (currently ' + str (cageSet.rewardPin) + ')?')
                 if inputStr[0] == 'y' or inputStr[0] == "Y":
@@ -214,7 +214,10 @@ def htloop (cageSet, tagReader, headFixer, stimulator, expSettings):
                 for i,j in enumerate(expSettings.stimulator):
                     print('\t'+str(i)+': '+str(j))
                 inputStr = input ('Which stimulator tester would you like to run?')
-                stimulator[int(inputStr)].tester(expSettings)
+                try:
+                    stimulator[int(inputStr)].tester(expSettings)
+                except:
+                    print('Input is not a valid number!')
             elif inputStr == 'h':
                 cageSet.show()
             elif inputStr=='v':
