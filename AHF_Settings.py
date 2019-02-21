@@ -173,6 +173,7 @@ class AHF_Settings (object):
             self.stimulator = configDict.get('stimulator')
             self.genotype = configDict.get('genotype',0)
             self.stimDict = configDict.get('stimParams')
+            self.doHeadFix = False
 
 
 

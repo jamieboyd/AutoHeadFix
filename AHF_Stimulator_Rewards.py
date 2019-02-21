@@ -13,8 +13,8 @@ import RPi.GPIO as GPIO
 
 class AHF_Stimulator_Rewards (AHF_Stimulator):
     
-    def __init__ (self, cageSettings, configDict, rewarder, lickDetector,textfp, camera):
-        super().__init__(cageSettings, configDict, rewarder, lickDetector, textfp, camera)
+    def __init__ (self, cageSettings, expSettings, rewarder, lickDetector, camera):
+        super().__init__(cageSettings, expSettings, rewarder, lickDetector, camera)
         self.setup()
 
     def setup (self):
@@ -31,9 +31,10 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
             stimDict.update ({'rewardInterval' : 5.0})
         return super(AHF_Stimulator_Rewards, AHF_Stimulator_Rewards).dict_from_user (stimDict)
         
-    def run(self,doHeadFix):
+    def run(self):
         
         #================ Debug ====================
+        sleep(0.3)
         ref_path = self.cageSettings.dataPath+'sample_im/'+datetime.fromtimestamp (int (time())).isoformat ('-')+'_'+str(self.mouse.tag)+'.jpg'
         self.camera.capture(ref_path)
         self.camera.start_preview(fullscreen = False, window = tuple(self.camera.AHFpreview))
@@ -61,8 +62,8 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
                 genotype = expSettings.genotype[mouse.genotype]
             else:
                 genotype = 'no genotype'
-            stimType = expSettings.stimulator[mouse.stimType][15:]
-            print(str(mouse.tag)+'\t'+headFixStyle + '\t\t' + stimType + '\t' + genotype)
+            stimType = expSettings.stimulator[mouse.stimType][15:22]
+            print(str(mouse.tag)+'\t'+headFixStyle + '\t\t' + stimType + '\t\t' + genotype)
         while(True):
             inputStr = input ('c= headFixStyle, s= stimType, q= quit: ')
             if inputStr == 'c':

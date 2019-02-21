@@ -38,8 +38,8 @@ class AHF_Stimulator_LickNoLick (AHF_Stimulator):
     buzz_lead_def = 1
 
 
-    def __init__ (self, cageSettings, configDict, rewarder, lickDetector,textfp, camera):
-        super().__init__(cageSettings, configDict, rewarder, lickDetector, textfp,camera)
+    def __init__ (self, cageSettings, expSettings, rewarder, lickDetector, camera):
+        super().__init__(cageSettings, expSettings, rewarder, lickDetector,camera)
         self.headFixTime = float (self.configDict.get ('headFixTime', AHF_Stimulator_LickNoLick.headFixTime_def))
         self.lickWitholdTime = float (self.configDict.get ('lickWitholdTime', AHF_Stimulator_LickNoLick.lickWitholdTime_def))
         self.buzz_pin = int(self.configDict.get ('buzz_pin', AHF_Stimulator_LickNoLick.buzz_pin_def))

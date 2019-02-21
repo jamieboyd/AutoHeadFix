@@ -164,7 +164,7 @@ class AHF_Stimulator_LickWitholdSpeaker (AHF_Stimulator_LickNoLick):
                 headFixStyle = 'loose'
             elif mouse.headFixStyle == 2:
                 headFixStyle = 'nofix'
-            stimType = expSettings.stimulator[mouse.stimType][15:]
+            stimType = expSettings.stimulator[mouse.stimType][15:22]
             print(str(mouse.tag)+'\t'+headFixStyle + '\t\t' + stimType)
         while(True):
             inputStr = input ('c= headFixStyle, s= stimType, q= quit: ')

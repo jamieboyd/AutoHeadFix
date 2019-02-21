@@ -33,8 +33,8 @@ import warnings
 import RPi.GPIO as GPIO
 
 class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
-    def __init__ (self, cageSettings, configDict, rewarder, lickDetector, textfp, camera):
-        super().__init__(cageSettings, configDict, rewarder, lickDetector, textfp, camera)
+    def __init__ (self, cageSettings, expSettings, rewarder, lickDetector, camera):
+        super().__init__(cageSettings, expSettings, rewarder, lickDetector, camera)
         self.setup()
 
     def setup (self):
@@ -115,6 +115,8 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
         self.headFixTime = float (self.configDict.get ('headFixTime', 0))
         self.lickWitholdTime = float (self.configDict.get ('lickWitholdTime', 1))
         self.afterStimWitholdTime = float(self.configDict.get ('after_Stim_Withold_Time', 0.2))
+        self.rewardInterval = float (self.configDict.get ('rewardInterval', 2))
+        self.nRewards = int (self.configDict.get('nRewards', 2))
 
         #Mouse scores
         self.buzzTimes = []
@@ -498,11 +500,15 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
 
 
 #=================Main functions called from outside===========================
-    def run(self,doHeadFix):
-        if doHeadFix:
+    def run(self):
+        
+        self.rewardTimes = []
+        
+        if self.expSettings.doHeadFix:
             if not hasattr(self.mouse,'ref_im'):
                 print('Take reference image')
                 self.get_ref_im()
+                return
             elif not hasattr(self.mouse,'targets'):
                 print('Select targets')
                 #If targets haven't been choosen -> release mouse again
@@ -513,23 +519,34 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
                 self.rewarder.giveReward('task')
                 print('Image registration')
                 targ_pos = self.image_registration()
+                self.rewarder.giveReward('task')
                 print('Moving laser to target and capture image to assert correct laser position')
                 self.move_to(np.flipud(targ_pos),topleft=True,join=True) #Move laser to target and wait until target reached
                 self.mouse.laser_spot = np.empty((self.camera.resolution[0], self.camera.resolution[1], 3),dtype=np.uint8)
-                self.pulse(250,self.duty_cycle)
-                self.camera.capture(self.mouse.laser_spot,'rgb')
-                sleep(0.25)
-                self.rewarder.giveReward('task')
+                self.pulse(60,self.duty_cycle) #At least 60 ms needed to capture laser spot
+                self.camera.capture(self.mouse.laser_spot,'rgb',use_video_port=True)
+                sleep(0.1)
+                # Repeatedly give a reward and pulse simultaneously
+                timeInterval = self.rewardInterval - self.rewarder.rewardDict.get ('task')
+                self.rewardTimes = []
+                for reward in range(self.nRewards):
+                    self.rewardTimes.append (time())
+                    self.pulse(self.laser_on_time,self.duty_cycle)
+                    self.rewarder.giveReward('task')
+                    sleep(timeInterval)
+                self.mouse.headFixRewards += self.nRewards
+                
             finally:
+                #Move laser back to zero position at the end of the trial
                 self.move_to(np.array([0,0]),topleft=True,join=False)
-            
-        timeInterval = self.rewardInterval - self.rewarder.rewardDict.get ('task')
-        self.rewardTimes = []
-        for reward in range(self.nRewards):
-            self.rewardTimes.append (time())
-            self.rewarder.giveReward('task')
-            sleep(timeInterval)
-        self.mouse.headFixRewards += self.nRewards
+        else:
+            timeInterval = self.rewardInterval - self.rewarder.rewardDict.get ('task')
+            self.rewardTimes = []
+            for reward in range(self.nRewards):
+                self.rewardTimes.append (time())
+                self.rewarder.giveReward('task')
+                sleep(timeInterval)
+            self.mouse.headFixRewards += self.nRewards
 
 
         ''' self.buzzTimes = []
@@ -604,7 +621,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
 
     def inspect_mice(self,mice,cageSettings,expSettings):
         #Inspect the mice array
-        print('MouseID\t\tref-im\ttargets\theadFixStyle\tstimType\t\tgenotype')
+        print('MouseID\t\tref-im\ttargets\theadFixStyle\tstimType\tgenotype')
         for mouse in mice.mouseArray:
             ref_im='no'
             targets='no'
@@ -621,7 +638,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
                 genotype = expSettings.genotype[mouse.genotype]
             else:
                 genotype = 'no genotype'
-            stimType = expSettings.stimulator[mouse.stimType][15:]
+            stimType = expSettings.stimulator[mouse.stimType][15:22]
             print(str(mouse.tag) + '\t' + str(ref_im) + '\t' + str(targets) +'\t' + headFixStyle + '\t\t' + stimType + '\t\t' + genotype)
         while(True):
             inputStr = input ('c= headFixStyle, t= select targets, s= stimType, q= quit: ')
@@ -700,28 +717,28 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
             elif inputStr == 'q':
                 break
 
-        def h5updater (self,mouse,h5):
-            if hasattr(mouse,'ref_im'):
-                ref = h5.require_dataset('ref_im',shape=tuple(expSettings.camParamsDict['resolution']+[3]),dtype=np.uint8,data=mouse.ref_im)
-                ref.attrs.modify('CLASS', np.string_('IMAGE'))
-                ref.attrs.modify('IMAGE_VERSION', np.string_('1.2'))
-                ref.attrs.modify('IMAGE_SUBCLASS', np.string_('IMAGE_TRUECOLOR'))
-                ref.attrs.modify('INTERLACE_MODE', np.string_('INTERLACE_PIXEL'))
-                ref.attrs.modify('IMAGE_MINMAXRANGE', [0,255])
-            if hasattr(mouse,'targets'):
-                h5.require_dataset('targets',shape=(2,),dtype=np.uint8,data=mouse.targets,)
-            t = h5.require_group('trial_image')
-            if hasattr(mouse,'trial_image'):
-                tr = t.require_dataset('trial_'+str(mouse.tot_headFixes),shape=tuple(expSettings.camParamsDict['resolution']+[3]),dtype=np.uint8,data=mouse.trial_image)
-                tr.attrs.modify('CLASS', np.string_('IMAGE'))
-                tr.attrs.modify('IMAGE_VERSION', np.string_('1.2'))
-                tr.attrs.modify('IMAGE_SUBCLASS', np.string_('IMAGE_TRUECOLOR'))
-                tr.attrs.modify('INTERLACE_MODE', np.string_('INTERLACE_PIXEL'))
-                tr.attrs.modify('IMAGE_MINMAXRANGE', [0,255])
-            if hasattr(mouse,'laser_spot'):
-                ls = t.require_dataset('trial_'+str(mouse.tot_headFixes)+'_laser_spot',shape=tuple(expSettings.camParamsDict['resolution']+[3]),dtype=np.uint8,data=mouse.laser_spot)
-                ls.attrs.modify('CLASS', np.string_('IMAGE'))
-                ls.attrs.modify('IMAGE_VERSION', np.string_('1.2'))
-                ls.attrs.modify('IMAGE_SUBCLASS', np.string_('IMAGE_TRUECOLOR'))
-                ls.attrs.modify('INTERLACE_MODE', np.string_('INTERLACE_PIXEL'))
-                ls.attrs.modify('IMAGE_MINMAXRANGE', [0,255])
+    def h5updater (self,mouse,h5):
+        if hasattr(mouse,'ref_im'):
+            ref = h5.require_dataset('ref_im',shape=tuple(self.expSettings.camParamsDict['resolution']+[3]),dtype=np.uint8,data=mouse.ref_im)
+            ref.attrs.modify('CLASS', np.string_('IMAGE'))
+            ref.attrs.modify('IMAGE_VERSION', np.string_('1.2'))
+            ref.attrs.modify('IMAGE_SUBCLASS', np.string_('IMAGE_TRUECOLOR'))
+            ref.attrs.modify('INTERLACE_MODE', np.string_('INTERLACE_PIXEL'))
+            ref.attrs.modify('IMAGE_MINMAXRANGE', [0,255])
+        if hasattr(mouse,'targets'):
+            h5.require_dataset('targets',shape=(2,),dtype=np.uint8,data=mouse.targets,)
+        t = h5.require_group('trial_image')
+        if hasattr(mouse,'trial_image'):
+            tr = t.require_dataset('trial_'+str(mouse.tot_headFixes),shape=tuple(self.expSettings.camParamsDict['resolution']+[3]),dtype=np.uint8,data=mouse.trial_image)
+            tr.attrs.modify('CLASS', np.string_('IMAGE'))
+            tr.attrs.modify('IMAGE_VERSION', np.string_('1.2'))
+            tr.attrs.modify('IMAGE_SUBCLASS', np.string_('IMAGE_TRUECOLOR'))
+            tr.attrs.modify('INTERLACE_MODE', np.string_('INTERLACE_PIXEL'))
+            tr.attrs.modify('IMAGE_MINMAXRANGE', [0,255])
+        if hasattr(mouse,'laser_spot'):
+            ls = t.require_dataset('trial_'+str(mouse.tot_headFixes)+'_laser_spot',shape=tuple(self.expSettings.camParamsDict['resolution']+[3]),dtype=np.uint8,data=mouse.laser_spot)
+            ls.attrs.modify('CLASS', np.string_('IMAGE'))
+            ls.attrs.modify('IMAGE_VERSION', np.string_('1.2'))
+            ls.attrs.modify('IMAGE_SUBCLASS', np.string_('IMAGE_TRUECOLOR'))
+            ls.attrs.modify('INTERLACE_MODE', np.string_('INTERLACE_PIXEL'))
+            ls.attrs.modify('IMAGE_MINMAXRANGE', [0,255])

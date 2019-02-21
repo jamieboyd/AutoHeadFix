@@ -20,21 +20,22 @@ class AHF_Stimulator (object):
 
     """
 
-    def __init__ (self, cageSettings, configDict, rewarder, lickDetector, textfp, camera):
+    def __init__ (self, cageSettings, expSettings, rewarder, lickDetector, camera):
         """
         The Stimulator class is inited with: a config dictionary of settings; the same rewarder
         object used to give entry rewards; and a file pointer to the log file
         """
         self.rewarder = rewarder
-        self.textfp = textfp
+        self.textfp = expSettings.logFP
         self.lickDetector = lickDetector
         self.camera = camera
         self.cageSettings = cageSettings
+        self.expSettings = expSettings
         self.mouse = None
-        if configDict == None:
+        if expSettings.stimDict == None:
             self.config_from_user ()
         else:
-            self.configDict = configDict
+            self.configDict = expSettings.stimDict
         self.setup()
 
     def setup (self):
@@ -92,7 +93,7 @@ class AHF_Stimulator (object):
         return 'stim'
 
 
-    def run (self,doHeadFix):
+    def run (self):
         """
         Called at start of each head fix. Gives a reward, increments mouse's reward count, then waits 10 seconds
         """

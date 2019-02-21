@@ -121,7 +121,7 @@ def main():
         sleep(1)
         lickDetector.start_logging ()
         # make stimulator(s)
-        stimulator = [AHF_Stimulator.get_class (i)(cageSettings, expSettings.stimDict, rewarder, lickDetector, expSettings.logFP, camera) for i in expSettings.stimulator]
+        stimulator = [AHF_Stimulator.get_class (i)(cageSettings, expSettings, rewarder, lickDetector, camera) for i in expSettings.stimulator]
         #Stimdict is chosen from the first stimulator
         expSettings.stimDict = stimulator[0].configDict
         # Entry beam breaker
@@ -548,7 +548,7 @@ def runTrial (thisMouse, expSettings, cageSettings, rewarder, headFixer, stimula
         else: # turn on the blue light and start the movie
             GPIO.output(cageSettings.ledPin, GPIO.HIGH)
             GPIO.output(cageSettings.led2Pin, GPIO.HIGH)
-        stimulator.run (expSettings.doHeadFix) # run whatever stimulus is configured
+        stimulator.run () # run whatever stimulus is configured
         if expSettings.hasUDP == True:
             GPIO.output(cageSettings.ledPin, GPIO.LOW) # turn off the green LED
             writeToLogFile (expSettings.logFP, thisMouse, "BrainLEDOFF")
