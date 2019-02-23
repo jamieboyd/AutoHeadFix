@@ -485,7 +485,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
         #Image registration
         #IMPROVE: Could run the registration on a different processor
         warnings.filterwarnings("ignore",".*the returned array has changed*")
-        tf = ird.similarity(self.mouse.ref_im[:,:,0],self.mouse.trial_image[:,:,0],numiter=3)
+        tf = ird.similarity(self.mouse.ref_im[:,:,1],self.mouse.trial_image[:,:,1],numiter=3)
         print('scale\tangle\tty\ttx')
         print('{0:.3}\t{1:.3}\t{2:.3}\t{3:.3}'.format(tf['scale'],tf['angle'],tf['tvec'][0],tf['tvec'][1]))
 
@@ -523,7 +523,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
                 print('Moving laser to target and capture image to assert correct laser position')
                 self.move_to(np.flipud(targ_pos),topleft=True,join=True) #Move laser to target and wait until target reached
                 self.mouse.laser_spot = np.empty((self.camera.resolution[0], self.camera.resolution[1], 3),dtype=np.uint8)
-                self.pulse(60,self.duty_cycle) #At least 60 ms needed to capture laser spot
+                self.pulse(70,self.duty_cycle) #At least 60 ms needed to capture laser spot
                 self.camera.capture(self.mouse.laser_spot,'rgb',use_video_port=True)
                 sleep(0.1)
                 # Repeatedly give a reward and pulse simultaneously

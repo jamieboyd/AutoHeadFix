@@ -170,12 +170,6 @@ def main():
                         if (GPIO.input (cageSettings.tirPin)== GPIO.HIGH) and giveEntranceReward == True:
                             thisMouse.reward (rewarder, 'entrance') # entrance reward was not countermanded by an early headfix
                             writeToLogFile(expSettings.logFP, thisMouse, 'entryReward')
-                            sleep(1.0)
-                            thisMouse.reward (rewarder, 'entrance') # entrance reward was not countermanded by an early headfix
-                            writeToLogFile(expSettings.logFP, thisMouse, 'entryReward')
-                            sleep(1.0)
-                            thisMouse.reward (rewarder, 'entrance') # entrance reward was not countermanded by an early headfix
-                            writeToLogFile(expSettings.logFP, thisMouse, 'entryReward')
                     # wait for contacts and run trials till mouse exits or time in chamber exceeded
                     expSettings.doHeadFix = expSettings.propHeadFix > random()
                     while GPIO.input (cageSettings.tirPin)== GPIO.HIGH and time () < entryTime + expSettings.inChamberTimeLimit:
