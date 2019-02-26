@@ -335,7 +335,19 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
         mp.daemon = True
         mp.start()
         if join:
-            mp.join()
+            timeout = 4
+            start = time()
+            while time() - start <= timeout:
+                if mp.is_alive():
+                    sleep(0.1)
+                else:
+                    break
+            else:
+                print('Process timed out, killing it!')
+                mp.terminate()
+                print('stopping ',mp.name,'=',mp.is_alive())
+                mp.join()
+            #mp.join()
         #Calculate next phase
         self.phase += steps%8
         self.phase = self.phase%8
@@ -501,9 +513,9 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
 
 #=================Main functions called from outside===========================
     def run(self):
-        
+
         self.rewardTimes = []
-        
+
         if self.expSettings.doHeadFix:
             if not hasattr(self.mouse,'ref_im'):
                 print('Take reference image')
@@ -535,7 +547,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
                     self.rewarder.giveReward('task')
                     sleep(timeInterval)
                 self.mouse.headFixRewards += self.nRewards
-                
+
             finally:
                 #Move laser back to zero position at the end of the trial
                 self.move_to(np.array([0,0]),topleft=True,join=False)
