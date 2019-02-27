@@ -12,21 +12,27 @@ class AHF_Camera_PiCam (AHF_Camera, picamera):
         return 'uses picamera.PiCamera to run the standard Raspberry Pi camera'
         
     @staticmethod
-    def config_user_get ():
+    def config_user_get (starterDict = {}):
+        defaultRes = (640,480)
+        defaultFrameRate = 30
+        defaultISO = 200
+        defaultShutterSpeed = 30000
+        defaultFormat = 'h264'
+        defaultQuality = 20
         # resolution
-        resolution = (640, 480)
-        tempInput = input ('set X,Y resolution (currently ' + str (resolution) + ') to :')
+        resolution = starterDict.get ('resolution', AHF_Camera_PiCam.defaultRes)
+        tempInput = input ('set X,Y resolution (currently {0}): '.format(resolution))
         if tempInput != '':
             resolution = tuple (int(x) for x in tempInput.split (','))
-        paramDict.update ({'resolution' : resolution})
+        starterDict.update ({'resolution' : resolution})
         # framerate
-        frameRate = 30
-        tempInput = input ('Set Frame rate in Hz of recorded movie (currently ' + str (frameRate) + ') to :')
+        frameRate = starterDict.get ('framerate', 30)
+        tempInput = input ('Set Frame rate in Hz of recorded movie (currently  {0}): '.format (frameRate))
         if tempInput != '':
             frameRate = float (tempInput)
-        paramDict.update ({'framerate' : frameRate})
+        starterDict.update ({'framerate' : frameRate})
         # ISO
-        iso = 200
+        iso = starterDict.get ('iso', 200)
         tempInput = input ('Set ISO for video, or 0 to auto set gains (currently ' + str (iso) + ') to :')
         if tempInput != '':
             iso = int (tempInput)
