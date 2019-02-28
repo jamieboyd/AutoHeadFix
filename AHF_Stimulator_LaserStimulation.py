@@ -335,7 +335,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
         mp.daemon = True
         mp.start()
         if join:
-            timeout = 4
+            timeout = 8
             start = time()
             while time() - start <= timeout:
                 if mp.is_alive():
@@ -345,7 +345,6 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
             else:
                 print('Process timed out, killing it!')
                 mp.terminate()
-                print('stopping ',mp.name,'=',mp.is_alive())
                 mp.join()
             #mp.join()
         #Calculate next phase
@@ -559,57 +558,6 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
                 self.rewarder.giveReward('task')
                 sleep(timeInterval)
             self.mouse.headFixRewards += self.nRewards
-
-
-        ''' self.buzzTimes = []
-            self.buzzTypes = []
-            self.lickWitholdTimes = []
-            self.rewardTimes = []
-            endTime = time() + self.headFixTime
-            speakerIsOn = False
-            OffForRewardEnd = 0.0
-            # outer loop runs trials until time is up
-            while time() < endTime:
-                # setup to start a trial, witholding licking for lickWitholdRandom secs till buzzer
-                lickWitholdRandom = self.lickWitholdTime #+ (0.5 - random())
-                lickWitholdEnd = time() + lickWitholdRandom
-                # inner loop keeps resetting lickWitholdEnd time until  a succsful withhold
-                while time() < lickWitholdEnd and time() < endTime:
-                    anyLicks = self.lickDetector.waitForLick_Soft (0.05)
-                    if anyLicks == 0:
-                        if speakerIsOn == True:
-                            self.speaker.stop_train()
-                            speakerIsOn = False
-                    else: # there were licks in witholding period
-                        if (speakerIsOn == False) and (time() > OffForRewardEnd):
-                            self.speaker.start_train()
-                            speakerIsOn = True
-                        lickWitholdRandom = self.lickWitholdTime + (0.5 - random())
-                        lickWitholdEnd = time() + lickWitholdRandom
-                # while loop only exits if trial time is up or lick witholding time passed with no licking
-                if anyLicks > 0:
-                    break
-                # at this point, mouse has just witheld licking for lickWitholdTime
-                self.lickWitholdTimes.append (lickWitholdRandom)
-                # Give a buzz.
-                self.buzzTimes.append (time())
-                afterBuzzEndTime= time() + 0.5
-                #============== Laser pulse instead of stimulus presentation========================
-                self.pulse(self.laser_on_time,self.duty_cycle)
-                #self.buzzer.do_train()
-                # sleep for a bit, then give reward
-                sleep (0.5)
-                self.rewardTimes.append (time())
-                self.rewarder.giveReward('task')
-                self.buzzTypes.append (2)
-                OffForRewardEnd = time() + self.speakerOffForReward
-            # make sure to turn off buzzer at end of loop when we exit
-            if speakerIsOn == True:
-                self.speaker.stop_train()
-
-        finally:
-            #Move laser back to zero position at the end of the trial
-            self.move_to(np.array([0,0]),topleft=True,join=False)'''
 
     def logfile (self):
         rewardStr = 'reward'
