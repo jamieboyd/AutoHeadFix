@@ -103,7 +103,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
         self.pos = np.array([0,0])
         self.laser_points = []
         self.image_points = []
-        # Define some boundaries to prevent unrealistic image registration results
+        # Define boundaries to exclude unrealistic image registration results
         self.max_trans = 30
         self.max_scale = np.array([0.9,1.1])
         self.max_angle = 10
@@ -514,7 +514,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
             print('{0}\t{1:.01f}\t{2:.01f}'.format('0',trans_coord[0],trans_coord[1]))
             return targ_pos
         else:
-            print('Abort trial: Image registration failed.')
+            print('No laser stimulation: Image registration failed.')
             return None
 
 
@@ -539,7 +539,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
                 print('Image registration')
                 targ_pos = self.image_registration()
                 self.rewarder.giveReward('task')
-                if targ_pos:
+                if targ_pos is not None:
                     print('Moving laser to target and capture image to assert correct laser position')
                     self.move_to(np.flipud(targ_pos),topleft=True,join=True) #Move laser to target and wait until target reached
                     self.mouse.laser_spot = np.empty((self.camera.resolution[0], self.camera.resolution[1], 3),dtype=np.uint8)
@@ -551,7 +551,8 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
                 self.rewardTimes = []
                 for reward in range(self.nRewards):
                     self.rewardTimes.append (time())
-                    self.pulse(self.laser_on_time,self.duty_cycle)
+                    if targ_pos is not None:
+                        self.pulse(self.laser_on_time,self.duty_cycle)
                     self.rewarder.giveReward('task')
                     sleep(timeInterval)
                 self.mouse.headFixRewards += self.nRewards
