@@ -103,6 +103,10 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
         self.pos = np.array([0,0])
         self.laser_points = []
         self.image_points = []
+        # Define some boundaries to prevent unrealistic image registration results
+        self.max_trans = 30
+        self.max_scale = np.array([0.9,1.1])
+        self.max_angle = 10
         '''
         Info: New stepper commands are queued (self.mot_q) and processed on
         another processor.
@@ -345,7 +349,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
             else:
                 print('Process timed out, killing it!')
                 mp.terminate()
-                mp.join()
+                mp.join(timeout=1.0)
             #mp.join()
         #Calculate next phase
         self.phase += steps%8
@@ -407,7 +411,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
         finally:
             self.move_to(np.array([0,0]),topleft=True,join=False)
             k_listener.stop()
-            mp.terminate()
+            #mp.terminate() #not necessary
             #Turn off the laser
             self.pulse(0)
             self.camera.stop_preview()
@@ -499,15 +503,19 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
         tf = ird.similarity(self.mouse.ref_im[:,:,1],self.mouse.trial_image[:,:,1],numiter=3)
         print('scale\tangle\tty\ttx')
         print('{0:.3}\t{1:.3}\t{2:.3}\t{3:.3}'.format(tf['scale'],tf['angle'],tf['tvec'][0],tf['tvec'][1]))
-
-        #Transform the target to new position
-        self.R = trans_mat(tf['angle'],tf['tvec'][1],tf['tvec'][0],tf['scale'])
-        cent_targ = self.mouse.targets - np.array([int(self.camera.resolution[0]/2),int(self.camera.resolution[0]/2)]) #translate targets to center of image
-        trans_coord = np.dot(self.R,np.append(cent_targ,1))+np.array([int(self.camera.resolution[0]/2),int(self.camera.resolution[0]/2)])
-        targ_pos = np.dot(self.coeff,np.append(trans_coord,1))
-        print('TARGET\ttx\tty')
-        print('{0}\t{1:.01f}\t{2:.01f}'.format('0',trans_coord[0],trans_coord[1]))
-        return targ_pos
+        #Check if results of image registration don't cross boundaries
+        if all((abs(tf['angle'])<=self.max_angle,all(np.abs(tf['tvec'])<=self.max_trans),self.max_scale[0]<=tf['scale']<=self.max_scale[1])):
+            #Transform the target to new position
+            self.R = trans_mat(tf['angle'],tf['tvec'][1],tf['tvec'][0],tf['scale'])
+            cent_targ = self.mouse.targets - np.array([int(self.camera.resolution[0]/2),int(self.camera.resolution[0]/2)]) #translate targets to center of image
+            trans_coord = np.dot(self.R,np.append(cent_targ,1))+np.array([int(self.camera.resolution[0]/2),int(self.camera.resolution[0]/2)])
+            targ_pos = np.dot(self.coeff,np.append(trans_coord,1))
+            print('TARGET\ttx\tty')
+            print('{0}\t{1:.01f}\t{2:.01f}'.format('0',trans_coord[0],trans_coord[1]))
+            return targ_pos
+        else:
+            print('Abort trial: Image registration failed.')
+            return None
 
 
 #=================Main functions called from outside===========================
@@ -531,12 +539,13 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
                 print('Image registration')
                 targ_pos = self.image_registration()
                 self.rewarder.giveReward('task')
-                print('Moving laser to target and capture image to assert correct laser position')
-                self.move_to(np.flipud(targ_pos),topleft=True,join=True) #Move laser to target and wait until target reached
-                self.mouse.laser_spot = np.empty((self.camera.resolution[0], self.camera.resolution[1], 3),dtype=np.uint8)
-                self.pulse(70,self.duty_cycle) #At least 60 ms needed to capture laser spot
-                self.camera.capture(self.mouse.laser_spot,'rgb',use_video_port=True)
-                sleep(0.1)
+                if targ_pos:
+                    print('Moving laser to target and capture image to assert correct laser position')
+                    self.move_to(np.flipud(targ_pos),topleft=True,join=True) #Move laser to target and wait until target reached
+                    self.mouse.laser_spot = np.empty((self.camera.resolution[0], self.camera.resolution[1], 3),dtype=np.uint8)
+                    self.pulse(70,self.duty_cycle) #At least 60 ms needed to capture laser spot
+                    self.camera.capture(self.mouse.laser_spot,'rgb',use_video_port=True)
+                    sleep(0.1)
                 # Repeatedly give a reward and pulse simultaneously
                 timeInterval = self.rewardInterval - self.rewarder.rewardDict.get ('task')
                 self.rewardTimes = []
