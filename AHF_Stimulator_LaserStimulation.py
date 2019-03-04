@@ -104,9 +104,9 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
         self.laser_points = []
         self.image_points = []
         # Define boundaries to exclude unrealistic image registration results
-        self.max_trans = 30
+        self.max_trans = 60
         self.max_scale = np.array([0.9,1.1])
-        self.max_angle = 10
+        self.max_angle = 15
         '''
         Info: New stepper commands are queued (self.mot_q) and processed on
         another processor.
@@ -537,6 +537,8 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
                 # Run this only if headfixed
                 self.rewarder.giveReward('task')
                 print('Image registration')
+                ref_path = self.cageSettings.dataPath+'sample_im/'+datetime.fromtimestamp (int (time())).isoformat ('-')+'_'+str(self.mouse.tag)+'.jpg'
+                self.camera.capture(ref_path)
                 targ_pos = self.image_registration()
                 self.rewarder.giveReward('task')
                 if targ_pos is not None:
@@ -549,6 +551,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
                 # Repeatedly give a reward and pulse simultaneously
                 timeInterval = self.rewardInterval - self.rewarder.rewardDict.get ('task')
                 self.rewardTimes = []
+                self.camera.start_preview(fullscreen = False, window = tuple(self.camera.AHFpreview))
                 for reward in range(self.nRewards):
                     self.rewardTimes.append (time())
                     if targ_pos is not None:
@@ -556,6 +559,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
                     self.rewarder.giveReward('task')
                     sleep(timeInterval)
                 self.mouse.headFixRewards += self.nRewards
+                self.camera.stop_preview()
 
             finally:
                 #Move laser back to zero position at the end of the trial
@@ -563,11 +567,13 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
         else:
             timeInterval = self.rewardInterval - self.rewarder.rewardDict.get ('task')
             self.rewardTimes = []
+            self.camera.start_preview(fullscreen = False, window = tuple(self.camera.AHFpreview))
             for reward in range(self.nRewards):
                 self.rewardTimes.append (time())
                 self.rewarder.giveReward('task')
                 sleep(timeInterval)
             self.mouse.headFixRewards += self.nRewards
+            self.camera.stop_preview()
 
     def logfile (self):
         rewardStr = 'reward'
@@ -614,10 +620,17 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
             inputStr = input ('c= headFixStyle, t= select targets, s= stimType, q= quit: ')
             if inputStr == 'c':
                 while(True):
-                    inputStr =  int(input ('Type the tagID of mouse to change headFixStyle:'))
+                    try:
+                        inputStr =  int(input ('Type the tagID of mouse to change headFixStyle:'))
+                    except ValueError:
+                        print("Input is not a valid mouse-id.")
+                        break
                     for mouse in mice.mouseArray:
                         if mouse.tag == inputStr:
-                            inputStr = int(input('Change headFixStyle to:\n0: fix\n1: loose\n2: nofix\n'))
+                            try:
+                                inputStr = int(input('Change headFixStyle to:\n0: fix\n1: loose\n2: nofix\n'))
+                            except ValueError:
+                                print('Input is not a valid number.')
                             if inputStr == 0:
                                 mouse.headFixStyle = 0
                             elif inputStr == 1:

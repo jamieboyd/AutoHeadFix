@@ -71,7 +71,10 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
                     inputStr =  int(input ('Type the tagID of mouse to change headFixStyle:'))
                     for mouse in mice.mouseArray:
                         if mouse.tag == inputStr:
-                            inputStr = int(input('Change headFixStyle to:\n0: fix\n1: loose\n2: nofix\n'))
+                            try:
+                                inputStr = int(input('Change headFixStyle to:\n0: fix\n1: loose\n2: nofix\n'))
+                            except ValueError:
+                                print('Input is not a valid number.')
                             if inputStr == 0:
                                 mouse.headFixStyle = 0
                             elif inputStr == 1:

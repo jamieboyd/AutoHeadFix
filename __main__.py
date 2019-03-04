@@ -276,7 +276,10 @@ def main():
                         for i,j in enumerate(expSettings.stimulator):
                             print('\t'+str(i)+': '+str(j))
                         inputStr = input ('Which stimulator-specific inspection method would you like to run?')
-                        stimulator[int(inputStr)].inspect_mice(mice,cageSettings,expSettings)
+                        try:
+                            stimulator[int(inputStr)].inspect_mice(mice,cageSettings,expSettings)
+                        except:
+                            print("Stimulator doesn't exist.")
                         updateH5File(expSettings,cageSettings,mice,stimulator)
                     elif event == 'c' or event == 'C':
                         camParams = camera.adjust_config_from_user ()
