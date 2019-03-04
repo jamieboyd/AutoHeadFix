@@ -411,7 +411,8 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
         finally:
             self.move_to(np.array([0,0]),topleft=True,join=False)
             k_listener.stop()
-            #mp.terminate() #not necessary
+            mp.terminate() #not necessary
+            mp.join(timeout=1.0)
             #Turn off the laser
             self.pulse(0)
             self.camera.stop_preview()
