@@ -618,7 +618,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
             stimType = expSettings.stimulator[mouse.stimType][15:22]
             print(str(mouse.tag) + '\t' + str(ref_im) + '\t' + str(targets) +'\t' + headFixStyle + '\t\t' + stimType + '\t\t' + genotype)
         while(True):
-            inputStr = input ('c= headFixStyle, t= select targets, s= stimType, q= quit: ')
+            inputStr = input ('c= headFixStyle, t= select targets, s= stimType, g = genotype, q= quit: ')
             if inputStr == 'c':
                 while(True):
                     try:
@@ -644,9 +644,32 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
                         continue
                     else:
                         break
+            elif inputStr == 'g':
+                while(True):
+                    try:
+                        inputStr =  int(input ('Type the tagID of mouse to change genotype:'))
+                    except ValueError:
+                        print("Input is not a valid mouse-id.")
+                        break
+                    for mouse in mice.mouseArray:
+                        if mouse.tag == inputStr:
+                            print('Following genotypes have been specified:')
+                            for i,j in enumerate(expSettings.genotype):
+                                print(str(i)+': '+j[:])
+                            inputStr = int(input('Set genotype to:'))
+                            mouse.genotype = inputStr
+                    inputStr = input('Change value of another mouse?')
+                    if inputStr[0] == 'y' or inputStr[0] == "Y":
+                        continue
+                    else:
+                        break
             elif inputStr == 's':
                 while(True):
-                    inputStr =  int(input ('Type the tagID of mouse to change stimType:'))
+                    try:
+                        inputStr =  int(input ('Type the tagID of mouse to change stimType:'))
+                    except ValueError:
+                        print("Input is not a valid mouse-id.")
+                        break
                     for mouse in mice.mouseArray:
                         if mouse.tag == inputStr:
                             print('Following stimTypes are available:')
@@ -660,7 +683,6 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
                         continue
                     else:
                         break
-
             elif inputStr == 't':
                 self.select_targets(mice)
             elif inputStr == 'q':
