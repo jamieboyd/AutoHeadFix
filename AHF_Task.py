@@ -106,6 +106,11 @@ class Task:
             self.BrainLightClass = CAD.Class_from_file('BrainLight', CAD.File_from_user ('BrainLight', 'Brain illuminator', '.py'))
             self.BrainLightDict = self.BrainLightClass.config_user_get ()
             fileErr = True
+        ###################### DataLogger (Obligatory) for logging data in text files, or database of HD5,or .... #################
+        if not hasattr (self, 'DataLoggerClass') or not hasattr (self, 'DataLoggerDict'):
+            self.DataLoggerClass = CAD.Class_from_file('DataLogger', CAD.File_from_user ('DataLogger', 'Data Logger', '.py'))
+            self.DataLoggerDict = self.DataLoggerClass.config_user_get ()
+            fileErr = True
         ############################ text messaging using textbelt service (Optional) only 1 subclass so far ######################
         if not hasattr (self, 'NotifierClass') or not hasattr (self, 'NotifierDict'):
             tempInput = input ('Send notifications if mouse exceeds criterion time in chamber?(Y or N):')
@@ -158,7 +163,7 @@ class Task:
         if not hasattr (self, 'inChamberTimeLimit'):
             self.inChamberTimeLimit = float(input('In-Chamber duration limit, seconds, before stopping head-fix trials:'))
         if not hasattr (self, 'mouseConfigPath'):
-            self.mouseConfigPath = input ('Enter the path to the directory where mouse configuration data can be loaded:')
+            self.mouseConfigPath = input ('Enter the path to the directory where configuration data for mice can be loaded:')
 
        
         # if some of the paramaters were set by user, give option to save
@@ -169,6 +174,9 @@ class Task:
                 
 
     def setup (self):
+        """
+        Sets up hardware and other objects that need setting up, each object is made by initing a class with a dictionary
+        """
         GPIO.setmode (GPIO.BCM)
         GPIO.setwarnings(False)
         fields = sorted (inspect.getmembers (self))

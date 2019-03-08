@@ -9,6 +9,7 @@ from datetime import datetime
 class AHF_DataLogger_text (AHF_DataLogger):
     """
     Simple text-based data logger modified from the original Auto Head Fix code
+    makes a new text file for each day, saved in default path. 
     """
     PSEUDO_MUTEX =0
     """
@@ -45,7 +46,6 @@ class AHF_DataLogger_text (AHF_DataLogger):
         self.cageID = self.settingsDict.get ('cageID')
         self.dataPath = self.settingsDict.get('dataPath')
         self.logFP = None
-        self.statsFP = None
         self.setDateStr ()
         self.makeDayFolderPath ()
         self.makeLogFile ()
@@ -70,7 +70,7 @@ class AHF_DataLogger_text (AHF_DataLogger):
         self.makeQuickStatsFile (mice)
     
 
-    def writeToLogFile(self, tag, event):
+    def writeToLogFile(self, tag, event, timeStamp):
         """
         Writes the time and type of each event to a text log file, and also to the shell
 

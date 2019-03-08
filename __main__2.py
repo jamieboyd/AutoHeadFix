@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 
 # Task configures and controls sub-tasks for hardware and stimulators
 from AHF_Task import AHF_Task
+from AHF_Mouse import Mouse, Mice
 # hardware tester can be called from menu pulled up by keyboard interrupt
 from AHF_HardwareTester import hardwareTester
 
@@ -41,12 +42,14 @@ def main():
         print ('Error initializing hardware' + str (e))
         raise e
     assert (hasattr (task, 'BrainLight')) # quick debug check that task got loaded and setup ran
-
+    # initialize mice with zero mice, then try to load mice from configuration path
+    setattr (task, 'mice', Mice(task)) # task object contains a reference to mice object, mice object contains a reference to task object
+    task.mouseConfigPath
     # calculate time for saving files for each day
     now = datetime.fromtimestamp (int (time()))
     nextDay = datetime (now.year, now.month, now.day, KDAYSTARTHOUR,0,0) + timedelta (hours=24)
     # Loop with a brief sleep, waiting for a tag to be read.
-        while True:
+    while True:
             try:
                 print ('Waiting for a mouse....')
                 while task.TagReader.readTag == 0:
@@ -70,34 +73,41 @@ def main():
             except KeyboardInterrupt:
                 if hasattr (task, 'LickDetector'):
                     task.lickDetector.stop_logging ()
-                inputStr = '\n************** Auto Head Fix Manager ********************\n'
-                inputStr += 'Enter:\nR to return to head fix trials\nQ to quit\nV to run rewarder (valve) control'
-                inputStr += '\nH for hardware tester\nT for task configuration\nL to log a note'
-                inputStr += '\nS to edit Stimulator settings:\n: '
+                inputStr = '\n************** Auto Head Fix Manager ********************\nEnter:\n'
+                inputStr += 'M to configure mice\n'
+                inputStr +='V to run rewarder (valve) control\n'
+                inputStr += 'H for hardware tester\n'
+                inputStr += 'S to edit Stimulator settings\n'
+                inputStr += 'T to edit Task configuration\n'
+                inputStr += 'L to log a note\n'
+                inputStr += 'R to Return to head fix trials\n'
+                inputStr += 'Q to quit\n:'
                 while True:
                     event = input (inputStr)
-                        if event == 'r' or event == "R":
-                            if hasattr (task, 'LickDetector'):
-                                task.lickDetector.start_logging ()
-                            break
-                        elif event == 'q' or event == 'Q':
-                            return
-                        elif event == 'v' or event== "V":
-                            task.Rewarder.rewardControl()
-                        elif event == 'h' or event == 'H':
-                            task.hardwareTester ()
-                        elif event == 'L' or event == 'l':
-                            logEvent = input ('Enter your log message\n: ')
-                            task.DataLogger.logEvent (0, 'logMsg:%s' % logEvent)
-                        elif event == 'T' or event == 't':
-                            task.editSettings()
-                            response = input ('Save edited settings to file?')
-                            if response [0] == 'Y' or response [0] == 'y':
-                                task.saveSettings ()
-                            task.setup ()
-                        elif event =- 'S' or event == 's':
-                            task.Stimulator.settingsDict = task.Stimulator.config_user_get (task.Stimulator.settingsDict):
-                            task.Stimulator.setup()
+                    if event == 'r' or event == "R":
+                        if hasattr (task, 'LickDetector'):
+                            task.lickDetector.start_logging ()
+                        break
+                    elif event == 'q' or event == 'Q':
+                        return
+                    elif event == 'v' or event== "V":
+                        task.Rewarder.rewardControl()
+                    elif event == 'h' or event == 'H':
+                        task.hardwareTester ()
+                    elif event == 'L' or event == 'l':
+                        logEvent = input ('Enter your log message\n: ')
+                        task.DataLogger.logEvent (0, 'logMsg:%s' % logEvent)
+                    elif event == 'T' or event == 't':
+                        task.editSettings()
+                        response = input ('Save edited settings to file?')
+                        if response [0] == 'Y' or response [0] == 'y':
+                            task.saveSettings ()
+                        task.setup ()
+                    elif event == 'S' or event == 's':
+                        task.Stimulator.settingsDict = task.Stimulator.config_user_get (task.Stimulator.settingsDict):
+                        task.Stimulator.setup()
+                    elif event == 'm' or even == 'M':
+                            task.mice.userConfigure()
 
     except Exception as anError:
         print ('Auto Head Fix error:' + str (anError))

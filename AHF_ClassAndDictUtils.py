@@ -15,7 +15,6 @@ from AHF_Base import AHF_Base
 methods for
 choosing classes and getting classes from files based on AHF naming conventions and/or on inheritance
 transferring structured data between JSON text files <-> dictionaries <-> object fields
-
 """
 ##################################################################################
 # methods for getting class names and importing classes from a base class

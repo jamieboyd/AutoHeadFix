@@ -1,7 +1,14 @@
-import json
+#! /usr/bin/python3
+#-*-coding: utf-8 -*-
+
+from AHF_Task import Task
+from AHF_TagReader import AHF_TagReader
+
 class Mouse:
     """
-    Class to hold information about each mouse, each mouse gets its own object
+    Class to hold information about each mouse, each mouse gets its own object. mouse data
+    is updated and stored, as in a JSON config file, for each mouse, updated after each entry
+    so it can be reloaded if program needs to be stopped
     """
     def __init__(self, tag, entries, entranceRewards, headFixes, headFixRewards):
         """
@@ -64,15 +71,32 @@ class Mouse:
 
 class Mice:
     """
-    The mice class simply contains an array of mouse objects
+    The mice class simply contains an array of mouse objects, plus a reference to task object
     """
-    def __init__(self, cageSettings, expSettings):
+    def __init__(self, task):
         """
         Initializes the array of mice with an empty array
         """
         self.mouseArray=[]
+        self.task = task
 
 
+    def userConfigure (self):
+        """
+        Allows user to add mice to file, maybe use TagReader, give initial values to paramaters
+        """
+        while True:
+            inputStr = '\n************** Mouse Configuration ********************\nEnter:\n'
+            inputStr += 'R to read a tag from the Tag Reader and add that mouse\n'
+
+            event = input (inputStr)
+                if event == 'r' or event == "R":
+                    tag = 
+
+
+
+
+    def 
     def addMouse (self, aMouse, statsfp):
         """
         Appends a mouse object to the array and updates quickstats file with new mouse
@@ -94,7 +118,7 @@ class Mice:
         aMouse.arrayPos = len (self.mouseArray)-1
 
 
-    def addMiceFromFile(self, statsfp):
+    def addMiceFromFile(self):
         """
         Adds mouse objects to the mice array, initialzing tagID and initial values for rewards from quickstats file
 
@@ -102,20 +126,7 @@ class Mice:
         :param statsfp: file pointer to the quickstats file
         returns:nothing
         """
-        statsfp.seek (39)
-        aline = statsfp.readline()
-        while aline:
-            try:
-                mouseID, entries, entRewards, hFixes, hfRewards = str(aline).split ('\t')
-                aMouse = Mouse (int (mouseID), int (entries), int (entRewards), int (hFixes), int (hfRewards))
-                self.addMouse(aMouse, statsfp)
-                aline = statsfp.readline()
-            except ValueError:
-                statsfp.truncate (39)
-                self.mouseArray = []
-                aline = statsfp.readline()
-                print ('Daily Quick Stats File overwritten.')
-        return
+        
             
 
     def removeMouseByTag (self, tag):
