@@ -22,11 +22,11 @@ class AHF_DataLogger_text (AHF_DataLogger):
     both threads think they have the mutex
     """
     defaultCage = 'cage1'
-    defaultPath='/home/pi/Documents/'
+    defaultPath='/home/pi/Documents/Mice_cfg/'
 
     @staticmethod
     def about ():
-        return 'Simple text-based data logger that prints mouse id, time, and event to shell and to a text file.'
+        return 'Simple text-based data logger that prints mouse id, time, event type, and event dictionary to a text file, and to the shell.'
 
     @staticmethod
     def config_user_get (starterDict = {}):

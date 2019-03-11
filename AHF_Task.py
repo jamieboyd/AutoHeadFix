@@ -162,9 +162,7 @@ class Task:
             fileErr = True
         if not hasattr (self, 'inChamberTimeLimit'):
             self.inChamberTimeLimit = float(input('In-Chamber duration limit, seconds, before stopping head-fix trials:'))
-        if not hasattr (self, 'mouseConfigPath'):
-            self.mouseConfigPath = input ('Enter the path to the directory where configuration data for mice can be loaded:')
-
+ 
        
         # if some of the paramaters were set by user, give option to save
         if fileErr: 

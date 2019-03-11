@@ -44,7 +44,7 @@ def main():
     assert (hasattr (task, 'BrainLight')) # quick debug check that task got loaded and setup ran
     # initialize mice with zero mice, then try to load mice from configuration path
     setattr (task, 'mice', Mice(task)) # task object contains a reference to mice object, mice object contains a reference to task object
-    task.mouseConfigPath
+    
     # calculate time for saving files for each day
     now = datetime.fromtimestamp (int (time()))
     nextDay = datetime (now.year, now.month, now.day, KDAYSTARTHOUR,0,0) + timedelta (hours=24)

@@ -38,3 +38,94 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
             self.setdown ()
             self.settingsDict = self.config_user_get (self.settingsDict)
             self.setup()    
+
+
+
+                thisMouse.currentEntrancesWithNoHeadFix += 1
+                thisMouse.currentContinuousHeadFixes = 0
+                checkUpLevel(thisMouse, expSettings, stimulator)
+                checkDownLevel(thisMouse, expSettings, stimulator)
+
+
+def checkUpLevel(thisMouse, expSettings, stimulator):
+    # Do not do anything to the mouse's level if its not allowed to be head fixed
+    if not thisMouse.allowHeadFixation:
+        thisMouse.currentContinuousHeadFixes = 0
+        thisMouse.currentMultipleHeadFixes = 0
+        return
+    
+    #CHF = Level change due to continuous head fixes.
+    if thisMouse.currentContinuousHeadFixes >= expSettings.continuousHeadFixesForLevelUp and thisMouse.headFixationType < 8 and thisMouse.headFixationType > 1:
+        thisMouse.headFixationType += 1
+        print("Mouse ", thisMouse.tag, " was leveled up to level (CHF): ", thisMouse.headFixationType)
+        log_str = "lvlCHF:" + str(thisMouse.headFixationType-1) + "->" + str(thisMouse.headFixationType)
+        writeToLogFile(expSettings.logFP, thisMouse, log_str)
+        # We reset both to avoid double bias.
+        thisMouse.currentContinuousHeadFixes = 0
+        thisMouse.currentMultipleHeadFixes = 0
+        
+        if thisMouse.headFixationType == 8:
+            thisMouse.timeMaxLevelObtained = time()
+
+#MHF = Level change due to multiple head fixes.
+elif thisMouse.currentMultipleHeadFixes >= expSettings.multipleHeadFixesForLevelUp and thisMouse.headFixationType < 8 and thisMouse.headFixationType > 1:
+    thisMouse.headFixationType += 1
+        print("Mouse ", thisMouse.tag, " was leveled up to level (MHF): ", thisMouse.headFixationType)
+        log_str = "lvlMHF:" + str(thisMouse.headFixationType-1) + "->" + str(thisMouse.headFixationType)
+        writeToLogFile(expSettings.logFP, thisMouse, log_str)
+        
+        
+        # We reset both to avoid double bias.
+        thisMouse.currentContinuousHeadFixes = 0
+        thisMouse.currentMultipleHeadFixes = 0
+        
+        if thisMouse.headFixationType == 8:
+            thisMouse.timeMaxLevelObtained = time()
+# Max level of the task start increasing trial length instead.
+# ITR = Increase task rewards
+elif thisMouse.timeMaxLevelObtained is not None:
+    if thisMouse.headFixationType == 8 and (time()-thisMouse.timeMaxLevelObtained) >= expSettings.timeToBeginIncreasingTrialLength:
+        if ((thisMouse.currentContinuousHeadFixes >= expSettings.continuousHeadFixesForLevelUp) or
+            (thisMouse.currentMultipleHeadFixes >= expSettings.multipleHeadFixesForLevelUp) and
+            (stimulator.nRewards*expSettings.taskRewardTime <= expSettings.maxTimePerTrial)):
+            
+            thisMouse.extraTaskRewards += 1
+                log_str = "lvlITR:" + str(thisMouse.extraTaskRewards-1) + "->" + str(thisMouse.extraTaskRewards)
+                writeToLogFile(expSettings.logFP, thisMouse, log_str)
+                stimulator.nRewards = stimulator.baseRewards + thisMouse.extraTaskRewards
+                
+                
+                # We reset both to avoid double bias.
+                thisMouse.currentContinuousHeadFixes = 0
+                thisMouse.currentMultipleHeadFixes = 0
+
+
+def checkDownLevel(thisMouse, expSettings, stimulator):
+    # Do not do anything to the mouse's level if its not allowed to be head fixed
+    if not thisMouse.allowHeadFixation:
+        thisMouse.currentEntrancesWithNoHeadFix = 0
+        return
+    #EHF = Level change due to many entrances.
+    if thisMouse.currentEntrancesWithNoHeadFix >= expSettings.entrancesWithNoHeadFixForLevelDown and thisMouse.headFixationType > 1 and thisMouse.extraTaskRewards == 0:
+        thisMouse.headFixationType -= 1
+        print("Mouse ", thisMouse.tag, " was leveled down to level (EHF): ", thisMouse.headFixationType)
+        log_str = "lvlEHF:" + str(thisMouse.headFixationType+1) + "->" + str(thisMouse.headFixationType)
+        writeToLogFile(expSettings.logFP, thisMouse, log_str)
+        
+        #Reset
+        thisMouse.currentEntrancesWithNoHeadFix = 0
+    
+    # Max level of the task modify trial length instead.
+    # DTR = decrease task rewards
+    if thisMouse.timeMaxLevelObtained is not None:
+        if thisMouse.headFixationType == 7 and (time()-thisMouse.timeMaxLevelObtained) >= expSettings.timeToBeginIncreasingTrialLength:
+            if (thisMouse.currentEntrancesWithNoHeadFix >= expSettings.entrancesWithNoHeadFixForLevelDown and
+                thisMouse.extraTaskRewards > 0):
+                
+                thisMouse.extraTaskRewards -= 1
+                log_str = "lvlDTR:" + str(thisMouse.extraTaskRewards+1) + "->" + str(thisMouse.extraTaskRewards)
+                writeToLogFile(expSettings.logFP, thisMouse, log_str)
+                stimulator.nRewards = stimulator.baseRewards + thisMouse.extraTaskRewards
+                
+                #Reset
+                thisMouse.currentEntrancesWithNoHeadFix = 0

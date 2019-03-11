@@ -2,7 +2,39 @@
 #-*-coding: utf-8 -*-
 
 from AHF_Task import Task
+import AHF_ClassAndDictUtils as CAD
 from AHF_TagReader import AHF_TagReader
+
+
+class Mice:
+    """
+    The Mice class contains an array of Mouse objects, plus a reference to the Task object
+    """
+    def __init__(self, task):
+        """
+        Initializes the array of mice, from a config file path, with an empty array, and keeps a reference to the task object
+        """
+        if task.mouseConfigPath
+        self.mouseArray=[]
+        self.task = task
+    
+    
+    def
+    
+    
+    def userConfigure (self):
+        """
+            Allows user to add mice to file, maybe use TagReader, give initial values to paramaters
+            """
+        while True:
+            inputStr = '\n************** Mouse Configuration ********************\nEnter:\n'
+            inputStr += 'R to read a tag from the Tag Reader and add that mouse\n'
+            
+            inputStr += 'P to print current stats for all mice\n'
+            event = input (inputStr)
+                if event == 'r' or event == 'R':
+                    tag = self.task.TagReader.readTag()
+
 
 class Mouse:
     """
@@ -69,34 +101,12 @@ class Mouse:
             print (stimResults)
 
 
-class Mice:
-    """
-    The mice class simply contains an array of mouse objects, plus a reference to task object
-    """
-    def __init__(self, task):
-        """
-        Initializes the array of mice with an empty array
-        """
-        self.mouseArray=[]
-        self.task = task
 
-
-    def userConfigure (self):
-        """
-        Allows user to add mice to file, maybe use TagReader, give initial values to paramaters
-        """
-        while True:
-            inputStr = '\n************** Mouse Configuration ********************\nEnter:\n'
-            inputStr += 'R to read a tag from the Tag Reader and add that mouse\n'
-
-            event = input (inputStr)
-                if event == 'r' or event == "R":
-                    tag = 
+    
 
 
 
 
-    def 
     def addMouse (self, aMouse, statsfp):
         """
         Appends a mouse object to the array and updates quickstats file with new mouse

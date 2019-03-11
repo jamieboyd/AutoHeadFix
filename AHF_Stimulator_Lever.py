@@ -3,7 +3,7 @@
 
 import ptLeverThread
 from array import array
-
+from AHF_Stimulator import AHF_Stimulator
 from AHF_Rewarder import AHF_Rewarder
 from AHF_Mouse import Mouse
 from Pywith import Pulse, Train
@@ -14,11 +14,12 @@ import json
 # a1 =lt.posBuffer[68:75] + lt.posBuffer [0:67] + lt.posBuffer [68:120]
 class AHF_Stimulator_Lever (AHF_Stimulator):
     """
-        AHF_Stimulator_Lever runs a lever task by calling c++ code that
+        AHF_Stimulator_Lever runs a lever task by calling ptLeverThread C-module code that
         records lever position and puts torque on the lever
     """
     ZERO_LEVER_RETURN = 0
     ZERO_LEVER_RESET = 1
+    LEVER_FREQ = 250
     
     posBufferSize_def = 1000 # 4 seconds of lever position data at 250 Hz
     isCued_def = False # trials will be un-cued, mouse starts when he likes
@@ -29,13 +30,9 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
     constForce_def = 1300 # constant force on lever
     pathToData_def = '/home/pi/Documents/' # folder where lever pos files will be saved
 
-    def __init__ (self, configDict, rewarder, textfp):
-        super().__init__(configDict, rewarder, textfp)
-        self.setup()
-
-    @staticmethod
-    def dict_from_user (stimDict):
-        keyTuple = ('posBufferSize', 'isCued', 'constForce', 'toGoalOrCirc', 'isReversed', 'goalCuePin', 'goalCueFreq','pathToData')
+    def config_user_get (starterDict = {}):
+        
+            keyTuple = ('posBufferSize', 'isCued', 'constForce', 'toGoalOrCirc', 'isReversed', 'goalCuePin', 'goalCueFreq','pathToData')
         for key in keyTuple:
             value = input ('Enter a value for ' + key + ':')
             stimDict.update({key : value})
