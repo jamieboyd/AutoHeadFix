@@ -58,28 +58,40 @@ class AHF_DataLogger_text (AHF_DataLogger):
         starterDict.update ({'cageID' : cageID, 'dataPath' : dataPath, 'mouseConfigPath' : configPath})
         return starterDict
 
-        
+"""
+            dataPath
+              _|_
+             /   \
+      logPath   statsPath
+         |         |
+     logFilePath  statsFilePath
+"""
     def setup (self):
         self.cageID = self.settingsDict.get ('cageID')
         self.dataPath = self.settingsDict.get('dataPath')
         self.configPath = self.settingsDict.get('mouseConfigPath') 
         self.logFP = None # reference to log file that will be created
-        self.logFilePath = ''
-        self.textFilePath = self.dataPath + 'TextFiles/'
-        if not path.exists(self.textFilePath):
-            uid = getpwnam ('pi').pw_uid
-            gid = getgrnam ('pi').gr_gid
-            if not path.exists(self.dataPath):
-                makedirs(self.dataPath, mode=0o777, exist_ok=True)
-                chown (self.dataPath, uid, gid)
-            makedirs(self.textFilePath, mode=0o777, exist_ok=True)
-            chown (self.textFilePath, uid, gid)
+        self.logPath = self.dataPath + 'LogFiles/' # path to the folder containing log files
+        self.logFilePath = '' # path to the log file
+        self.statsPath = self.dataPath + 'QuickStats/'
+        self.uid = getpwnam ('pi').pw_uid
+        self.gid = getgrnam ('pi').gr_gid
+        if not path.exists(self.dataPath):
+            makedirs(self.dataPath, mode=0o777, exist_ok=True)
+            chown (self.dataPath, self.uid, self.gid)
+        if not path.exists(self.logPath):
+            makedirs(self.logPath, mode=0o777, exist_ok=True)
+            chown (self.logPath, self.uid, self.gid)
+        if not path.exists(self.statsPath):
+            makedirs(self.statsPath, mode=0o777, exist_ok=True)
+            chown (self.statsPath, self.uid, self.gid)
         self.setDateStr ()
         self.makeLogFile ()
 
     
     def setdown (self):
         if self.logFP is not None:
+            self.writeToLogFile (0, 'SeshEnd', None, time()
             self.logFP.close()
 
 
@@ -87,7 +99,6 @@ class AHF_DataLogger_text (AHF_DataLogger):
         self.writeToLogFile (0, 'SeshEnd', None, time())
         if self.logFP is not None:
             self.logFP.close()
-
         self.setDateStr () 
         self.makeLogFile ()
         self.makeQuickStatsFile (mice)
@@ -98,11 +109,9 @@ class AHF_DataLogger_text (AHF_DataLogger):
         open a new text log file for today, or open an exisiting text file with 'a' for append
         """
         try:
-            self.logFilePath = self.textFilePath + 'headFix_' + self.cageID + '_' + self.dateStr + '.txt'
+            self.logFilePath = self.logPath + 'headFix_' + self.cageID + '_' + self.dateStr + '.txt'
             self.logFP = open(self.logFilePath, 'a')
-            uid = getpwnam ('pi').pw_uid
-            gid = getgrnam ('pi').gr_gid
-            chown (self.logFilePath, uid, gid)
+            chown (self.logFilePath, self.uid, self.gid)
             self.writeToLogFile (0, 'SeshStart', None, time())
         except Exception as e:
                 print ("Error maing log file\n", str(e))
@@ -122,7 +131,6 @@ class AHF_DataLogger_text (AHF_DataLogger):
         if eventKind == 'SeshStart' or eventKind == 'SeshEnd':
             tag = 0
             eventDict = None
-        FileOutputStr = '{:013}\t{:s}\t{:s}\t{:.2f}'.format(tag, eventKind, eventDict, timeStamp)
         LogOutputStr = '{:013}\t{:s}\t{:s}\t{:s}\n'.format (tag, eventKind, eventDict, datetime.fromtimestamp (int (timeStamp)).isoformat (' '))
         while AHF_DataLogger.PSEUDO_MUTEX ==1:
             sleep (0.01)
@@ -130,6 +138,7 @@ class AHF_DataLogger_text (AHF_DataLogger):
         print (LogOutputStr)
         AHF_DataLogger.PSEUDO_MUTEX = 0
         if self.logFP is not None:
+            FileOutputStr = '{:013}\t{:s}\t{:s}\t{:.2f}'.format(tag, eventKind, eventDict, timeStamp)                                 
             self.logFP.write(FileOutputStr)
             self.logFP.flush()
 
@@ -140,17 +149,18 @@ class AHF_DataLogger_text (AHF_DataLogger):
 
     def makeQuickStatsFile (self, mice):
         """
-        makes a new quickStats file for today's results.
+        makes a quickStats file for today's results.
         
         QuickStats file contains daily totals of rewards and headFixes for each mouse
         :param expSettings: experiment-specific settings, everything you need to know is stored in this object
         :param cageSettings: settings that are expected to stay the same for each setup, including hardware pin-outs for GPIO
         :param mice: the array of mice objects for this cage
-    """
-        self.statsFilePath = self.dayFolderPath + 'TextFiles/quickStats_' + self.cageID + '_' + self.dateStr + '.txt'
-        if path.exists(self.statsFilePath):
-            self.statsFP = open(self.statsFilePath, 'r+')
-            if mice is not None:
+        """
+        statsFilePath = self.statsPath + 'quickStats_' + self.cageID + '_' + self.dateStr + '.txt'
+        statsFP = open(statsFilePath, 'w')
+        statsFP.write('Mouse_ID\tentries\tent_rew\thfixes\thf_rew')
+        if mice is not None:
+            keyList = self.task.Stimulator.MousePrecis (mice.)
                 mice.addMiceFromFile(self.statsFP)
                 mice.show()
         else:
