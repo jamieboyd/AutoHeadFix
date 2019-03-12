@@ -64,6 +64,7 @@ class AHF_DataLogger_text (AHF_DataLogger):
         self.dataPath = self.settingsDict.get('dataPath')
         self.configPath = self.settingsDict.get('mouseConfigPath') 
         self.logFP = None # reference to log file that will be created
+        self.logFilePath = ''
         self.textFilePath = self.dataPath + 'TextFiles/'
         if not path.exists(self.textFilePath):
             uid = getpwnam ('pi').pw_uid
@@ -90,6 +91,21 @@ class AHF_DataLogger_text (AHF_DataLogger):
         self.setDateStr () 
         self.makeLogFile ()
         self.makeQuickStatsFile (mice)
+
+
+    def makeLogFile (self):
+        """
+        open a new text log file for today, or open an exisiting text file with 'a' for append
+        """
+        try:
+            self.logFilePath = self.textFilePath + 'headFix_' + self.cageID + '_' + self.dateStr + '.txt'
+            self.logFP = open(self.logFilePath, 'a')
+            uid = getpwnam ('pi').pw_uid
+            gid = getgrnam ('pi').gr_gid
+            chown (self.logFilePath, uid, gid)
+            self.writeToLogFile (0, 'SeshStart', None, time())
+        except Exception as e:
+                print ("Error maing log file\n", str(e))
     
 
     def writeToLogFile(self, tag, eventKind, eventDict, timeStamp):
@@ -112,21 +128,19 @@ class AHF_DataLogger_text (AHF_DataLogger):
             sleep (0.01)
         AHF_DataLogger.PSEUDO_MUTEX = 1
         print (LogOutputStr)
+        AHF_DataLogger.PSEUDO_MUTEX = 0
         if self.logFP is not None:
             self.logFP.write(FileOutputStr)
             self.logFP.flush()
-        AHF_DataLogger.PSEUDO_MUTEX = 0
-            
 
     def setDateStr (self):
         dateTimeStruct = localtime()
         self.dateStr='{:04}{:02}{:02}'.format (dateTimeStruct.tm_year, dateTimeStruct.tm_mon, dateTimeStruct.tm_mday)
 
 
-
     def makeQuickStatsFile (self, mice):
         """
-        makes a new quickStats file for today, or opens an existing file to append.
+        makes a new quickStats file for today's results.
         
         QuickStats file contains daily totals of rewards and headFixes for each mouse
         :param expSettings: experiment-specific settings, everything you need to know is stored in this object
