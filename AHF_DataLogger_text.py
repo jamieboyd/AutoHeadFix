@@ -9,7 +9,13 @@ from datetime import datetime
 class AHF_DataLogger_text (AHF_DataLogger):
     """
     Simple text-based data logger modified from the original Auto Head Fix code
-    makes a new text file for each day, saved in default path. 
+    makes a new text file for each day, saved in default data path. 
+    
+    Mouse data is stored in a specified folder, also as text files, one text file per mouse
+    containing JSON formatted configuration and performance data. These files will opened and
+    updated after each exit from the experimental tube, in case the program needs to be restarted
+    
+    
     """
     PSEUDO_MUTEX =0
     """
@@ -22,107 +28,101 @@ class AHF_DataLogger_text (AHF_DataLogger):
     both threads think they have the mutex
     """
     defaultCage = 'cage1'
-    defaultPath='/home/pi/Documents/Mice_cfg/'
-
+    defaultDataPath='/home/pi/Documents/'
+    defaultConfigPath = '/home/pi/Documents/MiceConfig'
+    
     @staticmethod
     def about ():
         return 'Simple text-based data logger that prints mouse id, time, event type, and event dictionary to a text file, and to the shell.'
 
     @staticmethod
     def config_user_get (starterDict = {}):
+        # cage ID
         cageID = starterDict.get('cageID', AHF_DataLogger_text.defaultCage)
         response = input('Enter a name for the cage ID (currently %s): ' & cageID)
         if reponse != '':
             cageID = response
-        dataPath = starterDict.get('dataPath', AHF_DataLogger_text.defaultPath)
+        # data path 
+        dataPath = starterDict.get('dataPath', AHF_DataLogger_text.defaultDataPath)
         response = input ('Enter the path to the directory where the data will be saved (currently %s): ' % dataPath)
         if reponse != '':
             dataPath = response
-        starterDict.update ({'cageID' : cageID, 'dataPath' : dataPath})
+        if not dataPath.endswith('/'):
+            dataPath += '/'
+        # config path
+        configPath = starterDict.get('mouseConfigPath', AHF_DataLogger_text.defaultConfigPath)
+        response = input ('Enter the path to the directory from which to load and store mouse configuration (currently %s): ' % configPath)
+        if reponse != '':
+            configPath = response
+        # update and return dict
+        starterDict.update ({'cageID' : cageID, 'dataPath' : dataPath, 'mouseConfigPath' : configPath})
         return starterDict
 
         
     def setup (self):
         self.cageID = self.settingsDict.get ('cageID')
         self.dataPath = self.settingsDict.get('dataPath')
-        self.logFP = None
+        self.configPath = self.settingsDict.get('mouseConfigPath') 
+        self.logFP = None # reference to log file that will be created
+        self.textFilePath = self.dataPath + 'TextFiles/'
+        if not path.exists(self.textFilePath):
+            uid = getpwnam ('pi').pw_uid
+            gid = getgrnam ('pi').gr_gid
+            if not path.exists(self.dataPath):
+                makedirs(self.dataPath, mode=0o777, exist_ok=True)
+                chown (self.dataPath, uid, gid)
+            makedirs(self.textFilePath, mode=0o777, exist_ok=True)
+            chown (self.textFilePath, uid, gid)
         self.setDateStr ()
-        self.makeDayFolderPath ()
         self.makeLogFile ()
 
     
     def setdown (self):
         if self.logFP is not None:
             self.logFP.close()
-        if self.statsFP is not None:
-            self.statsFP.close()
 
 
     def newDay (self, mice):
-        self.writeToLogFile (0, 'SeshEnd')
+        self.writeToLogFile (0, 'SeshEnd', None, time())
         if self.logFP is not None:
             self.logFP.close()
-        if self.statsFP is not None:
-            self.statsFP.close()
+
         self.setDateStr () 
-        self.makeDayFolderPath()
         self.makeLogFile ()
         self.makeQuickStatsFile (mice)
     
 
-    def writeToLogFile(self, tag, event, timeStamp):
+    def writeToLogFile(self, tag, eventKind, eventDict, timeStamp):
         """
         Writes the time and type of each event to a text log file, and also to the shell
 
         Format of the output string: tag     time_epoch or datetime       event
         The computer-parsable time_epoch is printed to the log file and user-friendly datetime is printed to the shell
         :param tag: the tag of mouse, usually from RFIDTagreader.globalTag
-        :param event: the type of event to be printed, entry, exit, reward, etc.
+        :param eventKind: the type of event to be printed, entry, exit, reward, etc.
+        :param eventDict: a dictionary containing data about the event (may be None if no associated data) 
         returns: nothing
         """
-        if event == 'SeshStart' or event == 'SeshEnd':
+        if eventKind == 'SeshStart' or eventKind == 'SeshEnd':
             tag = 0
-        outPutStr = '{:013}'.format(tag)
-        logOutPutStr = outPutStr + '\t' + '{:.2f}'.format (time ())  + '\t' + event +  '\t' + datetime.fromtimestamp (int (time())).isoformat (' ')
-        printOutPutStr = outPutStr + '\t' + datetime.fromtimestamp (int (time())).isoformat (' ') + '\t' + event
+            eventDict = None
+        FileOutputStr = '{:013}\t{:s}\t{:s}\t{:.2f}'.format(tag, eventKind, eventDict, timeStamp)
+        LogOutputStr = '{:013}\t{:s}\t{:s}\t{:s}\n'.format (tag, eventKind, eventDict, datetime.fromtimestamp (int (timeStamp)).isoformat (' '))
         while AHF_DataLogger.PSEUDO_MUTEX ==1:
             sleep (0.01)
         AHF_DataLogger.PSEUDO_MUTEX = 1
-        print (printOutPutStr)
+        print (LogOutputStr)
         if self.logFP is not None:
-            self.logFP.write(logOutPutStr + '\n')
+            self.logFP.write(FileOutputStr)
             self.logFP.flush()
         AHF_DataLogger.PSEUDO_MUTEX = 0
             
 
     def setDateStr (self):
         dateTimeStruct = localtime()
-        self.dateStr= str (dateTimeStruct.tm_year) + (str (dateTimeStruct.tm_mon)).zfill(2) + (str (dateTimeStruct.tm_mday)).zfill(2)
+        self.dateStr='{:04}{:02}{:02}'.format (dateTimeStruct.tm_year, dateTimeStruct.tm_mon, dateTimeStruct.tm_mday)
 
 
-    def makeDayFolderPath (self):
-        """
-        Makes data folders for a day's data,including movies, log file, and quick stats file
-
-        Format: dayFolder = cageSettings.dataPath + cageSettings.cageID + YYYMMMDD
-        within which will be /Videos and /TextFiles
-
-        """
-        self.dayFolderPath = self.dataPath + self.dateStr + '/' + self.cageID + '/'
-        if not path.exists(self.dayFolderPath):
-            makedirs(self.dayFolderPath, mode=0o777, exist_ok=True)
-            makedirs(self.dayFolderPath + 'TextFiles/', mode=0o777, exist_ok=True)
-            makedirs(self.dayFolderPath + 'Videos/', mode=0o777, exist_ok=True)
-            uid = getpwnam ('pi').pw_uid
-            gid = getgrnam ('pi').gr_gid
-            chown (self.dayFolderPath, uid, gid)
-            chown (self.dayFolderPath + 'TextFiles/', uid, gid)
-            chown (self.dayFolderPath + 'Videos/', uid, gid)
-
-
-
-        
-    
 
     def makeQuickStatsFile (self, mice):
         """

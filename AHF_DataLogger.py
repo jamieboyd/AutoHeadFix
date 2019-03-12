@@ -19,7 +19,8 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
     @abstractmethod
     def makeLogFile (self):
         """
-        Makes a text log file, or a datbase, or whatever else needs doing
+        Makes or opens a text log file, or a datbase, or whatever else needs doing. Called once before
+        entyering main loop of program. DataLogger may make a new file every day in NewDay function, if desired
         """
         pass
 
