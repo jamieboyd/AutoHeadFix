@@ -61,6 +61,7 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
         """
         Loads data that was saved for this mouse, in some permanent storage as a JSON file
         Will be called when program is started, or restarted and settings need to be reloaded
+        Updates dictionaies for mouse object
         """
         pass
 

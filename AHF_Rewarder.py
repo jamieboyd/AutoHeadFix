@@ -34,15 +34,15 @@ class AHF_Rewarder(AHF_Base, metaclass = ABCMeta):
 
             
     @abstractmethod
-    def giveReward(self, rewardName):
+    def giveReward(self, rewardName, resultDict):
         return 0
 
     @abstractmethod
-    def giveRewardCM(self, rewardName):
+    def giveRewardCM(self, rewardName, resultDict):
         return 0
 
     @abstractmethod
-    def countermandReward(self):
+    def countermandReward(self, resultDict):
         return 0
 
     @abstractmethod

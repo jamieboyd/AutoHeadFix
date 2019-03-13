@@ -357,7 +357,7 @@ def Dict_to_obj_fields (anObject, aDict):
 
 
         
-def Obj_fields_to_file (anObject, nameTypeStr, nameStr, typeSuffix):
+def Obj_fields_to_file (anObject, nameTypeStr, nameStr, typeSuffix, dir = ''):
     """
     Writes a file containing a json dictionary of all the fields of the object anObject
     """
@@ -371,7 +371,7 @@ def Obj_fields_to_file (anObject, nameTypeStr, nameStr, typeSuffix):
                 jsonDict.update({item [0]: item[1]})
 
     configFile = 'AHF_' + nameTypeStr + '_' + nameStr + typeSuffix
-    with open (configFile, 'w') as fp:
+    with open (dir + configFile, 'w') as fp:
         fp.write (json.dumps (jsonDict, separators = ('\n', '='), sort_keys=True, skipkeys = True))
         fp.close ()
         uid = pwd.getpwnam ('pi').pw_uid
@@ -380,13 +380,13 @@ def Obj_fields_to_file (anObject, nameTypeStr, nameStr, typeSuffix):
 
 
         
-def File_to_obj_fields (nameTypeStr, nameStr, typeSuffix, anObject):
+def File_to_obj_fields (nameTypeStr, nameStr, typeSuffix, anObject, dir = ''):
     """
     Sets attributes for the object anObject from the keys and values of dictionay aDict loaded from the file
     """
     filename = 'AHF_' + nameTypeStr + '_' + nameStr + typeSuffix
     errFlag = False
-    with open (filename, 'r') as fp:
+    with open (dir + filename, 'r') as fp:
         data = fp.read()
         data=data.replace('\n', ',')
         data=data.replace('=', ':')

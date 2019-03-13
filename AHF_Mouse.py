@@ -9,10 +9,10 @@ from AHF_Base import AHF_Base
 class Mice (object):
     """
     The Mice class contains an array of Mouse objects, plus a reference to the Task object
-    Additionally, MOuse objects may have appended attributes as follows:
+    Additionally, Mouse objects may have appended attributes as follows:
     Dictionaries from Stimulator, 1 for results, stimResults, and 1 for parameters, stimParams
     Dictionary from HeadFixer, either headFix% or headFix type (loose, strong, a scale from 1 -8)
-    Dictionary from Rewarder, task and entry reward size, max entry rewards
+    Dictionary from Rewarder, task and entry reward size, max entry rewards, daily reward totals
     """
     
     def __init__(self, task):
@@ -26,7 +26,6 @@ class Mice (object):
             self.mouseList=[]
 
 
-            
     def mouseGenerator(self):
         """
         A Generator function that generates each of the mice in the miceList in turn. Sample function call
@@ -44,7 +43,7 @@ class Mice (object):
         """
         while True:
             inputStr = '\n************** Mouse Configuration ********************\nEnter:\n'
-            inputStr += 'A to add a mouse, by RFID Tag\n'
+            inputStr += 'A to add a mouse, by its RFID Tag\n'
             inputStr += 'T to read a tag from the Tag Reader and add that mouse\n'
             inputStr += 'P to print current daily stats for all mice\n'
             inputStr += 'R to remove a mouse from the list, by RFID Tag\n: '
@@ -118,19 +117,16 @@ class Mouse:
         entrance and reward info can be loaded from quickStats file if program is restarted, else each
         mouse will probably be initialized with 1 entry, all reward 0 first time mouse enters chamber
         :param tag: RFID tag of this mouse
-        :param entries: number of entries mouse has made
-        :param entranceRewards: number of entrance rewards mouse has been given
-        :param headFixes: number of head fixes for this mouse
-        :param headFixRewards: number of head fix rewards mouse has earned
-        :stimResultsDict: dictionary used by Stimulator class to hold mouse-specific data
-
         """
         self.tag = tag
-        self.entries = entries
-        self.entranceRewards = entranceRewards
-        self.headFixes = headFixes
-        self.headFixRewards = headFixRewards
-        self.stimDict = stimDict
+        self.entries = 0
+        self.StimulatorParamsDict = None
+        self.StimulatorResultsDict = None
+        self.RewarderParamsDict = None
+        self.RewarderResultsDict = None
+        self.headFixerParamsDict =None
+        self.headFixerResultsDict =None
+        
 
     def clear (self):
         """
