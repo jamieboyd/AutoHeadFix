@@ -14,8 +14,10 @@ import os
 import pwd
 import grp
 import AHF_ClassAndDictUtils as CAD
+from AHF_Mouse import Mouse, Mice
 from abc import ABCMeta
 import RPi.GPIO as GPIO
+
 
 class Task:
     """
@@ -143,16 +145,8 @@ class Task:
                 self.LickDetectorDict = None
             fileErr = True
 
-            
-         ####### settings for experiment configuration ########  
-        #### these can also be set on a per-mouse bassis
-        ### these provide default values
-        if not hasattr (self, 'maxEntryRewards'):
-            self.maxEntryRewards = int (input ('Enter maximum number of entry rewards that will be given per day:'))
-            fileErr = True
-        if not hasattr (self, 'entryRewardDelay'):
-            self.entryRewardDelay= float (input('Enter delay, in seconds, before an entrance reward is given:'))
-            fileErr = True
+
+       
         if not hasattr (self, 'propHeadFix'):
             self.propHeadFix= float (input('Enter proportion (0 to 1) of trials that are head-fixed:'))
             self.propHeadFix = float (min (1, max (0, self.propHeadFix))) # make sure proportion is bewteen 0 and 1
@@ -183,7 +177,8 @@ class Task:
                 baseName = item [0].rstrip ('Class')
                 classDict = getattr (self, baseName + 'Dict')
                 setattr (self, baseName, item [1](self, classDict))
-
+        setattr (self, 'Mice', Mice(self))
+        setattr (self, 'curMouse', None)
             
     def saveSettings(self):
         """

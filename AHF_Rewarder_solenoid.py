@@ -32,14 +32,14 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
             task = float (response)
         rewards.update({'entry' : entry, 'task' : task, 'test' : AHF_Rewarder_solenoid.testAmount})
         starterDict.update ({'rewardPin': rewardPin, 'rewards' : rewards})
-        return starterDict
+        return AHF_Rewarder.config_user_get (starterDict)
 
 
     @abstractmethod
     def setup (self):
         self.rewardPin = self.settingsDict.get('rewardPin')
         self.rewards = self.settingsDict.get ('rewards')
-        self.countermandTime = self.defaultCMtime
+        self.countermandTime = self.settingsDict.get ('entryRewardDelay')
 
     @abstractmethod
     def giveReward(self, rewardName):

@@ -10,9 +10,29 @@ class AHF_Rewarder(AHF_Base, metaclass = ABCMeta):
     """
     rewardUnits = ''
     testAmount = 0
-    defaultCMtime = 2
+    defaultMaxEntryRewards =1000
+    defaultEntryRewardDelay = 1.0
 
+    @staticmethod
+    @abstractmethod
+    def config_user_get (starterDict = {}):
+        """
+        static method that querries user for settings, with default responses from starterDict,
+        and returns starterDict with settings as edited by the user.
 
+        """
+        maxEntryRewards = starterDict.get ('maxEntryRewards', AHF_Rewarder.defaultMaxEntryRewards)
+        response = input('Enter the maximum number of entry reards given per day (currently %d): ' % maxEntryRewards)
+        if response != '':
+            maxEntryRewards = int (response)
+        entryRewardDelay = starterDict.get ('entryRewardDelay', AHF_Rewarder.defaultEntryRewardDelay)
+        response = input('Enter the delay between entering and getting a reward (currently %.2f): ' % defaultEntryRewardDelay)
+        if response != '':
+            entryRewardDelay = float (response)
+        starterDict.update ({'maxEntryRewards' : maxEntryRewards, 'entryRewardDelay' : entryRewardDelay})
+        return starterDict
+
+            
     @abstractmethod
     def giveReward(self, rewardName):
         return 0
@@ -35,6 +55,14 @@ class AHF_Rewarder(AHF_Base, metaclass = ABCMeta):
 
     def addRewardToDict (self, rewardName, rewardSize):
         self.rewards.update ({rewardName : rewardSize})
+
+
+    def config_user_addDictToMouse (self, mouse):
+        if hasattr (mouse, 'RewarderDict'):
+             mouse.RewarderDict = self.config_user_get(starterDict = mouse.RewarderDict)
+        else:
+            setattr (mouse, 'RewarderDict', self.config_user_get(starterDict = self.settingsDict))
+            
 
     def setCountermandTime (self, countermandTime):
         self.countermandTime = countermandTime

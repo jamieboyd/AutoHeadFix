@@ -3,7 +3,7 @@
 
 from abc import ABCMeta, abstractmethod
 from AHF_Base import AHF_Base
-
+from AHF_Mouse import Mouse, Mice
 class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
     """
     A Data Logger provides an interface to save task data, and to save
@@ -50,12 +50,11 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
     @abstractmethod
     def loadAllMiceData (self):
         """
-        Loads configuration data for the initially empty mice array from the file pointed to
-        in task.mouseConfig path. Some kind of permanent storage as a JSON file, or a database
+        Loads configuration data from some kind of permanent storage as a JSON file, or a database
         Will be called when program is started, or restarted and settings need to be reloaded.
-        
+        Returns a List of Mice objects, with extra data loaded
         """
-        pass
+        return []
     
     @abstractmethod
     def loadMouseData (self, mouse):

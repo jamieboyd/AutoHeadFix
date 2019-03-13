@@ -2,10 +2,9 @@
 #-*-coding: utf-8 -*
 
 from abc import ABCMeta, abstractmethod
-import os
-import inspect
 
 from AHF_Base import AHF_Base
+from AHF_Mouse import Mice, Mouse
 
 class AHF_Stimulator (AHF_Base, metaclass = ABCMeta):
 
@@ -13,8 +12,19 @@ class AHF_Stimulator (AHF_Base, metaclass = ABCMeta):
     Stimulator does all stimulation and reward during a head fix task
     
     All events and their timings in a head fix, including rewards, are controlled by a Stimulator.
- 
+
+    resultsDict 
     """
+
+
+    def config_user_addDictToMouse (self, mouse):
+        if hasattr (mouse, 'StimParamDict'):
+             mouse.StimParamDict = self.config_user_get(starterDict = mouse.StimParamDict)
+        else:
+            setattr (mouse, 'StimParamDict', self.config_user_get(starterDict = self.settingsDict))
+
+    
+
 
     @abstractmethod
     def run (self, mouse):
@@ -23,7 +33,6 @@ class AHF_Stimulator (AHF_Base, metaclass = ABCMeta):
         """
         pass
 
-    
 
     @abstractmethod
     def configMouse (self, mouse):
@@ -37,6 +46,8 @@ class AHF_Stimulator (AHF_Base, metaclass = ABCMeta):
         """
         Returns a dictionary of daily results for an individual mouse. Number of trials, % correct, learning level, if applicable
         The items in the Precis dictionary will probably be the same as in the configMouse
+        If mouse is None, a list of strings with the keys in the stimulator dictionary is returned.
     
         """
         pass
+        

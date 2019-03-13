@@ -1,6 +1,6 @@
 #! /usr/bin/python
 #-*-coding: utf-8 -*-
-from os import path, makedirs, chown
+from os import path, makedirs, chown, listdir
 from pwd import getpwnam
 from grp import getgrnam
 from time import time, localtime,timezone
@@ -58,15 +58,15 @@ class AHF_DataLogger_text (AHF_DataLogger):
         starterDict.update ({'cageID' : cageID, 'dataPath' : dataPath, 'mouseConfigPath' : configPath})
         return starterDict
 
-"""
-            dataPath
-              _|_
-             /   \
-      logPath   statsPath
-         |         |
-     logFilePath  statsFilePath
-"""
     def setup (self):
+        """
+                    dataPath          path to data folder
+                      _|_
+                     /   \
+              logPath   statsPath      subfolders within data folder
+                 |         |
+             logFilePath  statsFilePath paths to individual files within corresponding subfolders
+        """
         self.cageID = self.settingsDict.get ('cageID')
         self.dataPath = self.settingsDict.get('dataPath')
         self.configPath = self.settingsDict.get('mouseConfigPath') 
@@ -76,23 +76,55 @@ class AHF_DataLogger_text (AHF_DataLogger):
         self.statsPath = self.dataPath + 'QuickStats/'
         self.uid = getpwnam ('pi').pw_uid
         self.gid = getgrnam ('pi').gr_gid
+        # data path
         if not path.exists(self.dataPath):
             makedirs(self.dataPath, mode=0o777, exist_ok=True)
             chown (self.dataPath, self.uid, self.gid)
+        # logPath, folder in data path
         if not path.exists(self.logPath):
             makedirs(self.logPath, mode=0o777, exist_ok=True)
             chown (self.logPath, self.uid, self.gid)
+        # stats path, a different folder in data path
         if not path.exists(self.statsPath):
             makedirs(self.statsPath, mode=0o777, exist_ok=True)
             chown (self.statsPath, self.uid, self.gid)
-        self.setDateStr ()
-        self.makeLogFile ()
+        # mouseConFigPath can be anywhere, not obliged to be in data path
+        if not path.exists(self.configPath):
+            makedirs(self.configPath, mode=0o777, exist_ok=True)
+            chown (self.configPath, self.uid, self.gid)
+        self.setDateStr ()  # makes a string for today's date, used in file names
+        self.makeLogFile () # makes and opens a file for today's data inside logFilePath folder, sets logFP
 
     
     def setdown (self):
         if self.logFP is not None:
-            self.writeToLogFile (0, 'SeshEnd', None, time()
+            self.writeToLogFile (0, 'SeshEnd', None, time())
             self.logFP.close()
+
+
+
+    def loadAllMiceData (self):
+        fileList = []
+        miceList = []
+        for fname in listdir(self.configPath):
+            if fname.startswith ('mouse_') and fname.endswith ('.jsn'):
+                fileList.append (fname)
+        for fname in fileList:
+            tag = int (fname[6:len (fname)-4])
+            mouse = mouse (tag)
+            with open (self.configPath + filename, 'r') as fp:
+                data = fp.read()
+                data=data.replace('\n', ',')
+                data=data.replace('=', ':')
+                configDict = json.loads(data)
+                fp.close()
+             for key, value in configDict.items():
+                setattr (mouse, key, value)
+            miceList.append(mouse)
+        return miceList
+                
+    for key, value in configDict.items():
+
 
 
     def newDay (self, mice):
