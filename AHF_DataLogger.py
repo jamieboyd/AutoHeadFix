@@ -48,30 +48,26 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
         pass
 
     @abstractmethod
-    def loadAllMiceData (self):
+    def configGenerator (self):
         """
-        Loads configuration data from some kind of permanent storage as a JSON file, or a database
-        Will be called when program is started, or restarted and settings need to be reloaded.
-        Returns a List of Mice objects, with extra data loaded
+        generates configuration data for each subject as (IDtag, dictionary) tuples from some kind of permanent storage
+        such as a JSON file, or a database. Will be called when program is started, or restarted and settings
+        need to be reloaded.
         """
-        return []
     
     @abstractmethod
-    def loadMouseData (self, mouse):
+    def getConfigData (self, tag):
         """
-        Loads data that was saved for this mouse, in some permanent storage as a JSON file
+        returns a dictionary of data that was saved for this reference tag, in some permanent storage such as a JSON file
         Will be called when program is started, or restarted and settings need to be reloaded
-        Updates dictionaies for mouse object
         """
         pass
 
 
     @abstractmethod
-    def storeMouseData (self, mouse):
+    def storeConfig (self, tagDictTuple):
         """
-        Stores data for a mouse, including results from stimultor, in some more permanent storage
-        as a JSON text file, or a database or hd5 file.
-        The main program will add reward/head fix settings to the mouse object, and the
-        Stimulator object will add a dictionary of settings/results
+        Stores configuration data, given as an IDtag, dictionary tuple, in some more permanent storage
+        as a JSON text file, or a database or hd5 file, so it can be later retrived by IDtag
         """
         pass
