@@ -32,6 +32,34 @@ import warnings
 #RPi module
 import RPi.GPIO as GPIO
 
+def writeToLogFile(logFP, mouseObj, event):
+    """
+    Writes the time and type of each event to a text log file, and also to the shell
+
+    Format of the output string: tag     time_epoch or datetime       event
+    The computer-parsable time_epoch is printed to the log file and user-friendly datetime is printed to the shell
+    :param logFP: file pointer to the log file
+    :param mouseObj: the mouse for which the event pertains,
+    :param event: the type of event to be printed, entry, exit, reward, etc.
+    returns: nothing
+    """
+    try:
+        if event == 'SeshStart' or event == 'SeshEnd' or mouseObj is None:
+            outPutStr = ''.zfill(13)
+        else:
+            outPutStr = '{:013}'.format(mouseObj.tag)
+        logOutPutStr = outPutStr + '\t' + '{:.2f}'.format (time ())  + '\t' + event +  '\t' + datetime.fromtimestamp (int (time())).isoformat (' ')
+        printOutPutStr = outPutStr + '\t' + datetime.fromtimestamp (int (time())).isoformat (' ') + '\t' + event
+        print (printOutPutStr)
+        logFP.write(logOutPutStr + '\n')
+        logFP.flush()
+    except Exception as e:
+        print ("Error writing to log file\n", str (e))
+        
+        
+        
+        
+
 class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
     def __init__ (self, cageSettings, expSettings, rewarder, lickDetector, camera):
         super().__init__(cageSettings, expSettings, rewarder, lickDetector, camera)
@@ -66,6 +94,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
         a separate thread. An existing coefficient matrix is loaded from the settings.
         '''
 
+        '''
         #Buzzer settings == Vibmotor
         #self.buzz_pulseProb = float (self.configDict.get ('buzz_pulseProb', 1))
         self.buzz_pin = int(self.configDict.get ('buzz_pin', 27))
@@ -82,6 +111,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
         self.speakerOffForReward = float(self.configDict.get ('speaker_OffForReward', 1.5))
         self.speaker=Infinite_train (PTSimpleGPIO.MODE_FREQ, self.speakerPin, self.speakerFreq, self.speakerDuty,  PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
         print('Debug: passed speaker')
+        '''
 
         #Stepper motor settings
         #Shift register controlled by 4 GPIOs
@@ -516,6 +546,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
             return targ_pos
         else:
             print('No laser stimulation: Image registration failed.')
+            writeToLogFile(self.expSettings.logFP, self.mouse, 'image registration failure')
             return None
 
 
@@ -527,10 +558,12 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
         if self.expSettings.doHeadFix:
             if not hasattr(self.mouse,'ref_im'):
                 print('Take reference image')
+                writeToLogFile(self.expSettings.logFP, self.mouse, 'taking reference image')
                 self.get_ref_im()
                 return
             elif not hasattr(self.mouse,'targets'):
                 print('Select targets')
+                writeToLogFile(self.expSettings.logFP, self.mouse, 'no targets selected')
                 #If targets haven't been choosen -> release mouse again
                 return
 
@@ -557,6 +590,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
                     self.rewardTimes.append (time())
                     if targ_pos is not None:
                         self.pulse(self.laser_on_time,self.duty_cycle)
+                        writeToLogFile(self.expSettings.logFP, self.mouse, 'laser pulse')
                     self.rewarder.giveReward('task')
                     sleep(timeInterval)
                 self.mouse.headFixRewards += self.nRewards
@@ -578,7 +612,8 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
 
     def logfile (self):
         rewardStr = 'reward'
-        buzzStr = 'Buzz:N=' + str (self.buzz_num) + ',length=' + '{:.2f}'.format(self.buzz_len) + ',period=' + '{:.2f}'.format (self.buzz_period)
+        buzzStr = 'no buzzer used'
+        #buzzStr = 'Buzz:N=' + str (self.buzz_num) + ',length=' + '{:.2f}'.format(self.buzz_len) + ',period=' + '{:.2f}'.format (self.buzz_period)
         #buzzStr = 'Buzz:duty=' + str (self.buzz_duty) + ',duration=' + '{:.2f}'.format(self.buzz_dur) + ',frequency=' + '{:.2f}'.format(self.buzz_freq)
         mStr = '{:013}'.format(self.mouse.tag)
         for i in range (0, len (self.buzzTimes)):
