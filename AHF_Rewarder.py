@@ -34,15 +34,15 @@ class AHF_Rewarder(AHF_Base, metaclass = ABCMeta):
 
             
     @abstractmethod
-    def giveReward(self, rewardName, resultDict):
+    def giveReward(self, rewardName):
         return 0
 
     @abstractmethod
-    def giveRewardCM(self, rewardName, resultDict):
+    def giveRewardCM(self, rewardName):
         return 0
 
     @abstractmethod
-    def countermandReward(self, resultDict):
+    def countermandReward(self):
         return 0
 
     @abstractmethod
@@ -55,13 +55,6 @@ class AHF_Rewarder(AHF_Base, metaclass = ABCMeta):
 
     def addRewardToDict (self, rewardName, rewardSize):
         self.rewards.update ({rewardName : rewardSize})
-
-
-    def config_user_addDictToMouse (self, mouse):
-        if hasattr (mouse, 'RewarderDict'):
-             mouse.RewarderDict = self.config_user_get(starterDict = mouse.RewarderDict)
-        else:
-            setattr (mouse, 'RewarderDict', self.config_user_get(starterDict = self.settingsDict))
             
 
     def setCountermandTime (self, countermandTime):

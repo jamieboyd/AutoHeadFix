@@ -19,12 +19,13 @@ class Mice (object):
         """
         Initializes the list of mice with an empty list, or from configuration from DataLogger, and keeps a reference to the task object
         """
-        self.task = task
-        if hasattr (self.task, 'DataLogger'):
+        self.task = task # reference to the task where all objects are referenced
+        self.currentMouse = None # reference to current mouse in the array, thae one that is in the experimental tube
+        if hasattr (self.task, 'DataLogger'): # try to load mice configuration from dataLogger
             self.mouseList=self.task.DataLoger.loadAllMiceData ()
         else:
             self.mouseList=[]
-
+        
 
     def mouseGenerator(self):
         """
@@ -49,21 +50,26 @@ class Mice (object):
             inputStr += 'R to remove a mouse from the list, by RFID Tag\n: '
             event = input (inputStr)
             tag = 0
-            if event == 'p' or event == 'P':
+            if event == 'p' or event == 'P': # print mice stats
                 self.showMice ()
-            elif event == 'r' or event == 'R':
+            elif event == 'r' or event == 'R': # remove a mouse
                 tag = input ('Enter the RFID tag of the mouse to be removed: ')
+                wasFound = False
+                for mouse in self.mouseList:
+                    if mouse.tag == tag:
+                        self.mouseList.remove (mouse)
+                        wasFound = True
+                        break
+                if not wasFound:
+                    print ('Mouse with tag ' + str (tag) + ' was not found.')
+            else: # other two choices are for adding a mouse by RFID Tag, either reading from Tag Reader, or typing it
+                if event == 't' or event == 'T':
+                    tag = self.task.TagReader.readTag()
+                elif event == 'a' or event == 'A':
+                    tag = int(input ('Enter the RFID tag for new mouse: '))
                 
-            elif event == 't' or event == 'T':
-                tag = self.task.TagReader.readTag()
-            elif event == 'a' or Event == 'A':
-                tag = input ('Enter the RFID tag for this mouse: ')
-            
-            
-                self.userAddMouse (tag, stimResultsDict = self.task.Stimulator.get_user_config())
-            elif event == 'a' or Event == 'A':
-                tag = input ('Enter the RFID tag for this mouse:')
-                self.userAddMouse (tag)
+                
+              
 
 
     def tagExists (self, RFIDTag):
@@ -79,7 +85,7 @@ class Mice (object):
 
     def showMice (self):
         stimDictKeys = self.mouseList [0].stimResultsDict.keys()
-        print ('Mouse\tEntries\tEntry Rewards\tHeadFixes\tHeadFix Rewards'.join('\t' + key for key in stimDictKeys))   
+        print ('Mouse\tEntries\tEntry Rewards\tHeadFixes\tHeadFix Rewards'.join('\t' + key for key in stimDictKeys))
         for mouse in self.mouseList:
             printStr = '{:013}\t{:d}\t{:d}\t{:d}\t{:d}'.format(self.tag, self.entries, self.headFixes, self.entranceRewards, ,self.headFixRewards)
             printStr.join ('\t' + str(self.mouseList [0].stimDict.get(key)) for key in stimDictKeys)
@@ -110,7 +116,7 @@ class Mouse:
     is updated and stored, as in a JSON config file, for each mouse, updated after each entry
     so it can be reloaded if program needs to be stopped
     """
-    def __init__(self, tag):
+    def __init__(self, tag, StimulatorResultsDict, RewarderResultsDict, headFixerResultsDict, StimulatorDict = None, RewarderDict = None, headFixerDict = None):
         """
         Makes a new mouse object, initializing with RFID tag and entrance and reward info
 
@@ -119,13 +125,15 @@ class Mouse:
         :param tag: RFID tag of this mouse
         """
         self.tag = tag
-        self.entries = 0
-        self.StimulatorParamsDict = None
-        self.StimulatorResultsDict = None
-        self.RewarderParamsDict = None
-        self.RewarderResultsDict = None
-        self.headFixerParamsDict =None
-        self.headFixerResultsDict =None
+        self.entries = 0 # no object that tracks entries, so we track them separately
+        self.StimulatorDict = StimulatorDict # 
+        self.StimulatorResultsDict = StimulatorResultsDict
+        self.RewarderDict = RewarderDict # params for rewarder, specialized for this mouse, e.g., reward sizes, reward limits
+        self.RewarderResultsDict = RewarderResultsDict # rewarder results, e.g. number of rewrads of different types given to this mouse
+        self.headFixerDict =headFixerDict
+        self.headFixerResultsDict =headFixerResultsDict
+
+    
         
 
     def clear (self):

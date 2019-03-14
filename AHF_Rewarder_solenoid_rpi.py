@@ -39,16 +39,29 @@ class AHF_Rewarder_solenoid_rpi (AHF_Rewarder_solenoid):
     def setdown (self):
         GPIO.cleanup(self.rewardPin)
 
+
     def giveReward(self, rewardName):
         """
         Gives a reward of the requested type, if the requested reward type is found in the dictionary
 
         If the requested reward type is not found, the default reward size is used
-        param:rewardName: the tyoe of the reward to be given, should already be in dictionary
+        param:rewardName: the type of the reward to be given, should already be in dictionary
         """
-        if rewardName in self.rewards:
-            sleepTime =self.rewards.get(rewardName)
+        
+        if self.task.mice.currentMouse.RewarderResultsDict is not none:
+            if 
+
+        self.settingsDict.get ('maxEntryRewards')
+        if self.task.mice.currentMouse.RewarderDict is not none:
+            theDict = self.task.mice.currentMouse.RewarderDict
+            rewards = theDict.get ('rewards')
+        else:
+            rewards = self.rewards
+        if
+        if rewardName in rewards:
+            sleepTime =rewards.get(rewardName)
             start_new_thread (self.rewardThread, (sleepTime,self.rewardPin))
+            
             return sleepTime
         else:
             return 0

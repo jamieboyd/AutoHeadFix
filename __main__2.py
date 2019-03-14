@@ -57,7 +57,8 @@ def main():
                     if datetime.fromtimestamp (int (time())) > nextDay:
                         task.DataLogger.newDay ()
                 # a Tag has been read
-                thisMouse = mice.getMouseFromTag (RFIDTagReader.globalTag)
+                #thisMouse = mice.getMouseFromTag (RFIDTagReader.globalTag)
+                
                 entryTime = time()
                 # log entrance and give entrance reward, if this mouse supports it
                 thisMouse.entry(rewarder, dataLogger)

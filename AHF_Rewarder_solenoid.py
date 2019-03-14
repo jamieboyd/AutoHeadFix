@@ -40,26 +40,8 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
         self.rewardPin = self.settingsDict.get('rewardPin')
         self.rewards = self.settingsDict.get ('rewards')
         self.countermandTime = self.settingsDict.get ('entryRewardDelay')
+        self.maxEntryRewards = self.settingsDict.get ('maxEntryRewards')
 
-    @abstractmethod
-    def giveReward(self, rewardName):
-        pass
-
-    @abstractmethod
-    def giveRewardCM(self, rewardName):
-        pass
-
-    @abstractmethod
-    def countermandReward(self):
-        pass
-
-    @abstractmethod
-    def turnON (self):
-        pass
-
-    @abstractmethod
-    def turnOFF (self):
-        pass
 
     def hardwareTest (self):
         print ('\nReward Solenoid opening for %.2f %s' % (self.testAmount, self.rewardUnits))
@@ -72,3 +54,18 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
             self.setup() 
                     
 
+    def newResultsDict (self):
+        """
+        Return a dictionary of keys = rewardNames, values = number of rewards given, each mouse will get one of these for reward monitoring each day
+        """
+        rDict = {}
+        for key in self.settingsDict.get ('rewards').items():
+            if key != 'test':
+                rDict.update({key : 0})
+        return rDict
+
+
+    def clearResultsDict (self, resultsDict):
+        for key in resultsDict.items():
+            resultsDict.update ({key : 0})
+        

@@ -14,7 +14,7 @@ class AHF_DataLogger_text (AHF_DataLogger):
     Mouse data is stored in a specified folder, also as text files, one text file per mouse
     containing JSON formatted configuration and performance data. These files will opened and
     updated after each exit from the experimental tube, in case the program needs to be restarted
-    
+    The file name for each mouse contains RFID tag 0-padded to 13 spaces: AHF_mouse_1234567890123.jsn
     
     """
     PSEUDO_MUTEX =0

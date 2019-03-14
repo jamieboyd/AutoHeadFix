@@ -145,8 +145,12 @@ class Task:
                 self.LickDetectorDict = None
             fileErr = True
 
-
-       
+        
+        # settings not controlled through an object
+        if not hasattr (self, 'freshMiceNotAllowed'):
+            tempInput = input ('Ignore mice whose RFID tage are not present in mouse configuration files?: ')
+            self.freshMiceNotAllowed = (tempInput [0] == 'y' or tempInput [0] == 'Y')
+            
         if not hasattr (self, 'propHeadFix'):
             self.propHeadFix= float (input('Enter proportion (0 to 1) of trials that are head-fixed:'))
             self.propHeadFix = float (min (1, max (0, self.propHeadFix))) # make sure proportion is bewteen 0 and 1

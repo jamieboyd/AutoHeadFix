@@ -30,8 +30,7 @@ class AHF_Base (metaclass = ABCMeta):
         """
         return starterDict
     
-    @staticmethod
-    def newResultsDict ():
+    def newResultsDict (self):
         """
         Returns a dictionary with fields, initialized to 0, for storing results from actions of the object, used e.g., by head fixer, stimulator, or rewarder
         """
