@@ -554,7 +554,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
     def run(self):
 
         self.rewardTimes = []
-
+        saved_targ_pos = None
         if self.expSettings.doHeadFix:
             if not hasattr(self.mouse,'ref_im'):
                 print('Take reference image')
@@ -575,7 +575,10 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
                 self.camera.capture(ref_path)
                 targ_pos = self.image_registration()
                 self.rewarder.giveReward('task')
+                if targ_pos is None and saved_targ_pos is not None:
+                    targ_pos = saved_targ_pos
                 if targ_pos is not None:
+                    saved_targ_pos = targ_pos
                     print('Moving laser to target and capture image to assert correct laser position')
                     self.move_to(np.flipud(targ_pos),topleft=True,join=True) #Move laser to target and wait until target reached
                     self.mouse.laser_spot = np.empty((self.camera.resolution[0], self.camera.resolution[1], 3),dtype=np.uint8)
