@@ -105,59 +105,30 @@ class AHF_DataLogger_text (AHF_DataLogger):
             self.writeToLogFile (0, 'SeshEnd', None, time())
             self.logFP.close()
 
-    def loadAllMiceData (self):
+    def configGenerator (self):
         """
-        Each mouse configuration file has config data for a single mouse. This function loads mice for all
-        the files in the folder and returns a list of mice objects
+        Each configuration file has config data for a single subject. This function loads data
+        from all of them in turn, and returnin each as a a tuple of (tagID, dictionary)
         """
-        fileList = []
-        miceList = []
         for fname in listdir(self.configPath):
             if fname.startswith ('AHF_mouse_') and fname.endswith ('.jsn'):
-                fileList.append (fname)
-        for fname in fileList:
-            tagStr = fname[10:len (fname)-4]
-            new_mouse = Mouse (int(tagStr))
-            CAD.File_to_obj_fields ('mouse', tagStr, '.jsn', new_mouse, dir = self.configPath)
-        return miceList
+                tagStr = fname[10:len (fname)-4]
+                yield (int (tagStr), CAD.File_to_dict ('mouse', tagStr, '.jsn', dir = self.configPath))
+                
 
-    def loadMouseData (self, mouse):
+    def getConfigData (self, tag):
         """
-        loads data from corresponding json text file, overwriting any data existing in the mouse object
+        returns saved dictionary for given tag
         """
-        CAD.File_to_obj_fields ('mouse', '{:013}'.format(mouse.tag), '.jsn', mouse, dir = self.configPath)
+        return CAD.File_to_dict ('mouse', '{:013}'.format(tag), '.jsn', dir = self.configPath)
+    
 
-    def saveMouseData (self, mouse):
+    def storeConfig (self, tag, configDict):
         """
         saves data to corresponding json text file, overwriting old file
         """
-        CAD.Obj_fields_to_file (mouse, 'mouse', '{:013}'.format(mouse.tag), '.jsn', dir = self.configPath)
+        CAD.Dict_to_file (configDict, 'mouse', '{:013}'.format(tag), '.jsn', dir = self.configPath)
 
-
-    def makeQuickStatsFile (self, mice):
-        """
-        makes a quickStats file for today's results.
-        
-        QuickStats file contains daily totals of rewards and headFixes for each mouse
-        :param expSettings: experiment-specific settings, everything you need to know is stored in this object
-        :param cageSettings: settings that are expected to stay the same for each setup, including hardware pin-outs for GPIO
-        :param mice: the array of mice objects for this cage
-        """
-        statsFilePath = self.statsPath + 'quickStats_' + self.cageID + '_' + self.dateStr + '.txt'
-        statsFP = open(statsFilePath, 'w')
-        statsFP.write('Mouse_ID\tentries\tent_rew\thfixes\thf_rew')
-        if mice is not None:
-            keyList = self.task.Stimulator.MousePrecis (mice.)
-                mice.addMiceFromFile(self.statsFP)
-                mice.show()
-                    else:
-                        self.statsFP = open(self.statsFilePath, 'w')
-                        self.statsFP.write('Mouse_ID\tentries\tent_rew\thfixes\thf_rew\n')
-                        self.statsFP.close()
-                        self.statsFP = open(self.statsFilePath, 'r+')
-                        uid = getpwnam ('pi').pw_uid
-                        gid = getgrnam ('pi').gr_gid
-                        chown (self.statsFilePath, uid, gid)
 
 
     def newDay (self, mice):
@@ -206,38 +177,37 @@ class AHF_DataLogger_text (AHF_DataLogger):
             self.logFP.write(FileOutputStr)
             self.logFP.flush()
 
+
     def setDateStr (self):
+        """
+        Sets the string corresponding to todays date that is used when making files
+        """
         dateTimeStruct = localtime()
         self.dateStr='{:04}{:02}{:02}'.format (dateTimeStruct.tm_year, dateTimeStruct.tm_mon, dateTimeStruct.tm_mday)
 
 
-
-
-
-    def updateStats (self, numMice):
-        """ Updates the quick stats text file after every exit, mostly for the benefit of folks logged in remotely
-        :param statsFP: file pointer to the stats file
-        :param mice: the array of mouse objects
-        returns:nothing
+        def makeQuickStatsFile (self, mice):
         """
-        pos = self.mouse.arrayPos
-        self.statsFP.seek (39 + 38 * pos) # calculate this mouse pos, skipping the 39 char header
-        # we are in the right place in the file and new and existing values are zero-padded to the same length, so overwriting should work
-        outPutStr = '{:013}'.format(self.mouse.tag) + "\t" +  '{:05}'.format(self.mouse.entries)
-        outPutStr += "\t" +  '{:05}'.format(self.mouse.entranceRewards) + "\t" + '{:05}'.format(self.mouse.headFixes)
-        outPutStr +=  "\t" + '{:05}'.format(self.mouse.headFixRewards) + "\n"
-        self.statsFP.write (outPutStr)
-        self.statsFP.flush()
-        self.statsFP.seek (39 + 38 * numMice) # leave file position at end of file so when we quit, nothing is truncated
-
-    def addMouseToStats (self, newMouse, numMice):
-         # add a blank line to the quik stats file
-        if self.statsFP is not None:
-            self.statsFP.seek (39 + 38 * numMice)
-            outPutStr = '{:013}'.format(int (newMouse.tag)) + "\t" +  '{:05}'.format(0) + "\t" +  '{:05}'.format(0) + "\t"
-            outPutStr += '{:05}'.format(0) + "\t" + '{:05}'.format(0) + "\n"
-            self.statsFP.write (outPutStr)
-            self.statsFP.flush()
+        makes a quickStats file for today's results.
+        
+        QuickStats file contains daily totals of rewards and headFixes for each mouse
+        """
+        statsFilePath = self.statsPath + 'quickStats_' + self.cageID + '_' + self.dateStr + '.txt'
+        statsFP = open(statsFilePath, 'w')
+        statsFP.write('Mouse_ID\tentries\tent_rew\thfixes\thf_rew')
+        if mice is not None:
+            keyList = self.task.Stimulator.MousePrecis (mice)
+                mice.addMiceFromFile(self.statsFP)
+                mice.show()
+                    else:
+                        self.statsFP = open(self.statsFilePath, 'w')
+                        self.statsFP.write('Mouse_ID\tentries\tent_rew\thfixes\thf_rew\n')
+                        self.statsFP.close()
+                        self.statsFP = open(self.statsFilePath, 'r+')
+                        uid = getpwnam ('pi').pw_uid
+                        gid = getgrnam ('pi').gr_gid
+                        chown (self.statsFilePath, uid, gid)
+                        
 
     def __del__ (self):
         self.writeToLogFile ('SeshEnd')

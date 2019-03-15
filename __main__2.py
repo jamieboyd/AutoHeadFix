@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 
 # Task configures and controls sub-tasks for hardware and stimulators
 from AHF_Task import AHF_Task
-from AHF_Mouse import Mouse, Mice
 # hardware tester can be called from menu pulled up by keyboard interrupt
 from AHF_HardwareTester import hardwareTester
 
@@ -75,7 +74,6 @@ def main():
                 if hasattr (task, 'LickDetector'):
                     task.lickDetector.stop_logging ()
                 inputStr = '\n************** Auto Head Fix Manager ********************\nEnter:\n'
-                inputStr += 'M to configure mice\n'
                 inputStr +='V to run rewarder (valve) control\n'
                 inputStr += 'H for hardware tester\n'
                 inputStr += 'S to edit Stimulator settings\n'
@@ -105,10 +103,8 @@ def main():
                             task.saveSettings ()
                         task.setup ()
                     elif event == 'S' or event == 's':
-                        task.Stimulator.settingsDict = task.Stimulator.config_user_get (task.Stimulator.settingsDict):
+                        task.Stimulator.settingsDict = task.Stimulator.config_user_get (task.Stimulator.settingsDict)
                         task.Stimulator.setup()
-                    elif event == 'm' or even == 'M':
-                            task.mice.userConfigure()
 
     except Exception as anError:
         print ('Auto Head Fix error:' + str (anError))

@@ -29,15 +29,15 @@ class AHF_Base (metaclass = ABCMeta):
 
         """
         return starterDict
+
     
     def newResultsDict (self):
         """
         Returns a dictionary with fields, initialized to 0, for storing results from actions of the object, used e.g., by head fixer, stimulator, or rewarder
         """
-        return None
+        return {}
     
-    @staticmethod
-    def clearResultsDict(resultsDict):
+    def clearResultsDict(self, resultsDict):
         """
         Clears values in the results dictionary, useful when you want daily totals
         """

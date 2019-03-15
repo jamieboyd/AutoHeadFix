@@ -11,7 +11,7 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
     a database, or hd5 files, or some combination thereof. The data logger
     should also print status updates to the shell, but these don't need to contain
     as much information. The brain imaging data is saved
-    separately, but references to movie files be saved by data logger.
+    separately, but references to movie files should be saved by data logger.
     Similarly, other binary data (lever positons, anyone?) can be saved separately,
     by the Stimulator class, but binary file/posiiton can be saved as an event.
     """
@@ -65,9 +65,9 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
 
 
     @abstractmethod
-    def storeConfig (self, tagDictTuple):
+    def storeConfig (self, tag, dictionary):
         """
-        Stores configuration data, given as an IDtag, dictionary tuple, in some more permanent storage
+        Stores configuration data, given as an IDtag, and dictionary for that tag, in some more permanent storage
         as a JSON text file, or a database or hd5 file, so it can be later retrived by IDtag
         """
         pass

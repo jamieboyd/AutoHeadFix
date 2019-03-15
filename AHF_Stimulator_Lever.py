@@ -5,8 +5,6 @@ import ptLeverThread
 from array import array
 from AHF_Stimulator import AHF_Stimulator
 from AHF_Rewarder import AHF_Rewarder
-from AHF_Mouse import Mouse
-from Pywith import Pulse, Train
 import time
 import json
 

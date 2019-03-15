@@ -345,16 +345,37 @@ def Edit_dict (anyDict, longName):
             anyDict.update (updatDict)
 
 
+########################################################################################################################
+## methods for moving data between.json files and python dicitonaries or object fields 
+#########################################################################################################################
 
-
-
-def Dict_to_obj_fields (anObject, aDict):
+def File_to_dict (nameTypeStr, nameStr, typeSuffix, dir = ''):
     """
-    Sets attributes for the object anObject from the keys and values of dictionay aDict
+    Sets attributes for the object anObject from the keys and values of dictionay aDict loaded from the file
     """
-    for key, value in aDict:
-        setattr (anObject, key, value)
+    filename = 'AHF_' + nameTypeStr + '_' + nameStr + typeSuffix
+    errFlag = False
+    with open (dir + filename, 'r') as fp:
+        data = fp.read()
+        data=data.replace('\n', ',')
+        data=data.replace('=', ':')
+        configDict = json.loads(data)
+        fp.close()
+    return configDict
 
+
+
+def Dict_to_file (anyDict, nameTypeStr, nameStr, typeSuffix, dir = ''):
+    """
+    Saves a dicitonary as JSON encoded text file
+    """
+    configFile = 'AHF_' + nameTypeStr + '_' + nameStr + typeSuffix
+    with open (dir + configFile, 'w') as fp:
+        fp.write (json.dumps (anyDict, separators = ('\n', '='), sort_keys=True, skipkeys = True))
+        fp.close ()
+        uid = pwd.getpwnam ('pi').pw_uid
+        gid = grp.getgrnam ('pi').gr_gid
+        os.chown (configFile, uid, gid) # we may run as root for pi PWM, so we need to expicitly set ownership
 
         
 def Obj_fields_to_file (anObject, nameTypeStr, nameStr, typeSuffix, dir = ''):
@@ -403,3 +424,11 @@ def File_to_obj_fields (nameTypeStr, nameStr, typeSuffix, anObject, dir = ''):
                 setattr (anObject, key, value)
         except ValueError as e:
             print ('Error:%s' % str (e))
+
+
+def Dict_to_obj_fields (anObject, aDict):
+    """
+    Sets attributes for the object anObject from the keys and values of dictionay aDict
+    """
+    for key, value in aDict:
+        setattr (anObject, key, value)

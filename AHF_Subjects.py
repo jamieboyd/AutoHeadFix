@@ -10,17 +10,16 @@ class AHF_Subjects (AHF_Base, metaclass = ABCMeta):
     """
 
     @abstractmethod
-    def setCurrent (self, IDnum):
+    def get (self, IDnum):
         """
-        Sets current individual in group of subjects based on a ID tag. The current subject id the one currently
-        under test in the experimental apparatus. returns True if subject is in pool, else false
+        returns dictionary for individual in group of subjects based on a ID tag.
         """
         pass
 
     @abstractmethod
     def generator (self):
         """
-        Generator function that generates all of the subjects in turn
+        Generator function that generates dictionaries of settings for all of the subjects in turn
         """
         pass
 

@@ -39,7 +39,7 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
             self.settingsDict = self.config_user_get (self.settingsDict)
             self.setup()    
 
-
+"""
 
                 thisMouse.currentEntrancesWithNoHeadFix += 1
                 thisMouse.currentContinuousHeadFixes = 0
@@ -129,3 +129,4 @@ def checkDownLevel(thisMouse, expSettings, stimulator):
                 
                 #Reset
                 thisMouse.currentEntrancesWithNoHeadFix = 0
+"""

@@ -14,7 +14,6 @@ import os
 import pwd
 import grp
 import AHF_ClassAndDictUtils as CAD
-from AHF_Mouse import Mouse, Mice
 from abc import ABCMeta
 import RPi.GPIO as GPIO
 
