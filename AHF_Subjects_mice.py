@@ -5,8 +5,8 @@ from AHF_Subjects import AHF_Subjects
 
 class AHF_Subjects_mice (AHF_Subjects):
     """
-    class for the mice, as experimental subjects.Contains an array of Mouse objects, plus a reference to the Task object
-    Has an inner class for the mice objects, which is a very basic mouse class with few built-in attributes. But Mice
+    class for the mice, as experimental subjects.Contains a dictionary where key id IDtag, and value is a dicitonary
+    of configuration information for corresponding mouse.
     objects may have appended attributes as follows:
     Dictionaries from Stimulator, 1 for results, stimResults, and 1 for parameters, stimParams
     Dictionary from HeadFixer, either headFix% or headFix type (loose, strong, a scale from 1 -8)
@@ -45,8 +45,25 @@ class AHF_Subjects_mice (AHF_Subjects):
         self.loadConfigs = self.settingsDict.get ('loadMiceConfig')
         
         if self.loadConfigs and hasattr (self.task, 'DataLogger'): # try to load mice configuration from dataLogger
+            for 
             
 
+    def generator(self):
+        """
+        A Generator function that generates each of the mice in the miceList in turn. Sample function call
+        for mouse in myMice.mouseGenerator():
+        """
+        for mouse in self.miceList:
+            yield mouse
+                
+
+    def setCurrent (self, IDnum)
+         self.current = miceList [IDnum]
+
+    Class 
+            
+            
+                
 from AHF_Task import Task
 import AHF_ClassAndDictUtils as CAD
 from AHF_TagReader import AHF_TagReader

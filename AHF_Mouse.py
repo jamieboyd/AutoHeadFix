@@ -8,8 +8,8 @@ from AHF_Base import AHF_Base
 
 class Mice (object):
     """
-    The Mice class contains an array of Mouse objects, plus a reference to the Task object
-    Additionally, Mouse objects may have appended attributes as follows:
+    The Mice class contains a dictionary of Mouse configuration dictionaries, plus a reference to the Task object
+    Mouse configuration dictionaries may have appended dictionaries as follows:
     Dictionaries from Stimulator, 1 for results, stimResults, and 1 for parameters, stimParams
     Dictionary from HeadFixer, either headFix% or headFix type (loose, strong, a scale from 1 -8)
     Dictionary from Rewarder, task and entry reward size, max entry rewards, daily reward totals
@@ -27,15 +27,7 @@ class Mice (object):
             self.mouseList=[]
         
 
-    def mouseGenerator(self):
-        """
-        A Generator function that generates each of the mice in the miceList in turn. Sample function call
-        for mouse in myMice.mouseGenerator():
-        """
-        i = 0
-        for mouse in self.mouseList:
-            yield self.mouseList[i]
-            i +=1 
+
     
     
     def userConfigure (self):
