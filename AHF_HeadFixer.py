@@ -10,29 +10,52 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
     boolean for settability of headFixing levels, default is False. Can be used for incremental learning
     """
     hasLevels = False
+
+
+    @abstractmethod
+    @staticmethod
+    def config_user_get (starterDict = {}):
+        propHeadFix = starterDict.get ('propHeadFix', AHF_Subjects_mice.propHeadFixDefault)
+        response = input('Enter proportion (0 to 1) of trials that are head-fixed, currently {:.2f}: '.format(propHeadFix))
+        if response != '':
+            propHeadFix = float (response)
+        skeddadleTime = starterDict.get ('skeddadleTime', AHF_Subjects_mice.skeddadleTimeDefault)
+        response = input ('Enter time, in seconds, for mouse to get head off the contacts when session ends, currently {:.2f}: '.format(skeddadleTime))
+        if response != '':
+            skeddadleTime = float (skeddadleTime)
+        starterDict.update ({'propHeadFix' : propHeadFix, 'skeddadleTime' : skeddadleTime})
     
+    @abstractmethod
+    def setup (self):
+        super().setup()
+        self.propHeadFix = self.settingsDict.get ('propHeadFix')
+        self.skeddadleTime = self.settingsDict.get ('skeddadleTime')
 
     def newResultsDict (self, starterDict = {}):
         """
         Returns a dictionary counting number of head fixes, subclasses could track more levels of head fixing, e.g.
         """
-        starterDict.update({'headFixes' : 0})
+        starterDict.update({'headFixes' : 0, 'Un-headFixes' : 0})
         return starterDict
 
 
     def clearResultsDict(self, resultsDict):
-        resultsDict.update ({'headFixes' : 0})
+        resultsDict.update ({'headFixes' : 0, 'Un-headFixes' : 0})
+        
 
+    def newSettingsDict (self,starterDict = {}):
+        starterDict.update ({'propHeadFix' : self.propHeadFix})
+        return starterDict
 
     @abstractmethod
-    def fixMouse(self, resultsDict = {}, individualDict = {}):
+    def fixMouse(self, resultsDict = {}, settingsDict = {}):
         """
         performs head fixation by energizing a piston, moving a servomotor, etc
         """
         pass
     
     @abstractmethod
-    def releaseMouse(self, resultsDict = {},individualDict = {}):
+    def releaseMouse(self, resultsDict = {},settingsDict = {}):
         """
         releases mouse from head fixation by relaxing a piston, moving a servomotor, etc
         """

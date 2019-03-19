@@ -40,20 +40,12 @@ class AHF_Subjects_mice (AHF_Subjects):
             loadConfigs = True
         else:
             loadConfigs =  False
-        propHeadFix = starterDict.get ('propHeadFix', AHF_Subjects_mice.propHeadFixDefault)
-        response = input('Enter proportion (0 to 1) of trials that are head-fixed, currently {:.2f}: '.format(propHeadFix))
-        if response != '':
-            propHeadFix = float (response)
-        skeddadleTime = starterDict.get ('skeddadleTime', AHF_Subjects_mice.skeddadleTimeDefault)
-        response = input ('Enter time, in seconds, for mouse to get head off the contacts when session ends, currently {:.2f}: '.format(skeddadleTime))
-        if response != '':
-            skeddadleTime = float (skeddadleTime)
+
         inChamberTimeLimit = starterDict.get ('inChamberTimeLimit',AHF_Subjects_mice.inChamberTimeLimitDefault)
         response = input('Enter in-Chamber duration limit, in minutes, before stopping head-fix trials, currently {:.2f}: '.format(inChamberTimeLimit/60))
         if response != '':
             self.inChamberTimeLimit = int(inChamberTimeLimit * 60)
-        starterDict.update ({'propHeadFix' : propHeadFix, 'skeddadleTime' : skeddadleTime, 'inChamberTimeLimit' : inChamberTimeLimit})
-        starterDict.update ({'loadMiceConfigs' : loadConfigs, 'freshMiceAllowed' : freshMiceAllowed})
+        starterDict.update ({'loadMiceConfigs' : loadConfigs, 'freshMiceAllowed' : freshMiceAllowed, 'inChamberTimeLimit' : inChamberTimeLimit})
         return starterDict
 
 

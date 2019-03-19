@@ -36,12 +36,6 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
         """
         pass
 
-    @bstractmethod
-    def setup(self)
-        self.logMouse=True
-        
-    def setMouseLogging (self, doLog):
-        self.logMouse = doLog
 
     @abstractmethod
     def newDay (self, mice):

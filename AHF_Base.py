@@ -51,7 +51,7 @@ class AHF_Base (metaclass = ABCMeta):
         """
         Returns a dictionary of settings that can individually varied, overriding values in self.settings
         """
-        return self.settingsDict
+        return None
 
 
     def __init__(self, taskP, settingsDictP):

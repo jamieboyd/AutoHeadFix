@@ -173,7 +173,7 @@ class AHF_DataLogger_text (AHF_DataLogger):
         AHF_DataLogger.PSEUDO_MUTEX = 1
         print (LogOutputStr)
         AHF_DataLogger.PSEUDO_MUTEX = 0
-        if self.logFP is not None and self.logMouse: # logMouse is set to False for test mice, or unknown mice
+        if self.logFP is not None and self.task.logToFile: # logMouse is set to False for test mice, or unknown mice
             FileOutputStr = '{:013}\t{:s}\t{:s}\t{:.2f}'.format(tag, eventKind, str(eventDict), timeStamp)                                 
             self.logFP.write(FileOutputStr)
             self.logFP.flush()

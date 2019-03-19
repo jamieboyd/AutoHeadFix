@@ -28,6 +28,7 @@ class AHF_HeadFixer_Pistons(AHF_HeadFixer):
         return starterDict
 
     def setup (self):
+        super().setup ()
         self.pistonsPin = self.settingsDict.get('pistonsPin')
         GPIO.setup (self.pistonsPin, GPIO.OUT, initial = GPIO.LOW)
 

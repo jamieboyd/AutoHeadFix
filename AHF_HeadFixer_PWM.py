@@ -42,6 +42,7 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
     
     @abstractmethod
     def setup (self):
+        super().setup()
         self.servoReleasedPosition = self.settingsDict.get ('servoReleasedPosition')
         self.servoFixedPosition = self.settingsDict.get ('servoFixedPosition')
         if self.__class__.hasLevels:

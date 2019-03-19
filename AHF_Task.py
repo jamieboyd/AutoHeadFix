@@ -151,6 +151,7 @@ class Task(object):
         ###################### things we track in the main program #################################
         self.tag = 0
         self.entryTime = 0
+        self.logToFile = True # a flag for writing to the shell only, or to the shall and the log
         ################ if some of the paramaters were set by user, give option to save ###############
         if fileErr: 
             response = input ('Save new/updated settings to a task configuration file?')

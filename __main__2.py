@@ -59,18 +59,18 @@ def main():
                     else:
                         sleep (kTIMEOUTSECS)
                     task.tag = task.TagReader.readTag ()
-            # a Tag has been read, get the time
+            # a Tag has been read, get the time for the log
             task.entryTime = time()
             # get a reference to the dictionaries for this subject
             subjectDict = task.Subjects.get (tag)
             if subjectDict is not None:
                 resultsDict = subjectDict.get ('results')
                 settingsDict = subjectDict.get ('settings')
-                task.DataLogger.setMouseLogging (True)
+                task.logToFile =True
             else: # set dicts to empty throw-away dictionaries
                 resultsDict = {}
                 settingsDict = {}
-                task.DataLogger.setMouseLogging (False)
+                task.logToFile = False  # logging not done for non-existent subjects
             # log entrance
             task.DataLogger.writeToLogFile(tag, 'Entry', None, task.entryTime)
             resultsDict.update ('entries', resultsDict.get ('entries', 0) + 1)
