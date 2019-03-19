@@ -8,3 +8,16 @@ class AHF_TagReader (AHF_Base, metaclass = ABCMeta):
     @abstractmethod
     def readTag (self):
         pass
+
+    @abstractmethod
+    def startLogging (self):
+        """
+        starts using data logger to start logging entries/exits
+        """
+        pass
+
+    @abstractmethod
+    def stopLogging (self):
+        """
+        stops  data logger from logging entries/exits
+        """

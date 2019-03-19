@@ -34,7 +34,7 @@ class AHF_TagReader_ID (AHF_TagReader):
         self.serialPort = self.settingsDict.get('serialPort')
         self.TIRpin = self.settingsDict.get('TIRpin')
         self.tagReader =RFIDTagReader.TagReader (self.serialPort, doChecksum = AHF_TagReader_ID.DO_CHECK_SUM, timeOutSecs = AHF_TagReader_ID.TIME_OUT_SECS, kind='ID')
-        self.tagReader.installCallBack (self.TIRpin)
+        #self.tagReader.installCallBack (self.TIRpin)
 
     def setdown (self):
         del self.tagReader
@@ -42,6 +42,25 @@ class AHF_TagReader_ID (AHF_TagReader):
 
     def readTag (self):
         return RFIDTagReader.globalTag
+
+    def startLogging (self):
+        self.tagReader.installCallBack (self.TIRpin, callBackFunc = tagReaderCustomCallback)
+        
+
+    def tagReaderCustomCallback (channel):
+        #global RFIDTagReader.globalTag # the global indicates that it is the same variable declared above
+        if GPIO.input (channel) == GPIO.HIGH: # tag just entered
+            try:
+                RFIDTagReader.globalTag = globalReader.readTag ()
+            except Exception as e:
+                RFIDTagReader.globalTag = 0
+        else:  # tag just left
+            RFIDTagReader.globalTag = 0
+            RFIDTagReader.globalReader.clearBuffer()
+
+
+
+        
 
     def hardwareTest (self):
         print ('Monitoring RFID Reader for next 10 seconds....')
