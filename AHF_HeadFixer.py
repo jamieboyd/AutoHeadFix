@@ -10,17 +10,29 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
     boolean for settability of headFixing levels, default is False. Can be used for incremental learning
     """
     hasLevels = False
-
     
+
+    def newResultsDict (self, starterDict = {}):
+        """
+        Returns a dictionary counting number of head fixes, subclasses could track more levels of head fixing, e.g.
+        """
+        starterDict.update({'headFixes' : 0})
+        return starterDict
+
+
+    def clearResultsDict(self, resultsDict):
+        resultsDict.update ({'headFixes' : 0})
+
+
     @abstractmethod
-    def fixMouse(self, mouse = None):
+    def fixMouse(self, resultsDict = {}, individualDict = {}):
         """
         performs head fixation by energizing a piston, moving a servomotor, etc
         """
         pass
     
     @abstractmethod
-    def releaseMouse(self, mouse = None):
+    def releaseMouse(self, resultsDict = {},individualDict = {}):
         """
         releases mouse from head fixation by relaxing a piston, moving a servomotor, etc
         """

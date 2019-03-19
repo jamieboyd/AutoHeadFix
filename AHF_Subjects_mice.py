@@ -10,12 +10,17 @@ class AHF_Subjects_mice (AHF_Subjects):
     """
     class for the mice, as experimental subjects.Contains a dictionary where key id IDtag, and value is a dicitonary
     of configuration information for corresponding mouse.
+    {mouseid1:{settingsDict:{},resultsDict{}}, mouseid2:{settingsDict:{},resultsDict{}}}
     Dictionaries from Stimulator, 1 for results, stimResults, and 1 for parameters, stimParams
     Dictionary from HeadFixer, either headFix% or headFix type (loose, strong, a scale from 1 -8)
     Dictionary from Rewarder, task and entry reward size, max entry rewards, daily reward totals
     """
     freshMiceDefault = False
     loadConfigsDefault = True
+    propHeadFixDefault = 1
+    skeddadleTimeDefault =2
+    inChamberTimeLimitDefault = 600
+
     
     @staticmethod
     def about():
@@ -23,26 +28,43 @@ class AHF_Subjects_mice (AHF_Subjects):
 
     @staticmethod
     def config_user_get (starterDict = {}):
-        freshMiceAllowed = starterDict.get('freshMiceAllowed', freshMiceDefault)
+        freshMiceAllowed = starterDict.get('freshMiceAllowed', AHF_Subjects_mice.freshMiceDefault)
         tempInput = input ('Ignore mice whose RFID tags are not present in mouse configuration data, currently {:}? :'.format (freshMiceAllowed))
         if tempInput [0] == 'y' or tempInput [0] == 'Y':
             freshMiceAllowed = False
         else:
             freshMiceAllowed = True
-        loadConfigs =  starterDict.get('loadMiceConfigs', loadConfigsDefault)
+        loadConfigs =  starterDict.get('loadMiceConfigs', AHF_Subjects_mice.loadConfigsDefault)
         tempInput = input ('Load mice configurations from Data logger, currently {:}? :'.format(loadConfigs))
         if tempInput [0] == 'y' or tempInput [0] == 'Y':
             loadConfigs = True
         else:
             loadConfigs =  False
+        propHeadFix = starterDict.get ('propHeadFix', AHF_Subjects_mice.propHeadFixDefault)
+        response = input('Enter proportion (0 to 1) of trials that are head-fixed, currently {:.2f}: '.format(propHeadFix))
+        if response != '':
+            propHeadFix = float (response)
+        skeddadleTime = starterDict.get ('skeddadleTime', AHF_Subjects_mice.skeddadleTimeDefault)
+        response = input ('Enter time, in seconds, for mouse to get head off the contacts when session ends, currently {:.2f}: '.format(skeddadleTime))
+        if response != '':
+            skeddadleTime = float (skeddadleTime)
+        inChamberTimeLimit = starterDict.get ('inChamberTimeLimit',AHF_Subjects_mice.inChamberTimeLimitDefault)
+        response = input('Enter in-Chamber duration limit, in minutes, before stopping head-fix trials, currently {:.2f}: '.format(inChamberTimeLimit/60))
+        if response != '':
+            self.inChamberTimeLimit = int(inChamberTimeLimit * 60)
+        starterDict.update ({'propHeadFix' : propHeadFix, 'skeddadleTime' : skeddadleTime, 'inChamberTimeLimit' : inChamberTimeLimit})
         starterDict.update ({'loadMiceConfigs' : loadConfigs, 'freshMiceAllowed' : freshMiceAllowed})
         return starterDict
 
 
     def setup():
-        self.current = None # reference to current mouse in the array, the one that is in the experimental tube
+        resultsTuple = ('HeadFixer', 'Rewarder', 'Stimulator', 'entries') # results tuple defines dictionaries for subjects we will read from and write results to
+        settingsTuple= ('HeadFixer', 'Rewarder', 'Stimulator')
         self.freshMiceAllowed = self.settingsDict.get ('freshMiceAllowed')
         self.loadConfigs = self.settingsDict.get ('loadMiceConfig')
+        self.propHeadFix = self.settingsDict.get ('propHeadFix')
+        self.skeddadleTime = self.settingsDict.get ('skeddadleTime')
+        self.inChamberTimeLimit = self.settingsDict.get ('inChamberTimeLimit')
         self.miceDict = {}
         if self.loadConfigs and hasattr (self.task, 'DataLogger'): # try to load mice configuration from dataLogger
             dataLogger=self.task.DataLogger
@@ -78,25 +100,45 @@ class AHF_Subjects_mice (AHF_Subjects):
 
     def generator(self):
         """
-        A Generator function that generates a dictionary of settings each of the mice in turn. Sample function call
+        A Generator function that generates a dictionary for each of the mice in turn. Sample function call
         for mouse in myMice.generator():
         """
         for key, value in self.miceDict.items():
             yield (key, value)
                 
 
-    def newResultsDict (self):
-        mDict = {'HeadFixerDict' : self.task.HeadFixerDict, 'HeadFixerResults' : self.task.HeadFixer.newResultsDict (self.HeadFixer)}
-        mDict.update ({'RewarderDict' : self.task.RewarderDict, 'RewarderResults' : self.task.Rewarder.newResultsDict (self.Rewarder)})
-        mDict.update ({'StimulatorDict' : self.task.StimulatorDict, 'StimulatorResults' : self.task.Stimulator.newResultsDict (self.Rewarder)})
-        return mDict
-
+    def newSubjectDict (starterDict = {}):
+        """
+        New dictionary made for each individual mouse, dictionaries for headFixer, rewarder, Stmiulator, and
+        tube entries, which are not tracked by stimulator, head fixer, or rewarder
+        A separate dictionary tracks individual settings, which over-ride global settings
+        """
+        resultsDict = starterDict.get ('resultsDict', {})
+        resultsDict.update ({'HeadFixer' : self.task.HeadFixer.newResultsDict ()})
+        resultsDict.update ({'Rewarder' : self.task.Rewarder.newResultsDict ()})
+        resultsDict.update ({'Stimulator' : self.task.Stimulator.newResultsDict ()})
+        resultsDict.update ({'Entries' : 0})
+        settingsDict = starterDict.get ('settingsDict', {})
+        settingsDict.update ({'HeadFixer' : self.task.HeadFixer.settingsDict ()})
+        settingsDict.update ({'Rewarder' : self.task.Rewarder.settingsDict ()})
+        settingsDict.update ({'Stimulator' : self.task.Stimulator.settingsDict ()})
+        return {'resultsDict' : resultsDict, 'settingsDict' : settingsDict)
 
     def clearResultsDict(self, resultsDict):
-        for key, value in self.miceDict.items():
+        """
+        Clears results for HeadFixer, Rewarder, Stimulator, and results tracked in Mice class
+        """
+        for key, value in self.miceDict.get (resultsDict).items():
             self.task.HeadFixer.clearResultsDict (value)
             self.task.Rewarder.clearResultsDict (value)
             self.task.Stimulator.clearResultsDict (value)
+            resultsDict.update ({'Entries' : 0})
+            
+
+    def individualSettings (self, starterDict={}):
+        starterDict.update ({'propHeadFix' : self.propHeadFix})
+        
+        
     
     def get (self, IDnum):
         """
@@ -105,7 +147,7 @@ class AHF_Subjects_mice (AHF_Subjects):
         """
         if not IDnum in self.miceDict.keys and self.freshMiceAllowed:
             self.miceDict.update ({IDnum, self.newResultsDict()})
-        return self.miceDict.get (IDnum, {})
+        return self.miceDict.get (IDnum, None)
 
 
 

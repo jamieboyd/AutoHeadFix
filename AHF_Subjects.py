@@ -9,10 +9,16 @@ class AHF_Subjects (AHF_Base, metaclass = ABCMeta):
     Subclasses may wish to define an inner class that describes an object for a single experimental subject.
     """
 
+
+    @abstractmethod
+    def setup(self):
+        resultsTuple = ('HeadFixer', 'Rewarder', 'Stimulator') # results tuple defines dictionaries for subjects we will read from and write results to
+        settingsTuple= ('HeadFixer', 'Rewarder', 'Stimulator') # results tuple defines dictionaries for subjects we will read from and write settings to 
+
     @abstractmethod
     def get (self, IDnum):
         """
-        returns dictionary for individual in group of subjects based on a ID tag.
+        returns tuple of results dictionary/settings dictionary for individual in group of subjects based on a ID tag.
         """
         pass
 
@@ -27,7 +33,7 @@ class AHF_Subjects (AHF_Base, metaclass = ABCMeta):
     def add (self, IDnum, dataDict):
         """
         Adds a new subject to the pool of subjects, initializing subject fields with data from a dictionary
-        returns True if subject was added, false if subjet with IDnum already exists in sibject pool
+        returns True if subject was added, false if subjet with IDnum already exists in subject pool
         """
         pass
 
@@ -53,6 +59,22 @@ class AHF_Subjects (AHF_Base, metaclass = ABCMeta):
         The attributes will be defined by subclass, results provided by stimulator, etc. Retyrns true if IDNum was found in
         pool, else False
         """
+
+    @abstractmethod
+    def newSubjectDict (starterDict = {}):
+        """
+        New dictionary made for each individual mouse, dictionaries for headFixer, rewarder, Stmiulator, and
+        tube entries, which are not tracked by stimulator, head fixer, or rewarder
+        A separate dictionary tracks individual settings, which over-ride global settings
+        """
+        resultsDict = {}
+        for results in self.resultsTuple:
+            resultsDict.update (results, {})
+        settingsDict = {}
+        for settings in settingsTuple:
+            settingsDict.update (settings, {})
+        return {'results' : resultsDict, 'settings' : settingsDict}
+            
 
     
 

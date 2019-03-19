@@ -10,7 +10,12 @@
 <p>Every bit of funtionality that needs to save any settings or initialize any data is subclassed from an abstract base class. This is for added flexibility, and to organize all the code along the same lines for better readibility and to reduce code duplication. If all the classes follow the same conventions, they cna be manipulated with the same utility functions, found in AHF_ClassAndDictUtils.py, and the hardware tester functionality can simlpy call the hardware tester function for each class. Even the simple blue light to illuminate the brain has been made into a class and subclassed. It serves as a good example of what is involved. The base class for all AHF classes that follow  the pattern is AHF_Base
 <pre>
 class AHF_Base (metaclass = ABCMeta):
-
+    """
+    Defines conventions for classes used for accesing hardware and doing subtasks in AutoHeadFix code
+    Each class has a static method, config_user_get, to create or edit a settings dictionary, and will be inititialized
+    with a settings dictionary. The setup function does hardware initialization, or other inititialization. 
+    """
+    
     @staticmethod
     @abstractmethod
     def about():
@@ -29,20 +34,47 @@ class AHF_Base (metaclass = ABCMeta):
         """
         return starterDict
 
+    
+    def newResultsDict (self, starterDict = {}):
+        """
+        Returns a dictionary with fields, initialized to 0, for storing results from actions of the object, used e.g., by head fixer, stimulator, or rewarder
+        not all sub classes may need to return results, so newResultsDict is not an abstract function
+        """
+        return None
+    
+    
+    def clearResultsDict(self, resultsDict):
+        """
+        Clears values in the results dictionary, useful when you want daily totals Not all classes may store results, so not an abstract function
+        """
+        pass
 
-    def __init__(self, settingsDict):
+
+    def individualSettings (self, starterDict = {}):
         """
-        Initialization of a subclass object may be just making a link to the settings dict
-        and running setup so this does not need to be an abtract function
+        Returns starterDict, after adding fields filled with default values that can be modified for individual subjects
+         Not all classes may have individualizabe settings, so individualSettings is not an abstract function
         """
-        self.settingsDict = settingsDict
+        return {}
+    
+
+    def __init__(self, taskP, settingsDictP):
+        """
+        Initialization of a subclass object may be just making a link to the settings dict and running setup
+        so this does not need to be an abtract function - your class can use this __init__ as is
+        __init__ will be passed both the settings dict andthe entire Task including the settings dict
+        Class names need to start with AHF_ and the dictionary must follow convention, named for the class with 'Dict' appended. 
+        
+        """
+        self.task=taskP
+        self.settingsDict = settingsDictP
         self.setup ()
 
 
     @abstractmethod
     def setup (self):
         """
-        does hardware initialization of  with (possibly updated) info in self.settingsDict
+        does hardware initialization with (possibly updated) info in self.settingsDict
         Run by __init__, or can be run  separately after editing the settingsDict
         """
         pass
@@ -51,14 +83,22 @@ class AHF_Base (metaclass = ABCMeta):
     def setdown (self):
         """
         oppposite of setup. Releases any hardware resouces. can be run before editing settings so GPIO
-        pins can be reused, for example
+        pins can be reused, for example. This strategy should be used in hardwareTest method, after making changes
         """
         pass
-	
+
+    def __del__ (self):
+        """
+        For clean up purposes, releases hardware resources with setdown method. Not abstract, sa setdown may be all you need.
+        """
+        self.setdown ()
+
+
     @abstractmethod
     def hardwareTest (self):
         """
-        Tests functionality, gives user a chance to change settings
+        Tests functionality, gives user a chance to change settings. Not restricted to classes that use hardware. Can be used to test any kind of
+	functionality or adjust any kind of settings
         """
         pass
 </pre>

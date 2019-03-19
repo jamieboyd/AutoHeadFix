@@ -14,9 +14,11 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
     numLevels =8
     defaultReleasePosition = 540
     defaultFixedPosition = 325
+    
     @staticmethod
     @abstractmethod
     def config_user_get (starterDict = {}):
+        starterDict.update (AHF_HeadFixer.config_user_get(starterDict))
         servoReleasedPosition = starterDict.get ('servoReleasedPosition', AHF_HeadFixer_PWM.defaultReleasePosition)
         response = input("Set Servo Released Position (0-4095: currently %d): " % servoReleasedPosition)
         if response != '':
@@ -28,6 +30,15 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
         starterDict.update ({'servoReleasedPosition' : servoReleasedPosition, 'servoFixedPosition' : servoFixedPosition})
         return starterDict
 
+
+    def individualSettings (self, starterDict={}):
+        """
+        copies servo fixed position to dictionary - there is no reason to have different released positions per subject
+        TO DO: add multiple headfixing levels, maybe progression based on resdults
+        """
+        starterDict.update ({'servoFixedPosition' : self.servoFixedPosition})
+        return starterDict
+
     
     @abstractmethod
     def setup (self):
@@ -36,13 +47,11 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
         if self.__class__.hasLevels:
             self.servoIncrement = (self.servoFixedPosition - self.servoReleasedPosition)/self.numLevels
     
-    def fixMouse(self, mouse = None):
-        if self.hasLevels and hasattr (mouse, 'HeadFixLevel'):
-            self.setPWM (int(self.servoReleasedPosition + (self.servoIncrement * mouse.HeadFixLevel)))
-        else:
-            self.setPWM (self.servoFixedPosition)
+    def fixMouse(self, resultsDict = {}, individualDict= {}):
+        self.setPWM (individualDict.get ('servoFixedPosition', self.servoFixedPosition))
+        resultsDict.update ({'headFixes' : resultsDict.get('headFixes', 0) + 1})
 
-    def releaseMouse(self):
+    def releaseMouse(self, resultsDict = {}, settingsDict= {}):
         self.setPWM (self.servoReleasedPosition)
 
 

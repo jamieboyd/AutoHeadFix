@@ -19,35 +19,20 @@ class AHF_Rewarder_solenoid_pt (AHF_Rewarder_solenoid):
         self.cmPulse = CountermandPulse (self.rewardPin, 0, 0, self.rewards.get('entry'), 1)
 
 
-    def giveReward(self, rewardName):
-        """
-        Gives a reward of the requested type, if the requested reward type is found in the dictionary
-
-        If the requested reward type is not found, the default reward size is used
-        param:rewardName: the tyoe of the reward to be given, should already be in dictionary
-        """
-        if rewardName in self.rewards:
-            duration = self.rewards.get (rewardName)
-            self.cmPulse.set_delay(0)
-            self.cmPulse.set_duration(duration)
-            self.cmPulse.do_pulse()
-            return duration
-        else:
-            return 0
+    def threadReward (self, sleepTime):
+        self.cmPulse.set_delay(0)
+        self.cmPulse.set_duration(sleepTime)
+        self.cmPulse.do_pulse()
 
     
-    def giveRewardCM(self, rewardName):
-        if rewardName in self.rewards:
-            duration =self.rewards.get(rewardName)
-            self.cmPulse.set_duration(duration)
-            self.cmPulse.set_delay (self.countermandTime)
-            self.cmPulse.do_pulse_countermandable()
-            return duration
-        else:
-            return 0
+     def threadCMReward (self, sleepTime):
+        self.cmPulse.set_duration(sleepTime)
+        self.cmPulse.set_delay (self.countermandTime)
+        self.cmPulse.do_pulse_countermandable()
 
-    def countermandReward(self):
-        return cmPulse.countermand_pulse ()
+
+    def threadCountermand(self):
+        return self.cmPulse.countermand_pulse ()
 
     def turnON (self):
         self.cmPulse.set_level(1,0)

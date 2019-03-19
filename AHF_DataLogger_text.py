@@ -29,7 +29,7 @@ class AHF_DataLogger_text (AHF_DataLogger):
     """
     defaultCage = 'cage1'
     defaultDataPath='/home/pi/Documents/'
-    defaultConfigPath = '/home/pi/Documents/MiceConfig'
+    defaultConfigPath = '/home/pi/Documents/MiceConfig/'
     
     @staticmethod
     def about ():
@@ -68,6 +68,7 @@ class AHF_DataLogger_text (AHF_DataLogger):
                  |         |
              logFilePath  statsFilePath paths to individual files within corresponding subfolders
         """
+        super.setup()
         self.cageID = self.settingsDict.get ('cageID')
         self.dataPath = self.settingsDict.get('dataPath')
         self.configPath = self.settingsDict.get('mouseConfigPath') 
@@ -108,7 +109,7 @@ class AHF_DataLogger_text (AHF_DataLogger):
     def configGenerator (self):
         """
         Each configuration file has config data for a single subject. This function loads data
-        from all of them in turn, and returnin each as a a tuple of (tagID, dictionary)
+        from all of them in turn, and returning each as a a tuple of (tagID, dictionary)
         """
         for fname in listdir(self.configPath):
             if fname.startswith ('AHF_mouse_') and fname.endswith ('.jsn'):
@@ -166,14 +167,14 @@ class AHF_DataLogger_text (AHF_DataLogger):
         if eventKind == 'SeshStart' or eventKind == 'SeshEnd':
             tag = 0
             eventDict = None
-        LogOutputStr = '{:013}\t{:s}\t{:s}\t{:s}\n'.format (tag, eventKind, eventDict, datetime.fromtimestamp (int (timeStamp)).isoformat (' '))
+        LogOutputStr = '{:013}\t{:s}\t{:s}\t{:s}\n'.format (tag, eventKind, str(eventDict), datetime.fromtimestamp (int (timeStamp)).isoformat (' '))
         while AHF_DataLogger.PSEUDO_MUTEX ==1:
             sleep (0.01)
         AHF_DataLogger.PSEUDO_MUTEX = 1
         print (LogOutputStr)
         AHF_DataLogger.PSEUDO_MUTEX = 0
-        if self.logFP is not None:
-            FileOutputStr = '{:013}\t{:s}\t{:s}\t{:.2f}'.format(tag, eventKind, eventDict, timeStamp)                                 
+        if self.logFP is not None and self.logMouse: # logMouse is set to False for test mice, or unknown mice
+            FileOutputStr = '{:013}\t{:s}\t{:s}\t{:.2f}'.format(tag, eventKind, str(eventDict), timeStamp)                                 
             self.logFP.write(FileOutputStr)
             self.logFP.flush()
 
@@ -186,7 +187,7 @@ class AHF_DataLogger_text (AHF_DataLogger):
         self.dateStr='{:04}{:02}{:02}'.format (dateTimeStruct.tm_year, dateTimeStruct.tm_mon, dateTimeStruct.tm_mday)
 
 
-        def makeQuickStatsFile (self, mice):
+    def makeQuickStatsFile (self, mice):
         """
         makes a quickStats file for today's results.
         

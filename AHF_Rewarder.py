@@ -10,8 +10,8 @@ class AHF_Rewarder(AHF_Base, metaclass = ABCMeta):
     """
     rewardUnits = ''
     testAmount = 0
-    defaultMaxEntryRewards =1000
-    defaultEntryRewardDelay = 1.0
+    maxEntryRewardsDefault =1000
+    entryRewardDelayDefault = 1.0
 
     @staticmethod
     @abstractmethod
@@ -21,28 +21,17 @@ class AHF_Rewarder(AHF_Base, metaclass = ABCMeta):
         and returns starterDict with settings as edited by the user.
 
         """
-        maxEntryRewards = starterDict.get ('maxEntryRewards', AHF_Rewarder.defaultMaxEntryRewards)
-        response = input('Enter the maximum number of entry reards given per day (currently %d): ' % maxEntryRewards)
-        if response != '':
-            maxEntryRewards = int (response)
-        entryRewardDelay = starterDict.get ('entryRewardDelay', AHF_Rewarder.defaultEntryRewardDelay)
-        response = input('Enter the delay between entering and getting a reward (currently %.2f): ' % defaultEntryRewardDelay)
-        if response != '':
-            entryRewardDelay = float (response)
-        starterDict.update ({'maxEntryRewards' : maxEntryRewards, 'entryRewardDelay' : entryRewardDelay})
-        return starterDict
-
-            
+  
     @abstractmethod
-    def giveReward(self, rewardName):
+    def giveReward(self, rewardName, resultsDict={}, settingsDict = {}):
         return 0
 
     @abstractmethod
-    def giveRewardCM(self, rewardName):
+    def giveRewardCM(self, rewardName, resultsDict={}, settingsDict = {}):
         return 0
 
     @abstractmethod
-    def countermandReward(self):
+    def countermandReward(self,resultsDict={}, settingsDict = {}):
         return 0
 
     @abstractmethod

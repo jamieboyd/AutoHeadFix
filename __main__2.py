@@ -41,34 +41,50 @@ def main():
         print ('Error initializing hardware' + str (e))
         raise e
     assert (hasattr (task, 'BrainLight')) # quick debug check that task got loaded and setup ran
-    # initialize mice with zero mice, then try to load mice from configuration path
-    setattr (task, 'mice', Mice(task)) # task object contains a reference to mice object, mice object contains a reference to task object
-    
     # calculate time for saving files for each day
     now = datetime.fromtimestamp (int (time()))
     nextDay = datetime (now.year, now.month, now.day, KDAYSTARTHOUR,0,0) + timedelta (hours=24)
-    # Loop with a brief sleep, waiting for a tag to be read.
+    # Top level infinite Loop running mouse entries/trials
     while True:
-            try:
-                print ('Waiting for a mouse....')
-                while task.TagReader.readTag == 0:
-                    sleep (kTIMEOUTSECS)
+        try:
+            print ('Waiting for a mouse....')
+            # loop with a brief sleep, waiting for a tag to be read, or a new day to dawn
+            task.tag = task.TagReader.readTag ()
+            while True:
+                if task.tag != 0:
+                    break
+                else:
                     if datetime.fromtimestamp (int (time())) > nextDay:
                         task.DataLogger.newDay ()
-                # a Tag has been read
-                #thisMouse = mice.getMouseFromTag (RFIDTagReader.globalTag)
-                
-                entryTime = time()
-                # log entrance and give entrance reward, if this mouse supports it
-                thisMouse.entry(rewarder, dataLogger)
-                # set head fixing probability
-                task.doHeadFix = expSettings.propHeadFix > random()
-                while GPIO.input (task.tirPin)== GPIO.HIGH and time () < entryTime + task.inChamberTimeLimit:
-                    if (GPIO.input (task.contactPin)== task.noContactState):
-                        GPIO.wait_for_edge (task.contactPin, task.contactEdge, timeout= kTIMEOUTmS)
-                    if (GPIO.input (task.contactPin)== task.contactState):
-                        runTrial (thisMouse, task, camera, rewarder, headFixer, stimulator, UDPTrigger)
-                        expSettings.doHeadFix = expSettings.propHeadFix > random() # set doHeadFix for next contact
+                    else:
+                        sleep (kTIMEOUTSECS)
+                    task.tag = task.TagReader.readTag ()
+            # a Tag has been read, get the time
+            task.entryTime = time()
+            # get a reference to the dictionaries for this subject
+            subjectDict = task.Subjects.get (tag)
+            if subjectDict is not None:
+                resultsDict = subjectDict.get ('results')
+                settingsDict = subjectDict.get ('settings')
+                task.DataLogger.setMouseLogging (True)
+            else: # set dicts to empty throw-away dictionaries
+                resultsDict = {}
+                settingsDict = {}
+                task.DataLogger.setMouseLogging (False)
+            # log entrance
+            task.DataLogger.writeToLogFile(tag, 'Entry', None, task.entryTime)
+            resultsDict.update ('entries', resultsDict.get ('entries', 0) + 1)
+            # queue up an entrance reward
+            task.Rewarder.giveRewardCM('entry', resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
+
+            # set head fixing probability
+            task.doHeadFix = expSettings.propHeadFix > random()
+            while GPIO.input (task.tirPin)== GPIO.HIGH and time () < entryTime + task.inChamberTimeLimit:
+                if (GPIO.input (task.contactPin)== task.noContactState):
+                    GPIO.wait_for_edge (task.contactPin, task.contactEdge, timeout= kTIMEOUTmS)
+                if (GPIO.input (task.contactPin)== task.contactState):
+                    runTrial (thisMouse, task, camera, rewarder, headFixer, stimulator, UDPTrigger)
+                    expSettings.doHeadFix = expSettings.propHeadFix > random() # set doHeadFix for next contact
 
             except KeyboardInterrupt:
                 if hasattr (task, 'LickDetector'):

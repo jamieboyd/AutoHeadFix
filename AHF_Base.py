@@ -31,17 +31,28 @@ class AHF_Base (metaclass = ABCMeta):
         return starterDict
 
     
-    def newResultsDict (self):
+    def newResultsDict (self, starterDict = {}):
         """
-        Returns a dictionary with fields, initialized to 0, for storing results from actions of the object, used e.g., by head fixer, stimulator, or rewarder
+        Returns a dictionary with fields, initialized to 0, for storing settings/results from actions of the object, used e.g., by head fixer, stimulator, or rewarder
+        not all classes may need results, so not an abstract function
         """
-        return {}
+        return None
+    
     
     def clearResultsDict(self, resultsDict):
         """
         Clears values in the results dictionary, useful when you want daily totals
+        not all classes may store results, so not an abstract function
         """
         pass
+
+
+    def newSettingsDict (self, starterDict ={}):
+        """
+        Returns a dictionary of settings that can individually varied, overriding values in self.settings
+        """
+        return self.settingsDict
+
 
     def __init__(self, taskP, settingsDictP):
         """

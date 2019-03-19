@@ -30,7 +30,7 @@ class Task(object):
     """
     def __init__ (self, fileName = ''):
         """
-        Initializes a Task object with hardware settings and experiment settings by calling loadSettings function
+        Initializes a Task object with settings for various hardware, stimulator, and Subjects classes
         
         """
         fileErr = False
@@ -114,7 +114,7 @@ class Task(object):
             fileErr = True
         ############################ text messaging using textbelt service (Optional) only 1 subclass so far ######################
         if not hasattr (self, 'NotifierClass') or not hasattr (self, 'NotifierDict'):
-            tempInput = input ('Send notifications if mouse exceeds criterion time in chamber?(Y or N):')
+            tempInput = input ('Send notifications if subject exceeds criterion time in chamber?(Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
                 self.NotifierClass = CAD.Class_from_file('Notifier', '')
                 self.NotifierDict = self.NotifierClass.config_user_get()
@@ -143,28 +143,20 @@ class Task(object):
                 self.LickDetectorClass = None
                 self.LickDetectorDict = None
             fileErr = True
-        ############################## Mice only 1 subclass so far ##############
+        ############################## Subjects only 1 subclass so far (generic mice) ##############
         if not hasattr (self, 'SubjectsClass') or not hasattr (self, 'SubjectsDict'):
             self.SubjectsClass = CAD.Class_from_file('Subjects', CAD.File_from_user ('Subjects', 'test subjects', '.py'))
             self.SubjectsClass = self.SubjectsClass.config_user_get ()
             fileErr = True
-             
-        if not hasattr (self, 'propHeadFix'):
-            self.propHeadFix= float (input('Enter proportion (0 to 1) of trials that are head-fixed:'))
-            self.propHeadFix = float (min (1, max (0, self.propHeadFix))) # make sure proportion is bewteen 0 and 1
-            fileErr = True
-        if not hasattr (self, 'skeddadleTime'):
-            self.skeddadleTime = float (input ('Enter time, in seconds, for mouse to get head off the contacts when session ends:'))
-            fileErr = True
-        if not hasattr (self, 'inChamberTimeLimit'):
-            self.inChamberTimeLimit = float(input('In-Chamber duration limit, seconds, before stopping head-fix trials:'))
- 
-       
-        # if some of the paramaters were set by user, give option to save
+        ###################### things we track in the main program #################################
+        self.tag = 0
+        self.entryTime = 0
+        ################ if some of the paramaters were set by user, give option to save ###############
         if fileErr: 
             response = input ('Save new/updated settings to a task configuration file?')
             if response [0] == 'y' or response [0] == 'Y':
                 self.saveSettings ()
+    
                 
 
     def setup (self):
@@ -179,8 +171,6 @@ class Task(object):
                 baseName = item [0].rstrip ('Class')
                 classDict = getattr (self, baseName + 'Dict')
                 setattr (self, baseName, item [1](self, classDict))
-        setattr (self, 'Mice', Mice(self))
-        setattr (self, 'curMouse', None)
             
     def saveSettings(self):
         """
