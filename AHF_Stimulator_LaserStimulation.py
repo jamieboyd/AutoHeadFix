@@ -6,7 +6,6 @@ stimulation/inhibition.
 '''
 
 #AHF-specific moudules
-from AHF_Stimulator_LickNoLick import AHF_Stimulator_LickNoLick
 from PTSimpleGPIO import PTSimpleGPIO, Infinite_train, Train
 from AHF_Rewarder import AHF_Rewarder
 from AHF_Stimulator_Rewards import AHF_Stimulator_Rewards
@@ -146,16 +145,16 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
         '''
 
         #Experiment settings
-        self.headFixTime = float (self.configDict.get ('headFixTime', 0))
-        self.lickWitholdTime = float (self.configDict.get ('lickWitholdTime', 1))
-        self.afterStimWitholdTime = float(self.configDict.get ('after_Stim_Withold_Time', 0.2))
+        self.headFixTime = float (self.configDict.get ('headFixTime', 30))
+        #self.lickWitholdTime = float (self.configDict.get ('lickWitholdTime', 1))
+        #self.afterStimWitholdTime = float(self.configDict.get ('after_Stim_Withold_Time', 0.2))
         self.rewardInterval = float (self.configDict.get ('rewardInterval', 2))
         self.nRewards = int (self.configDict.get('nRewards', 2))
 
         #Mouse scores
-        self.buzzTimes = []
-        self.buzzTypes = []
-        self.lickWitholdTimes = []
+        #self.buzzTimes = []
+        #self.buzzTypes = []
+        #self.lickWitholdTimes = []
         self.rewardTimes = []
 
 #============== Utility functions for the stepper motors and laser =================

@@ -1,40 +1,22 @@
 '''
-This Stimulator is subclassed from Rewards. It captures a reference image for each
-mouse and includes a user interface to select targets on reference images.
+This Stimulator combines LaserStimulation with LickWitholdSpeaker.
+
+It captures a reference image for each mouse and includes a user interface to select targets on reference images.
 The Stimulator directs and pulses a laser to selected targets for optogenetic
 stimulation/inhibition.
+
+The laser is pulsed whenever the mouse goes for a set amount of time without licking, 
 '''
 
 #AHF-specific moudules
-from AHF_Stimulator_LickNoLick import AHF_Stimulator_LickNoLick
+
+from AHF_Stimulator_LaserStimulation import AHF_Stimulator_LaserStimulation
 from PTSimpleGPIO import PTSimpleGPIO, Infinite_train, Train
-from AHF_Rewarder import AHF_Rewarder
-from AHF_Stimulator_Rewards import AHF_Stimulator_Rewards
-from AHF_Mouse import Mouse, Mice
-
-#Laser-stimulator modules
-from pynput import keyboard
-import numpy as np
-import sys
-import matplotlib.pyplot as plt
-from PTPWM import PTPWM
-from array import array
-from queue import Queue as queue
-from threading import Thread
-from multiprocessing import Process, Queue
-from time import sleep, time
 from random import random
-from datetime import datetime
-from itertools import combinations,product
-import imreg_dft as ird
-import warnings
 
-#RPi module
-import RPi.GPIO as GPIO
-
-def writeToLogFile(logFP, mouseObj, event):
+def writeToLogFile(logFP, mouse, event):
     """
-    Writes the time and type of each event to a text log file, and also to the shell
+    Writes the time and type of each event to a text log file, and also to the shell, things that don't go in report after stimulator is done
 
     Format of the output string: tag     time_epoch or datetime       event
     The computer-parsable time_epoch is printed to the log file and user-friendly datetime is printed to the shell
@@ -44,10 +26,7 @@ def writeToLogFile(logFP, mouseObj, event):
     returns: nothing
     """
     try:
-        if event == 'SeshStart' or event == 'SeshEnd' or mouseObj is None:
-            outPutStr = ''.zfill(13)
-        else:
-            outPutStr = '{:013}'.format(mouseObj.tag)
+        outPutStr = '{:013}'.format(mouse.tag)
         logOutPutStr = outPutStr + '\t' + '{:.2f}'.format (time ())  + '\t' + event +  '\t' + datetime.fromtimestamp (int (time())).isoformat (' ')
         printOutPutStr = outPutStr + '\t' + datetime.fromtimestamp (int (time())).isoformat (' ') + '\t' + event
         print (printOutPutStr)
@@ -56,107 +35,258 @@ def writeToLogFile(logFP, mouseObj, event):
     except Exception as e:
         print ("Error writing to log file\n", str (e))
         
-        
-        
-        
 
-class AHF_Stimulator_LaserStimulation_LW (AHF_Stimulator_Rewards):
+
+    
+class AHF_Stimulator_LaserStimulation_LW (AHF_Stimulator_LaserStimulation):
+    #### default definitions for stimulator configuration that are not defined in superclass
+    lickWitholdTime_def = 1  # how long mouse has to go for without licking before getting rewarded
+    laser_lead_def = 0.5     # laser pulse is this may seconds before reward is given
+    ##### speaker feedback GPIO definitions #######
+    speakerPin_def = 25      # GPIO pin used to drive piezo speaker for negative feedback
+    speakerFreq_def = 300    # frequency to drive the speaker
+    speakerDuty_def = 0.8    # duty cycle to drive speaker, unbalanced duty cycle gives nasty harmonics
+    speakerOffForReward_def = 1.5   #time for consuming reward without getting buzzed at
+
+     
     def __init__ (self, cageSettings, expSettings, rewarder, lickDetector, camera):
         super().__init__(cageSettings, expSettings, rewarder, lickDetector, camera)
         self.setup()
 
     def setup (self):
-
-        #PWM settings
-        self.PWM_mode = int(self.configDict.get('PWM_mode', 0))
-        self.PWM_channel = int(self.configDict.get('PWM_channel', 2))
-        self.array = array('i',(0 for i in range(1000)))
-        self.PWM = PTPWM(1,1000,1000,0,(int(1E6/1000)),1000,2) #PWM object
-        self.PWM.add_channel(self.PWM_channel,0,self.PWM_mode,0,0,self.array)
-        self.PWM.set_PWM_enable(1,self.PWM_channel,0)
-        self.duty_cycle = int(self.configDict.get('duty_cycle', 0))
-        self.laser_on_time = int(self.configDict.get('laser_on_time', 0))
-        '''
-        Info: The laser is controlled using the PTPWM class, which employs a hardsware
-        pulse-width modulator to change the laser intensity. Read PWM Thread documentation
-        for further information.
-        '''
-
-        #Cross-hair Overlay settings
-        self.overlay_resolution = self.camera.resolution
-        self.cross_pos = (np.array(self.camera.resolution)/2).astype(int)
-        self.cross_step = int(self.camera.resolution[0]/50)
-        self.cross_q = queue(maxsize=0) #Queues the cross-hair changes.
-        self.coeff = np.asarray (self.configDict.get ('coeff_matrix', None))
-        '''
-        Info: A cross-hair is used as an overlay to the picamera preview. Commands
-        to move the cross-hair are queued in a python queue, which is processed by
-        a separate thread. An existing coefficient matrix is loaded from the settings.
-        '''
-
-        '''
-        #Buzzer settings == Vibmotor
-        #self.buzz_pulseProb = float (self.configDict.get ('buzz_pulseProb', 1))
-        self.buzz_pin = int(self.configDict.get ('buzz_pin', 27))
-        self.buzz_num = int (self.configDict.get ('buzz_num', 2))
-        self.buzz_len = float (self.configDict.get ('buzz_len', 0.1))
-        self.buzz_period = float (self.configDict.get ('buzz_period', 0.2))
-        self.buzzer=Train (PTSimpleGPIO.MODE_PULSES, self.buzz_pin, 0, self.buzz_len, (self.buzz_period - self.buzz_len), self.buzz_num,PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
-        print('Debug: passed buzzer')
-
-        #Speaker Settings == Buzzer
-        self.speakerPin=int(self.configDict.get ('speaker_pin', 25))
-        self.speakerFreq=float(self.configDict.get ('speaker_freq', 6000))
-        self.speakerDuty = float(self.configDict.get ('speaker_duty', 0.5))
-        self.speakerOffForReward = float(self.configDict.get ('speaker_OffForReward', 1.5))
+        # super() sets up all the laser stuff plus self.headFixTime plus # rewards (not used here)
+        super().setup()
+        #Lick-withold settings
+        self.lickWitholdTime = float (self.configDict.get ('lickWitholdTime', self.lickWitholdTime_def))
+        self.laser_lead = float (self.configDict.get ('laser_lead', self.laser_lead_def))
+        # setting up speaker for negative feedback for licking
+        self.speakerPin=int(self.configDict.get ('speaker_pin', self.speakerPin_def))
+        self.speakerFreq=float(self.configDict.get ('speaker_freq', self.speakerFreq_def))
+        self.speakerDuty = float(self.configDict.get ('speaker_duty', self.speakerDuty_def))
+        self.speakerOffForReward = float(self.configDict.get ('speaker_OffForReward', self.speakerOffForReward_def))
         self.speaker=Infinite_train (PTSimpleGPIO.MODE_FREQ, self.speakerPin, self.speakerFreq, self.speakerDuty,  PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
-        print('Debug: passed speaker')
-        '''
-
-        #Stepper motor settings
-        #Shift register controlled by 4 GPIOs
-        self.DS = int(self.configDict.get('DS', 4))
-        self.Q7S = int(self.configDict.get('Q7S', 6))
-        self.SHCP = int(self.configDict.get('SHCP', 5))
-        self.STCP = int(self.configDict.get('STCP', 17))
-
-        self.delay = self.configDict.get('motor_delay', 0.03)
-
-        GPIO.setup(self.SHCP, GPIO.OUT, initial = GPIO.HIGH)
-        GPIO.setup(self.DS, GPIO.OUT, initial = GPIO.LOW)
-        GPIO.setup(self.STCP, GPIO.OUT, initial = GPIO.HIGH)
-        GPIO.setup(self.Q7S, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
-
-        self.mot_q = Queue(maxsize=0) #Queues stepper motor commands
-        self.phase_queue = Queue(maxsize=0) #Returns the new phase of the motors during the matching
-        self.phase = np.array([0,0])
-        self.pos = np.array([0,0])
-        self.laser_points = []
-        self.image_points = []
-        # Define boundaries to exclude unrealistic image registration results
-        self.max_trans = 60
-        self.max_scale = np.array([0.9,1.1])
-        self.max_angle = 15
-        '''
-        Info: New stepper commands are queued (self.mot_q) and processed on
-        another processor.
-        Main program keeps track of the phase of the stepper motors and queues
-        (self.phase_queue) the recent phase to make it available for the another
-        processor.
-        '''
-
-        #Experiment settings
-        self.headFixTime = float (self.configDict.get ('headFixTime', 0))
-        self.lickWitholdTime = float (self.configDict.get ('lickWitholdTime', 1))
-        self.afterStimWitholdTime = float(self.configDict.get ('after_Stim_Withold_Time', 0.2))
-        self.rewardInterval = float (self.configDict.get ('rewardInterval', 2))
-        self.nRewards = int (self.configDict.get('nRewards', 2))
-
         #Mouse scores
-        self.buzzTimes = []
-        self.buzzTypes = []
         self.lickWitholdTimes = []
         self.rewardTimes = []
+        self.laserTimes = []
+
+
+
+    def logfile (self):
+        for i in range (0, len (self.rewardTimes)):
+            if len (self.laserTimes) > 0:
+                print ('{:013}\t{:s}\tlaser_pulse:lickwithold={:.2f}'.format(self.mouse.tag, datetime.fromtimestamp (int (self.laserTimes [i])).isoformat (' '),self.lickWitholdTimes [i]))
+            print ('{:013}\t{:s}\treward'.format(self.mouse.tag, datetime.fromtimestamp (int (self.laserTimes [i])).isoformat (' ')))
+        if self.textfp != None:
+            for i in range (0, len (self.rewardTimes)):
+                if len (self.laserTimes) > 0:
+                    self.textfp.write('{:013}\t{:.2f}\tlaser_pulse:lickwithold={:.2f}\t{:s}\n'.format(self.mouse.tag, self.laserTimes [i] ,self.lickWitholdTimes [i], datetime.fromtimestamp (int (self.laserTimes [i])).isoformat (' ')))
+                self.textfp.write('{:013}\t{:.2f}\treward\t{:s}\n'.format(self.mouse.tag, self.rewardTimes [i], datetime.fromtimestamp (int (self.rewardTimes [i])).isoformat (' ')))
+            self.textfp.flush()
+        
+#=================Main functions called from outside===========================
+    def run(self):
+
+        self.lickWitholdTimes = []
+        self.rewardTimes = []
+        self.laserTimes = []
+        if not hasattr (self.mouse, 'saved_targ_pos'):
+            setattr (self.mouse, 'saved_targ_pos', None)
+        if self.expSettings.doHeadFix:
+            if not hasattr(self.mouse,'ref_im'):
+                print('Take reference image')
+                writeToLogFile(self.expSettings.logFP, self.mouse, 'taking reference image')
+                self.get_ref_im()
+                return
+            elif not hasattr(self.mouse,'targets'):
+                print('Select targets')
+                writeToLogFile(self.expSettings.logFP, self.mouse, 'no targets selected')
+                #If targets haven't been choosen -> release mouse again
+                return
+
+            try:
+                # Run this only if headfixed
+                self.rewarder.giveReward('task')
+                #print('Image registration')
+                ref_path = self.cageSettings.dataPath+'sample_im/'+datetime.fromtimestamp (int (time())).isoformat ('-')+'_'+str(self.mouse.tag)+'.jpg'
+                self.camera.capture(ref_path)
+                targ_pos = self.image_registration()
+                writeToLogFile(self.expSettings.logFP, self.mouse, 'no targets selected')
+                self.rewarder.giveReward('task')
+                if targ_pos is None and self.mouse.saved_targ_pos is not None:
+                    targ_pos = self.mouse.saved_targ_pos
+                if targ_pos is not None:
+                    self.mouse.saved_targ_pos = targ_pos
+                    print('Moving laser to target and capture image to assert correct laser position')
+                    self.move_to(np.flipud(targ_pos),topleft=True,join=True) #Move laser to target and wait until target reached
+                    self.mouse.laser_spot = np.empty((self.camera.resolution[0], self.camera.resolution[1], 3),dtype=np.uint8)
+                    self.pulse(70,self.duty_cycle) #At least 60 ms needed to capture laser spot
+                    self.camera.capture(self.mouse.laser_spot,'rgb',use_video_port=True)
+                    sleep(0.1)
+                self.camera.start_preview(fullscreen = False, window = tuple(self.camera.AHFpreview))
+                #every time lickWitholdtime passes with no licks, make a buzz then give a reward after buzz_lead time.
+                self.lickWitholdTimes = []
+                self.rewardTimes = []
+                self.laserTimes = []
+                endTime = time() + self.headFixTime
+                speakerIsOn = False
+                OffForRewardEnd = 0.0
+                while time() < endTime:
+                    # setup to start a trial, witholding licking for lickWitholdRandom secs till buzzer
+                    lickWitholdRandom = self.lickWitholdTime + (0.5 - random())
+                    lickWitholdEnd = time() + lickWitholdRandom
+                    # inner loop keeps resetting lickWitholdEnd time until  a succsful withhold
+                    while time() < lickWitholdEnd and time() < endTime:
+                        anyLicks = self.lickDetector.waitForLick_Soft (0.05)
+                        if anyLicks == 0:
+                            if speakerIsOn == True:
+                                self.speaker.stop_train()
+                                speakerIsOn = False
+                        else: # there were licks in witholding period
+                            if (speakerIsOn == False) and (time() > OffForRewardEnd):
+                                self.speaker.start_train()
+                                speakerIsOn = True
+                            lickWitholdRandom = self.lickWitholdTime + (0.5 - random())
+                            lickWitholdEnd = time() + lickWitholdRandom
+                    # inner while loop only exits if trial time is up or lick witholding time passed with no licking
+                    if anyLicks > 0:
+                        break
+                    # at this point, mouse has just witheld licking for lickWitholdTime
+                    self.lickWitholdTimes.append (lickWitholdRandom)
+                    # Give a laser pulse
+                    if targ_pos is not None:
+                        self.laserTimes.append (time())
+                        self.pulse(self.laser_on_time,self.duty_cycle)
+                    # sleep for laser lead time, then give reward
+                    sleep (self.laser_lead)
+                    self.rewardTimes.append (time())
+                    self.rewarder.giveReward('task')
+                    OffForRewardEnd = time() + self.speakerOffForReward
+                # make sure to turn off buzzer at end of loop when we exit
+                if speakerIsOn == True:
+                    self.speaker.stop_train()
+                self.mouse.headFixRewards += len (self.rewardTimes)
+
+                """
+                # Repeatedly give a reward and pulse simultaneously
+                timeInterval = self.rewardInterval - self.rewarder.rewardDict.get ('task')
+                self.rewardTimes = []
+                self.camera.start_preview(fullscreen = False, window = tuple(self.camera.AHFpreview))
+                for reward in range(self.nRewards):
+                    self.rewardTimes.append (time())
+                    if targ_pos is not None:
+                        self.pulse(self.laser_on_time,self.duty_cycle)
+                        writeToLogFile(self.expSettings.logFP, self.mouse, 'laser pulse')
+                    self.rewarder.giveReward('task')
+                    sleep(timeInterval)
+                self.mouse.headFixRewards += self.nRewards
+                self.camera.stop_preview()
+                """
+            finally:
+                #Move laser back to zero position at the end of the trial
+                self.move_to(np.array([0,0]),topleft=True,join=False)
+        else:
+            timeInterval = self.rewardInterval - self.rewarder.rewardDict.get ('task')
+            self.rewardTimes = []
+            self.camera.start_preview(fullscreen = False, window = tuple(self.camera.AHFpreview))
+            for reward in range(self.nRewards):
+                self.rewardTimes.append (time())
+                self.rewarder.giveReward('task')
+                sleep(timeInterval)
+            self.mouse.headFixRewards += self.nRewards
+        self.camera.stop_preview()
+
+    def inspect_mice(self,mice,cageSettings,expSettings):
+        #Inspect the mice array
+        print('MouseID\t\tref-im\ttargets\theadFixStyle\tstimType\tgenotype')
+        for mouse in mice.mouseArray:
+            ref_im='no'
+            targets='no'
+            headFixStyle = 'fix'
+            if hasattr(mouse,'ref_im'):
+                ref_im='yes'
+            if hasattr(mouse,'targets'):
+                targets='yes'
+            if mouse.headFixStyle == 1:
+                headFixStyle = 'loose'
+            elif mouse.headFixStyle == 2:
+                headFixStyle = 'nofix'
+            if hasattr(mouse, 'genotype'):
+                genotype = expSettings.genotype[mouse.genotype]
+            else:
+                genotype = 'no genotype'
+            stimType = expSettings.stimulator[mouse.stimType][15:22]
+            print(str(mouse.tag) + '\t' + str(ref_im) + '\t' + str(targets) +'\t' + headFixStyle + '\t\t' + stimType + '\t\t' + genotype)
+        while(True):
+            inputStr = input ('c= headFixStyle, t= select targets, s= stimType, g = genotype, q= quit: ')
+            if inputStr == 'c':
+                while(True):
+                    try:
+                        inputStr =  int(input ('Type the tagID of mouse to change headFixStyle:'))
+                    except ValueError:
+                        print("Input is not a valid mouse-id.")
+                        break
+                    for mouse in mice.mouseArray:
+                        if mouse.tag == inputStr:
+                            try:
+                                inputStr = int(input('Change headFixStyle to:\n0: fix\n1: loose\n2: nofix\n'))
+                            except ValueError:
+                                print('Input is not a valid number.')
+                            if inputStr == 0:
+                                mouse.headFixStyle = 0
+                            elif inputStr == 1:
+                                mouse.headFixStyle = 1
+                            elif inputStr == 2:
+                                mouse.headFixStyle = 2
+
+                    inputStr = input('Change value of another mouse?')
+                    if inputStr[0] == 'y' or inputStr[0] == "Y":
+                        continue
+                    else:
+                        break
+            elif inputStr == 'g':
+                while(True):
+                    try:
+                        inputStr =  int(input ('Type the tagID of mouse to change genotype:'))
+                    except ValueError:
+                        print("Input is not a valid mouse-id.")
+                        break
+                    for mouse in mice.mouseArray:
+                        if mouse.tag == inputStr:
+                            print('Following genotypes have been specified:')
+                            for i,j in enumerate(expSettings.genotype):
+                                print(str(i)+': '+j[:])
+                            inputStr = int(input('Set genotype to:'))
+                            mouse.genotype = inputStr
+                    inputStr = input('Change value of another mouse?')
+                    if inputStr[0] == 'y' or inputStr[0] == "Y":
+                        continue
+                    else:
+                        break
+            elif inputStr == 's':
+                while(True):
+                    try:
+                        inputStr =  int(input ('Type the tagID of mouse to change stimType:'))
+                    except ValueError:
+                        print("Input is not a valid mouse-id.")
+                        break
+                    for mouse in mice.mouseArray:
+                        if mouse.tag == inputStr:
+                            print('Following stimTypes are available:')
+                            for i,j in enumerate(expSettings.stimulator):
+                                print(str(i)+': '+j[15:])
+                            inputStr = int(input('Change stimType to:'))
+                            mouse.stimType = inputStr
+
+                    inputStr = input('Change value of another mouse?')
+                    if inputStr[0] == 'y' or inputStr[0] == "Y":
+                        continue
+                    else:
+                        break
+            elif inputStr == 't':
+                self.select_targets(mice)
+            elif inputStr == 'q':
+                break
 
 #============== Utility functions for the stepper motors and laser =================
 
@@ -498,19 +628,23 @@ class AHF_Stimulator_LaserStimulation_LW (AHF_Stimulator_Rewards):
             if inputStr == str(0):
                 for mouse in mice.mouseArray:
                     if (not hasattr(mouse,'targets') and hasattr(mouse,'ref_im')):
-                        print('Mouse: ',mouse.tag)
+                        #print('Mouse: ',mouse.tag)
                         targets_coords = manual_annot(mouse.ref_im)
                         mouse.targets=np.asarray(targets_coords).astype(int)
-                        print('TARGET\tx\ty')
-                        print('{0}\t{1}\t{2}'.format('0',mouse.targets[0],mouse.targets[1]))
+                        #print('TARGET\tx\ty')
+                        #print('{0}\t{1}\t{2}'.format('0',mouse.targets[0],mouse.targets[1]))
+                        writeToLogFile(self.logFP, self.mouse, 'Target:x={1},y={2}'.format(mouse.targets[0],mouse.targets[1]))
+
+                        
             if inputStr == str(1):
                 for mouse in mice.mouseArray:
                     if hasattr(mouse,'ref_im'):
-                        print('Mouse: ',mouse.tag)
+                        #print('Mouse: ',mouse.tag)
                         targets_coords = manual_annot(mouse.ref_im)
                         mouse.targets=np.asarray(targets_coords).astype(int)
-                        print('TARGET\tx\ty')
-                        print('{0}\t{1}\t{2}'.format('0',mouse.targets[0],mouse.targets[1]))
+                        #print('TARGET\tx\ty')
+                        #print('{0}\t{1}\t{2}'.format('0',mouse.targets[0],mouse.targets[1]))
+                        writeToLogFile(self.logFP, self.mouse, 'Target:x={1},y={2}'.format(mouse.targets[0],mouse.targets[1]))
 
     def image_registration(self):
         #Runs at the beginning of a new trial
@@ -541,190 +675,16 @@ class AHF_Stimulator_LaserStimulation_LW (AHF_Stimulator_Rewards):
             cent_targ = self.mouse.targets - np.array([int(self.camera.resolution[0]/2),int(self.camera.resolution[0]/2)]) #translate targets to center of image
             trans_coord = np.dot(self.R,np.append(cent_targ,1))+np.array([int(self.camera.resolution[0]/2),int(self.camera.resolution[0]/2)])
             targ_pos = np.dot(self.coeff,np.append(trans_coord,1))
-            print('TARGET\ttx\tty')
-            print('{0}\t{1:.01f}\t{2:.01f}'.format('0',trans_coord[0],trans_coord[1]))
+            #print('TARGET\ttx\tty')
+            #print('{0}\t{1:.01f}\t{2:.01f}'.format('0',trans_coord[0],trans_coord[1]))
+            writeToLogFile(self.logFP, self.mouse, 'Target Registration:x={1},y={2}'.format(trans_coord[0],trans_coord[1]))
             return targ_pos
         else:
             print('No laser stimulation: Image registration failed.')
-            writeToLogFile(self.expSettings.logFP, self.mouse, 'image registration failure')
+            writeToLogFile(self.logFP, self.mouse, 'Target Registration:FAILED')
             return None
 
 
-#=================Main functions called from outside===========================
-    def run(self):
-
-        self.rewardTimes = []
-        saved_targ_pos = None
-        if self.expSettings.doHeadFix:
-            if not hasattr(self.mouse,'ref_im'):
-                print('Take reference image')
-                writeToLogFile(self.expSettings.logFP, self.mouse, 'taking reference image')
-                self.get_ref_im()
-                return
-            elif not hasattr(self.mouse,'targets'):
-                print('Select targets')
-                writeToLogFile(self.expSettings.logFP, self.mouse, 'no targets selected')
-                #If targets haven't been choosen -> release mouse again
-                return
-
-            try:
-                # Run this only if headfixed
-                self.rewarder.giveReward('task')
-                print('Image registration')
-                ref_path = self.cageSettings.dataPath+'sample_im/'+datetime.fromtimestamp (int (time())).isoformat ('-')+'_'+str(self.mouse.tag)+'.jpg'
-                self.camera.capture(ref_path)
-                targ_pos = self.image_registration()
-                self.rewarder.giveReward('task')
-                if targ_pos is None and saved_targ_pos is not None:
-                    targ_pos = saved_targ_pos
-                if targ_pos is not None:
-                    saved_targ_pos = targ_pos
-                    print('Moving laser to target and capture image to assert correct laser position')
-                    self.move_to(np.flipud(targ_pos),topleft=True,join=True) #Move laser to target and wait until target reached
-                    self.mouse.laser_spot = np.empty((self.camera.resolution[0], self.camera.resolution[1], 3),dtype=np.uint8)
-                    self.pulse(70,self.duty_cycle) #At least 60 ms needed to capture laser spot
-                    self.camera.capture(self.mouse.laser_spot,'rgb',use_video_port=True)
-                    sleep(0.1)
-                # Repeatedly give a reward and pulse simultaneously
-                timeInterval = self.rewardInterval - self.rewarder.rewardDict.get ('task')
-                self.rewardTimes = []
-                self.camera.start_preview(fullscreen = False, window = tuple(self.camera.AHFpreview))
-                for reward in range(self.nRewards):
-                    self.rewardTimes.append (time())
-                    if targ_pos is not None:
-                        self.pulse(self.laser_on_time,self.duty_cycle)
-                        writeToLogFile(self.expSettings.logFP, self.mouse, 'laser pulse')
-                    self.rewarder.giveReward('task')
-                    sleep(timeInterval)
-                self.mouse.headFixRewards += self.nRewards
-                self.camera.stop_preview()
-
-            finally:
-                #Move laser back to zero position at the end of the trial
-                self.move_to(np.array([0,0]),topleft=True,join=False)
-        else:
-            timeInterval = self.rewardInterval - self.rewarder.rewardDict.get ('task')
-            self.rewardTimes = []
-            self.camera.start_preview(fullscreen = False, window = tuple(self.camera.AHFpreview))
-            for reward in range(self.nRewards):
-                self.rewardTimes.append (time())
-                self.rewarder.giveReward('task')
-                sleep(timeInterval)
-            self.mouse.headFixRewards += self.nRewards
-            self.camera.stop_preview()
-
-    def logfile (self):
-        rewardStr = 'reward'
-        buzzStr = 'no buzzer used'
-        #buzzStr = 'Buzz:N=' + str (self.buzz_num) + ',length=' + '{:.2f}'.format(self.buzz_len) + ',period=' + '{:.2f}'.format (self.buzz_period)
-        #buzzStr = 'Buzz:duty=' + str (self.buzz_duty) + ',duration=' + '{:.2f}'.format(self.buzz_dur) + ',frequency=' + '{:.2f}'.format(self.buzz_freq)
-        mStr = '{:013}'.format(self.mouse.tag)
-        for i in range (0, len (self.buzzTimes)):
-            outPutStr = mStr + '\t' + (datetime.fromtimestamp (int (self.buzzTimes [i]))).isoformat (' ') + '\t' + buzzStr
-            print (outPutStr)
-        for i in range (0, len (self.rewardTimes)):
-            outPutStr = mStr + '\t' + (datetime.fromtimestamp (int (self.rewardTimes [i]))).isoformat (' ') + '\t' + rewardStr
-            print (outPutStr)
-        if self.textfp != None:
-            for i in range (0, len (self.buzzTimes)):
-                outPutStr = mStr + '\t' + '{:.2f}'.format (self.buzzTimes [i]) + '\t' + buzzStr + '\t' + datetime.fromtimestamp (int (self.buzzTimes [i])).isoformat (' ')  + '\n'
-                self.textfp.write(outPutStr)
-            for i in range (0, len (self.rewardTimes)):
-                outPutStr = mStr + '\t'  + '{:.2f}'.format (self.rewardTimes [i]) + '\t'  + rewardStr + '\t' +  datetime.fromtimestamp (int (self.rewardTimes [i])).isoformat (' ') + '\n'
-                self.textfp.write(outPutStr)
-            self.textfp.flush()
-
-    def inspect_mice(self,mice,cageSettings,expSettings):
-        #Inspect the mice array
-        print('MouseID\t\tref-im\ttargets\theadFixStyle\tstimType\tgenotype')
-        for mouse in mice.mouseArray:
-            ref_im='no'
-            targets='no'
-            headFixStyle = 'fix'
-            if hasattr(mouse,'ref_im'):
-                ref_im='yes'
-            if hasattr(mouse,'targets'):
-                targets='yes'
-            if mouse.headFixStyle == 1:
-                headFixStyle = 'loose'
-            elif mouse.headFixStyle == 2:
-                headFixStyle = 'nofix'
-            if hasattr(mouse, 'genotype'):
-                genotype = expSettings.genotype[mouse.genotype]
-            else:
-                genotype = 'no genotype'
-            stimType = expSettings.stimulator[mouse.stimType][15:22]
-            print(str(mouse.tag) + '\t' + str(ref_im) + '\t' + str(targets) +'\t' + headFixStyle + '\t\t' + stimType + '\t\t' + genotype)
-        while(True):
-            inputStr = input ('c= headFixStyle, t= select targets, s= stimType, g = genotype, q= quit: ')
-            if inputStr == 'c':
-                while(True):
-                    try:
-                        inputStr =  int(input ('Type the tagID of mouse to change headFixStyle:'))
-                    except ValueError:
-                        print("Input is not a valid mouse-id.")
-                        break
-                    for mouse in mice.mouseArray:
-                        if mouse.tag == inputStr:
-                            try:
-                                inputStr = int(input('Change headFixStyle to:\n0: fix\n1: loose\n2: nofix\n'))
-                            except ValueError:
-                                print('Input is not a valid number.')
-                            if inputStr == 0:
-                                mouse.headFixStyle = 0
-                            elif inputStr == 1:
-                                mouse.headFixStyle = 1
-                            elif inputStr == 2:
-                                mouse.headFixStyle = 2
-
-                    inputStr = input('Change value of another mouse?')
-                    if inputStr[0] == 'y' or inputStr[0] == "Y":
-                        continue
-                    else:
-                        break
-            elif inputStr == 'g':
-                while(True):
-                    try:
-                        inputStr =  int(input ('Type the tagID of mouse to change genotype:'))
-                    except ValueError:
-                        print("Input is not a valid mouse-id.")
-                        break
-                    for mouse in mice.mouseArray:
-                        if mouse.tag == inputStr:
-                            print('Following genotypes have been specified:')
-                            for i,j in enumerate(expSettings.genotype):
-                                print(str(i)+': '+j[:])
-                            inputStr = int(input('Set genotype to:'))
-                            mouse.genotype = inputStr
-                    inputStr = input('Change value of another mouse?')
-                    if inputStr[0] == 'y' or inputStr[0] == "Y":
-                        continue
-                    else:
-                        break
-            elif inputStr == 's':
-                while(True):
-                    try:
-                        inputStr =  int(input ('Type the tagID of mouse to change stimType:'))
-                    except ValueError:
-                        print("Input is not a valid mouse-id.")
-                        break
-                    for mouse in mice.mouseArray:
-                        if mouse.tag == inputStr:
-                            print('Following stimTypes are available:')
-                            for i,j in enumerate(expSettings.stimulator):
-                                print(str(i)+': '+j[15:])
-                            inputStr = int(input('Change stimType to:'))
-                            mouse.stimType = inputStr
-
-                    inputStr = input('Change value of another mouse?')
-                    if inputStr[0] == 'y' or inputStr[0] == "Y":
-                        continue
-                    else:
-                        break
-            elif inputStr == 't':
-                self.select_targets(mice)
-            elif inputStr == 'q':
-                break
 
     def tester(self,expSettings):
         #Tester function called from the hardwareTester. Includes Stimulator
