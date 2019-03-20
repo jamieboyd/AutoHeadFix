@@ -613,6 +613,8 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
             self.camera.stop_preview()
 
     def logfile (self):
+        pass
+        """
         rewardStr = 'reward'
         buzzStr = 'no buzzer used'
         #buzzStr = 'Buzz:N=' + str (self.buzz_num) + ',length=' + '{:.2f}'.format(self.buzz_len) + ',period=' + '{:.2f}'.format (self.buzz_period)
@@ -632,7 +634,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
                 outPutStr = mStr + '\t'  + '{:.2f}'.format (self.rewardTimes [i]) + '\t'  + rewardStr + '\t' +  datetime.fromtimestamp (int (self.rewardTimes [i])).isoformat (' ') + '\n'
                 self.textfp.write(outPutStr)
             self.textfp.flush()
-
+		"""
     def inspect_mice(self,mice,cageSettings,expSettings):
         #Inspect the mice array
         print('MouseID\t\tref-im\ttargets\theadFixStyle\tstimType\tgenotype')

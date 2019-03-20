@@ -13,6 +13,24 @@ The laser is pulsed whenever the mouse goes for a set amount of time without lic
 from AHF_Stimulator_LaserStimulation import AHF_Stimulator_LaserStimulation
 from PTSimpleGPIO import PTSimpleGPIO, Infinite_train, Train
 from random import random
+import RPi.GPIO as GPIO
+
+#Laser-stimulator modules
+from pynput import keyboard
+import numpy as np
+import sys
+import matplotlib.pyplot as plt
+from PTPWM import PTPWM
+from array import array
+from queue import Queue as queue
+from threading import Thread
+from multiprocessing import Process, Queue
+from time import sleep, time
+from random import random
+from datetime import datetime
+from itertools import combinations,product
+import imreg_dft as ird
+import warnings
 
 def writeToLogFile(logFP, mouse, event):
     """
@@ -73,13 +91,9 @@ class AHF_Stimulator_LaserStimulation_LW (AHF_Stimulator_LaserStimulation):
 
 
     def logfile (self):
-        for i in range (0, len (self.rewardTimes)):
-            if len (self.laserTimes) > 0:
-                print ('{:013}\t{:s}\tlaser_pulse:lickwithold={:.2f}'.format(self.mouse.tag, datetime.fromtimestamp (int (self.laserTimes [i])).isoformat (' '),self.lickWitholdTimes [i]))
-            print ('{:013}\t{:s}\treward'.format(self.mouse.tag, datetime.fromtimestamp (int (self.laserTimes [i])).isoformat (' ')))
         if self.textfp != None:
             for i in range (0, len (self.rewardTimes)):
-                if len (self.laserTimes) > 0:
+                if len (self.laserTimes) ==len (self.rewardTimes):
                     self.textfp.write('{:013}\t{:.2f}\tlaser_pulse:lickwithold={:.2f}\t{:s}\n'.format(self.mouse.tag, self.laserTimes [i] ,self.lickWitholdTimes [i], datetime.fromtimestamp (int (self.laserTimes [i])).isoformat (' ')))
                 self.textfp.write('{:013}\t{:.2f}\treward\t{:s}\n'.format(self.mouse.tag, self.rewardTimes [i], datetime.fromtimestamp (int (self.rewardTimes [i])).isoformat (' ')))
             self.textfp.flush()
@@ -95,12 +109,12 @@ class AHF_Stimulator_LaserStimulation_LW (AHF_Stimulator_LaserStimulation):
         if self.expSettings.doHeadFix:
             if not hasattr(self.mouse,'ref_im'):
                 print('Take reference image')
-                writeToLogFile(self.expSettings.logFP, self.mouse, 'taking reference image')
+                writeToLogFile(self.textfp, self.mouse, 'taking reference image')
                 self.get_ref_im()
                 return
             elif not hasattr(self.mouse,'targets'):
                 print('Select targets')
-                writeToLogFile(self.expSettings.logFP, self.mouse, 'no targets selected')
+                writeToLogFile(self.testfp, self.mouse, 'no targets selected')
                 #If targets haven't been choosen -> release mouse again
                 return
 
@@ -111,7 +125,7 @@ class AHF_Stimulator_LaserStimulation_LW (AHF_Stimulator_LaserStimulation):
                 ref_path = self.cageSettings.dataPath+'sample_im/'+datetime.fromtimestamp (int (time())).isoformat ('-')+'_'+str(self.mouse.tag)+'.jpg'
                 self.camera.capture(ref_path)
                 targ_pos = self.image_registration()
-                writeToLogFile(self.expSettings.logFP, self.mouse, 'no targets selected')
+                writeToLogFile(self.textfp, self.mouse, 'no targets selected')
                 self.rewarder.giveReward('task')
                 if targ_pos is None and self.mouse.saved_targ_pos is not None:
                     targ_pos = self.mouse.saved_targ_pos
@@ -157,10 +171,13 @@ class AHF_Stimulator_LaserStimulation_LW (AHF_Stimulator_LaserStimulation):
                     if targ_pos is not None:
                         self.laserTimes.append (time())
                         self.pulse(self.laser_on_time,self.duty_cycle)
+                        print ('{:013}\t{:s}\tlaser_pulse:lickwithold={:.2f}'.format(self.mouse.tag, datetime.fromtimestamp (int (time())).isoformat (' '),lickWitholdRandom))
                     # sleep for laser lead time, then give reward
                     sleep (self.laser_lead)
                     self.rewardTimes.append (time())
                     self.rewarder.giveReward('task')
+                    print ('{:013}\t{:s}\treward'.format(self.mouse.tag, datetime.fromtimestamp (int (time())).isoformat (' ')))
+
                     OffForRewardEnd = time() + self.speakerOffForReward
                 # make sure to turn off buzzer at end of loop when we exit
                 if speakerIsOn == True:
@@ -633,7 +650,7 @@ class AHF_Stimulator_LaserStimulation_LW (AHF_Stimulator_LaserStimulation):
                         mouse.targets=np.asarray(targets_coords).astype(int)
                         #print('TARGET\tx\ty')
                         #print('{0}\t{1}\t{2}'.format('0',mouse.targets[0],mouse.targets[1]))
-                        writeToLogFile(self.logFP, self.mouse, 'Target:x={1},y={2}'.format(mouse.targets[0],mouse.targets[1]))
+                        writeToLogFile(self.textfp, self.mouse, 'Target:x={1},y={2}'.format(mouse.targets[0],mouse.targets[1]))
 
                         
             if inputStr == str(1):
@@ -644,7 +661,7 @@ class AHF_Stimulator_LaserStimulation_LW (AHF_Stimulator_LaserStimulation):
                         mouse.targets=np.asarray(targets_coords).astype(int)
                         #print('TARGET\tx\ty')
                         #print('{0}\t{1}\t{2}'.format('0',mouse.targets[0],mouse.targets[1]))
-                        writeToLogFile(self.logFP, self.mouse, 'Target:x={1},y={2}'.format(mouse.targets[0],mouse.targets[1]))
+                        writeToLogFile(self.textfp, self.mouse, 'Target:x={1},y={2}'.format(mouse.targets[0],mouse.targets[1]))
 
     def image_registration(self):
         #Runs at the beginning of a new trial
@@ -677,11 +694,11 @@ class AHF_Stimulator_LaserStimulation_LW (AHF_Stimulator_LaserStimulation):
             targ_pos = np.dot(self.coeff,np.append(trans_coord,1))
             #print('TARGET\ttx\tty')
             #print('{0}\t{1:.01f}\t{2:.01f}'.format('0',trans_coord[0],trans_coord[1]))
-            writeToLogFile(self.logFP, self.mouse, 'Target Registration:x={1},y={2}'.format(trans_coord[0],trans_coord[1]))
+            writeToLogFile(self.textfp, self.mouse, 'Target Registration:x={1},y={2}'.format(trans_coord[0],trans_coord[1]))
             return targ_pos
         else:
             print('No laser stimulation: Image registration failed.')
-            writeToLogFile(self.logFP, self.mouse, 'Target Registration:FAILED')
+            writeToLogFile(self.textfp, self.mouse, 'Target Registration:FAILED')
             return None
 
 
