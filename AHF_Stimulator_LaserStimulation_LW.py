@@ -217,7 +217,7 @@ class AHF_Stimulator_LaserStimulation_LW (AHF_Stimulator_LaserStimulation):
 
     def inspect_mice(self,mice,cageSettings,expSettings):
         #Inspect the mice array
-        print('MouseID\t\tref-im\ttargets\theadFixStyle\tstimType\tgenotype')
+        print('MouseID\t\tref-im\ttargets\theadFixStyle\tstimType\t\tgenotype')
         for mouse in mice.mouseArray:
             ref_im='no'
             targets='no'
@@ -234,7 +234,7 @@ class AHF_Stimulator_LaserStimulation_LW (AHF_Stimulator_LaserStimulation):
                 genotype = expSettings.genotype[mouse.genotype]
             else:
                 genotype = 'no genotype'
-            stimType = expSettings.stimulator[mouse.stimType][15:22]
+            stimType = expSettings.stimulator[mouse.stimType][15:22]+expSettings.stimulator[mouse.stimType][-2:]
             print(str(mouse.tag) + '\t' + str(ref_im) + '\t' + str(targets) +'\t' + headFixStyle + '\t\t' + stimType + '\t\t' + genotype)
         while(True):
             inputStr = input ('c= headFixStyle, t= select targets, s= stimType, g = genotype, q= quit: ')
@@ -749,7 +749,6 @@ class AHF_Stimulator_LaserStimulation_LW (AHF_Stimulator_LaserStimulation):
             ref.attrs.modify('IMAGE_SUBCLASS', np.string_('IMAGE_TRUECOLOR'))
             ref.attrs.modify('INTERLACE_MODE', np.string_('INTERLACE_PIXEL'))
             ref.attrs.modify('IMAGE_MINMAXRANGE', [0,255])
-            ref.attrs.modify('timestamp', mouse.timestamp)
         if hasattr(mouse,'targets'):
             h5.require_dataset('targets',shape=(2,),dtype=np.uint8,data=mouse.targets,)
         t = h5.require_group('trial_image')
