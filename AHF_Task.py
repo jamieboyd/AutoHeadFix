@@ -172,6 +172,7 @@ class Task(object):
                 baseName = item [0].rstrip ('Class')
                 classDict = getattr (self, baseName + 'Dict')
                 setattr (self, baseName, item [1](self, classDict))
+                
             
     def saveSettings(self):
         """

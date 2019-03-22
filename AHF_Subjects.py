@@ -12,7 +12,7 @@ class AHF_Subjects (AHF_Base, metaclass = ABCMeta):
 
     @abstractmethod
     def setup(self):
-        resultsTuple = ('HeadFixer', 'Rewarder', 'Stimulator') # results tuple defines dictionaries for subjects we will read from and write results to
+        resultsTuple = ('HeadFixer', 'Rewarder', 'Stimulator', 'TagReader') # results tuple defines dictionaries for subjects we will read from and write results to
         settingsTuple= ('HeadFixer', 'Rewarder', 'Stimulator') # results tuple defines dictionaries for subjects we will read from and write settings to 
 
     @abstractmethod

@@ -12,6 +12,22 @@ class AHF_TagReader_ID (AHF_TagReader):
 
     defaultPort = '/dev/serial0'
     defaultPin = 21
+
+    @staticmethod
+    def customCallback (channel):
+        global gTask  #gTask is global reference to task object in main
+        if GPIO.input (channel) == GPIO.HIGH: # tag just entered
+            try:
+                gTask.tag = RFIDTagReader.globalReader.readTag ()
+                gTask.DataLogger.writeToLogFile(gTask.tag, 'entry', None, time())
+                newVal = gTask.Subjects.get(gTask.tag).get('resultsDict').get('TagReader').get('entries') + 1
+                gTask.Subjects.get(gTask.tag).get('resultsDict').get('TagReader').update ({'entries' : newVal})
+            except Exception as e:
+                gTask.tag =0
+        else: # tag just left
+            gTask.DataLogger.writeToLogFile(gTask.tag, 'exit', None, time())
+            gTask.tag = 0
+        
     
     @staticmethod
     def about ():
@@ -30,6 +46,14 @@ class AHF_TagReader_ID (AHF_TagReader):
         starterDict.update({'serialPort' : serialPort, 'TIRpin' : TIRpin})
         return starterDict
 
+
+    def newResultsDict (self, starterDict = {}):
+        return starterDict.update({'entries' : starterDict.get ('entries', 0)})
+
+    def clearResultsDict(self, resultsDict):
+        resultsDict.update
+        
+
     def setup (self):
         self.serialPort = self.settingsDict.get('serialPort')
         self.TIRpin = self.settingsDict.get('TIRpin')
@@ -44,7 +68,7 @@ class AHF_TagReader_ID (AHF_TagReader):
         return RFIDTagReader.globalTag
 
     def startLogging (self):
-        self.tagReader.installCallBack (self.TIRpin, callBackFunc = tagReaderCustomCallback)
+        self.tagReader.installCallBack (self.TIRpin, callBackFunc = AHF_TagReader_ID.customCallback)
         
 
     def tagReaderCustomCallback (channel):

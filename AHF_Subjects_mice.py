@@ -92,24 +92,24 @@ class AHF_Subjects_mice (AHF_Subjects):
 
     def generator(self):
         """
-        A Generator function that generates a dictionary for each of the mice in turn. Sample function call
-        for mouse in myMice.generator():
+        A Generator function that generates a (tagID, dictionary) tuple for each of the mice in turn.
+        Sample function call: for mouse in myMice.generator():
         """
-        for key, value in self.miceDict.items():
-            yield (key, value)
+        for item in self.miceDict.items():
+            yield item
                 
 
     def newSubjectDict (starterDict = {}):
         """
         New dictionary made for each individual mouse, dictionaries for headFixer, rewarder, Stmiulator, and
-        tube entries, which are not tracked by stimulator, head fixer, or rewarder
+        TagReader
         A separate dictionary tracks individual settings, which over-ride global settings
         """
         resultsDict = starterDict.get ('resultsDict', {})
         resultsDict.update ({'HeadFixer' : self.task.HeadFixer.newResultsDict ()})
         resultsDict.update ({'Rewarder' : self.task.Rewarder.newResultsDict ()})
         resultsDict.update ({'Stimulator' : self.task.Stimulator.newResultsDict ()})
-        resultsDict.update ({'Entries' : 0})
+        resultsDict.update ({'TagReader' : self.task.TagReader.newResultsDict ()})
         settingsDict = starterDict.get ('settingsDict', {})
         settingsDict.update ({'HeadFixer' : self.task.HeadFixer.settingsDict ()})
         settingsDict.update ({'Rewarder' : self.task.Rewarder.settingsDict ()})
@@ -124,7 +124,7 @@ class AHF_Subjects_mice (AHF_Subjects):
             self.task.HeadFixer.clearResultsDict (value)
             self.task.Rewarder.clearResultsDict (value)
             self.task.Stimulator.clearResultsDict (value)
-            resultsDict.update ({'Entries' : 0})
+            self.task.TagReader.clearResultsDict
             
 
     def individualSettings (self, starterDict={}):
