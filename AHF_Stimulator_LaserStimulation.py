@@ -470,6 +470,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
     def get_ref_im(self):
         #Save a reference image whithin the mouse object
         self.mouse.ref_im = np.empty((self.camera.resolution[0], self.camera.resolution[1], 3),dtype=np.uint8)
+        self.mouse.timestamp = time()
         self.camera.capture(self.mouse.ref_im,'rgb')
 
     def select_targets(self,mice):
@@ -571,6 +572,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
                 self.rewarder.giveReward('task')
                 print('Image registration')
                 ref_path = self.cageSettings.dataPath+'sample_im/'+datetime.fromtimestamp (int (time())).isoformat ('-')+'_'+str(self.mouse.tag)+'.jpg'
+                self.mouse.timestamp = time()
                 self.camera.capture(ref_path)
                 targ_pos = self.image_registration()
                 self.rewarder.giveReward('task')
@@ -770,6 +772,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
             ref.attrs.modify('IMAGE_SUBCLASS', np.string_('IMAGE_TRUECOLOR'))
             ref.attrs.modify('INTERLACE_MODE', np.string_('INTERLACE_PIXEL'))
             ref.attrs.modify('IMAGE_MINMAXRANGE', [0,255])
+            ref.attrs.modify('timestamp', mouse.timestamp)
         if hasattr(mouse,'targets'):
             h5.require_dataset('targets',shape=(2,),dtype=np.uint8,data=mouse.targets,)
         t = h5.require_group('trial_image')
@@ -780,6 +783,7 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
             tr.attrs.modify('IMAGE_SUBCLASS', np.string_('IMAGE_TRUECOLOR'))
             tr.attrs.modify('INTERLACE_MODE', np.string_('INTERLACE_PIXEL'))
             tr.attrs.modify('IMAGE_MINMAXRANGE', [0,255])
+            tr.attrs.modify('timestamp', mouse.timestamp)
         if hasattr(mouse,'laser_spot'):
             ls = t.require_dataset('trial_'+str(mouse.tot_headFixes)+'_laser_spot',shape=tuple(self.expSettings.camParamsDict['resolution']+[3]),dtype=np.uint8,data=mouse.laser_spot)
             ls.attrs.modify('CLASS', np.string_('IMAGE'))
@@ -787,3 +791,4 @@ class AHF_Stimulator_LaserStimulation (AHF_Stimulator_Rewards):
             ls.attrs.modify('IMAGE_SUBCLASS', np.string_('IMAGE_TRUECOLOR'))
             ls.attrs.modify('INTERLACE_MODE', np.string_('INTERLACE_PIXEL'))
             ls.attrs.modify('IMAGE_MINMAXRANGE', [0,255])
+            ls.attrs.modify('timestamp', mouse.timestamp)
