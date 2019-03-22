@@ -17,6 +17,7 @@ import AHF_ClassAndDictUtils as CAD
 from abc import ABCMeta
 import RPi.GPIO as GPIO
 
+gTask = None
 
 class Task(object):
     """
@@ -172,6 +173,8 @@ class Task(object):
                 baseName = item [0].rstrip ('Class')
                 classDict = getattr (self, baseName + 'Dict')
                 setattr (self, baseName, item [1](self, classDict))
+        global gTask
+        gTask = self
                 
             
     def saveSettings(self):

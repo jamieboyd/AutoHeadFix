@@ -13,15 +13,23 @@ class AHF_Subjects (AHF_Base, metaclass = ABCMeta):
     @abstractmethod
     def setup(self):
         resultsTuple = ('HeadFixer', 'Rewarder', 'Stimulator', 'TagReader') # results tuple defines dictionaries for subjects we will read from and write results to
-        settingsTuple= ('HeadFixer', 'Rewarder', 'Stimulator') # results tuple defines dictionaries for subjects we will read from and write settings to 
+        settingsTuple= ('HeadFixer', 'Rewarder', 'Stimulator') # settings tuple defines dictionaries for subjects we will read from and write settings to 
 
     @abstractmethod
     def get (self, IDnum):
         """
-        returns tuple of results dictionary/settings dictionary for individual in group of subjects based on a ID tag.
+        returns results/settings dictionary for individual in group of subjects based on a ID tag.
         """
         pass
 
+    @abstractmethod
+    def check (self, IDnum):
+        """
+        returns 1 if IDnum is already in subjects, 0 if IDnum is not in subjects but is elgible to be added, returns -1 if IDnum is not elgible to be added
+        """
+        return -1
+
+    
     @abstractmethod
     def generator (self):
         """
