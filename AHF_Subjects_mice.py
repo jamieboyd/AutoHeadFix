@@ -50,7 +50,7 @@ class AHF_Subjects_mice (AHF_Subjects):
 
 
     def setup():
-        resultsTuple = ('HeadFixer', 'Rewarder', 'Stimulator', 'entries') # results tuple defines dictionaries for subjects we will read from and write results to
+        resultsTuple = ('HeadFixer', 'Rewarder', 'Stimulator', 'TagReader') # results tuple defines dictionaries for subjects we will read from and write results to
         settingsTuple= ('HeadFixer', 'Rewarder', 'Stimulator')
         self.freshMiceAllowed = self.settingsDict.get ('freshMiceAllowed')
         self.loadConfigs = self.settingsDict.get ('loadMiceConfig')
@@ -64,6 +64,18 @@ class AHF_Subjects_mice (AHF_Subjects):
                 self.miceDict.update ({configTuple[0] : configTuple[1]})
             
 
+    def check (self, IDnum):
+        """
+        returns 1 if IDnum is already in subjects, 0 if IDnum is not in subjects but is elgible to be added, returns -1 if IDnum is not elgible to be added
+        """
+        if IDnum in self.miceDict.keys:
+            return 1
+        elif self.freshMiceAllowed:
+            return 0
+        else:
+            return -1
+        
+    
     def add (self, IDnum, dataDict):
         """
         Adds a new subject to the pool of subjects, initializing subject fields with data from a dictionary
