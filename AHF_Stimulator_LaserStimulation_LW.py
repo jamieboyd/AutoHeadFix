@@ -653,7 +653,7 @@ class AHF_Stimulator_LaserStimulation_LW (AHF_Stimulator_LaserStimulation):
                         mouse.targets=np.asarray(targets_coords).astype(int)
                         #print('TARGET\tx\ty')
                         #print('{0}\t{1}\t{2}'.format('0',mouse.targets[0],mouse.targets[1]))
-                        writeToLogFile(self.textfp, self.mouse, 'Target:x={1},y={2}'.format(mouse.targets[0],mouse.targets[1]))
+                        writeToLogFile(self.textfp, self.mouse, 'Target:x={0},y={1}'.format(mouse.targets[0],mouse.targets[1]))
 
                         
             if inputStr == str(1):
@@ -664,7 +664,7 @@ class AHF_Stimulator_LaserStimulation_LW (AHF_Stimulator_LaserStimulation):
                         mouse.targets=np.asarray(targets_coords).astype(int)
                         #print('TARGET\tx\ty')
                         #print('{0}\t{1}\t{2}'.format('0',mouse.targets[0],mouse.targets[1]))
-                        writeToLogFile(self.textfp, self.mouse, 'Target:x={1},y={2}'.format(mouse.targets[0],mouse.targets[1]))
+                        writeToLogFile(self.textfp, self.mouse, 'Target:x={0},y={1}'.format(mouse.targets[0],mouse.targets[1]))
 
     def image_registration(self):
         #Runs at the beginning of a new trial
@@ -697,7 +697,7 @@ class AHF_Stimulator_LaserStimulation_LW (AHF_Stimulator_LaserStimulation):
             targ_pos = np.dot(self.coeff,np.append(trans_coord,1))
             #print('TARGET\ttx\tty')
             #print('{0}\t{1:.01f}\t{2:.01f}'.format('0',trans_coord[0],trans_coord[1]))
-            writeToLogFile(self.textfp, self.mouse, 'Target Registration:x={1},y={2}'.format(trans_coord[0],trans_coord[1]))
+            writeToLogFile(self.textfp, self.mouse, 'Target Registration:x={0:.01f},y={1:.01f}'.format(trans_coord[0],trans_coord[1]))
             return targ_pos
         else:
             print('No laser stimulation: Image registration failed.')
