@@ -44,12 +44,15 @@ def main():
     # calculate time for saving files for each day
     now = datetime.fromtimestamp (int (time()))
     nextDay = datetime (now.year, now.month, now.day, KDAYSTARTHOUR,0,0) + timedelta (hours=24)
-    # Top level infinite Loop running mouse entries/trials
+    # start TagReader and Lick Detector, the two background task things, logging
+    task.TagReader.startLogging ()
+    if hasattr(task, 'LickDetector'):
+        task.LickDetector.startLogging ()
+     # Top level infinite Loop running mouse entries/trials
     while True:
         try:
             print ('Waiting for a mouse....')
             # loop with a brief sleep, waiting for a tag to be read, or a new day to dawn
-            task.tag = task.TagReader.readTag ()
             while True:
                 if task.tag != 0:
                     break
@@ -58,10 +61,7 @@ def main():
                         task.DataLogger.newDay ()
                     else:
                         sleep (kTIMEOUTSECS)
-                    task.tag = task.TagReader.readTag ()
-            # a Tag has been read, get the time for the log
-            task.entryTime = time()
-            # get a reference to the dictionaries for this subject
+            # a Tag has been read, get a reference to the dictionaries for this subject
             subjectDict = task.Subjects.get (tag)
             if subjectDict is not None:
                 resultsDict = subjectDict.get ('results')

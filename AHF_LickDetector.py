@@ -20,27 +20,27 @@ class AHF_LickDetector (AHF_Base, metaclass = ABCMeta):
 
 
     @abstractmethod
-    def zeroLickCount (self):
+    def startLickCount (self, chanList):
         """
-        Zeros the array that stores lick counts for each channel
+        Zeros the array that stores lick counts for each channel, and makes sure callback is filling the array for requested channels
         """
         pass
     
     @abstractmethod
     def getLickCount (self, chanList):
         """
-        takes a list of channels and returns a list where each member is the number of licks for that channel in the global array
+        takes a tuple of channels and returns a list where each member is the number of licks for that channel in the global array
         call zeroLickCount, wait a while for some licks, then call getLickCount
         """
         pass
+
+    @abstractmethod
+    def stopLickCount (self):
+        """
+        stops callback from filling the array of licks
+        """
+        pass
     
-
-    def addDataLogger (self, dataLogger):
-        if dataLogger is None: 
-            self.dataLogger = Simple_Logger (None)
-        else:
-            self.dataLogger = dataLogger
-
     
     @abstractmethod
     def startLogging (self):

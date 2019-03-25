@@ -36,7 +36,7 @@ class AHF_Base (metaclass = ABCMeta):
         Returns a dictionary with fields, initialized to 0, for storing settings/results from actions of the object, used e.g., by head fixer, stimulator, or rewarder
         not all classes may need results, so not an abstract function
         """
-        return None
+        return starterDict
     
     
     def clearResultsDict(self, resultsDict):
@@ -51,7 +51,7 @@ class AHF_Base (metaclass = ABCMeta):
         """
         Returns a dictionary of settings that can individually varied, overriding values in self.settings
         """
-        return None
+        return starterDict
 
 
     def __init__(self, taskP, settingsDictP):

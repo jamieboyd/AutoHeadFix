@@ -3,58 +3,11 @@
 
 from time import time, sleep
 from datetime import datetime
-import RPi.GPIO as GPIO
-from Adafruit_MPR121 import MPR121
-from array import array
+
+
+from MPR121TouchDetector import TouchDetector
 from AHF_LickDetector import AHF_LickDetector
 
-"""
-Adafruit_MPR121 requires the Adafuit MPR121 library which, in turn,
-requires the Adafuit GPIO library:
-git clone https://github.com/adafruit/Adafruit_Python_MPR121 
-git clone https://github.com/adafruit/Adafruit_Python_GPIO
-
-NOTE :The file
-/Adafruit_Python_GPIO/Adafruit_GPIO/Adafruit_GPIO/I2C.py contains a function,
-require_repeated_start, that fails with newer OS verions. It tries to edit
-a file, '/sys/module/i2c_bcm2708/parameters/combined', that may no longer exist.
-Replace the file name with '/sys/module/i2c_bcm2835/parameters/debug' reinstall,
-and try again.
-
-        subprocess.check_call('chmod 666 /sys/module/i2c_bcm2835/parameters/debug', shell=True)
-        subprocess.check_call('echo -n 1 > /sys/module/i2c_bcm2835/parameters/debug', shell=True)
-
-Adafruit has a new module for mpr121 using CircuitPython at github.com/adafruit/Adafruit_CircuitPython_MPR121
-which requires the whole CircuitPython install. May be worth switching to this in future
-"""
-
-
-gLickDetector = None
-"""
-Global reference to lickDetector for interacting with lickDetector callback, will be set when lickDetetctor object is setup
-"""
-
-def MPR_Callback (channel):
-    """
-    Lick Detetctor Callback, triggered by IRQ pin. mpr121 sets IRQ pin high whenever the touched/untouched state of any of the
-    antenna pins changes. Calling mpr121.touched () sets the IRQ pin low again. mpr121.touched() returns a 12-but value
-    where each bit  represents a pin, with a value of 1 being touched and 0 being not touched.
-    This callback updates object field for touches, adds new touches to the array of touches used for counting touches,
-    and possibly logs licks. Callback tracks only touches, not un-touches, by keeping track of last touches
-    
-    """
-    global gLickDetector
-    touches = gLickDetector.mpr121.touched()
-    # compare current touches to previous touches to find new touches
-    pinBitVal =1
-    for i in range (0,AHF_LickDetector_MPR.numTouchChannels):
-        if (touches & pinBitVal) and not (gLickDetector.prevTouches & pinBitVal):
-            gLickDetector.lickArray [i] +=1
-            if gLickDetector.isLogging:
-                gLickDetector.dataLogger.writeToLogFile(gLickDetector.tagReader.readTag(), 'Lick:' + str (i))
-        pinBitVal *= 2
-    gLickDetector.prevTouches = touches
-    
 
 class AHF_LickDetector_MPR (AHF_LickDetector):
     """
@@ -74,9 +27,9 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
     """
     Touch thresholds recommended by dirkjan
     """
-    numTouchChannels = 11
+    numTouchChannels = 12
     """
-    number of channels on the mpr121 is 11
+    number of channels on the mpr121 is 12
     """
     @staticmethod
     def about ():
@@ -92,6 +45,7 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
         response = input("Enter MPR121 I2C Address, in Hexadecimal, currently 0x%x: " % mprAddress)
         if response != '':
             mprAddress = int (response, 16)
+            
         starterDict.update ({'mprAddress' : mprAddress, 'IRQpin' : pin})
         return starterDict  
 
@@ -100,11 +54,6 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
         self.pin = self.settingsDict.get ('IRQpin')
         self.address = self.settingsDict.get ('mprAddress')
         # initialize capacitive sensor object and start it up
-        self.mpr121 = MPR121.MPR121()
-        self.mpr121.begin(address =self.address )
-        self.mpr121.set_thresholds (self.defaultTouchThresh,self.defaultUntouchThresh)
-         # state of touches from one invocation to next, used in callback to separate touches from untouches
-        self.prevTouches = self.mpr121.touched()
         if hasattr (self.task, 'DataLogger'):
             self.dataLogger = self.task.DataLogger
         else:

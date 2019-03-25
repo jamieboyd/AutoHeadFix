@@ -78,6 +78,7 @@ class AHF_TagReader_ID (AHF_TagReader):
 
     def stopLogging (self):
         if self.isLogging:
+            self.tagReader.removeCallback()
             GPIO.remove_event_detect (self.tag_in_range_pin)
             self.isLogging = False
         
