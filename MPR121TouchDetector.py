@@ -2,8 +2,8 @@
 #-*-coding: utf-8 -*-
 
 """
-Code to use the MPR121 capacitive touch sensor from Adafruit to count/log touches, while ignoring 'un-touch' events, by way of threaded callbacks
-firing from the IRQ pin on the MPR121 which are installed with add_event_detect from RPi.GPIO.
+Code to use the MPR121 capacitive touch sensor from Adafruit to count/log touches, while ignoring 'un-touch' events, by way of a
+threaded callback, installed with add_event_detect from RPi.GPIO, firing from the IRQ pin on the MPR121.
 
 Adafruit_MPR121 requires the Adafuit MPR121 library which, in turn, requires the Adafuit GPIO library:
 git clone https://github.com/adafruit/Adafruit_Python_MPR121 
@@ -21,15 +21,15 @@ from array import array
 from time import time
 
 """
-Touch Detector Callback, triggered by IRQ pin.  The MPR121 sets the IRQ pin high whenever the touched/untouched state of any of the
+Touch Detector callback, triggered by IRQ pin.  The MPR121 sets the IRQ pin high whenever the touched/untouched state of any of the
 antenna pins changes. Calling MPR121.touched () sets the IRQ pin low again.  MPR121.touched() returns a 12-but value
 where each bit represents a pin, with a value of 1 being touched and 0 being not touched. The callback tracks only touches, 
 not un-touches, by keeping track of last touches. The callback either counts touches on a set of channels, or saves timestamps of touches
-on a set of channels
+on a set of channels, or calls a supplied custom function with the touched channel.
 """
 gTouchDetector = None        # global reference to touchDetector for interacting with touchDetector callbacks
 
-def touchDetectorCounterCallback (channel):
+def touchDetectorCallback (channel):
     global gTouchDetector
     touches = gTouchDetector.touched()
     # compare current touches to previous touches to find new touches
@@ -48,15 +48,15 @@ class TouchDetector (MPR121):
     """
     TouchDetector inherits from Adafruit's MPR121 capacitive touch sensor code 
     """
-    callbackOff = 0
-    callbackSetTouch =1
-    callbackCountMode = 2
-    callbackTimeMode =4
-    callbackCustomMode = 8
+    callbackOff = 0         # callback function not installed
+    callbackSetTouch =1     # callback sets state of touches (all other modes need this set as well)
+    callbackCountMode = 3   # callback counts licks on set of channels in touchChans
+    callbackTimeMode = 5    # callback records time of each touch for each channel in touchChans 
+    callbackCustomMode = 9  # callback calls custom function with touched channel
     
-    def __init__(self, I2Caddr, touchThesh, unTouchThresh):
+    def __init__(self, I2Caddr, touchThresh, unTouchThresh):
         super.__init__()
-        self.setup (I2Caddr, touchThesh, unTouchThresh)
+        self.setup (I2Caddr, touchThresh, unTouchThresh)
 
     def setup (I2Caddr, touchThresh, unTouchThresh):
         self.begin(address =I2Caddr)
@@ -107,7 +107,7 @@ class TouchDetector (MPR121):
 
     def getCount (self):
         """
-        returns a list where each member is the number of licks for that channel in the global array
+        returns a list where each member is the number of touches for that channel in the global array
         call resetCount, wait a while for some touches, then call getCount
         """
         results = []

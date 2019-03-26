@@ -6,34 +6,22 @@ from AHF_LickDetector import AHF_LickDetector
 from time import time
 
 
-class AHF_LickDetector_MPR (AHF_LickDetector, MPR121TouchDetector):
+class AHF_LickDetector_MPR (AHF_LickDetector):
     """
     Lick detector for Auto Head Fix based on MPR121 capacitive touch sensor
     """
-    defaultIRQ = 26
-    """
-    GPIO pin for IRQ signal form lick detector, used for triggering callback
-    """
-    defaultAddress = 0x5a 
-    """
-    i2c addresss is 0x5a (90) with address pin tied to ground
-    address will be 0x5b (91) with address pin tied to 3v3
-    """
-    defaultTouchThresh = 8
-    defaultUntouchThresh = 4
-    """
-    Touch thresholds recommended by dirkjan
-    """
-    defaultTouchChannels = (0,1,2,3)
-    """
-    number of channels on the mpr121 is 12, but last channel is sum of all channels
-    """
+    defaultIRQ = 26 # GPIO pin for IRQ signal form lick detector, used for triggering callback
+    defaultAddress = 0x5a # i2c addresss is 0x5a (90) with address pin tied to ground address will be 0x5b (91) with address pin tied to 3v3
+    defaultTouchThresh = 8 # 8 bit value for what constitutes a touch, recommended by dirkjan
+    defaultUntouchThresh = 4 # # 8 bit value for what constitutes an un-touch, recommended by dirkjan
+    defaultTouchChannels = (0,1,2,3) # number of channels on the mpr121 is 12, but last channel is sum of all channels
+
     @staticmethod
-    def customCallback(channel):
+    def customCallback(touchedChannel):
         """
-        custom callback 
+        custom callback using global task reference from AHF_Task
         """
-        AHF_Task.gTask.DataLogger.writeToLogFile(gTask.tag, 'lick', {'chan' : channel}, time())
+        AHF_Task.gTask.DataLogger.writeToLogFile(gTask.tag, 'lick', {'chan' : touchedChannel}, time())
         newVal = AHF_Task.gTask.Subjects.get(gTask.tag).get('resultsDict').get('LickDetector').get('licks') + 1
         AHF_Task.gTask.Subjects.get(gTask.tag).get('resultsDict').get('LickDetector').update ({'licks' : newVal})
 
