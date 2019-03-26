@@ -1,15 +1,12 @@
 #! /usr/bin/python
 #-*-coding: utf-8 -*-
 
-from time import time, sleep
-from datetime import datetime
-
-
 from MPR121TouchDetector import TouchDetector
 from AHF_LickDetector import AHF_LickDetector
+from time import time
 
 
-class AHF_LickDetector_MPR (AHF_LickDetector):
+class AHF_LickDetector_MPR (AHF_LickDetector, MPR121TouchDetector):
     """
     Lick detector for Auto Head Fix based on MPR121 capacitive touch sensor
     """
@@ -27,10 +24,20 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
     """
     Touch thresholds recommended by dirkjan
     """
-    numTouchChannels = 12
+    defaultTouchChannels = (0,1,2,3)
     """
-    number of channels on the mpr121 is 12
+    number of channels on the mpr121 is 12, but last channel is sum of all channels
     """
+    @staticmethod
+    def customCallback(channel):
+        """
+        custom callback 
+        """
+        AHF_Task.gTask.DataLogger.writeToLogFile(gTask.tag, 'lick', {'chan' : channel}, time())
+        newVal = AHF_Task.gTask.Subjects.get(gTask.tag).get('resultsDict').get('LickDetector').get('licks') + 1
+        AHF_Task.gTask.Subjects.get(gTask.tag).get('resultsDict').get('LickDetector').update ({'licks' : newVal})
+
+
     @staticmethod
     def about ():
         return 'Lick detector using the mpr121 capacitive touch sensor breakout from sparkfun over i2c bus'
@@ -45,48 +52,66 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
         response = input("Enter MPR121 I2C Address, in Hexadecimal, currently 0x%x: " % mprAddress)
         if response != '':
             mprAddress = int (response, 16)
-            
-        starterDict.update ({'mprAddress' : mprAddress, 'IRQpin' : pin})
+        touchThresh = startDict.get ('touchThresh', AHF_LickDetector_MPR.defaultTouchThresh)
+        response = input ('Enter 8-bit (0-255) touch threshold value, curently %d: ' % touchThresh)
+        if response !+ '':
+            touchthresh = int (response)
+        unTouchThresh = startDict.get ('unTouchThresh', AHF_LickDetector_MPR.defaultunTouchThresh)
+        response = input ('Enter 8-bit (0-255) un-touch threshold value, curently %d: ' % unTouchThresh)
+        if response != '':
+            unTouchthresh = int (response)
+        touchChans = starterDict.get ('touchChans', AHF_LickDetector_MPR.defaultTouchChannels)
+        response = input ('Enter comma-separarted list of channels (0 -11) to monitor, currently {:s}: '.format (str(touchChans)))
+        if response != '':
+            tempList = []
+            for chan in response.split (','):
+                tempList.append (chan)
+            touchChans = tuple(tempList)
+        starterDict.update ({'mprAddress' : mprAddress, 'IRQpin' : pin, 'touchThresh' : touchThresh})
+        starterDict.update ({'unTouchThresh' : unTouchthresh, 'touchChans' : touchChans})
         return starterDict  
+
 
     def setup (self):
         # read dictionary
-        self.pin = self.settingsDict.get ('IRQpin')
-        self.address = self.settingsDict.get ('mprAddress')
-        # initialize capacitive sensor object and start it up
-        if hasattr (self.task, 'DataLogger'):
-            self.dataLogger = self.task.DataLogger
-        else:
-            self.dataLogger = None
-        self.isLogging = False
-        self.lickArray = array ('i', [0]*self.numTouchChannels)
-        # set up global lick detector with callback
-        global gLickDetector
-        gLickDetector = self
-         # set up IRQ interrupt function. GPIO.setmode should alreay have been called
-        GPIO.setup(self.pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        GPIO.add_event_detect (self.pin, GPIO.FALLING)
-        GPIO.add_event_callback (self.pin, MPR_Callback)        
+        self.IRQpin = self.settingsDict.get ('IRQpin')
+        self.I2Caddress = self.settingsDict.get ('mprAddress')
+        self.touchThresh = self.settingsDict.get ('touchThresh')
+        self.unTouchThresh = self.settingsDict.get ('unTouchThresh')
+        self.touchChans = self.settingsDict.get ('touchChans')
+        # initialize capacitive sensor object
+        self.touchDetector = TouchDetector(self.I2Caddress, touchThresh, unTouchThresh)
+        self.touchDetector.installCallback (self.IRQpin, self.touchChans, TouchDetector.callbackSetTouch)
+        self.touchDetector.addCustomCallback (self.customCallback)
 
+    def newResultsDict (self, starterDict = {}):
+        """
+        Returns a dictionary with fields, initialized to 0,
+        """
+        return starterDict.update ({'licks' : starterDict.get ('licks', 0)})
+
+    def clearResultsDict(self, resultsDict):
+        """
+        Clears values in the results dictionary, for daily totals of licks on all channels. Could be extended to per channel data
+        """
+        resultsDict.update ({'licks' : 0})
 
     def setdown (self):
-        GPIO.remove_event_detect (self.pin)
-        GPIO.cleanup (self.pin)
-        del self.mpr121
+        self.touchDetector.removeCallback (self.IRQpin)
+        del self.touchDetector
 
     def getTouches (self):
         """
         gets touches from mpr121
         """
-        return self.prevTouches
+        return self.touchDetector.touched ()
 
 
     def startLogging (self):
         """
         tells the AHF_LickDetectorCallback to log touches in shell and file (if present)
         """
-        if self.dataLogger is not None:
-            self.isLogging = True
+
 
 
     def stopLogging (self):
@@ -177,36 +202,3 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
             else:
                 self.resetDetector()
        
-
-
-def main():
-    serialPort = '/dev/serial0'
-    #serialPort = '/dev/ttyUSB0'
-    tag_in_range_pin=21
-    lick_IRQ_pin = 26
-    import RPi.GPIO as GPIO
-    import RFIDTagReader
-    from time import sleep
-    GPIO.setmode (GPIO.BCM)
-    tagReader = RFIDTagReader.TagReader(serialPort, True, timeOutSecs = 0.05, kind='ID')
-    tagReader.installCallBack (tag_in_range_pin)
-    logger = Simple_Logger (None)
-    lickDetetctor = LickDetector (lick_IRQ_pin, logger)
-    lickDetetctor.zeroLickCount ([0,1])
-    print ('Waiting for licks...')
-    lickDetetctor.startLogging()
-    #sleep (20)
-    for i in range (0,10):
-        while RFIDTagReader.globalTag == 0:
-            sleep (0.02)
-        mouse = RFIDTagReader.globalTag
-        logger.writeToLogFile (mouse, 'Mouse Entry')
-        while RFIDTagReader.globalTag != 0:
-            sleep (0.02)
-        logger.writeToLogFile (mouse, 'Mouse Exit')
-    lickDetetctor.stopLogging()
-    print (lickDetetctor.getLickCount ([0,1]), ' licks in 10 entries')
-
-
-if __name__ == '__main__':
-    main()

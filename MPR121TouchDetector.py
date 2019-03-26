@@ -1,15 +1,11 @@
 #! /usr/bin/python
 #-*-coding: utf-8 -*-
 
-from Adafruit_MPR121 import MPR121
-import RPi.GPIO as GPIO
-
 """
-Code to use the MPR121 capacitive touch sensor to log touches, while ignoring 'un-touch' events
-For continuous logging, a background task firing from the IRQ pin on the MPR121 can be installed with add_event_detect from RPi.GPIO.
+Code to use the MPR121 capacitive touch sensor from Adafruit to count/log touches, while ignoring 'un-touch' events, by way of threaded callbacks
+firing from the IRQ pin on the MPR121 which are installed with add_event_detect from RPi.GPIO.
 
-Adafruit_MPR121 requires the Adafuit MPR121 library which, in turn,
-requires the Adafuit GPIO library:
+Adafruit_MPR121 requires the Adafuit MPR121 library which, in turn, requires the Adafuit GPIO library:
 git clone https://github.com/adafruit/Adafruit_Python_MPR121 
 git clone https://github.com/adafruit/Adafruit_Python_GPIO
 
@@ -18,61 +14,139 @@ Adafruit_Python_MPR121 has been deprecated. Adafruit has a new module for mpr121
 but this requires the whole CircuitPython install, which is rather large. It may be worth switching to this in the future.
 """
 
-from time import time, sleep
+from Adafruit_MPR121 import MPR121
+import RPi.GPIO as GPIO
 
 from array import array
-
-
-
-
-gTouchDetector = None
-gTouched =0
-gtouches = array('L'[0]*11)
+from time import time
 
 """
-Global reference to touchDetector for interacting with touchDetector callback, will be set when touchDetetctor object is setup
-Global reference to gTouched, bitwise-status of which pins are touched
-Global reference to gTouches, the array of counts of touch events, which can be updated from the callback
+Touch Detector Callback, triggered by IRQ pin.  The MPR121 sets the IRQ pin high whenever the touched/untouched state of any of the
+antenna pins changes. Calling MPR121.touched () sets the IRQ pin low again.  MPR121.touched() returns a 12-but value
+where each bit represents a pin, with a value of 1 being touched and 0 being not touched. The callback tracks only touches, 
+not un-touches, by keeping track of last touches. The callback either counts touches on a set of channels, or saves timestamps of touches
+on a set of channels
 """
+gTouchDetector = None        # global reference to touchDetector for interacting with touchDetector callbacks
 
-def touchDetectorCallback (channel):
-    """
-    touch Detetctor Callback, triggered by IRQ pin. mpr121 sets IRQ pin high whenever the touched/untouched state of any of the
-    antenna pins changes. Calling mpr121.touched () sets the IRQ pin low again. mpr121.touched() returns a 12-but value
-    where each bit  represents a pin, with a value of 1 being touched and 0 being not touched.
-    This callback updates object field for touches, adds new touches to the array of touches used for counting touches,
-    and possibly logs touchs. Callback tracks only touches, not un-touches, by keeping track of last touches
-    
-    """
+def touchDetectorCounterCallback (channel):
     global gTouchDetector
-    global gTouched
-    gTouched = gTouchDetector.touched()
+    touches = gTouchDetector.touched()
     # compare current touches to previous touches to find new touches
-    pinBitVal =1
-    for i in range (0,11):
-        if (touches & pinBitVal) and not (gTouchDetector.prevTouches & pinBitVal):
-            gTouchDetector.touchArray [i] +=1
-            if gTouchDetector.isLogging:
-                gTouchDetector.dataLogger.writeToLogFile(gtouchDetector.tagReader.readTag(), 'touch:' + str (i))
-        pinBitVal *= 2
-    gtouchDetector.prevTouches = touches
-
+    for channel in gTouchDetector.touchChans:
+        chanBits = 2**channel
+        if (touches & chanBits) and not (gTouchDetector.prevTouches & chanBits):
+            if gTouchDetector.callbackMode & TouchDetector.callbackCountMode:
+                gTouchDetector.touchCounts [channel] +=1
+            if gTouchDetector.callbackMode & TouchDetector.callbackTimeMode:
+                gTouchDetector.touchTimes.get(channel).append (time())
+            if gTouchDetector.callbackMode & TouchDetector.callbackCustomMode:
+                gTouchDetector.customCallback (channel)
+    gTouchDetector.prevTouches = touches
 
 class TouchDetector (MPR121):
+    """
+    TouchDetector inherits from Adafruit's MPR121 capacitive touch sensor code 
+    """
+    callbackOff = 0
+    callbackSetTouch =1
+    callbackCountMode = 2
+    callbackTimeMode =4
+    callbackCustomMode = 8
+    
     def __init__(self, I2Caddr, touchThesh, unTouchThresh):
         super.__init__()
+        self.setup (I2Caddr, touchThesh, unTouchThresh)
+
+    def setup (I2Caddr, touchThresh, unTouchThresh):
         self.begin(address =I2Caddr)
-        self.set_thresholds (touchThesh, unTouchThresh)
+        self.set_thresholds (touchThresh, unTouchThresh)
          # state of touches from one invocation to next, used in callback to separate touches from untouches
         self.prevTouches = self.touched()
+        # an array of ints to count touches for each channel.
+        self.touchCounts = array ('i', [0]*12)
+        # a tuple of channel numbers to monitor
+        self.touchChans = ()
+        # a dictionary of lists to capture times of each lick on each channel
+        self.touchTimes = {}
+        # callback mode, for counting touches or capturing touch times
+        self.callbackMode = TouchDetector.callbackOff
+        # custom callback function, called from main callback function
+        self.customCallback = None
 
-
-    def installCallback (self, IRQpin, callBackFunc = touchDetectorCallback):
+    def installCallback (self, IRQpin, chanTuple, callbackMode):
         global gLickDetector
         gLickDetector = self
         # set up IRQ interrupt function. GPIO.setmode may already have been called, but call it again anyway
         GPIO.setmode (GPIO.BCM)
         GPIO.setup(IRQpin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        GPIO.add_event_detect (self.pin, GPIO.FALLING)
-        GPIO.add_event_callback (self.pin, callBackFunc) 
-    
+        GPIO.add_event_detect (IRQpin, GPIO.FALLING)
+        GPIO.add_event_callback (IRQpin, touchDetectorCallback)
+        self.touchChans = chanTuple
+        self.touchTimes = {}
+        for chan in self.touchChans:
+            self.touchTimes.update(chan : [])
+        self.callbackMode = callbackMode
+
+    def addCustomCallback (customCallBack)
+        self.customCallback = customCallBack
+        self.callbackMode = self.callbackMode | TouchDetector.callbackCustomMode
+
+    def removeCallback (self, IRQpin):
+        GPIO.remove_event_detect (IRQpin)
+        GPIO.cleanup (IRQpin)
+        self.callbackMode = TouchDetector.callbackOff
+
+    def resetCount (self):
+        """
+        Zeros the array that stores counts for each channel, and makes sure callback is filling the array for requested channels
+        """
+        for i in range (0,12):
+            self.touchCounts [i] = 0
+       self.callbackMode = self.callbackMode | TouchDetector.callbackCountMode
+
+    def getCount (self):
+        """
+        returns a list where each member is the number of licks for that channel in the global array
+        call resetCount, wait a while for some touches, then call getCount
+        """
+        results = []
+        for channel in self.touchChans:
+            results.append (self.touchCounts [channel])
+        return results
+
+    def resetTimes (self):
+        for chan in self.touchChans:
+            self.touchTimes.update(chan : [])
+        self.callbackMode = self.callbackMode | TouchDetector.callbackTimeMode
+
+    def getTimes (self):
+        return self.touchTimes
+
+    def waitForTouch (self, timeOut_secs, setTouchMode, startFromZero=False):
+        """
+        Waits for a touch on any channel. Returns channel that was touched, or 0 if timeout expires with no touch,
+        or -1 if startFromZero was True and the detector was touched for entire time
+         """
+        if setTouchMode:
+            self.callbackMode =TouchDetector.callbackSetTouch
+        endTime = time() + timeOut_secs
+        if self.prevTouches == 0: # no touches now, wait for first touch, or timeout expiry
+            while self.prevTouches ==0 and time() < endTime:
+                sleep (0.05)
+            return self.prevTouches
+        else: #touches already registered
+            if not startFromZero: # we are done already
+                return self.prevTouches
+            else: # we first wait till there are no touches, or time has expired
+                while self.prevTouches > 0 and time() < endTime:
+                    sleep (0.05)
+                if time() > endTime: # touched till timeout expired
+                    return -1
+                else: # now wait for touch or til timeout expires
+                    while self.prevTouches == 0 and time() < endTime:
+                        sleep (0.05)
+                    return self.prevTouches # will be the channel touched, or 0 if no touches till timeout expires
+
+
+
