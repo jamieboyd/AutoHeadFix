@@ -27,17 +27,10 @@ class AHF_LickDetector (AHF_Base, metaclass = ABCMeta):
         pass
     
     @abstractmethod
-    def getLickCount (self):
+    def stopLickCount (self):
         """
         takes a tuple of channels and returns a list where each member is the number of licks for that channel in the global array
         call zeroLickCount, wait a while for some licks, then call getLickCount
-        """
-        pass
-
-    @abstractmethod
-    def stopLickCount (self):
-        """
-        stops callback from filling the array of licks
         """
         pass
 
@@ -49,20 +42,12 @@ class AHF_LickDetector (AHF_Base, metaclass = ABCMeta):
         pass
     
     @abstractmethod
-    def getLickTiming (self):
+    def stopLickTiming (self):
         """
         takes a tuple of channels and returns a list where each member is the number of licks for that channel in the global array
         call zeroLickCount, wait a while for some licks, then call getLickCount
         """
         pass
-
-    @abstractmethod
-    def stopLickTiming (self):
-        """
-        stops callback from filling the array of licks
-        """
-        pass
-
     
     @abstractmethod
     def startLogging (self):
