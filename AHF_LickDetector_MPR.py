@@ -1,10 +1,8 @@
 #! /usr/bin/python
 #-*-coding: utf-8 -*-
 
-from MPR121TouchDetector import TouchDetector
+import TouchDetectorMPR121
 from AHF_LickDetector import AHF_LickDetector
-from time import time
-
 
 class AHF_LickDetector_MPR (AHF_LickDetector):
     """
@@ -15,6 +13,7 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
     defaultTouchThresh = 8 # 8 bit value for what constitutes a touch, recommended by dirkjan
     defaultUntouchThresh = 4 # # 8 bit value for what constitutes an un-touch, recommended by dirkjan
     defaultTouchChannels = (0,1,2,3) # number of channels on the mpr121 is 12, but last channel is sum of all channels
+    
 
     @staticmethod
     def customCallback(touchedChannel):
@@ -25,6 +24,14 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
         newVal = AHF_Task.gTask.Subjects.get(gTask.tag).get('resultsDict').get('LickDetector').get('licks') + 1
         AHF_Task.gTask.Subjects.get(gTask.tag).get('resultsDict').get('LickDetector').update ({'licks' : newVal})
 
+
+    @staticmethod
+    def hardWareTestCallback(touchedChannel):
+        """
+        custom callback used for hardware test - prints touches to the shell
+        """
+        print ('A touch was recorded on channel {:d}'.format(touchedChannel))
+        
 
     @staticmethod
     def about ():
@@ -42,7 +49,7 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
             mprAddress = int (response, 16)
         touchThresh = startDict.get ('touchThresh', AHF_LickDetector_MPR.defaultTouchThresh)
         response = input ('Enter 8-bit (0-255) touch threshold value, curently %d: ' % touchThresh)
-        if response !+ '':
+        if response != '':
             touchthresh = int (response)
         unTouchThresh = startDict.get ('unTouchThresh', AHF_LickDetector_MPR.defaultunTouchThresh)
         response = input ('Enter 8-bit (0-255) un-touch threshold value, curently %d: ' % unTouchThresh)
@@ -68,8 +75,7 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
         self.unTouchThresh = self.settingsDict.get ('unTouchThresh')
         self.touchChans = self.settingsDict.get ('touchChans')
         # initialize capacitive sensor object
-        self.touchDetector = TouchDetector(self.I2Caddress, touchThresh, unTouchThresh)
-        self.touchDetector.installCallback (self.IRQpin, self.touchChans, TouchDetector.callbackSetTouch)
+        self.touchDetector = TouchDetectorMPR121.TouchDetector(self.I2Caddress, touchThresh, unTouchThresh)
         self.touchDetector.addCustomCallback (self.customCallback)
 
     def newResultsDict (self, starterDict = {}):
@@ -77,6 +83,7 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
         Returns a dictionary with fields, initialized to 0,
         """
         return starterDict.update ({'licks' : starterDict.get ('licks', 0)})
+
 
     def clearResultsDict(self, resultsDict):
         """
@@ -94,28 +101,28 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
         """
         return self.touchDetector.touched ()
 
-
     def startLogging (self):
         """
         tells the AHF_LickDetectorCallback to log touches in shell and file (if present)
         """
-
+        self.touchDetector.startCustomCallback()
 
 
     def stopLogging (self):
         """
         tells the AHF_LickDetectorCallback to stop logging touches in shell and file (if present)
+        but the callback is still running
         """
         self.isLogging = False
+        self.touchDetector.stopCustomCallback()
 
 
-    def zeroLickCount (self):
+    def startLickCount (self):
         """
         Zeros the selected list of channels in the global array of licks per channel that the callback function updates.
         Use it to count licks, by zeroing selected channels, then checking the values in the array
         """
-        for chan in range (0, self.numTouchChannels):
-            self.lickArray [chan] = 0
+        self.touchDetector.startCount()
 
 
     def getLickCount (self, chanList):
@@ -123,70 +130,63 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
         takes a list of channels and returns a list where each member is the number of licks for that channel in the global array
         call zeroLickCount, wait a while for some licks, then call getLickCount
         """
-        global gLickArray
-        returnList = []
-        for chan in chanList:
-            returnList.append (self.lickArray[chan])
-        return returnList
+        return self.touchDetector.stopCount()
 
- 
 
     def resetDetector (self):
         """
         Calls MPR121 reset function. Should rarely need to do this? This could be of use in resetting baseline untouched values.
         """
-        self.mpr121._reset ()
+        self.touchDetector._reset ()
 
 
+    def startLickTiming (self):
+        self.touchDetector.startTimeLog ()
+
+
+    def stopLickTiming(self):
+        return self.touchDetector.stopLickTiming ()
 
     def waitForLick (self, timeOut_secs, startFromZero=False):
         """
         Waits for a lick on any channel. Returns channel that was touched, or 0 if timeout expires with no touch,
         or -1 if startFromZero was True and the detector was touched for entire time
          """
-        endTime = time() + timeOut_secs
-        if self.prevTouches == 0: # no touches now, wait for first touch, or timeout expiry
-            while self.prevTouches ==0 and time() < endTime:
-                sleep (0.05)
-            return self.prevTouches
-        else: #touches already registered
-            if not startFromZero: # we are done already
-                return self.prevTouches
-            else: # we first wait till there are no touches, or time has expired
-                while self.prevTouches > 0 and time() < endTime:
-                    sleep (0.05)
-                if time() > endTime: # touched till timeout expired
-                    return -1
-                else: # now wait for touch or til timeout expires
-                    while self.prevTouches == 0 and time() < endTime:
-                        sleep (0.05)
-                    return self.prevTouches # will be the channel touched, or 0 if no touches till timeout expires
+        return self.touchDetector.waitForTouch()
 
-    
  
     def hardwareTest (self):
         from math import log
         """
         tests the lick detector, designed to be called by the hardware tester,can modify IRQ pin in hardware settings
-        If asked to change IRQ pin, also resets the detector
         """
-        self.startLogging ()
+        wasLogging = self.touchDetector.callbackMode & TouchDetectorMPR121.TouchDetector.callbackCountMode
+        if wasLogging :
+            self.stopLogging ()
+        #self.touchDetector.addCustomCallback (hardWareTestCallback)
+        #self.startLickCount()
+        #self.startLickTiming()
         lickError = 0
-        self.zeroLickCount()
+        self.getTouches()
         print ('\nTo pass the test, start with lick spout untouched and touch spout within 10 seconds....')
         lick = self.waitForLick (10, True)
         if lick >= 1:
-            print ('Touch registerd on channel %d' % int (log (lick, 2))) # will round to highest number channel reporting touched
+            print ('PASS:Touch registerd on channel %d' % int (log (lick, 2))) # will round to highest number channel reporting touched
         else:
             if lick == -1:
-                rStr= 'Touches were registered the whole 10 seconds: '
+                rStr= 'FAIL: Touch was registered the whole 10 seconds: '
             else:
-                rStr= 'No Touches were detected in 10 seconds: '
+                rStr= 'FAIL:No Touches were detected in 10 seconds: '
             inputStr=input (rStr + '\nDo you want to change the lick detetctor settings? :') 
             if inputStr[0] == 'y' or inputStr[0] == "Y":
                 self.setdown()
                 self.settingsDict = self.config_user_get (self.settingsDict)
                 self.setup() 
             else:
+                inputStr=input (rStr + '\nDo you want to re-calculate base-line values wit a re-set? :')
+                if inputStr[0] == 'y' or inputStr[0] == "Y":
                 self.resetDetector()
+                self.touchDetector.set_thresholds (self.touchThresh, self.unTouchThresh)
+        if wasLogging :
+            self.startLogging ()
        

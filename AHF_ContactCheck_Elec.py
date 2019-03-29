@@ -58,10 +58,17 @@ class AHF_ContactCheck_Elec (AHF_ContactCheck):
             self.contactState = GPIO.LOW
             self.unContactPolarity = GPIO.RISING
         self.contactPUD = getattr (GPIO, self.settingsDict.get ('contactPUD'))
-        GPIO.setmode (GPIO.BCM)
-        GPIO.setwarnings(False)
-        GPIO.setup (self.contactPin, GPIO.IN, pull_up_down =self.contactPUD)
+        hasContact = True
+        try:
+            GPIO.setmode (GPIO.BCM)
+            GPIO.setwarnings(False)
+            GPIO.setup (self.contactPin, GPIO.IN, pull_up_down =self.contactPUD)
+        except Exception as e:
+            print (str(e))
+            hasContact = False
+        return hasContact
 
+    
     def setdown (self):
         GPIO.cleanup(self.contactPin)
 

@@ -27,7 +27,6 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
     
     @abstractmethod
     def setup (self):
-        super().setup()
         self.propHeadFix = self.settingsDict.get ('propHeadFix')
         self.skeddadleTime = self.settingsDict.get ('skeddadleTime')
 
@@ -35,12 +34,12 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
         """
         Returns a dictionary counting number of head fixes, subclasses could track more levels of head fixing, e.g.
         """
-        starterDict.update({'headFixes' : 0, 'Un-headFixes' : 0})
+        starterDict.update({'headFixes' : 0})
         return starterDict
 
 
     def clearResultsDict(self, resultsDict):
-        resultsDict.update ({'headFixes' : 0, 'Un-headFixes' : 0})
+        resultsDict.update ({'headFixes' : 0)
         
 
     def newSettingsDict (self,starterDict = {}):

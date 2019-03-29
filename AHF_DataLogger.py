@@ -15,7 +15,9 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
     Similarly, other binary data (lever positons, anyone?) can be saved separately,
     by the Stimulator class, but binary file/posiiton can be saved as an event.
     """
-
+    TO_SHELL =1
+    TO_FILE = 2
+    
     @abstractmethod
     def makeLogFile (self):
         """
@@ -25,7 +27,7 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
         pass
 
     @abstractmethod
-    def writeToLogFile(self, tag, eventKind, eventDict, timeStamp):
+    def writeToLogFile(self, tag, eventKind, eventDict, timeStamp, toShellOrFile):
         """
         The original standard text file method was 4 tab-separated columns, mouse tag, or 0
         if no single tag was applicaple, unix time stamp, ISO formatted time, and event. Event

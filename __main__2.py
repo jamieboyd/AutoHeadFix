@@ -71,9 +71,6 @@ def main():
                 resultsDict = {}
                 settingsDict = {}
                 task.logToFile = False  # logging not done for non-existent subjects
-            # log entrance
-            task.DataLogger.writeToLogFile(tag, 'Entry', None, task.entryTime)
-            resultsDict.update ('entries', resultsDict.get ('entries', 0) + 1)
             # queue up an entrance reward
             task.Rewarder.giveRewardCM('entry', resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
 

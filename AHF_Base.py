@@ -72,8 +72,9 @@ class AHF_Base (metaclass = ABCMeta):
         """
         does hardware initialization with (possibly updated) info in self.settingsDict
         Run by __init__, or can be run  separately after editing the settingsDict
+        returns the truth that setup completed without errors
         """
-        pass
+        return True
 
     @abstractmethod
     def setdown (self):

@@ -28,9 +28,15 @@ class AHF_HeadFixer_Pistons(AHF_HeadFixer):
         return starterDict
 
     def setup (self):
+        hasFixer = True
         super().setup ()
-        self.pistonsPin = self.settingsDict.get('pistonsPin')
-        GPIO.setup (self.pistonsPin, GPIO.OUT, initial = GPIO.LOW)
+            self.pistonsPin = self.settingsDict.get('pistonsPin')
+        try:
+            GPIO.setup (self.pistonsPin, GPIO.OUT, initial = GPIO.LOW)
+        except Exception as e:
+            print (str(e))
+            hasFixer = False
+        return hasFixer
 
 
     def setdown (self):
