@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 #-*-coding: utf-8 -*-
-from time import sleep
+from time import time, sleep
 from abc import ABCMeta, abstractmethod
 from AHF_Base import AHF_Base
 
@@ -10,36 +10,39 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
     boolean for settability of headFixing levels, default is False. Can be used for incremental learning
     """
     hasLevels = False
-
+    defaultPropHeadFix = 0.75
+    defaultSkeddadleTime = 0.5
 
     @abstractmethod
     @staticmethod
     def config_user_get (starterDict = {}):
-        propHeadFix = starterDict.get ('propHeadFix', AHF_Subjects_mice.propHeadFixDefault)
+        propHeadFix = starterDict.get ('propHeadFix', AHF_HeadFixer.defaultPropHeadFix)
         response = input('Enter proportion (0 to 1) of trials that are head-fixed, currently {:.2f}: '.format(propHeadFix))
         if response != '':
             propHeadFix = float (response)
-        skeddadleTime = starterDict.get ('skeddadleTime', AHF_Subjects_mice.skeddadleTimeDefault)
+        skeddadleTime = starterDict.get ('skeddadleTime', AHF_HeadFixer.defaultSkeddadleTime)
         response = input ('Enter time, in seconds, for mouse to get head off the contacts when session ends, currently {:.2f}: '.format(skeddadleTime))
         if response != '':
             skeddadleTime = float (skeddadleTime)
         starterDict.update ({'propHeadFix' : propHeadFix, 'skeddadleTime' : skeddadleTime})
+        return starterDict
     
     @abstractmethod
     def setup (self):
         self.propHeadFix = self.settingsDict.get ('propHeadFix')
         self.skeddadleTime = self.settingsDict.get ('skeddadleTime')
+        self.fixAgainTime = 0.0
 
     def newResultsDict (self, starterDict = {}):
         """
         Returns a dictionary counting number of head fixes, subclasses could track more levels of head fixing, e.g.
         """
-        starterDict.update({'headFixes' : 0})
+        starterDict.update({'headFixes' : 0, 'unFixes' : 0})
         return starterDict
 
 
     def clearResultsDict(self, resultsDict):
-        resultsDict.update ({'headFixes' : 0)
+        resultsDict.update ({'headFixes' : 0, 'unFixes' : 0)
         
 
     def newSettingsDict (self,starterDict = {}):
@@ -50,14 +53,23 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
     def fixMouse(self, resultsDict = {}, settingsDict = {}):
         """
         performs head fixation by energizing a piston, moving a servomotor, etc
+        returns truth that mouse has been fixed, as opposed to not fixed
         """
-        pass
+        if time() < self.fixAgainTime:
+            tag = self.task.tag
+            while self.task.tag == tag and time() < self.fixAgainTime:
+                sleep (0.05)
+            if self.task.ContactChecker.checkContact() == False or tag != self.task.tag:
+                return False
+        
+        return False
     
     @abstractmethod
-    def releaseMouse(self, resultsDict = {},settingsDict = {}):
+    def releaseMouse(self, resultsDict = {}, settingsDict = {}):
         """
         releases mouse from head fixation by relaxing a piston, moving a servomotor, etc
         """
+        self.fixAgainTime = time() + self.skeddadleTime
         pass
 
 
