@@ -151,7 +151,8 @@ class Task(object):
             fileErr = True
         ###################### things we track in the main program #################################
         self.tag = 0
-        self.entryTime = 0
+        self.entryTime = 0.0
+        self.inChamberLimitExceeded = False
         self.logToFile = True # a flag for writing to the shell only, or to the shall and the log
         ################ if some of the paramaters were set by user, give option to save ###############
         if fileErr: 

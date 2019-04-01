@@ -1,6 +1,7 @@
 #! /usr/bin/python
 #-*-coding: utf-8 -*-
 from time import time, sleep
+from _thread import start_new_thread, interrupt_main
 
 import RFIDTagReader
 import AHF_Task
@@ -13,6 +14,10 @@ class AHF_TagReader_ID (AHF_TagReader):
 
     defaultPort = '/dev/serial0'
     defaultPin = 21
+    defaultChamberTimeLimit = 600
+
+    gStillThere = False
+    gInChamberTimeLimit = 0.0
 
     @staticmethod
     def customCallback(channel):
@@ -24,15 +29,40 @@ class AHF_TagReader_ID (AHF_TagReader):
         if GPIO.input (channel) == GPIO.HIGH: # tag just entered
             try:
                 AHF_Task.gTask.tag = RFIDTagReader.globalReader.readTag ()
-                AHF_Task.gTask.DataLogger.writeToLogFile(gTask.tag, 'entry', None, time())
-                newVal = AHF_Task.gTask.Subjects.get(gTask.tag).get('resultsDict').get('TagReader').get('entries') + 1
-                AHF_Task.gTask.Subjects.get(gTask.tag).get('resultsDict').get('TagReader').update ({'entries' : newVal})
+                AHF_Task.gTask.DataLogger.writeToLogFile(AHF_Task.gTask.tag, 'entry', None, time())
+                newVal = AHF_Task.gTask.Subjects.get(AHF_Task.gTask.tag).get('resultsDict').get('TagReader').get('entries') + 1
+                AHF_Task.gTask.Subjects.get(AHF_Task.gTask.tag).get('resultsDict').get('TagReader').update ({'entries' : newVal})
+                AHF_Task.gtask.entryTime = time()
+                AHF_TagReader_ID.stillThere = True
+                start_new_thread (AHF_TagReader_ID.timeInChamberThread,(time () + AHF_TagReader_ID.gInChamberTimeLimit))
             except Exception as e:
                 AHF_Task.gTask.tag =0
         else: # tag just left
-            AHF_Task.gTask.DataLogger.writeToLogFile(gTask.tag, 'exit', None, time())
+            AHF_Task.gTask.DataLogger.writeToLogFile(AHF_Task.gTask.tag, 'exit', None, time())
             AHF_Task.gTask.tag = 0
             RFIDTagReader.globalReader.clearBuffer()
+            AHF_TagReader_ID.stillThere = False
+
+
+    @staticmethod
+    def timeInChamberThread (sleepEndTime):
+        while AHF_TagReader_ID.stillThere & time () < sleepEndTime:
+            sleep (0.1)
+        if AHF_TagReader_ID.stillThere:
+            stuckMouse = AHF_Task.gTask.tag
+            AHF_Task.gTask.inChamberLimitExceeded = True
+            AHF_Task.gTask.headFixer.releaseMouse ()
+            AHF_Task.gTask.AHF_BrainLight.offForStim ()
+            if hasattr (AHF_Task.gTask, 'Notifer'):
+                Notifier = AHF_Task.gTask.Notifier
+                Notifier.notifyStuck (stuckMouse, cageID, (time() - AHF_Task.gTask.entryTime), True)
+                # wait for mouse to leave chamber
+                while AHF_Task.gTask.tag == stuckMouse:
+                    sleep (0.1)
+                if hasattr (AHF_Task.gTask, 'Notifer'):
+                    Notifier.notifyStuck (stuckMouse, cageID, (time() - AHF_Task.gTask.entryTime), False)
+                 AHF_Task.gTask.inChamberLimitExceeded = False
+            
  
     @staticmethod
     def about ():
@@ -48,7 +78,11 @@ class AHF_TagReader_ID (AHF_TagReader):
         response = input ('Enter the GPIO pin connected to the Tag-In-Range pin of the Tag Reader, currently %s :' % TIRpin)
         if response != '':
             TIRpin = int (response)
-        starterDict.update({'serialPort' : serialPort, 'TIRpin' : TIRpin})
+        inChamberTimeLimit = starterDict.get ('inChamberTimeLimit', AHF_TagReader_ID.defaultChamberTimeLimit)
+        response = input('Enter in-Chamber duration limit, in minutes, before stopping head-fix trials, currently {:.2f}: '.format(inChamberTimeLimit/60))
+        if response != '':
+            inChamberTimeLimit = int(inChamberTimeLimit * 60)
+        starterDict.update({'serialPort' : serialPort, 'TIRpin' : TIRpin, 'inChamberTimeLimit' : inChamberTimeLimit})
         return starterDict
 
     def newResultsDict (self, starterDict = {}):
@@ -62,7 +96,9 @@ class AHF_TagReader_ID (AHF_TagReader):
         self.TIRpin = self.settingsDict.get('TIRpin')
         self.tagReader =RFIDTagReader.TagReader (self.serialPort, doChecksum = AHF_TagReader_ID.DO_CHECK_SUM, timeOutSecs = AHF_TagReader_ID.TIME_OUT_SECS, kind='ID')
         self.isLogging = False
-
+        AHF_TagReader_ID.gStillThere = False
+        AHF_TagReader_ID.gInChamberTimeLimit = self.settingsDict.get ('inChamberTimeLimit')
+        
     def setdown (self):
         if self.isLogging:
             self.stopLogging()

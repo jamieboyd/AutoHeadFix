@@ -62,18 +62,17 @@ def main():
                     else:
                         sleep (kTIMEOUTSECS)
             # a Tag has been read, get a reference to the dictionaries for this subject
+            thisTag = task.tag
             subjectDict = task.Subjects.get (tag)
-            if subjectDict is not None:
-                resultsDict = subjectDict.get ('results')
-                settingsDict = subjectDict.get ('settings')
-                task.logToFile =True
-            else: # set dicts to empty throw-away dictionaries
-                resultsDict = {}
-                settingsDict = {}
-                task.logToFile = False  # logging not done for non-existent subjects
+            resultsDict = subjectDict.get ('results')
+            settingsDict = subjectDict.get ('settings')
             # queue up an entrance reward
             task.Rewarder.giveRewardCM('entry', resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
-
+            # loop through as many trials as this mouse wants to do before leaving chamber
+            while task.tag == thisTag:
+                # Fixmouse, or do unfixed trial
+                
+            
             # set head fixing probability
             task.doHeadFix = expSettings.propHeadFix > random()
             while GPIO.input (task.tirPin)== GPIO.HIGH and time () < entryTime + task.inChamberTimeLimit:
@@ -84,6 +83,10 @@ def main():
                     expSettings.doHeadFix = expSettings.propHeadFix > random() # set doHeadFix for next contact
 
             except KeyboardInterrupt:
+                
+        
+        
+                    
                 if hasattr (task, 'LickDetector'):
                     task.lickDetector.stop_logging ()
                 inputStr = '\n************** Auto Head Fix Manager ********************\nEnter:\n'

@@ -19,7 +19,7 @@ class AHF_Subjects_mice (AHF_Subjects):
     loadConfigsDefault = True
     propHeadFixDefault = 1
     skeddadleTimeDefault =2
-    inChamberTimeLimitDefault = 600
+    
 
     
     @staticmethod

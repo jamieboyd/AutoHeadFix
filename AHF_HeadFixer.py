@@ -13,6 +13,9 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
     defaultPropHeadFix = 0.75
     defaultSkeddadleTime = 0.5
 
+    HAS_CONTACT = 1
+    IS_FIX_TRIAL = 2
+
     @abstractmethod
     @staticmethod
     def config_user_get (starterDict = {}):
@@ -24,7 +27,7 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
         response = input ('Enter time, in seconds, for mouse to get head off the contacts when session ends, currently {:.2f}: '.format(skeddadleTime))
         if response != '':
             skeddadleTime = float (skeddadleTime)
-        starterDict.update ({'propHeadFix' : propHeadFix, 'skeddadleTime' : skeddadleTime})
+        starterDict.update ({'propHeadFix  -' : propHeadFix, 'skeddadleTime' : skeddadleTime})
         return starterDict
     
     @abstractmethod
@@ -32,6 +35,7 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
         self.propHeadFix = self.settingsDict.get ('propHeadFix')
         self.skeddadleTime = self.settingsDict.get ('skeddadleTime')
         self.fixAgainTime = 0.0
+        self.lastFixedTag = 0
 
     def newResultsDict (self, starterDict = {}):
         """
@@ -53,8 +57,9 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
     def fixMouse(self, resultsDict = {}, settingsDict = {}):
         """
         performs head fixation by energizing a piston, moving a servomotor, etc
-        returns truth that mouse has been fixed, as opposed to not fixed
+        returns bitwise combination of HAS_CONTACT and IS_FIX_TRIAL
         """
+        is             
         if time() < self.fixAgainTime:
             tag = self.task.tag
             while self.task.tag == tag and time() < self.fixAgainTime:

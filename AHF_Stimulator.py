@@ -15,7 +15,7 @@ class AHF_Stimulator (AHF_Base, metaclass = ABCMeta):
 
     resultsDict 
     """
-
+ 
 
     def config_user_addDictToMouse (self, mouse):
         if hasattr (mouse, 'StimParamDict'):
