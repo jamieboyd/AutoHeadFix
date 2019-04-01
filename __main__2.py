@@ -71,8 +71,8 @@ def main():
             # loop through as many trials as this mouse wants to do before leaving chamber
             while task.tag == thisTag:
                 # Fixmouse, or do unfixed trial
+                task.fixed = HeadFixer.fixMouse (resultsDict.get('HeadFixer'), settingsDict.get('HeadFixer'))
                 
-            
             # set head fixing probability
             task.doHeadFix = expSettings.propHeadFix > random()
             while GPIO.input (task.tirPin)== GPIO.HIGH and time () < entryTime + task.inChamberTimeLimit:

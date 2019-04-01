@@ -3,7 +3,7 @@
 from time import time, sleep
 from abc import ABCMeta, abstractmethod
 from AHF_Base import AHF_Base
-
+from random import random
 class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
     """
     Base class for all head fix classs. Other head fixers subclass from this, or from one of its subclasses
@@ -13,8 +13,8 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
     defaultPropHeadFix = 0.75
     defaultSkeddadleTime = 0.5
 
-    HAS_CONTACT = 1
-    IS_FIX_TRIAL = 2
+    IS_FIX_TRIAL = 1
+    HAS_CONTACT = 2
 
     @abstractmethod
     @staticmethod
@@ -27,7 +27,7 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
         response = input ('Enter time, in seconds, for mouse to get head off the contacts when session ends, currently {:.2f}: '.format(skeddadleTime))
         if response != '':
             skeddadleTime = float (skeddadleTime)
-        starterDict.update ({'propHeadFix  -' : propHeadFix, 'skeddadleTime' : skeddadleTime})
+        starterDict.update ({'propHeadFix' : propHeadFix, 'skeddadleTime' : skeddadleTime})
         return starterDict
     
     @abstractmethod
@@ -59,13 +59,18 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
         performs head fixation by energizing a piston, moving a servomotor, etc
         returns bitwise combination of HAS_CONTACT and IS_FIX_TRIAL
         """
-        is             
+        tag = self.task.tag
+        isFixed = settingsDict.get ('propHeadFix', self.propHeadFix) > random()
         if time() < self.fixAgainTime:
-            tag = self.task.tag
             while self.task.tag == tag and time() < self.fixAgainTime:
                 sleep (0.05)
-            if self.task.ContactChecker.checkContact() == False or tag != self.task.tag:
-                return False
+            if tag != self.task.tag:
+                return 0
+        while self.task.tag == tag:
+            if self.task.ContactChecker.waitForContact (0.1)
+                break
+        
+        
         
         return False
     

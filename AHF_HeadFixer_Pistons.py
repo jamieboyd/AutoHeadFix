@@ -42,14 +42,16 @@ class AHF_HeadFixer_Pistons(AHF_HeadFixer):
     def setdown (self):
         GPIO.cleanup (self.pistonsPin)
 
-    def fixMouse(self, resultsDict = {}, individualDict= {}):
+    def fixMouse(self, resultsDict = {}, settingsDict= {}):
         """
         sets GPIO pin high to trigger pistons
         adds one to headfix results dictionary
         """
-        fixed = super().fixMouse (resultsDict,individualDict)
-        if fixed:
+        fixed = super().fixMouse (resultsDict,settingsDict)
+        if fixed == AHF_HeadFixer.HAS_CONTACT and AHF_HeadFixer.IS_FIX_TRIAL:
             GPIO.output(self.pistonsPin, GPIO.HIGH)
+            sleep (0.5)
+            self.task.
         return fixed
             
     def releaseMouse(self, resultsDict = {},individualDict= {}):
