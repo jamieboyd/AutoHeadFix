@@ -90,15 +90,18 @@ class AHF_Stimulator_LaserStimulation_LW (AHF_Stimulator_LaserStimulation):
 
 
     def logfile (self):
-        if self.textfp != None:
-            xPos = self.mouse.targets [0]
-            yPos = self.mouse.targets [1]
-            for i in range (0, len (self.rewardTimes)):
-                if len (self.laserTimes) ==len (self.rewardTimes):
-                    self.textfp.write('{:013}\t{:.2f}\tlickWitholdTime={:.2f},laser_pulse=1,x={:d},y={:d},GO=0\t{:s}\n'.format(self.mouse.tag, self.laserTimes [i] , self.lickWitholdTimes [i], xPos, yPos, datetime.fromtimestamp (int (self.laserTimes [i])).isoformat (' ')))
-                    #self.textfp.write('{:013}\t{:.2f}\tlaser_pulse:lickwithold={:.2f}\t{:s}\n'.format(self.mouse.tag, self.laserTimes [i] ,self.lickWitholdTimes [i], datetime.fromtimestamp (int (self.laserTimes [i])).isoformat (' ')))
-                self.textfp.write('{:013}\t{:.2f}\treward\t{:s}\n'.format(self.mouse.tag, self.rewardTimes [i], datetime.fromtimestamp (int (self.rewardTimes [i])).isoformat (' ')))
-            self.textfp.flush()
+        try:
+            if self.textfp != None:
+                xPos = self.mouse.targets [0]
+                yPos = self.mouse.targets [1]
+                for i in range (0, len (self.rewardTimes)):
+                    if len (self.laserTimes) ==len (self.rewardTimes):
+                        self.textfp.write('{:013}\t{:.2f}\tlickWitholdTime={:.2f},laser_pulse=1,x={:d},y={:d},GO=0\t{:s}\n'.format(self.mouse.tag, self.laserTimes [i] , self.lickWitholdTimes [i], xPos, yPos, datetime.fromtimestamp (int (self.laserTimes [i])).isoformat (' ')))
+                        #self.textfp.write('{:013}\t{:.2f}\tlaser_pulse:lickwithold={:.2f}\t{:s}\n'.format(self.mouse.tag, self.laserTimes [i] ,self.lickWitholdTimes [i], datetime.fromtimestamp (int (self.laserTimes [i])).isoformat (' ')))
+                    self.textfp.write('{:013}\t{:.2f}\treward\t{:s}\n'.format(self.mouse.tag, self.rewardTimes [i], datetime.fromtimestamp (int (self.rewardTimes [i])).isoformat (' ')))
+                self.textfp.flush()
+        except Exception as e:
+            pass
         
 #=================Main functions called from outside===========================
     def run(self):
