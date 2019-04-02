@@ -66,13 +66,14 @@ def main():
             subjectDict = task.Subjects.get (tag)
             resultsDict = subjectDict.get ('results')
             settingsDict = subjectDict.get ('settings')
-            # queue up an entrance reward
+            # queue up an entrance reward, that can be countermanded
             task.Rewarder.giveRewardCM('entry', resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
             # loop through as many trials as this mouse wants to do before leaving chamber
             while task.tag == thisTag:
-                # Fixmouse, or do unfixed trial
-                task.fixed = HeadFixer.fixMouse (resultsDict.get('HeadFixer'), settingsDict.get('HeadFixer'))
-                
+                # Fix mouse
+                fixed = HeadFixer.fixMouse (resultsDict.get('HeadFixer'), settingsDict.get('HeadFixer'))
+                if fixed & 
+                    
             # set head fixing probability
             task.doHeadFix = expSettings.propHeadFix > random()
             while GPIO.input (task.tirPin)== GPIO.HIGH and time () < entryTime + task.inChamberTimeLimit:

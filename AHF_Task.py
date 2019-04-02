@@ -63,15 +63,10 @@ class Task(object):
                 fileErr = True
         # check for any missing settings, all settings will be missing if making a new config, and call setting functions for
         # things like head fixer that are subclassable need some extra work , when either loaded from file or user queried
-        ########## Head Fixer (optional) makes its own dictionary #################################
+        ########## Head Fixer (obligatory) makes its own dictionary #################################
         if not hasattr (self, 'HeadFixerClass') or not hasattr (self, 'HeadFixerDict'):
-            tempInput = input ('Does this setup have a head fixing mechanism installed? (Y or N):')
-            if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.HeadFixerClass =  CAD.Class_from_file('HeadFixer', CAD.File_from_user ('HeadFixer', 'Head Fixer Class', '.py'))
-                self.HeadFixerDict = self.HeadFixerClass.config_user_get ()
-            else:
-                self.HeadFixerClass = None
-                self.HeadFixerDict = None
+            self.HeadFixerClass =  CAD.Class_from_file('HeadFixer', CAD.File_from_user ('HeadFixer', 'Head Fixer Class', '.py'))
+            self.HeadFixerDict = self.HeadFixerClass.config_user_get ()
             fileErr = True
         ################################ Stimulator (Obligatory) makes its own dictionary #######################
         if not hasattr (self, 'StimulatorClass') or not hasattr (self, 'StimulatorDict'):
@@ -151,7 +146,9 @@ class Task(object):
             fileErr = True
         ###################### things we track in the main program #################################
         self.tag = 0
+        self.lastFixedTag = 0
         self.entryTime = 0.0
+        self.fixAgainTime = float ('inf')
         self.inChamberLimitExceeded = False
         self.logToFile = True # a flag for writing to the shell only, or to the shall and the log
         ################ if some of the paramaters were set by user, give option to save ###############

@@ -47,16 +47,31 @@ class AHF_HeadFixer_Pistons(AHF_HeadFixer):
         sets GPIO pin high to trigger pistons
         adds one to headfix results dictionary
         """
-        fixed = super().fixMouse (resultsDict,settingsDict)
-        if fixed == AHF_HeadFixer.HAS_CONTACT and AHF_HeadFixer.IS_FIX_TRIAL:
+        fixed = super().waitForMouse (resultsDict,settingsDict)
+        if fixed == self.HAS_CONTACT + self.IS_FIX_TRIAL : # is fixed trial and contact was made
             GPIO.output(self.pistonsPin, GPIO.HIGH)
             sleep (0.5)
-            self.task.
+            
+            if self.task.ContactChecker.checkContact ():
+                self.task.DataLogger.writeToLogFile (self.task.tag, 'Fix', {'kind' : 'fixed', 'result' : 'check+'}, time(), 3)
+                newFixes = resultsDict.get ('headFixes', 0) + 1
+                resultsDict.update ('headFixes' : newFixes)
+            else:
+                fixed &= ~self.HAS_CONTACT
+                GPIO.output(self.pistonsPin, GPIO.LOW)
+                self.task.DataLogger.writeToLogFile (self.task.tag, 'Fix', {'kind' : 'fixed', 'result' : 'check-'}, time(), 3)
+        elif fixed & self.HAS_CONTACT: #a no-fix trial with contact
+            self.task.DataLogger.writeToLogFile (self.task.tag, 'Fix', {'kind' : 'unfixed', 'result' : 'check+'}, time(), 3)
+            newUnFixes = resultsDict.get ('unFixes', 0) + 1
+            resultsDict.update ('unFixes' : newUnFixes)
         return fixed
+            
+
             
     def releaseMouse(self, resultsDict = {},individualDict= {}):
         """
         sets GPIO pin low to retract pistons
         """
         GPIO.output(self.pistonsPin, GPIO.LOW)
+        self.task.lastFixedTag = self.task.tag
         super().releaseMouse (resultsDict, individualDict)

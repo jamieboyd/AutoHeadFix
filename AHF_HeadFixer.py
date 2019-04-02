@@ -15,6 +15,7 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
 
     IS_FIX_TRIAL = 1
     HAS_CONTACT = 2
+    LEFT_CHAMBER = 4
 
     @abstractmethod
     @staticmethod
@@ -29,13 +30,14 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
             skeddadleTime = float (skeddadleTime)
         starterDict.update ({'propHeadFix' : propHeadFix, 'skeddadleTime' : skeddadleTime})
         return starterDict
+
     
-    @abstractmethod
     def setup (self):
+        """
+        gets settings from dict, not @abstract because this may be all you nees, as for HeadFixer_NoFix
+        """
         self.propHeadFix = self.settingsDict.get ('propHeadFix')
         self.skeddadleTime = self.settingsDict.get ('skeddadleTime')
-        self.fixAgainTime = 0.0
-        self.lastFixedTag = 0
 
     def newResultsDict (self, starterDict = {}):
         """
@@ -46,41 +48,74 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
 
 
     def clearResultsDict(self, resultsDict):
-        resultsDict.update ({'headFixes' : 0, 'unFixes' : 0)
+        resultsDict.update ({'headFixes' : 0, 'unFixes' : 0})
         
 
     def newSettingsDict (self,starterDict = {}):
         starterDict.update ({'propHeadFix' : self.propHeadFix})
         return starterDict
+                            
 
+    def waitForMouse (self, resultsDict = {}, settingsDict = {}):
+        # calculate if this is a headfixed trial
+        isFixTrial = settingsDict.get ('propHeadFix', self.propHeadFix) > random()
+        thisTag = self.task.tag
+        if self.task.lastFixedTag == thisTag:
+            # wait on contact checking if skeddadle time is in effect
+            while self.task.tag == thisTag and time() < self.task.fixAgainTime:
+                sleep (0.05)
+        # wait for contact check or mouse leaving chamber
+        while self.task.tag == thisTag:
+            if self.task.ContactChecker.waitForContact (0.1):
+                return isFixTrial | AHF_HeadFixer.HAS_CONTACT
+        return AHF_HeadFixer.LEFT_CHAMBER # left chamber,not relevant if trial was to be fixed or unfixed
+  
+
+
+    def hasMouse (resultsDict = {}, settingsDict = {}):
+
+        if self.task.ContactChecker.checkContact ():
+            self.task.DataLogger.writeToLogFile (self.task.tag, 'Fix', {'kind' : 'fixed', 'result' : 'check+'}, time(), 3)
+            newFixes = resultsDict.get ('headFixes', 0) + 1
+            resultsDict.update ('headFixes' : newFixes)
+        else:
+            fixed &= ~self.HAS_CONTACT
+            self.releaseMouse (resultsDict, settingsDict)
+            self.task.DataLogger.writeToLogFile (self.task.tag, 'Fix', {'kind' : 'fixed', 'result' : 'check-'}, time(), 3)
+    elif fixed & self.HAS_CONTACT: #a no-fix trial with contact
+        self.task.DataLogger.writeToLogFile (self.task.tag, 'Fix', {'kind' : 'unfixed', 'result' : 'check+'}, time(), 3)
+        newUnFixes = resultsDict.get ('unFixes', 0) + 1
+        resultsDict.update ('unFixes' : newUnFixes)
+    return fixed
+
+             
     @abstractmethod
     def fixMouse(self, resultsDict = {}, settingsDict = {}):
         """
         performs head fixation by energizing a piston, moving a servomotor, etc
         returns bitwise combination of HAS_CONTACT and IS_FIX_TRIAL
         """
-        tag = self.task.tag
-        isFixed = settingsDict.get ('propHeadFix', self.propHeadFix) > random()
-        if time() < self.fixAgainTime:
-            while self.task.tag == tag and time() < self.fixAgainTime:
+         # calculate if this is a headfixed trial
+        isFixTrial = settingsDict.get ('propHeadFix', self.propHeadFix) > random()
+        thisTag = self.task.tag
+        if self.task.lastFixedTag == thisTag:
+            # wait on contact checking if skeddadle time is in effect
+            while self.task.tag == thisTag and time() < self.task.fixAgainTime:
                 sleep (0.05)
-            if tag != self.task.tag:
-                return 0
-        while self.task.tag == tag:
-            if self.task.ContactChecker.waitForContact (0.1)
-                break
+        # wait for contact check or mouse leaving chamber
+        while self.task.tag == thisTag:
+            if self.task.ContactChecker.waitForContact (0.1):
+                return isFixTrial | AHF_HeadFixer.HAS_CONTACT
+        return AHF_HeadFixer.LEFT_CHAMBER # left chamber,not relevant if trial was to be fixed or unfixed
+    
         
-        
-        
-        return False
     
     @abstractmethod
     def releaseMouse(self, resultsDict = {}, settingsDict = {}):
         """
         releases mouse from head fixation by relaxing a piston, moving a servomotor, etc
         """
-        self.fixAgainTime = time() + self.skeddadleTime
-        pass
+        self.task.fixAgainTime = time() + self.skeddadleTime
 
 
     def hardwareTest (self):
