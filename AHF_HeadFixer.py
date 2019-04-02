@@ -13,10 +13,6 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
     defaultPropHeadFix = 0.75
     defaultSkeddadleTime = 0.5
 
-    IS_FIX_TRIAL = 1
-    HAS_CONTACT = 2
-    LEFT_CHAMBER = 4
-
     @abstractmethod
     @staticmethod
     def config_user_get (starterDict = {}):
@@ -56,9 +52,10 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
         return starterDict
                             
 
-    def waitForMouse (self, resultsDict = {}, settingsDict = {}):
-        # calculate if this is a headfixed trial
-        isFixTrial = settingsDict.get ('propHeadFix', self.propHeadFix) > random()
+    def waitForMouse (self):
+        """
+        Waits for a mouse to either make contact or leave the chamber
+        """
         thisTag = self.task.tag
         if self.task.lastFixedTag == thisTag:
             # wait on contact checking if skeddadle time is in effect
@@ -67,26 +64,33 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
         # wait for contact check or mouse leaving chamber
         while self.task.tag == thisTag:
             if self.task.ContactChecker.waitForContact (0.1):
-                return isFixTrial | AHF_HeadFixer.HAS_CONTACT
-        return AHF_HeadFixer.LEFT_CHAMBER # left chamber,not relevant if trial was to be fixed or unfixed
+                return True # made contact
+        return False # left chamber
   
 
-
-    def hasMouse (resultsDict = {}, settingsDict = {}):
-
+    def hasMouse (doFix, resultsDict = {}, settingsDict = {}):
         if self.task.ContactChecker.checkContact ():
-            self.task.DataLogger.writeToLogFile (self.task.tag, 'Fix', {'kind' : 'fixed', 'result' : 'check+'}, time(), 3)
-            newFixes = resultsDict.get ('headFixes', 0) + 1
-            resultsDict.update ('headFixes' : newFixes)
+            result = 'check+'
         else:
-            fixed &= ~self.HAS_CONTACT
-            self.releaseMouse (resultsDict, settingsDict)
-            self.task.DataLogger.writeToLogFile (self.task.tag, 'Fix', {'kind' : 'fixed', 'result' : 'check-'}, time(), 3)
-    elif fixed & self.HAS_CONTACT: #a no-fix trial with contact
-        self.task.DataLogger.writeToLogFile (self.task.tag, 'Fix', {'kind' : 'unfixed', 'result' : 'check+'}, time(), 3)
-        newUnFixes = resultsDict.get ('unFixes', 0) + 1
-        resultsDict.update ('unFixes' : newUnFixes)
-    return fixed
+            result = 'check-'
+        if doFix:
+            kind = 'fixed'
+            self.task.DataLogger.writeToLogFile (self.task.tag, 'Fix', {'kind' : kind, 'result' : result}, time(), 3)
+        else:
+            kind = 'unfixed'
+        
+            
+               
+        if result == 'check+':
+            if kind == 'fixed': 
+                newFixes = resultsDict.get ('headFixes', 0) + 1
+                resultsDict.update ('headFixes' : newFixes)
+            else:
+                newUnFixes = resultsDict.get ('unFixes', 0) + 1
+                resultsDict.update ('unFixes' : newUnFixes)
+            return True
+        else:
+            return False
 
              
     @abstractmethod

@@ -70,20 +70,13 @@ def main():
             task.Rewarder.giveRewardCM('entry', resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
             # loop through as many trials as this mouse wants to do before leaving chamber
             while task.tag == thisTag:
-                # Fix mouse
+                # Fix mouse - returns bitwise 1 for fixTrial, 2 for contact
                 fixed = HeadFixer.fixMouse (resultsDict.get('HeadFixer'), settingsDict.get('HeadFixer'))
-                if fixed & 
-                    
-            # set head fixing probability
-            task.doHeadFix = expSettings.propHeadFix > random()
-            while GPIO.input (task.tirPin)== GPIO.HIGH and time () < entryTime + task.inChamberTimeLimit:
-                if (GPIO.input (task.contactPin)== task.noContactState):
-                    GPIO.wait_for_edge (task.contactPin, task.contactEdge, timeout= kTIMEOUTmS)
-                if (GPIO.input (task.contactPin)== task.contactState):
-                    runTrial (thisMouse, task, camera, rewarder, headFixer, stimulator, UDPTrigger)
-                    expSettings.doHeadFix = expSettings.propHeadFix > random() # set doHeadFix for next contact
+                if fixed & 2:
+                    task.Stimulator.run (resultsDict.get('Stimulator'), settingsDict.get('Stimulator'))
 
-            except KeyboardInterrupt:
+
+        except KeyboardInterrupt:
                 
         
         
