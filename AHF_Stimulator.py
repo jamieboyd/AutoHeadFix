@@ -24,7 +24,7 @@ class AHF_Stimulator (AHF_Base, metaclass = ABCMeta):
             setattr (mouse, 'StimParamDict', self.config_user_get(starterDict = self.settingsDict))
 
     
-
+ 
 
     @abstractmethod
     def run (self, mouse):

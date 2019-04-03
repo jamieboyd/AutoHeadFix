@@ -66,7 +66,7 @@ def main():
             subjectDict = task.Subjects.get (tag)
             resultsDict = subjectDict.get ('results')
             settingsDict = subjectDict.get ('settings')
-            # queue up an entrance reward, that can be countermanded
+            # queue up an entrance reward, that can be countermanded if a) mouse leaves early, or b) fixes right away
             task.Rewarder.giveRewardCM('entry', resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
             # loop through as many trials as this mouse wants to do before leaving chamber
             while task.tag == thisTag:

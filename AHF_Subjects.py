@@ -12,8 +12,20 @@ class AHF_Subjects (AHF_Base, metaclass = ABCMeta):
 
     @abstractmethod
     def setup(self):
-        resultsTuple = ('HeadFixer', 'Rewarder', 'Stimulator', 'TagReader') # results tuple defines dictionaries for subjects we will read from and write results to
-        settingsTuple= ('HeadFixer', 'Rewarder', 'Stimulator') # settings tuple defines dictionaries for subjects we will read from and write settings to 
+        resultsTuple = ('HeadFixer', 'Rewarder', 'Stimulator', 'TagReader')
+        """
+        results tuple defines dictionaries for subjects that our favorite objects will write results to
+        for making daily tallies of results
+        HeadFixer writes number of headfixes and un-fixes to its dictionary
+        rewarder writes number and kind of rewards given to its dictionary
+        TagReader writes number of chamber entrances to its dictionary
+        Stimulator writes results of whatever it does during a head-fix session
+        """
+        settingsTuple= ('HeadFixer', 'Rewarder', 'Stimulator')
+        """
+        settings tuple defines dictionaries for subjects that our favorite objects will read from and write personalized settings
+        personal settings should be initialized from settings, or cloned from defaults set by the objects, if new subjects are added
+        """
 
     @abstractmethod
     def get (self, IDnum):
