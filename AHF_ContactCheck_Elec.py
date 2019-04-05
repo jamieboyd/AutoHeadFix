@@ -4,11 +4,19 @@ import RPi.GPIO as GPIO
 from time import time, sleep
 from AHF_ContactCheck import AHF_ContactCheck
 
+gContactChecker = None
+
 class AHF_ContactCheck_Elec (AHF_ContactCheck):
     
     defaultPin = 21
     defaultPolarity = 'FALLING'
     defaultPUD = 'PUD_UP'
+
+
+    @staticmethod
+    def contactCheckCallback (channel):
+         AHF_Task.gTask.contact = gContactChecker.checkContact ()
+    
     @staticmethod
     def about ():
         return 'Simple electrical contact check with option for pull-up or pull-down resistor.'
@@ -63,6 +71,8 @@ class AHF_ContactCheck_Elec (AHF_ContactCheck):
             GPIO.setmode (GPIO.BCM)
             GPIO.setwarnings(False)
             GPIO.setup (self.contactPin, GPIO.IN, pull_up_down =self.contactPUD)
+            global gContactChecker
+            gContactChecker = self
         except Exception as e:
             print (str(e))
             hasContact = False
@@ -90,4 +100,11 @@ class AHF_ContactCheck_Elec (AHF_ContactCheck):
             return False
         else:
             return True
+
+    def startLogging (self):
+        GPIO.add_event_detect (self.contactPin, GPIO.BOTH)
+        
+    def stopLogging (self):
+        GPIO.remove_event_detect (self.contactPin)
+        
         

@@ -19,6 +19,20 @@ class AHF_ContactCheck (AHF_Base, metaclass = ABCMeta):
     def waitForNoContact (self, timeoutSecs):
         return False
 
+     @abstractmethod
+    def startLogging (self):
+        """
+        starts contactChecker running background task updated gTask.contact
+        do not use waitForContact or waitForNoContact when logging
+        """
+        pass
+
+    @abstractmethod
+    def stopLogging (self):
+        """
+        stops contactChecker running background task
+        """
+
     def hardwareTest (self):
         print ('To pass test, start with no contact. Make contact within 10 seconds, then hold contact for less than 10 seconds')
         passed = False

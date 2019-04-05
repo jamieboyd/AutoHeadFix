@@ -48,7 +48,7 @@ def main():
     task.TagReader.startLogging ()
     if hasattr(task, 'LickDetector'):
         task.LickDetector.startLogging ()
-     # Top level infinite Loop running mouse entries/trials
+     # Top level infinite Loop running mouse entries
     while True:
         try:
             print ('Waiting for a mouse....')
@@ -68,13 +68,18 @@ def main():
             settingsDict = subjectDict.get ('settings')
             # queue up an entrance reward, that can be countermanded if a) mouse leaves early, or b) fixes right away
             task.Rewarder.giveRewardCM('entry', resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
+            doCountermand = True
             # loop through as many trials as this mouse wants to do before leaving chamber
             while task.tag == thisTag:
                 # Fix mouse - returns bitwise 1 for fixTrial, 2 for contact
                 fixed = HeadFixer.fixMouse (resultsDict.get('HeadFixer'), settingsDict.get('HeadFixer'))
                 if fixed & 2:
+                    if doCountermand:
+                        task.Rewarder.countermandReward (resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
+                        doCountermand = False
                     task.Stimulator.run (resultsDict.get('Stimulator'), settingsDict.get('Stimulator'))
-
+            if doCountermand:
+                task.Rewarder.countermandReward (resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
 
         except KeyboardInterrupt:
                 

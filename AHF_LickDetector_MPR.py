@@ -21,14 +21,14 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
         custom callback using global task reference from AHF_Task
         """
         AHF_Task.gTask.DataLogger.writeToLogFile(gTask.tag, 'lick', {'chan' : touchedChannel}, time())
-        newVal = AHF_Task.gTask.Subjects.get(gTask.tag).get('resultsDict').get('LickDetector').get('licks') + 1
+        newVal = AHF_Task.gTask.Subjects.get(gTask.tag).get('resultsDict').get('LickDetector').get('licks', 0) + 1
         AHF_Task.gTask.Subjects.get(gTask.tag).get('resultsDict').get('LickDetector').update ({'licks' : newVal})
 
 
     @staticmethod
     def hardWareTestCallback(touchedChannel):
         """
-        custom callback used for hardware test - prints touches to the shell
+        custom callback used for hardware test - prints touches to the shell, but does not log
         """
         print ('A touch was recorded on channel {:d}'.format(touchedChannel))
         
