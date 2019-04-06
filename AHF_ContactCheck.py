@@ -19,7 +19,7 @@ class AHF_ContactCheck (AHF_Base, metaclass = ABCMeta):
     def waitForNoContact (self, timeoutSecs):
         return False
 
-     @abstractmethod
+    @abstractmethod
     def startLogging (self):
         """
         starts contactChecker running background task updated gTask.contact

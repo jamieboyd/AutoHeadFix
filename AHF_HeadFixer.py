@@ -13,8 +13,8 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
     defaultPropHeadFix = 0.75
     defaultSkeddadleTime = 0.5
 
-    @abstractmethod
     @staticmethod
+    @abstractmethod
     def config_user_get (starterDict = {}):
         propHeadFix = starterDict.get ('propHeadFix', AHF_HeadFixer.defaultPropHeadFix)
         response = input('Enter proportion (0 to 1) of trials that are head-fixed, currently {:.2f}: '.format(propHeadFix))
@@ -51,83 +51,71 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
         starterDict.update ({'propHeadFix' : self.propHeadFix})
         return starterDict
                             
-
-    def waitForMouse (self):
-        """
-        Waits for a mouse to either make contact or leave the chamber
-        """
-        thisTag = self.task.tag
-        if self.task.lastFixedTag == thisTag:
-            # wait on contact checking if skeddadle time is in effect
-            while self.task.tag == thisTag and time() < self.task.fixAgainTime:
-                sleep (0.05)
-        # wait for contact check or mouse leaving chamber
-        while self.task.tag == thisTag:
-            if self.task.ContactChecker.waitForContact (0.1):
-                return True # made contact
-        return False # left chamber
-  
-
-    def hasMouse (doFix, resultsDict = {}, settingsDict = {}):
-        if self.task.ContactChecker.checkContact ():
-            result = 'check+'
-        else:
-            result = 'check-'
-        if doFix:
-            kind = 'fixed'
-            self.task.DataLogger.writeToLogFile (self.task.tag, 'Fix', {'kind' : kind, 'result' : result}, time(), 3)
-        else:
-            kind = 'unfixed'
-        
-            
-               
-        if result == 'check+':
-            if kind == 'fixed': 
-                newFixes = resultsDict.get ('headFixes', 0) + 1
-                resultsDict.update ('headFixes' : newFixes)
-            else:
-                newUnFixes = resultsDict.get ('unFixes', 0) + 1
-                resultsDict.update ('unFixes' : newUnFixes)
-            return True
-        else:
-            return False
-
              
     @abstractmethod
-    def fixMouse(self, resultsDict = {}, settingsDict = {}):
+    def fixMouse(self, thisTag, resultsDict = {}, settingsDict = {}):
         """
         performs head fixation by energizing a piston, moving a servomotor, etc
-        returns bitwise combination of HAS_CONTACT and IS_FIX_TRIAL
+        returns True if successful, else false.
         """
-         # calculate if this is a headfixed trial
-        isFixTrial = settingsDict.get ('propHeadFix', self.propHeadFix) > random()
-        thisTag = self.task.tag
-        if self.task.lastFixedTag == thisTag:
-            # wait on contact checking if skeddadle time is in effect
-            while self.task.tag == thisTag and time() < self.task.fixAgainTime:
-                sleep (0.05)
-        # wait for contact check or mouse leaving chamber
-        while self.task.tag == thisTag:
-            if self.task.ContactChecker.waitForContact (0.1):
-                return isFixTrial | AHF_HeadFixer.HAS_CONTACT
-        return AHF_HeadFixer.LEFT_CHAMBER # left chamber,not relevant if trial was to be fixed or unfixed
-    
+        pass       
         
     
     @abstractmethod
-    def releaseMouse(self, resultsDict = {}, settingsDict = {}):
+    def releaseMouse(self, thisTag, resultsDict = {}, settingsDict = {}):
         """
         releases mouse from head fixation by relaxing a piston, moving a servomotor, etc
         """
         self.task.fixAgainTime = time() + self.skeddadleTime
+        self.task.lastFixedTag = thisTag
+
+
+    
+    def waitForMouse (self, thisTag):
+        """
+        Utility function for head fix subclasses
+        Waits for a mouse to either make contact or leave the chamber
+        """
+ 
+        if self.task.lastFixedTag == thisTag:
+            # wait on contact checking if skeddadle time is in effect
+            while self.task.tag == thisTag and time() < self.task.fixAgainTime:
+                sleep (0.05)
+        # wait for contact check or mouse leaving chamber
+        while self.task.tag == thisTag and not self.task.contact:
+            sleep (0.05)
+        return self.task.contact # made contact or left chamber
+  
+
+    def hasMouseLog (hasContact, isFixed, thisTag, resultsDict):
+        """
+        Utility function for head fix subclasses
+        Run after head fixing to update common results
+        """
+        if isFixed:
+            if hasContact:
+                result = 'check+'
+            else:
+                result = 'check-'
+        else:
+            kind = 'unfixed'
+        self.task.DataLogger.writeToLogFile (thisTag, 'Fix', {'result' : result}, time(), 3)
+               
+        if hasContact:
+            if isFixed: 
+                newFixes = resultsDict.get ('headFixes', 0) + 1
+                resultsDict.update ({'headFixes' : newFixes})
+            else:
+                newUnFixes = resultsDict.get ('unFixes', 0) + 1
+                resultsDict.update ({'unFixes' : newUnFixes})
 
 
     def hardwareTest (self):
         print (self.__class__.about())
         print ('Head Fixer head-fixing for 2 sec')
-        self.fixMouse()
+        self.fixMouse(0, {},{})
         sleep (2)
-        self.releaseMouse ()
+        self.releaseMouse (0, {},{})
         inputStr=input ('Head-Fixer released.\nDo you want to change the Head-Fixer settings?')
         if inputStr[0] == 'y' or inputStr[0] == "Y":
             self.setdown ()

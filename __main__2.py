@@ -68,16 +68,17 @@ def main():
             settingsDict = subjectDict.get ('settings')
             # queue up an entrance reward, that can be countermanded if a) mouse leaves early, or b) fixes right away
             task.Rewarder.giveRewardCM('entry', resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
+            doCountermand = True
             # loop through as many trials as this mouse wants to do before leaving chamber
             while task.tag == thisTag:
-                # Fix mouse - returns bitwise 1 for fixTrial, 2 for contact
-                fixed = HeadFixer.fixMouse (resultsDict.get('HeadFixer'), settingsDict.get('HeadFixer'))
-                if fixed & 2:
-                    if time() < task.countermandTime:
+                # Fix mouse - returns True if 'fixed', though that may just be a True contact check if a no-fix trial
+                fixed = HeadFixer.fixMouse (thisTag, resultsDict.get('HeadFixer'), settingsDict.get('HeadFixer'))
+                if fixed:
+                    if doCountermand:
                         task.Rewarder.countermandReward (resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
-                        task.countermandTime = float (inf)
-                    task.Stimulator.run (resultsDict.get('Stimulator'), settingsDict.get('Stimulator'))
-            if time() < task.countermandTime:
+                        doCountermand = False
+                    task.Stimulator.run (thisTag, resultsDict.get('Stimulator'), settingsDict.get('Stimulator'))
+            if doCountermand:
                 task.Rewarder.countermandReward (resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
 
         except KeyboardInterrupt:

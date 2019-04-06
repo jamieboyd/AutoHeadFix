@@ -120,12 +120,12 @@ def File_from_user (nameTypeStr, longName, typeSuffix, makeNew = False):
                     #print ('module=' + str (moduleObj))
                     classObj = getattr(moduleObj, moduleObj.__name__)
                     #print (classObj)
-                    isAbstractClass =inspect.isabstract (classObj)
+                    isAbstractClass = inspect.isabstract (classObj)
                     if isAbstractClass == False:
                         fileList.append (fname + ": " + classObj.about())
                         iFile += 1
                 except Exception as e: # exception will be thrown if imported module imports non-existant modules, for instance
-                    print (e)
+                    print (f, " : ", e)
                     continue     
     if iFile == 0:
         print ('Could not find any %s files in the current directory' % longName)
