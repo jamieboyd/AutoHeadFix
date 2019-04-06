@@ -15,7 +15,15 @@ class AHF_ContactCheck_Elec (AHF_ContactCheck):
 
     @staticmethod
     def contactCheckCallback (channel):
-         AHF_Task.gTask.contact = gContactChecker.checkContact ()
+        """
+        Contacts are immediate, but un-contacts are delayed
+        """
+        global gContactChecker
+        contact = gContactChecker.checkContact ()
+        if contact:
+            AHF_Task.gTask.contactBounce = 
+        if contact == False and time() > 
+         AHF_Task.gTask.contact = g
     
     @staticmethod
     def about ():
@@ -103,6 +111,7 @@ class AHF_ContactCheck_Elec (AHF_ContactCheck):
 
     def startLogging (self):
         GPIO.add_event_detect (self.contactPin, GPIO.BOTH)
+        GPIO.add_event_calback (self.contactPin, self.contactCheckCallback)
         
     def stopLogging (self):
         GPIO.remove_event_detect (self.contactPin)

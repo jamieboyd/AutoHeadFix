@@ -48,13 +48,27 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
         if self.__class__.hasLevels:
             self.servoIncrement = (self.servoFixedPosition - self.servoReleasedPosition)/self.numLevels
     
-    def fixMouse(self, resultsDict = {}, individualDict= {}):
-        self.setPWM (individualDict.get ('servoFixedPosition', self.servoFixedPosition))
-        resultsDict.update ({'headFixes' : resultsDict.get('headFixes', 0) + 1})
+    def fixMouse(self, thisTag, resultsDict = {}, individualDict= {}):
+        self.task.isFixTrial = settingsDict.get ('propHeadFix', self.propHeadFix) > random()
+        hasContact = False
+        if self.task.isFixTrial:
+            if self.waitForMouse (): # contact was made
+                self.setPWM (individualDict.get ('servoFixedPosition', self.servoFixedPosition))
+                sleep (0.5)
+                hasContact = self.task.contact
+                if not hasContact: # tried to fix and failed
+                    self.setPWM (self.servoReleasedPosition)
+                self.hasMouseLog (hasContact, isFixTrial, resultsDict, settingsDict)
+        else: # noFix trial, wait for contact and return
+            hasContact = self.waitForMouse ()
+            if hasContact:
+                self.hasMouseLog (True, isFixTrial, resultsDict, settingsDict)
+        return hasContact
 
-    def releaseMouse(self, resultsDict = {}, settingsDict= {}):
+
+    def releaseMouse(self, thisTag, resultsDict = {}, settingsDict= {}):
         self.setPWM (self.servoReleasedPosition)
-
+        super().releaseMouse (thisTag, resultsDict, individualDict)
 
     # each PWM subclass must implement its own code to set the pulse width
     @abstractmethod
