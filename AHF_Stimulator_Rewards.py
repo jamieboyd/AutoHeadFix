@@ -1,4 +1,4 @@
-#! /usr/bin/python3
+ #! /usr/bin/python3
 #-*-coding: utf-8 -*-
 
 from time import time, localtime,timezone, sleep
@@ -35,7 +35,7 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
         self.rewarder = self.task.Rewarder
 
 
-    def setdown (delf):
+    def setdown (self):
         print ('Rewards stimulator set down')
 
 

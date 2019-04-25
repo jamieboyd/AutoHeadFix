@@ -20,27 +20,34 @@ class AHF_LickDetector (AHF_Base, metaclass = ABCMeta):
 
 
     @abstractmethod
-    def zeroLickCount (self):
+    def startLickCount (self):
         """
-        Zeros the array that stores lick counts for each channel
+        Zeros the array that stores lick counts for each channel, and makes sure callback is filling the array for requested channels
         """
         pass
     
     @abstractmethod
-    def getLickCount (self, chanList):
+    def stopLickCount (self):
         """
-        takes a list of channels and returns a list where each member is the number of licks for that channel in the global array
+        takes a tuple of channels and returns a list where each member is the number of licks for that channel in the global array
         call zeroLickCount, wait a while for some licks, then call getLickCount
         """
         pass
+
+    @abstractmethod
+    def startLickTiming (self):
+        """
+        Zeros the array that stores lick counts for each channel, and makes sure callback is filling the array for requested channels
+        """
+        pass
     
-
-    def addDataLogger (self, dataLogger):
-        if dataLogger is None: 
-            self.dataLogger = Simple_Logger (None)
-        else:
-            self.dataLogger = dataLogger
-
+    @abstractmethod
+    def stopLickTiming (self):
+        """
+        takes a tuple of channels and returns a list where each member is the number of licks for that channel in the global array
+        call zeroLickCount, wait a while for some licks, then call getLickCount
+        """
+        pass
     
     @abstractmethod
     def startLogging (self):
@@ -67,32 +74,3 @@ class AHF_LickDetector (AHF_Base, metaclass = ABCMeta):
         pass
 
 
-class Simple_Logger (object):
-    """
-    A class to do simple logging of licks, or other events, used if no data logger is passed to lickdetector constructor
-    """
-    PSEUDO_MUTEX =0
-   
-    def __init__(self, logFP):
-        """
-        takes file pointer to a file opened for writing
-        If file pointer is none, will just write to shell
-        """
-        self.logFP = logFP
-
-    
-    def writeToLogFile(self, tag, event):
-        """
-        Writes time of lick to shell, and to a file, if present, in AHF_dataLogger format
-        """
-        while Simple_Logger.PSEUDO_MUTEX ==1:
-            sleep (0.01)
-        Simple_Logger.PSEUDO_MUTEX =1
-        outPutStr = '{:013}'.format(tag)
-        logOutPutStr = outPutStr + '\t' + '{:.2f}'.format (time ())  + '\t' + event +  '\t' + datetime.fromtimestamp (int (time())).isoformat (' ')
-        printOutPutStr = outPutStr + '\t' + datetime.fromtimestamp (int (time())).isoformat (' ') + '\t' + event
-        print (printOutPutStr)
-        if self.logFP is not None:
-            self.logFP.write(logOutPutStr + '\n')
-            self.logFP.flush()
-        Simple_Logger.PSEUDO_MUTEX = 0

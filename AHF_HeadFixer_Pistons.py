@@ -11,14 +11,17 @@ class AHF_HeadFixer_Pistons(AHF_HeadFixer):
     a single GPIO output triggers a driver of some kind to energize solenoids
     """
     defaultPin = 12
+    
     @staticmethod
     def about():
         return 'Single GPIO output triggers driver that energize solenoids that push headbar'
 
+    @staticmethod
     def config_user_get (starterDict = {}):
         """
         Querries user for pin number for piston, returns dictionary 
         """
+        starterDict.update (AHF_HeadFixer.config_user_get(starterDict))
         pin = starterDict.get('pistonsPin', AHF_HeadFixer_Pistons.defaultPin)
         response = input ('Enter the GPIO pin connected to the Head Fixing pistons, currently %d:' % pin)
         if response != '':
@@ -26,22 +29,48 @@ class AHF_HeadFixer_Pistons(AHF_HeadFixer):
         starterDict.update ({'pistonsPin': pin})
         return starterDict
 
-    
     def setup (self):
+        hasFixer = True
+        super().setup ()
         self.pistonsPin = self.settingsDict.get('pistonsPin')
-        GPIO.setup (self.pistonsPin, GPIO.OUT, initial = GPIO.LOW)
+        try:
+            GPIO.setup (self.pistonsPin, GPIO.OUT, initial = GPIO.LOW)
+        except Exception as e:
+            print (str(e))
+            hasFixer = False
+        return hasFixer
+
 
     def setdown (self):
         GPIO.cleanup (self.pistonsPin)
+        
 
-    def fixMouse(self, mouse=None):
+    def fixMouse(self, thisTag, resultsDict = {}, settingsDict= {}):
         """
         sets GPIO pin high to trigger pistons
+        
         """
-        GPIO.output(self.pistonsPin, GPIO.HIGH)
+        self.task.isFixTrial = settingsDict.get ('propHeadFix', self.propHeadFix) > random()
+        hasContact = False
+        if self.task.isFixTrial:
+            if self.waitForMouse (): # contact was made
+                GPIO.output(self.pistonsPin, GPIO.HIGH)
+                sleep (0.5)
+                hasContact = self.task.contact
+                if not hasContact: # tried to fix and failed
+                    GPIO.output(self.pistonsPin, GPIO.LOW)
+                self.hasMouseLog (hasContact, isFixTrial, resultsDict, settingsDict)
+        else: # noFix trial, wait for contact and return
+            hasContact = self.waitForMouse ()
+            if hasContact:
+                self.hasMouseLog (True, isFixTrial, resultsDict, settingsDict)
+        return hasContact
 
-    def releaseMouse(self, mouse=None):
+
+    def releaseMouse(self, resultsDict = {},individualDict= {}):
         """
         sets GPIO pin low to retract pistons
         """
-        GPIO.output(self.pistonsPin, GPIO.LOW)
+        if self.task.isFixTrial:
+            GPIO.output(self.pistonsPin, GPIO.LOW)
+        super().releaseMouse (resultsDict, individualDict)

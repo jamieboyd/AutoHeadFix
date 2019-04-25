@@ -10,19 +10,28 @@ class AHF_Rewarder(AHF_Base, metaclass = ABCMeta):
     """
     rewardUnits = ''
     testAmount = 0
-    defaultCMtime = 2
+    maxEntryRewardsDefault =1000
+    entryRewardDelayDefault = 1.0
 
-
+    @staticmethod
     @abstractmethod
-    def giveReward(self, rewardName):
+    def config_user_get (starterDict = {}):
+        """
+        static method that querries user for settings, with default responses from starterDict,
+        and returns starterDict with settings as edited by the user.
+
+        """
+  
+    @abstractmethod
+    def giveReward(self, rewardName, resultsDict={}, settingsDict = {}):
         return 0
 
     @abstractmethod
-    def giveRewardCM(self, rewardName):
+    def giveRewardCM(self, rewardName, resultsDict={}, settingsDict = {}):
         return 0
 
     @abstractmethod
-    def countermandReward(self):
+    def countermandReward(self,resultsDict={}, settingsDict = {}):
         return 0
 
     @abstractmethod
@@ -35,6 +44,7 @@ class AHF_Rewarder(AHF_Base, metaclass = ABCMeta):
 
     def addRewardToDict (self, rewardName, rewardSize):
         self.rewards.update ({rewardName : rewardSize})
+            
 
     def setCountermandTime (self, countermandTime):
         self.countermandTime = countermandTime

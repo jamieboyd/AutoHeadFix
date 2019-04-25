@@ -120,12 +120,12 @@ def File_from_user (nameTypeStr, longName, typeSuffix, makeNew = False):
                     #print ('module=' + str (moduleObj))
                     classObj = getattr(moduleObj, moduleObj.__name__)
                     #print (classObj)
-                    isAbstractClass =inspect.isabstract (classObj)
+                    isAbstractClass = inspect.isabstract (classObj)
                     if isAbstractClass == False:
                         fileList.append (fname + ": " + classObj.about())
                         iFile += 1
                 except Exception as e: # exception will be thrown if imported module imports non-existant modules, for instance
-                    print (e)
+                    print (f, " : ", e)
                     continue     
     if iFile == 0:
         print ('Could not find any %s files in the current directory' % longName)
@@ -345,19 +345,40 @@ def Edit_dict (anyDict, longName):
             anyDict.update (updatDict)
 
 
+########################################################################################################################
+## methods for moving data between.json files and python dicitonaries or object fields 
+#########################################################################################################################
 
-
-
-def Dict_to_obj_fields (anObject, aDict):
+def File_to_dict (nameTypeStr, nameStr, typeSuffix, dir = ''):
     """
-    Sets attributes for the object anObject from the keys and values of dictionay aDict
+    Sets attributes for the object anObject from the keys and values of dictionay aDict loaded from the file
     """
-    for key, value in aDict:
-        setattr (anObject, key, value)
+    filename = 'AHF_' + nameTypeStr + '_' + nameStr + typeSuffix
+    errFlag = False
+    with open (dir + filename, 'r') as fp:
+        data = fp.read()
+        data=data.replace('\n', ',')
+        data=data.replace('=', ':')
+        configDict = json.loads(data)
+        fp.close()
+    return configDict
 
+
+
+def Dict_to_file (anyDict, nameTypeStr, nameStr, typeSuffix, dir = ''):
+    """
+    Saves a dicitonary as JSON encoded text file
+    """
+    configFile = 'AHF_' + nameTypeStr + '_' + nameStr + typeSuffix
+    with open (dir + configFile, 'w') as fp:
+        fp.write (json.dumps (anyDict, separators = ('\n', '='), sort_keys=True, skipkeys = True))
+        fp.close ()
+        uid = pwd.getpwnam ('pi').pw_uid
+        gid = grp.getgrnam ('pi').gr_gid
+        os.chown (configFile, uid, gid) # we may run as root for pi PWM, so we need to expicitly set ownership
 
         
-def Obj_fields_to_file (anObject, nameTypeStr, nameStr, typeSuffix):
+def Obj_fields_to_file (anObject, nameTypeStr, nameStr, typeSuffix, dir = ''):
     """
     Writes a file containing a json dictionary of all the fields of the object anObject
     """
@@ -371,7 +392,7 @@ def Obj_fields_to_file (anObject, nameTypeStr, nameStr, typeSuffix):
                 jsonDict.update({item [0]: item[1]})
 
     configFile = 'AHF_' + nameTypeStr + '_' + nameStr + typeSuffix
-    with open (configFile, 'w') as fp:
+    with open (dir + configFile, 'w') as fp:
         fp.write (json.dumps (jsonDict, separators = ('\n', '='), sort_keys=True, skipkeys = True))
         fp.close ()
         uid = pwd.getpwnam ('pi').pw_uid
@@ -380,13 +401,13 @@ def Obj_fields_to_file (anObject, nameTypeStr, nameStr, typeSuffix):
 
 
         
-def File_to_obj_fields (nameTypeStr, nameStr, typeSuffix, anObject):
+def File_to_obj_fields (nameTypeStr, nameStr, typeSuffix, anObject, dir = ''):
     """
     Sets attributes for the object anObject from the keys and values of dictionay aDict loaded from the file
     """
     filename = 'AHF_' + nameTypeStr + '_' + nameStr + typeSuffix
     errFlag = False
-    with open (filename, 'r') as fp:
+    with open (dir + filename, 'r') as fp:
         data = fp.read()
         data=data.replace('\n', ',')
         data=data.replace('=', ':')
@@ -403,3 +424,11 @@ def File_to_obj_fields (nameTypeStr, nameStr, typeSuffix, anObject):
                 setattr (anObject, key, value)
         except ValueError as e:
             print ('Error:%s' % str (e))
+
+
+def Dict_to_obj_fields (anObject, aDict):
+    """
+    Sets attributes for the object anObject from the keys and values of dictionay aDict
+    """
+    for key, value in aDict:
+        setattr (anObject, key, value)

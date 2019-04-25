@@ -17,7 +17,9 @@ import AHF_ClassAndDictUtils as CAD
 from abc import ABCMeta
 import RPi.GPIO as GPIO
 
-class Task:
+gTask = None
+
+class Task(object):
     """
     The plan is to copy all variables from settings, user, into a single object
     The object will have fields for things loaded from hardware config dictionary and experiment config dictionary
@@ -29,7 +31,7 @@ class Task:
     """
     def __init__ (self, fileName = ''):
         """
-        Initializes a Task object with hardware settings and experiment settings by calling loadSettings function
+        Initializes a Task object with settings for various hardware, stimulator, and Subjects classes
         
         """
         fileErr = False
@@ -61,15 +63,10 @@ class Task:
                 fileErr = True
         # check for any missing settings, all settings will be missing if making a new config, and call setting functions for
         # things like head fixer that are subclassable need some extra work , when either loaded from file or user queried
-        ########## Head Fixer (optional) makes its own dictionary #################################
+        ########## Head Fixer (obligatory) makes its own dictionary #################################
         if not hasattr (self, 'HeadFixerClass') or not hasattr (self, 'HeadFixerDict'):
-            tempInput = input ('Does this setup have a head fixing mechanism installed? (Y or N):')
-            if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.HeadFixerClass =  CAD.Class_from_file('HeadFixer', CAD.File_from_user ('HeadFixer', 'Head Fixer Class', '.py'))
-                self.HeadFixerDict = self.HeadFixerClass.config_user_get ()
-            else:
-                self.HeadFixerClass = None
-                self.HeadFixerDict = None
+            self.HeadFixerClass =  CAD.Class_from_file('HeadFixer', CAD.File_from_user ('HeadFixer', 'Head Fixer Class', '.py'))
+            self.HeadFixerDict = self.HeadFixerClass.config_user_get ()
             fileErr = True
         ################################ Stimulator (Obligatory) makes its own dictionary #######################
         if not hasattr (self, 'StimulatorClass') or not hasattr (self, 'StimulatorDict'):
@@ -113,7 +110,7 @@ class Task:
             fileErr = True
         ############################ text messaging using textbelt service (Optional) only 1 subclass so far ######################
         if not hasattr (self, 'NotifierClass') or not hasattr (self, 'NotifierDict'):
-            tempInput = input ('Send notifications if mouse exceeds criterion time in chamber?(Y or N):')
+            tempInput = input ('Send notifications if subject exceeds criterion time in chamber?(Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
                 self.NotifierClass = CAD.Class_from_file('Notifier', '')
                 self.NotifierDict = self.NotifierClass.config_user_get()
@@ -142,35 +139,25 @@ class Task:
                 self.LickDetectorClass = None
                 self.LickDetectorDict = None
             fileErr = True
-
-            
-         ####### settings for experiment configuration ########  
-        #### these can also be set on a per-mouse bassis
-        ### these provide default values
-        if not hasattr (self, 'maxEntryRewards'):
-            self.maxEntryRewards = int (input ('Enter maximum number of entry rewards that will be given per day:'))
+        ############################## Subjects only 1 subclass so far (generic mice) ##############
+        if not hasattr (self, 'SubjectsClass') or not hasattr (self, 'SubjectsDict'):
+            self.SubjectsClass = CAD.Class_from_file('Subjects', CAD.File_from_user ('Subjects', 'test subjects', '.py'))
+            self.SubjectsClass = self.SubjectsClass.config_user_get ()
             fileErr = True
-        if not hasattr (self, 'entryRewardDelay'):
-            self.entryRewardDelay= float (input('Enter delay, in seconds, before an entrance reward is given:'))
-            fileErr = True
-        if not hasattr (self, 'propHeadFix'):
-            self.propHeadFix= float (input('Enter proportion (0 to 1) of trials that are head-fixed:'))
-            self.propHeadFix = float (min (1, max (0, self.propHeadFix))) # make sure proportion is bewteen 0 and 1
-            fileErr = True
-        if not hasattr (self, 'skeddadleTime'):
-            self.skeddadleTime = float (input ('Enter time, in seconds, for mouse to get head off the contacts when session ends:'))
-            fileErr = True
-        if not hasattr (self, 'inChamberTimeLimit'):
-            self.inChamberTimeLimit = float(input('In-Chamber duration limit, seconds, before stopping head-fix trials:'))
-        if not hasattr (self, 'mouseConfigPath'):
-            self.mouseConfigPath = input ('Enter the path to the directory where configuration data for mice can be loaded:')
-
-       
-        # if some of the paramaters were set by user, give option to save
+        ###################### things we track in the main program #################################
+        self.tag = 0    # RFIG tag number, 0 for no tag, updated by threaded callback
+        self.contact = False # true if contact is true 
+        self.lastFixedTag = 0
+        self.entryTime = 0.0
+        self.fixAgainTime = float ('inf')
+        self.inChamberLimitExceeded = False
+        self.logToFile = True # a flag for writing to the shell only, or to the shall and the log
+        ################ if some of the paramaters were set by user, give option to save ###############
         if fileErr: 
             response = input ('Save new/updated settings to a task configuration file?')
             if response [0] == 'y' or response [0] == 'Y':
                 self.saveSettings ()
+    
                 
 
     def setup (self):
@@ -185,7 +172,9 @@ class Task:
                 baseName = item [0].rstrip ('Class')
                 classDict = getattr (self, baseName + 'Dict')
                 setattr (self, baseName, item [1](self, classDict))
-
+        global gTask
+        gTask = self
+                
             
     def saveSettings(self):
         """

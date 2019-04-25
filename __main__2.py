@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 
 # Task configures and controls sub-tasks for hardware and stimulators
 from AHF_Task import AHF_Task
-from AHF_Mouse import Mouse, Mice
 # hardware tester can be called from menu pulled up by keyboard interrupt
 from AHF_HardwareTester import hardwareTester
 
@@ -42,39 +41,54 @@ def main():
         print ('Error initializing hardware' + str (e))
         raise e
     assert (hasattr (task, 'BrainLight')) # quick debug check that task got loaded and setup ran
-    # initialize mice with zero mice, then try to load mice from configuration path
-    setattr (task, 'mice', Mice(task)) # task object contains a reference to mice object, mice object contains a reference to task object
-    task.mouseConfigPath
     # calculate time for saving files for each day
     now = datetime.fromtimestamp (int (time()))
     nextDay = datetime (now.year, now.month, now.day, KDAYSTARTHOUR,0,0) + timedelta (hours=24)
-    # Loop with a brief sleep, waiting for a tag to be read.
+    # start TagReader and Lick Detector, the two background task things, logging
+    task.TagReader.startLogging ()
+    if hasattr(task, 'LickDetector'):
+        task.LickDetector.startLogging ()
+     # Top level infinite Loop running mouse entries
     while True:
-            try:
-                print ('Waiting for a mouse....')
-                while task.TagReader.readTag == 0:
-                    sleep (kTIMEOUTSECS)
+        try:
+            print ('Waiting for a mouse....')
+            # loop with a brief sleep, waiting for a tag to be read, or a new day to dawn
+            while True:
+                if task.tag != 0:
+                    break
+                else:
                     if datetime.fromtimestamp (int (time())) > nextDay:
                         task.DataLogger.newDay ()
-                # a Tag has been read
-                thisMouse = mice.getMouseFromTag (RFIDTagReader.globalTag)
-                entryTime = time()
-                # log entrance and give entrance reward, if this mouse supports it
-                thisMouse.entry(rewarder, dataLogger)
-                # set head fixing probability
-                task.doHeadFix = expSettings.propHeadFix > random()
-                while GPIO.input (task.tirPin)== GPIO.HIGH and time () < entryTime + task.inChamberTimeLimit:
-                    if (GPIO.input (task.contactPin)== task.noContactState):
-                        GPIO.wait_for_edge (task.contactPin, task.contactEdge, timeout= kTIMEOUTmS)
-                    if (GPIO.input (task.contactPin)== task.contactState):
-                        runTrial (thisMouse, task, camera, rewarder, headFixer, stimulator, UDPTrigger)
-                        expSettings.doHeadFix = expSettings.propHeadFix > random() # set doHeadFix for next contact
+                    else:
+                        sleep (kTIMEOUTSECS)
+            # a Tag has been read, get a reference to the dictionaries for this subject
+            thisTag = task.tag
+            subjectDict = task.Subjects.get (tag)
+            resultsDict = subjectDict.get ('results')
+            settingsDict = subjectDict.get ('settings')
+            # queue up an entrance reward, that can be countermanded if a) mouse leaves early, or b) fixes right away
+            task.Rewarder.giveRewardCM('entry', resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
+            doCountermand = True
+            # loop through as many trials as this mouse wants to do before leaving chamber
+            while task.tag == thisTag:
+                # Fix mouse - returns True if 'fixed', though that may just be a True contact check if a no-fix trial
+                fixed = HeadFixer.fixMouse (thisTag, resultsDict.get('HeadFixer'), settingsDict.get('HeadFixer'))
+                if fixed:
+                    if doCountermand:
+                        task.Rewarder.countermandReward (resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
+                        doCountermand = False
+                    task.Stimulator.run (thisTag, resultsDict.get('Stimulator'), settingsDict.get('Stimulator'))
+            if doCountermand:
+                task.Rewarder.countermandReward (resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
 
-            except KeyboardInterrupt:
+        except KeyboardInterrupt:
+                
+        
+        
+                    
                 if hasattr (task, 'LickDetector'):
                     task.lickDetector.stop_logging ()
                 inputStr = '\n************** Auto Head Fix Manager ********************\nEnter:\n'
-                inputStr += 'M to configure mice\n'
                 inputStr +='V to run rewarder (valve) control\n'
                 inputStr += 'H for hardware tester\n'
                 inputStr += 'S to edit Stimulator settings\n'
@@ -104,10 +118,8 @@ def main():
                             task.saveSettings ()
                         task.setup ()
                     elif event == 'S' or event == 's':
-                        task.Stimulator.settingsDict = task.Stimulator.config_user_get (task.Stimulator.settingsDict):
+                        task.Stimulator.settingsDict = task.Stimulator.config_user_get (task.Stimulator.settingsDict)
                         task.Stimulator.setup()
-                    elif event == 'm' or even == 'M':
-                            task.mice.userConfigure()
 
     except Exception as anError:
         print ('Auto Head Fix error:' + str (anError))

@@ -19,6 +19,7 @@ class AHF_HeadFixer_PWM_PCA9685 (AHF_HeadFixer_PWM):
     inherits from AHF_HeadFixer_PWM
     """
     defaultAddress = 0x40
+    
     @staticmethod
     def about():
         return 'PCA9685 servo driver over i2c controls a servo motor to push head bar'
@@ -28,7 +29,7 @@ class AHF_HeadFixer_PWM_PCA9685 (AHF_HeadFixer_PWM):
     def config_user_get (starterDict = {}):
         starterDict.update (AHF_HeadFixer_PWM.config_user_get(starterDict))
         servoAddress = starterDict.get ('servoAddress', AHF_HeadFixer_PWM_PCA9685.defaultAddress)
-        response = input("Enter Servo I2C Address, in Hexadecimal, currently 0x%x: " % servoAddress)
+        response = input('Enter Servo I2C Address, in Hexadecimal, currently 0x%x: ' % servoAddress)
         if response != '':
             servoAddress = int (response, 16)
         starterDict.update ({'servoAddress' : servoAddress})
@@ -38,9 +39,15 @@ class AHF_HeadFixer_PWM_PCA9685 (AHF_HeadFixer_PWM):
     def setup (self):
         super().setup()
         self.servoAddress = self.settingsDict.get ('servoAddress')
-        self.PCA9685 = Adafruit_PCA9685.PCA9685 (address=self.servoAddress)
-        self.PCA9685.set_pwm_freq (90) # 40-1000Hz
-        self.setPWM (self.servoReleasedPosition)
+        hasFixer = True
+        try:
+            self.PCA9685 = Adafruit_PCA9685.PCA9685 (address=self.servoAddress)
+            self.PCA9685.set_pwm_freq (90) # 40-1000Hz
+            self.setPWM (self.servoReleasedPosition)
+        except Exception as e:
+            print (str(e))
+            hasFixer = False
+        return hasFixer
 
     def setdown (self):
         del self.PCA9685

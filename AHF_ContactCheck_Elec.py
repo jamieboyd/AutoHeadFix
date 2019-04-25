@@ -4,11 +4,27 @@ import RPi.GPIO as GPIO
 from time import time, sleep
 from AHF_ContactCheck import AHF_ContactCheck
 
+gContactChecker = None
+
 class AHF_ContactCheck_Elec (AHF_ContactCheck):
     
     defaultPin = 21
     defaultPolarity = 'FALLING'
     defaultPUD = 'PUD_UP'
+
+
+    @staticmethod
+    def contactCheckCallback (channel):
+        """
+        Contacts are immediate, but un-contacts are delayed
+        """
+        global gContactChecker
+        contact = gContactChecker.checkContact ()
+        if contact:
+            AHF_Task.gTask.contactBounce = 
+        if contact == False and time() > 
+         AHF_Task.gTask.contact = g
+    
     @staticmethod
     def about ():
         return 'Simple electrical contact check with option for pull-up or pull-down resistor.'
@@ -58,10 +74,19 @@ class AHF_ContactCheck_Elec (AHF_ContactCheck):
             self.contactState = GPIO.LOW
             self.unContactPolarity = GPIO.RISING
         self.contactPUD = getattr (GPIO, self.settingsDict.get ('contactPUD'))
-        GPIO.setmode (GPIO.BCM)
-        GPIO.setwarnings(False)
-        GPIO.setup (self.contactPin, GPIO.IN, pull_up_down =self.contactPUD)
+        hasContact = True
+        try:
+            GPIO.setmode (GPIO.BCM)
+            GPIO.setwarnings(False)
+            GPIO.setup (self.contactPin, GPIO.IN, pull_up_down =self.contactPUD)
+            global gContactChecker
+            gContactChecker = self
+        except Exception as e:
+            print (str(e))
+            hasContact = False
+        return hasContact
 
+    
     def setdown (self):
         GPIO.cleanup(self.contactPin)
 
@@ -83,4 +108,12 @@ class AHF_ContactCheck_Elec (AHF_ContactCheck):
             return False
         else:
             return True
+
+    def startLogging (self):
+        GPIO.add_event_detect (self.contactPin, GPIO.BOTH)
+        GPIO.add_event_calback (self.contactPin, self.contactCheckCallback)
+        
+    def stopLogging (self):
+        GPIO.remove_event_detect (self.contactPin)
+        
         

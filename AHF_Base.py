@@ -30,6 +30,29 @@ class AHF_Base (metaclass = ABCMeta):
         """
         return starterDict
 
+    
+    def newResultsDict (self, starterDict = {}):
+        """
+        Returns a dictionary with fields, initialized to 0, for storing settings/results from actions of the object, used e.g., by head fixer, stimulator, or rewarder
+        not all classes may need results, so not an abstract function
+        """
+        return starterDict
+    
+    
+    def clearResultsDict(self, resultsDict):
+        """
+        Clears values in the results dictionary, useful when you want daily totals
+        not all classes may store results, so not an abstract function
+        """
+        pass
+
+
+    def newSettingsDict (self, starterDict ={}):
+        """
+        Returns a dictionary of settings that can individually varied, overriding values in self.settings
+        """
+        return starterDict
+
 
     def __init__(self, taskP, settingsDictP):
         """
@@ -49,8 +72,9 @@ class AHF_Base (metaclass = ABCMeta):
         """
         does hardware initialization with (possibly updated) info in self.settingsDict
         Run by __init__, or can be run  separately after editing the settingsDict
+        returns the truth that setup completed without errors
         """
-        pass
+        return True
 
     @abstractmethod
     def setdown (self):

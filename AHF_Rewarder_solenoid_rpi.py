@@ -10,11 +10,12 @@ class AHF_Rewarder_solenoid_rpi (AHF_Rewarder_solenoid):
     """
     A class to use a solenoid to deliver water rewards using 1 GPIO pin controlled by RPi.GPIO , using sleep for timing 
     """
+    countermandVal=0
+    
     @staticmethod
     def about():
         return 'water rewards by opening a solenoid using 1 GPIO pin, controlled by RPi.GPIO with sleep for timing'
 
- 
     @staticmethod
     def rewardThread (sleepTime, rewardPin):
         GPIO.output(rewardPin, GPIO.HIGH)
@@ -23,49 +24,34 @@ class AHF_Rewarder_solenoid_rpi (AHF_Rewarder_solenoid):
 
     @staticmethod
     def rewardCMThread (delayTime, sleepTime, rewardPin):
-        AHF_Rewarder_solenoid.counterMand = 1
+        AHF_Rewarder_solenoid_rpi.countermandVal = 1
         sleep(delayTime) # not very accurate timing, but good enough
-        if AHF_Rewarder_solenoid.counterMand == 1:
-            AHF_Rewarder_solenoid.counterMand = 2
+        if AHF_Rewarder_solenoid_rpi.countermandVal== 1:
+            AHF_Rewarder_solenoid_rpi.countermandVal = 2
             GPIO.output(rewardPin, GPIO.HIGH)
             sleep(sleepTime) # not very accurate timing, but good enough
             GPIO.output(rewardPin, GPIO.LOW)
+            AHF_Rewarder_solenoid_rpi.countermandVal =0 
         
 
     def setup (self):
         super().setup()
         GPIO.setup(self.rewardPin, GPIO.OUT)
+        self.counterMand = 0
 
     def setdown (self):
         GPIO.cleanup(self.rewardPin)
 
-    def giveReward(self, rewardName):
-        """
-        Gives a reward of the requested type, if the requested reward type is found in the dictionary
-
-        If the requested reward type is not found, the default reward size is used
-        param:rewardName: the tyoe of the reward to be given, should already be in dictionary
-        """
-        if rewardName in self.rewards:
-            sleepTime =self.rewards.get(rewardName)
-            start_new_thread (self.rewardThread, (sleepTime,self.rewardPin))
-            return sleepTime
-        else:
-            return 0
-
+    def threadReward (self, sleepTime):
+        start_new_thread (self.rewardThread, (sleepTime, self.rewardPin))
+        
     
-    def giveRewardCM(self, rewardName):
-        if rewardName in self.rewards:
-            sleepTime =self.rewards.get(rewardName)
-            start_new_thread (self.rewardCMThread, (self.countermandTime, sleepTime,self.rewardPin))
-            return sleepTime
-        else:
-            return 0
+    def threadCMReward(self, sleepTime):
+        start_new_thread (self.rewardCMThread, (self.countermandTime, sleepTime, self.rewardPin))
 
-
-    def countermandReward(self):
-        if self.countermand == 1:
-            self.countermand =0
+    def threadCountermand(self):
+        if AHF_Rewarder_solenoid_rpi.countermandVal == 1:
+            AHF_Rewarder_solenoid_rpi.countermandVal =0
             return True
         else:
             return False

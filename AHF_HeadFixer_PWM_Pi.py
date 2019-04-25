@@ -25,10 +25,16 @@ class AHF_HeadFixer_PWM_Pi (AHF_HeadFixer_PWM):
     def setup (self):
         super().setup()
         self.pwmChan = self.settingsDict.get('pwmChan')
-        self.pwm_ptr = ptPWM.newThreadless(90, 4096)
-        ptPWM.threadlessAddChan(self.pwm_ptr, self.pwmChan, 1, 0, 0)
-        ptPWM.threadlessSetValue(self.pwm_ptr, self.servoReleasedPosition, self.pwmChan)
-        ptPWM.threadlessSetAble (self.pwm_ptr, 1, self.pwmChan)
+        hasFixer = True
+        try:
+            self.pwm_ptr = ptPWM.newThreadless(90, 4096)
+            ptPWM.threadlessAddChan(self.pwm_ptr, self.pwmChan, 1, 0, 0)
+            ptPWM.threadlessSetValue(self.pwm_ptr, self.servoReleasedPosition, self.pwmChan)
+            ptPWM.threadlessSetAble (self.pwm_ptr, 1, self.pwmChan)
+        except Exception as e:
+            print (str(e))
+            hasFixer = False
+        return hasFixer
 
     def setdown (self):
         del self.pwm_ptr
