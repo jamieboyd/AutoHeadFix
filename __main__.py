@@ -25,6 +25,7 @@ from time import time, localtime,timezone, sleep
 from datetime import datetime, timedelta
 from random import random
 from sys import argv
+from h5py import File
 #library import - need to have RPi.GPIO installed, but should be standard on Raspbian Woody or Jessie
 import RPi.GPIO as GPIO
 
@@ -49,15 +50,15 @@ def entryBBCallback (channel):
             print ('mouse at entrance')
         gMouseAtEntry =True
         gTubePanicTime = time () + gTubeMaxTime
-        
+
     elif GPIO.input (channel) == GPIO.HIGH:  # mouse just left
         if gMouseAtEntry == True:
             print ('Mouse left entrance')
         gMouseAtEntry =False
         gTubePanicTime = time () + 25920000 # a month from now.
-        
 
-        
+
+
 def main():
     """
     The main function for the AutoHeadFix program.
@@ -72,13 +73,13 @@ def main():
         # get settings that may vary by experiment, including rewarder, camera parameters, and stimulator
         # More than one of these files can exist, and the user needs to choose one or make one
         # we will add some other  variables to expSettings so we can pass them as a single argument to functions
-        # logFP, statsFP, dateStr, dayFolderPath, doHeadFix, 
+        # logFP, statsFP, dateStr, dayFolderPath, doHeadFix,
         # configFile can be specified if launched from command line, eg, sudo python3 myconfig or sudo python3 AHFexp_myconfig.jsn
         configFile = None
         if argv.__len__() > 1:
             configFile = argv [1]
         expSettings = AHF_Settings (configFile)
-        #put settings into one big dictionary 
+        #put settings into one big dictionary
         #allSettings = {}
         #allSettings.update (cageSettings.asDict())
         #allSettings.update (expSettings.asDict())
@@ -100,13 +101,13 @@ def main():
         GPIO.setup (cageSettings.tirPin, GPIO.IN)  # Tag-in-range output from RFID tatg reader
         GPIO.setup (cageSettings.contactPin, GPIO.IN, pull_up_down=getattr (GPIO, "PUD_" + cageSettings.contactPUD))
         if cageSettings.contactPolarity == 'RISING':
-            expSettings.contactEdge = GPIO.RISING 
+            expSettings.contactEdge = GPIO.RISING
             expSettings.noContactEdge = GPIO.FALLING
             expSettings.contactState = GPIO.HIGH
             expSettings.noContactState = GPIO.LOW
         else:
             expSettings.contactEdge = GPIO.FALLING
-            expSettings.noContactEdge = GPIO.RISING 
+            expSettings.noContactEdge = GPIO.RISING
             expSettings.contactState = GPIO.LOW
             expSettings.noContactState = GPIO.HIGH
         # make head fixer - does its own GPIO initialization from info in cageSettings
@@ -242,7 +243,7 @@ def main():
                     # check for entry beam break while idling between trials
                     if cageSettings.hasEntryBB==True and time() > gTubePanicTime:
                         print ('Some one has been in the entrance of this tube for too long')
-                        # explictly turn off pistons, though they should be off 
+                        # explictly turn off pistons, though they should be off
                         headFixer.releaseMouse()
                         BBentryTime = gTubePanicTime - gTubeMaxTime
                         if expSettings.hasTextMsg == True:
@@ -280,13 +281,13 @@ def main():
                     elif event == 'h' or event == 'H':
                         hardwareTester(cageSettings, tagReader, headFixer)
                         if cageSettings.contactPolarity == 'RISING':
-                            expSettings.contactEdge = GPIO.RISING 
+                            expSettings.contactEdge = GPIO.RISING
                             expSettings.noContactEdge = GPIO.FALLING
                             expSettings.contactState = GPIO.HIGH
                             expSettings.noContactState = GPIO.LOW
                         else:
                             expSettings.contactEdge = GPIO.FALLING
-                            expSettings.noContactEdge = GPIO.RISING 
+                            expSettings.noContactEdge = GPIO.RISING
                             expSettings.contactState = GPIO.LOW
                             expSettings.noContactState = GPIO.HIGH
                     elif event == 'c' or event == 'C':
@@ -343,7 +344,7 @@ def runTrial (thisMouse, expSettings, cageSettings, camera, rewarder, headFixer,
         # Configure the stimulator and the path for the video
         stimStr = stimulator.configStim (thisMouse)
         headFixTime = time()
-        
+
         #TODO IMPROVE
         if camera.AHFvideoFormat == 'rgb':
             extension = 'raw'
@@ -383,7 +384,7 @@ def runTrial (thisMouse, expSettings, cageSettings, camera, rewarder, headFixer,
         skeddadleEnd = time() + expSettings.skeddadleTime
         if expSettings.doHeadFix == True:
             headFixer.releaseMouse()
-            sleep (0.5) # need to be mindful that servo motors generate RF, so wait 
+            sleep (0.5) # need to be mindful that servo motors generate RF, so wait
         stimulator.logfile ()
         writeToLogFile (expSettings.logFP, thisMouse,'complete')
         if (GPIO.input (cageSettings.contactPin)== expSettings.contactState):
@@ -424,7 +425,7 @@ def makeDayFolderPath (expSettings, cageSettings):
             chown (expSettings.dayFolderPath + 'Videos/', uid, gid)
     except Exception as e:
             print ("Error making directories\n", str(e))
-        
+
 
 def makeLogFile (expSettings, cageSettings):
     """
@@ -439,7 +440,7 @@ def makeLogFile (expSettings, cageSettings):
         writeToLogFile (expSettings.logFP, None, 'SeshStart')
     except Exception as e:
             print ("Error maing log file\n", str(e))
-            
+
 def writeToLogFile(logFP, mouseObj, event):
     """
     Writes the time and type of each event to a text log file, and also to the shell
@@ -447,7 +448,7 @@ def writeToLogFile(logFP, mouseObj, event):
     Format of the output string: tag     time_epoch or datetime       event
     The computer-parsable time_epoch is printed to the log file and user-friendly datetime is printed to the shell
     :param logFP: file pointer to the log file
-    :param mouseObj: the mouse for which the event pertains, 
+    :param mouseObj: the mouse for which the event pertains,
     :param event: the type of event to be printed, entry, exit, reward, etc.
     returns: nothing
     """
@@ -467,7 +468,7 @@ def writeToLogFile(logFP, mouseObj, event):
 def makeQuickStatsFile (expSettings, cageSettings, mice):
     """
     makes a new quickStats file for today, or opens an existing file to append.
-    
+
     QuickStats file contains daily totals of rewards and headFixes for each mouse
     :param expSettings: experiment-specific settings, everything you need to know is stored in this object
     :param cageSettings: settings that are expected to stay the same for each setup, including hardware pin-outs for GPIO
@@ -494,7 +495,7 @@ def updateStats (statsFP, mice, mouse):
     """ Updates the quick stats text file after every exit, mostly for the benefit of folks logged in remotely
     :param statsFP: file pointer to the stats file
     :param mice: the array of mouse objects
-    :param mouse: the mouse which just left the chamber 
+    :param mouse: the mouse which just left the chamber
     returns:nothing
     """
     try:
@@ -509,6 +510,54 @@ def updateStats (statsFP, mice, mouse):
         statsFP.seek (39 + 38 * mice.nMice()) # leave file position at end of file so when we quit, nothing is truncated
     except Exception as e:
         print ("Error writing updating stat file\n", str (e))
+
+# TODO: Adjust the HDF5 Code to store the images with timestamp and file name
+
+# def makeH5File (expSettings,cageSettings,mice):
+#     #makes a new .h5-file or opens and existing one
+#     expSettings.hdf_path = cageSettings.dataPath + 'mice_images.h5'
+#     if path.exists(expSettings.hdf_path):
+#         with File(expSettings.hdf_path,'r+') as hdf:
+#             mice.addMiceFromH5(hdf,expSettings.statsFP)
+#             mice.show()
+#     else:
+#         with File(expSettings.hdf_path,'w') as hdf:
+#             pass
+#
+# def backup_H5 (expSettings,cageSettings):
+#     expSettings.hdf_backup_path = cageSettings.dataPath + 'mice_images_backup.h5'
+#     if path.exists(expSettings.hdf_path):
+#         with File(expSettings.hdf_path,'r+') as hdf:
+#             with File(expSettings.hdf_backup_path,'w') as hdfb:
+#                 for key, items in hdf.items():
+#                     hdf.copy(key,hdfb)
+#     else:
+#         print("mice_metadata.h5 doesn't exist.")
+#
+# def updateH5File (expSettings,cageSettings,mice,stimulator):
+#     #Updates the existing h5 file, which contains relevant information of each mouse.
+#     with File(expSettings.hdf_path,'r+') as hdf:
+#         for mouse in mice.mouseArray:
+#             m = hdf.require_group(str(mouse.tag))
+#             m.attrs.modify('headFixes',mouse.headFixes)
+#             m.attrs.modify('tot_headFixes',mouse.tot_headFixes)
+#             m.attrs.modify('entries',mouse.entries)
+#             m.attrs.modify('entranceRewards',mouse.entranceRewards)
+#             m.attrs.modify('headFixRewards',mouse.headFixRewards)
+#             m.attrs.modify('headFixStyle',mouse.headFixStyle)
+#             m.attrs.modify('stimType',mouse.stimType)
+#             # Run mouse-stimulator specific updater
+#             stimulator[mouse.stimType].h5updater (mouse,m)
+#             #To keep track of mouse attributes, create 'log' and save all attributes per day
+#             h = m.require_group('log')
+#             t = h.require_group(str(expSettings.dateStr))
+#             t.attrs.modify('headFixes',mouse.headFixes)
+#             t.attrs.modify('tot_headFixes',mouse.tot_headFixes)
+#             t.attrs.modify('entries',mouse.entries)
+#             t.attrs.modify('entranceRewards',mouse.entranceRewards)
+#             t.attrs.modify('headFixRewards',mouse.headFixRewards)
+#             t.attrs.modify('headFixStyle',mouse.headFixStyle)
+
 
 if __name__ == '__main__':
    main()

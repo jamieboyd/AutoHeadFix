@@ -11,7 +11,7 @@ class AHF_Stimulator (AHF_Base, metaclass = ABCMeta):
     """
     Stimulator does all stimulation and reward during a head fix task
     All events and their timings in a head fix, including rewards, are controlled by a Stimulator.
-    
+
     """
 
 
@@ -22,12 +22,16 @@ class AHF_Stimulator (AHF_Base, metaclass = ABCMeta):
         """
         pass
 
-        
+
 
 
     def startCamera (self):
 
-
+        # TODO: Save images within HDF5 code for each event
+        # Save with file name and timestamp, the rest of the information
+        # should be in the text file
+        # End goal: Use database with text file, then use result of database
+        # to find images in HDF5.
 
         try:
         if expSettings.doHeadFix == True:
@@ -47,7 +51,7 @@ class AHF_Stimulator (AHF_Base, metaclass = ABCMeta):
         # Configure the stimulator and the path for the video
         stimStr = stimulator.configStim (thisMouse)
         headFixTime = time()
-        
+
         #TODO IMPROVE
         if camera.AHFvideoFormat == 'rgb':
             extension = 'raw'
@@ -87,7 +91,7 @@ class AHF_Stimulator (AHF_Base, metaclass = ABCMeta):
         skeddadleEnd = time() + expSettings.skeddadleTime
         if expSettings.doHeadFix == True:
             headFixer.releaseMouse()
-            sleep (0.5) # need to be mindful that servo motors generate RF, so wait 
+            sleep (0.5) # need to be mindful that servo motors generate RF, so wait
         stimulator.logfile ()
         writeToLogFile (expSettings.logFP, thisMouse,'complete')
         if (GPIO.input (cageSettings.contactPin)== expSettings.contactState):
