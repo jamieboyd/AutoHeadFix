@@ -32,7 +32,7 @@ class Task(object):
     def __init__ (self, fileName = ''):
         """
         Initializes a Task object with settings for various hardware, stimulator, and Subjects classes
-        
+
         """
         fileErr = False
         if fileName != '':
@@ -71,6 +71,7 @@ class Task(object):
         ################################ Stimulator (Obligatory) makes its own dictionary #######################
         if not hasattr (self, 'StimulatorClass') or not hasattr (self, 'StimulatorDict'):
             self.StimulatorClass = CAD.Class_from_file('Stimulator', CAD.File_from_user ('Stimulator', 'Experiment Stimulator Class', '.py'))
+            #requires a starter dict?
             self.StimulatorDict = self.StimulatorClass.config_user_get ()
             fileErr = True
         ################################ Rewarder (Obligatory) class makes its own dictionary #######################
@@ -146,19 +147,19 @@ class Task(object):
             fileErr = True
         ###################### things we track in the main program #################################
         self.tag = 0    # RFIG tag number, 0 for no tag, updated by threaded callback
-        self.contact = False # true if contact is true 
+        self.contact = False # true if contact is true
         self.lastFixedTag = 0
         self.entryTime = 0.0
         self.fixAgainTime = float ('inf')
         self.inChamberLimitExceeded = False
         self.logToFile = True # a flag for writing to the shell only, or to the shall and the log
         ################ if some of the paramaters were set by user, give option to save ###############
-        if fileErr: 
+        if fileErr:
             response = input ('Save new/updated settings to a task configuration file?')
             if response [0] == 'y' or response [0] == 'Y':
                 self.saveSettings ()
-    
-                
+
+
 
     def setup (self):
         """
@@ -174,8 +175,8 @@ class Task(object):
                 setattr (self, baseName, item [1](self, classDict))
         global gTask
         gTask = self
-                
-            
+
+
     def saveSettings(self):
         """
         Saves current configuration stored in the task object into AHF_task_*.jsn
@@ -207,12 +208,12 @@ class Task(object):
         change. Returns the ordered dictionary, used by editSettings function
         """
         return CAD.Show_ordered_object (self, 'Auto Head Fix Task')
-    
+
 
     def editSettings (self):
         CAD.Edit_Obj_fields (self,  'Auto Head Fix Task')
-        
-        
+
+
     def Show_testable_objects (self):
         print ('\n*************** Testable Auto Head Fix Objects *******************')
         showDict = OrderedDict()
@@ -223,7 +224,7 @@ class Task(object):
            if isinstance(item[1], AHF_Base) and hasattr (item[1], 'hardwareTest'):
                 showDict.update ({nP:{item [0]: item [1]}})
                 nP +=1
-        # print to screen 
+        # print to screen
         for ii in range (0, nP):
             itemDict.update (showDict.get (ii))
             kvp = itemDict.popitem()
@@ -252,7 +253,7 @@ class Task(object):
         response = input ('Save changes in settings to a file?')
         if response [0] == 'Y' or response [0] == 'y':
             self.saveSettings ()
-                             
+
 
 if __name__ == '__main__':
     task = Task ('')
@@ -262,4 +263,3 @@ if __name__ == '__main__':
         task.saveSettings ()
     task.setup ()
     task.hardwareTester ()
-
