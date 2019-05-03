@@ -32,7 +32,7 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
         response = input ('Enter solenoid opening duration, in seconds, for task rewards, (currently %.2f): ' % AHF_Rewarder_solenoid.defaultTask)
         if response != '':
             task = float (response)
-                maxEntryRewards = starterDict.get ('maxEntryRewards', AHF_Rewarder_solenoid.maxEntryRewardsDefault)
+            maxEntryRewards = starterDict.get ('maxEntryRewards', AHF_Rewarder_solenoid.maxEntryRewardsDefault)
         response = input('Enter the maximum number of entry reards given per day (currently %d): ' % maxEntryRewards)
         if response != '':
             maxEntryRewards = int (response)
@@ -84,7 +84,7 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
             if sleepTime ==0:
                 return 0
             else:                     
-                resultsDict.update {rewardName, resultsDict.get (rewardName, 0) + 1})
+                resultsDict.update ({rewardName, resultsDict.get (rewardName, 0) + 1})
                 self.task.DataLogger.writeToLogFile(self.task.tag, 'Reward', {'kind' : rewardName, 'size' : sleepTime}, time())
                 self.threadReward (sleepTime)
                 return sleepTime
@@ -101,7 +101,7 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
             if sleepTime ==0:
                 return 0
             else:                     
-                resultsDict.update {rewardName, resultsDict.get (rewardName, 0) + 1})
+                resultsDict.update ({rewardName, resultsDict.get (rewardName, 0) + 1})
                 self.countermanded = rewardName
                 self.threadCMReward (sleepTime)
                 return sleepTime
@@ -111,7 +111,7 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
         Countermands the previously given reward
         """
         if self.threadCountermand ():
-            resultsDict.update {self.countermanded, resultsDict.get (self.countermanded, 0) - 1})
+            resultsDict.update ({self.countermanded, resultsDict.get (self.countermanded, 0) - 1})
              
         return 0
     
