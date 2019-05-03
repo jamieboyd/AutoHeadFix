@@ -9,14 +9,14 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
     defaultRewards = 5
     defaultInterval = 3
 
-    
+
     @staticmethod
     def about():
         return 'Rewards stimulator gives periodic rewards, no interaction from mouse required.'
 
 
     @staticmethod
-    def config_user_get (starterDict):
+    def config_user_get (starterDict = {}):
         nRewards = starterDict.get ('nRewards', AHF_Stimulator_Rewards.defaultRewards)
         response = input('Enter the number of rewards you want to give per head fixing session (currently %d): ' % nRewards)
         if response != '':
@@ -27,8 +27,8 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
             rewardInterval = float (response)
         starterDict.update({'nRewards' : nRewards, 'rewardInterval' : rewardInterval})
         return starterDict
-    
-        
+
+
     def setup (self):
         self.nRewards = self.settingsDict.get ('nRewards')
         self.rewardInterval = self.settingsDict.get ('rewardInterval')
@@ -46,7 +46,7 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
             self.rewarder.giveReward('task')
             sleep(self.rewardInterval)
         mouse.headFixRewards += self.nRewards
-        
+
     def logFile (self):
         event = '\treward'
         mStr = '{:013}'.format(self.mouse.tag) + '\t'
@@ -103,6 +103,4 @@ if __name__ == '__main__':
         print ('File not found')
     finally:
         GPIO.cleanup ()
-"""    
-
-    
+"""

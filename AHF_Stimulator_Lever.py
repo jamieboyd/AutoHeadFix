@@ -18,7 +18,7 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
     ZERO_LEVER_RETURN = 0
     ZERO_LEVER_RESET = 1
     LEVER_FREQ = 250
-    
+
     posBufferSize_def = 1000 # 4 seconds of lever position data at 250 Hz
     isCued_def = False # trials will be un-cued, mouse starts when he likes
     toGoalOrCirc_def = 63 # .252 seconds before lever gets into goal are recorded
@@ -29,8 +29,8 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
     pathToData_def = '/home/pi/Documents/' # folder where lever pos files will be saved
 
     def config_user_get (starterDict = {}):
-        
-            keyTuple = ('posBufferSize', 'isCued', 'constForce', 'toGoalOrCirc', 'isReversed', 'goalCuePin', 'goalCueFreq','pathToData')
+
+        keyTuple = ('posBufferSize', 'isCued', 'constForce', 'toGoalOrCirc', 'isReversed', 'goalCuePin', 'goalCueFreq','pathToData')
         for key in keyTuple:
             value = input ('Enter a value for ' + key + ':')
             stimDict.update({key : value})
@@ -39,7 +39,7 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
     def dict_from_user (stimDict):
         if not 'dataSaveFolder' in stimDict:
             stimDict.update ({'dataSaveFolder' : '/home/pi/Documents/'})
-                
+
         if not 'decoderReversed' in stimDict:
             stimDict.update ({'decoderReversed' : False})
         if not 'motorPresent' in stimDict:

@@ -6,7 +6,7 @@ from PTSimpleGPIO import CountermandPulse
 
 class AHF_Rewarder_solenoid_pt (AHF_Rewarder_solenoid):
     """
-    A class to use a solenoid to deliver water rewards using 1 GPIO pin, using pulsed thread/PTSimpleGPIO for timing 
+    A class to use a solenoid to deliver water rewards using 1 GPIO pin, using pulsed thread/PTSimpleGPIO for timing
     """
 
     @staticmethod
@@ -24,8 +24,8 @@ class AHF_Rewarder_solenoid_pt (AHF_Rewarder_solenoid):
         self.cmPulse.set_duration(sleepTime)
         self.cmPulse.do_pulse()
 
-    
-     def threadCMReward (self, sleepTime):
+
+    def threadCMReward (self, sleepTime):
         self.cmPulse.set_duration(sleepTime)
         self.cmPulse.set_delay (self.countermandTime)
         self.cmPulse.do_pulse_countermandable()

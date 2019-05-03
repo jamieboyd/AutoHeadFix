@@ -61,9 +61,9 @@ class AHF_TagReader_ID (AHF_TagReader):
                     sleep (0.1)
                 if hasattr (AHF_Task.gTask, 'Notifer'):
                     Notifier.notifyStuck (stuckMouse, cageID, (time() - AHF_Task.gTask.entryTime), False)
-                 AHF_Task.gTask.inChamberLimitExceeded = False
-            
- 
+                AHF_Task.gTask.inChamberLimitExceeded = False
+
+
     @staticmethod
     def about ():
         return 'ID Innovations RFID-Tag Reader on a serial port with GPIO Tag-in-Range Pin'
@@ -90,7 +90,7 @@ class AHF_TagReader_ID (AHF_TagReader):
 
     def clearResultsDict(self, resultsDict):
         resultsDict.update({'entries' : 0})
-        
+
     def setup (self):
         self.serialPort = self.settingsDict.get('serialPort')
         self.TIRpin = self.settingsDict.get('TIRpin')
@@ -98,12 +98,12 @@ class AHF_TagReader_ID (AHF_TagReader):
         self.isLogging = False
         AHF_TagReader_ID.gStillThere = False
         AHF_TagReader_ID.gInChamberTimeLimit = self.settingsDict.get ('inChamberTimeLimit')
-        
+
     def setdown (self):
         if self.isLogging:
             self.stopLogging()
         del self.tagReader
-        
+
     def readTag (self):
         return self.tagReader.readTag ()
 
@@ -117,7 +117,7 @@ class AHF_TagReader_ID (AHF_TagReader):
             self.tagReader.removeCallback()
             GPIO.remove_event_detect (self.tag_in_range_pin)
             self.isLogging = False
-        
+
     def hardwareTest (self):
         wasLogging = self.isLogging
         if wasLogging:

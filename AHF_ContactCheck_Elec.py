@@ -7,11 +7,11 @@ from AHF_ContactCheck import AHF_ContactCheck
 gContactChecker = None
 
 class AHF_ContactCheck_Elec (AHF_ContactCheck):
-    
+
     defaultPin = 21
     defaultPolarity = 'FALLING'
     defaultPUD = 'PUD_UP'
-
+    debounceTime = 5 #seconds
 
     @staticmethod
     def contactCheckCallback (channel):
@@ -19,12 +19,15 @@ class AHF_ContactCheck_Elec (AHF_ContactCheck):
         Contacts are immediate, but un-contacts are delayed
         """
         global gContactChecker
-        contact = gContactChecker.checkContact ()
-        if contact:
-            AHF_Task.gTask.contactBounce = 
-        if contact == False and time() > 
-         AHF_Task.gTask.contact = g
-    
+        # TODO: Fix and complete this
+        # contact = gContactChecker.checkContact ()
+        # duration = time() - AHF_Task.gTask.contactTime
+        # if contact:
+        #     AHF_Task.gTask.contact = True
+        #     AHF_Task.gTask.contactTime = time()
+        # if contact == False and duration > debounceTime
+        #     AHF_Task.gTask.contact = False
+
     @staticmethod
     def about ():
         return 'Simple electrical contact check with option for pull-up or pull-down resistor.'
@@ -52,7 +55,7 @@ class AHF_ContactCheck_Elec (AHF_ContactCheck):
         updown = 'pull-up'
         if contactPolarity == 'RISING':
             updown = 'pull-down'
-        
+
         response = input ('Enable %s resistor on the GPIO pin? enter Yes to enable, or No if an external pull-up is installed, currently %s:' % (updown, onoff))
         if response != '':
             if response [0]== 'N' or response [0]== 'n':
@@ -86,7 +89,7 @@ class AHF_ContactCheck_Elec (AHF_ContactCheck):
             hasContact = False
         return hasContact
 
-    
+
     def setdown (self):
         GPIO.cleanup(self.contactPin)
 
@@ -112,8 +115,6 @@ class AHF_ContactCheck_Elec (AHF_ContactCheck):
     def startLogging (self):
         GPIO.add_event_detect (self.contactPin, GPIO.BOTH)
         GPIO.add_event_calback (self.contactPin, self.contactCheckCallback)
-        
+
     def stopLogging (self):
         GPIO.remove_event_detect (self.contactPin)
-        
-        
