@@ -15,7 +15,7 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
     defaultEntry = 0.2
     defaultTask = 0.4
 
-    gTask = none
+    gTask = None
 
     @staticmethod
     def config_user_get(starterDict = {}):
@@ -37,7 +37,7 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
         if response != '':
             maxEntryRewards = int (response)
         entryRewardDelay = starterDict.get ('entryRewardDelay', AHF_Rewarder_solenoid.entryRewardDelayDefault)
-        response = input('Enter the delay between entering and getting a reward (currently %.2f): ' % defaultEntryRewardDelay)
+        response = input('Enter the delay between entering and getting a reward (currently %.2f): ' % entryRewardDelay)
         if response != '':
             entryRewardDelay = float (response)
         rewards.update({'entry' : entry, 'task' : task, 'test' : AHF_Rewarder_solenoid.testAmount})

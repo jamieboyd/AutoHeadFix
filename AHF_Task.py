@@ -88,7 +88,7 @@ class Task(object):
         if not hasattr (self, 'CameraClass') or not hasattr (self, 'CameraDict'):
             tempInput = input ('Does this system have a main camera installed (Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.CameraClass = CAD.Class_from_file(CAD.File_from_user ('Camera', 'main camera', '.py'))
+                self.CameraClass = CAD.Class_from_file('Camera', CAD.File_from_user ('Camera', 'main camera', '.py'))
                 self.CameraDict = self.CameraClass.config_user_get ()
             else:
                 self.cameraClass = None
@@ -115,7 +115,7 @@ class Task(object):
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
                 self.NotifierClass = CAD.Class_from_file('Notifier', '')
                 self.NotifierDict = self.NotifierClass.config_user_get()
-                self.NotifierDict.update ({'cageID' : self.cageID})
+                self.NotifierDict.update ({'cageID' : self.DataLoggerDict.get('cageID')})
             else:
                 self.NotifierClass = None
                 self.NotifierDict = None
@@ -170,7 +170,7 @@ class Task(object):
         fields = sorted (inspect.getmembers (self))
         for item in fields:
             if isinstance(item [1],  ABCMeta):
-                baseName = item [0].rstrip ('Class')
+                baseName = (item [0], item[0][:-5])[item[0].endswith('Class')]
                 classDict = getattr (self, baseName + 'Dict')
                 setattr (self, baseName, item [1](self, classDict))
         global gTask
