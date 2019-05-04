@@ -12,9 +12,9 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
     """
     hasLevels = True
     numLevels =8
-    defaultReleasePosition = 540
-    defaultFixedPosition = 325
-    
+    defaultReleasePosition = 933
+    defaultFixedPosition = 685
+
     @staticmethod
     @abstractmethod
     def config_user_get (starterDict = {}):
@@ -39,7 +39,7 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
         starterDict.update ({'servoFixedPosition' : self.servoFixedPosition})
         return starterDict
 
-    
+
     @abstractmethod
     def setup (self):
         super().setup()
@@ -47,7 +47,7 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
         self.servoFixedPosition = self.settingsDict.get ('servoFixedPosition')
         if self.__class__.hasLevels:
             self.servoIncrement = (self.servoFixedPosition - self.servoReleasedPosition)/self.numLevels
-    
+
     def fixMouse(self, thisTag, resultsDict = {}, individualDict= {}):
         self.task.isFixTrial = settingsDict.get ('propHeadFix', self.propHeadFix) > random()
         hasContact = False
@@ -88,4 +88,3 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
             self.settingsDict = AHF_HeadFixer_PWM.config_user_get (self.settingsDict)
             self.servoReleasedPosition = self.settingsDict.get ('servoReleasedPosition')
             self.servoFixedPosition = self.settingsDict.get ('servoFixedPosition')
-

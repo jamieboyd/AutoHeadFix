@@ -113,7 +113,7 @@ class Task(object):
         if not hasattr (self, 'NotifierClass') or not hasattr (self, 'NotifierDict'):
             tempInput = input ('Send notifications if subject exceeds criterion time in chamber?(Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.NotifierClass = CAD.Class_from_file('Notifier', '')
+                self.NotifierClass = CAD.Class_from_file('Notifier',  CAD.File_from_user ('Notifier', 'Text Messaging Notifier', '.py'))
                 self.NotifierDict = self.NotifierClass.config_user_get()
                 self.NotifierDict.update ({'cageID' : self.DataLoggerDict.get('cageID')})
             else:
@@ -124,7 +124,7 @@ class Task(object):
         if not hasattr (self, 'TriggerClass') or not hasattr (self, 'TriggerDict'):
             tempInput = input ('Send triggers to start tasks on secondary computers (Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.TriggerClass = CAD.Class_from_file('Trigger', '')
+                self.TriggerClass = CAD.Class_from_file('Trigger', CAD.File_from_user ('Trigger', 'Trigger', '.py'))
                 self.TriggerDict = self.TriggerClass.config_user_get()
             else:
                 self.TriggerClass = None
@@ -134,7 +134,7 @@ class Task(object):
         if not hasattr (self, 'LickDetectorClass') or not hasattr (self, 'LickDetectorDict'):
             tempInput = input ('Does this setup have a Lick Detector installed? (Y or N)')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.LickDetectorClass = CAD.Class_from_file('LickDetector', '')
+                self.LickDetectorClass = CAD.Class_from_file('LickDetector', CAD.File_from_user ('LickDetector', 'Lick Detector', '.py'))
                 self.LickDetectorDict = self.LickDetectorClass.config_user_get()
             else:
                 self.LickDetectorClass = None

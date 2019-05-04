@@ -21,7 +21,7 @@ class AHF_Rewarder(AHF_Base, metaclass = ABCMeta):
         and returns starterDict with settings as edited by the user.
 
         """
-  
+        return starterDict
     @abstractmethod
     def giveReward(self, rewardName, resultsDict={}, settingsDict = {}):
         return 0
@@ -44,7 +44,7 @@ class AHF_Rewarder(AHF_Base, metaclass = ABCMeta):
 
     def addRewardToDict (self, rewardName, rewardSize):
         self.rewards.update ({rewardName : rewardSize})
-            
+
 
     def setCountermandTime (self, countermandTime):
         self.countermandTime = countermandTime
@@ -52,7 +52,7 @@ class AHF_Rewarder(AHF_Base, metaclass = ABCMeta):
     @abstractmethod
     def hardwareTest (self):
         pass
-        
+
     def rewardControl (self):
         """
         Opens and closes valve, as for testing, or draining the lines
@@ -80,7 +80,3 @@ class AHF_Rewarder(AHF_Base, metaclass = ABCMeta):
                     print ("I understand 1 for open, 0 for close, q for quit.")
         except KeyboardInterrupt:
             print ("RewardControl quitting.")
-            
-
-
-

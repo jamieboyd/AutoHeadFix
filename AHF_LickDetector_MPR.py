@@ -1,7 +1,7 @@
 #! /usr/bin/python
 #-*-coding: utf-8 -*-
 
-import TouchDetectorMPR121
+import Adafruit_MPR121.MPR121 as MPR121
 from AHF_LickDetector import AHF_LickDetector
 
 class AHF_LickDetector_MPR (AHF_LickDetector):
@@ -13,7 +13,7 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
     defaultTouchThresh = 8 # 8 bit value for what constitutes a touch, recommended by dirkjan
     defaultUntouchThresh = 4 # # 8 bit value for what constitutes an un-touch, recommended by dirkjan
     defaultTouchChannels = (0,1,2,3) # number of channels on the mpr121 is 12, but last channel is sum of all channels
-    
+
 
     @staticmethod
     def customCallback(touchedChannel):
@@ -31,12 +31,12 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
         custom callback used for hardware test - prints touches to the shell, but does not log
         """
         print ('A touch was recorded on channel {:d}'.format(touchedChannel))
-        
+
 
     @staticmethod
     def about ():
         return 'Lick detector using the mpr121 capacitive touch sensor breakout from sparkfun over i2c bus'
-    
+
     @staticmethod
     def config_user_get (starterDict = {}):
         pin = starterDict.get ('IRQpin', AHF_LickDetector_MPR.defaultIRQ)
@@ -47,11 +47,11 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
         response = input("Enter MPR121 I2C Address, in Hexadecimal, currently 0x%x: " % mprAddress)
         if response != '':
             mprAddress = int (response, 16)
-        touchThresh = startDict.get ('touchThresh', AHF_LickDetector_MPR.defaultTouchThresh)
+        touchThresh = starterDict.get ('touchThresh', AHF_LickDetector_MPR.defaultTouchThresh)
         response = input ('Enter 8-bit (0-255) touch threshold value, curently %d: ' % touchThresh)
         if response != '':
             touchthresh = int (response)
-        unTouchThresh = startDict.get ('unTouchThresh', AHF_LickDetector_MPR.defaultunTouchThresh)
+        unTouchThresh = starterDict.get ('unTouchThresh', AHF_LickDetector_MPR.defaultUntouchThresh)
         response = input ('Enter 8-bit (0-255) un-touch threshold value, curently %d: ' % unTouchThresh)
         if response != '':
             unTouchthresh = int (response)
@@ -63,8 +63,8 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
                 tempList.append (chan)
             touchChans = tuple(tempList)
         starterDict.update ({'mprAddress' : mprAddress, 'IRQpin' : pin, 'touchThresh' : touchThresh})
-        starterDict.update ({'unTouchThresh' : unTouchthresh, 'touchChans' : touchChans})
-        return starterDict  
+        starterDict.update ({'unTouchThresh' : unTouchThresh, 'touchChans' : touchChans})
+        return starterDict
 
 
     def setup (self):
@@ -75,7 +75,7 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
         self.unTouchThresh = self.settingsDict.get ('unTouchThresh')
         self.touchChans = self.settingsDict.get ('touchChans')
         # initialize capacitive sensor object
-        self.touchDetector = TouchDetectorMPR121.TouchDetector(self.I2Caddress, touchThresh, unTouchThresh)
+        self.touchDetector = MPR121.TouchDetector(self.I2Caddress, touchThresh, unTouchThresh)
         self.touchDetector.addCustomCallback (self.customCallback)
 
     def newResultsDict (self, starterDict = {}):
@@ -125,7 +125,7 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
         self.touchDetector.startCount()
 
 
-    def getLickCount (self, chanList):
+    def stopLickCount (self, chanList):
         """
         takes a list of channels and returns a list where each member is the number of licks for that channel in the global array
         call zeroLickCount, wait a while for some licks, then call getLickCount
@@ -154,13 +154,13 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
          """
         return self.touchDetector.waitForTouch()
 
- 
+
     def hardwareTest (self):
         from math import log
         """
         tests the lick detector, designed to be called by the hardware tester,can modify IRQ pin in hardware settings
         """
-        wasLogging = self.touchDetector.callbackMode & TouchDetectorMPR121.TouchDetector.callbackCountMode
+        wasLogging = self.touchDetector.callbackMode & MPR121.TouchDetector.callbackCountMode
         if wasLogging :
             self.stopLogging ()
         #self.touchDetector.addCustomCallback (hardWareTestCallback)
@@ -177,16 +177,15 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
                 rStr= 'FAIL: Touch was registered the whole 10 seconds: '
             else:
                 rStr= 'FAIL:No Touches were detected in 10 seconds: '
-            inputStr=input (rStr + '\nDo you want to change the lick detetctor settings? :') 
+            inputStr=input (rStr + '\nDo you want to change the lick detetctor settings? :')
             if inputStr[0] == 'y' or inputStr[0] == "Y":
                 self.setdown()
                 self.settingsDict = self.config_user_get (self.settingsDict)
-                self.setup() 
+                self.setup()
             else:
                 inputStr=input (rStr + '\nDo you want to re-calculate base-line values wit a re-set? :')
                 if inputStr[0] == 'y' or inputStr[0] == "Y":
-                self.resetDetector()
-                self.touchDetector.set_thresholds (self.touchThresh, self.unTouchThresh)
+                    self.resetDetector()
+                    self.touchDetector.set_thresholds (self.touchThresh, self.unTouchThresh)
         if wasLogging :
             self.startLogging ()
-       

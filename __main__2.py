@@ -3,9 +3,9 @@
 
 from time import time, localtime,timezone, sleep
 from datetime import datetime, timedelta
-
+from sys import argv
 # Task configures and controls sub-tasks for hardware and stimulators
-from AHF_Task import AHF_Task
+from AHF_Task import Task
 # hardware tester can be called from menu pulled up by keyboard interrupt
 from AHF_HardwareTester import hardwareTester
 
@@ -43,7 +43,7 @@ def main():
     assert (hasattr (task, 'BrainLight')) # quick debug check that task got loaded and setup ran
     # calculate time for saving files for each day
     now = datetime.fromtimestamp (int (time()))
-    nextDay = datetime (now.year, now.month, now.day, KDAYSTARTHOUR,0,0) + timedelta (hours=24)
+    nextDay = datetime (now.year, now.month, now.day, kDAYSTARTHOUR,0,0) + timedelta (hours=24)
     # start TagReader and Lick Detector, the two background task things, logging
     task.TagReader.startLogging ()
     if hasattr(task, 'LickDetector'):
@@ -82,10 +82,10 @@ def main():
                 task.Rewarder.countermandReward (resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
 
         except KeyboardInterrupt:
-                
-        
-        
-                    
+
+
+
+
                 if hasattr (task, 'LickDetector'):
                     task.lickDetector.stop_logging ()
                 inputStr = '\n************** Auto Head Fix Manager ********************\nEnter:\n'
@@ -120,21 +120,20 @@ def main():
                     elif event == 'S' or event == 's':
                         task.Stimulator.settingsDict = task.Stimulator.config_user_get (task.Stimulator.settingsDict)
                         task.Stimulator.setup()
+        except Exception as anError:
+            print ('Auto Head Fix error:' + str (anError))
+            raise anError
+        finally:
+            stimulator.quitting()
+            GPIO.output(task.ledPin, GPIO.LOW)
+            headFixer.releaseMouse()
+            GPIO.output(task.rewardPin, GPIO.LOW)
+            GPIO.cleanup()
+            writeToLogFile(task.logFP, None, 'SeshEnd')
+            task.logFP.close()
+            task.statsFP.close()
+            print ('AutoHeadFix Stopped')
 
-    except Exception as anError:
-        print ('Auto Head Fix error:' + str (anError))
-        raise anError
-    finally:
-        stimulator.quitting()
-        GPIO.output(task.ledPin, GPIO.LOW)
-        headFixer.releaseMouse()
-        GPIO.output(task.rewardPin, GPIO.LOW)
-        GPIO.cleanup()
-        writeToLogFile(task.logFP, None, 'SeshEnd')
-        task.logFP.close()
-        task.statsFP.close()
-        print ('AutoHeadFix Stopped')
-                
 
 """
 
@@ -145,7 +144,7 @@ def main():
         # get settings that may vary by experiment, including rewarder, camera parameters, and stimulator
         # More than one of these files can exist, and the user needs to choose one or make one
         # we will add some other  variables to expSettings so we can pass them as a single argument to functions
-        # logFP, statsFP, dateStr, dayFolderPath, doHeadFix, 
+        # logFP, statsFP, dateStr, dayFolderPath, doHeadFix,
         # configFile can be specified if launched from command line, eg, sudo python3 myconfig or sudo python3 AHFexp_myconfig.jsn
         configFile = None
         if argv.__len__() > 1:
