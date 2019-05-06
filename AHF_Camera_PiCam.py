@@ -5,12 +5,12 @@ from AHF_Camera import AHF_Camera
 from picamera import PiCamera
 from time import sleep
 
-class AHF_Camera_PiCam (AHF_Camera, picamera):
+class AHF_Camera_PiCam (AHF_Camera, PiCamera):
 
     @staticmethod
     def about ():
         return 'uses picamera.PiCamera to run the standard Raspberry Pi camera'
-        
+
     @staticmethod
     def config_user_get (starterDict = {}):
         defaultRes = (640,480)
@@ -20,7 +20,7 @@ class AHF_Camera_PiCam (AHF_Camera, picamera):
         defaultFormat = 'h264'
         defaultQuality = 20
         # resolution
-        resolution = starterDict.get ('resolution', AHF_Camera_PiCam.defaultRes)
+        resolution = starterDict.get ('resolution', defaultRes)
         tempInput = input ('set X,Y resolution (currently {0}): '.format(resolution))
         if tempInput != '':
             resolution = tuple (int(x) for x in tempInput.split (','))
@@ -36,42 +36,42 @@ class AHF_Camera_PiCam (AHF_Camera, picamera):
         tempInput = input ('Set ISO for video, or 0 to auto set gains (currently ' + str (iso) + ') to :')
         if tempInput != '':
             iso = int (tempInput)
-        paramDict.update ({'iso' : iso})
+        starterDict.update ({'iso' : iso})
         # shutter speed
-        shutter_speed = paramDict.get ('shutter_speed', 30000)
+        shutter_speed = starterDict.get ('shutter_speed', 30000)
         tempInput = input ('Set Shutter speed (in microseconds) for recorded video (currently ' + str (shutter_speed) + ') to :')
         if tempInput != '':
             shutter_speed= int (tempInput)
-        paramDict.update ({'shutter_speed' : shutter_speed})
+        starterDict.update ({'shutter_speed' : shutter_speed})
         # videoFormat
-        videoFormat = paramDict.get ('format', 'h264' )
+        videoFormat = starterDict.get ('format', 'h264' )
         tempInput = input ('Set Video format for recording movies (currently ' + videoFormat + ') to :')
         if tempInput != '':
             videoFormat = tempInput
-        paramDict.update ({'format' : videoFormat})
+        starterDict.update ({'format' : videoFormat})
         # quality
-        quality = paramDict.get ('quality', 20)
+        quality = starterDict.get ('quality', 20)
         tempInput = input ('Set Video quality for h264 movies, best=1, worst =40,0 for auto (currently ' + str (quality) + ') to :')
         if tempInput != '':
             quality = int (tempInput)
-        paramDict.update ({'quality' : quality})
+        starterDict.update ({'quality' : quality})
         # preview window
-        previewWin = paramDict.get ('previewWin', (0,0,640,480))
+        previewWin = starterDict.get ('previewWin', (0,0,640,480))
         tempInput = input ('Set video preview window, left, top, right, bottom, (currently ' + str(previewWin) + ') to :')
         if tempInput != '':
             previewWin = tuple (int(x) for x in tempInput.split (','))
-        paramDict.update ({'previewWin' : previewWin})
+        starterDict.update ({'previewWin' : previewWin})
         # white balance
-        whiteBalance = paramDict.get ('whiteBalance', False)
+        whiteBalance = starterDict.get ('whiteBalance', False)
         tempInput = input ('Set white balancing for video, 1 for True, or 0 for Flase (currently ' + str (whiteBalance) + ') to :')
         if tempInput !='':
             tempInput = bool (int (tempInput))
-        paramDict.update ({'whiteBalance' : whiteBalance})
+        starterDict.update ({'whiteBalance' : whiteBalance})
         # return already modified dictionary, needed when making a new dictionary
-        return paramDict
+        return starterDict
 
 
-        
+
     def __init__(self, paramDict):
         """
         Initializes an AHF_Camera from a dictonary
@@ -229,6 +229,17 @@ class AHF_Camera_PiCam (AHF_Camera, picamera):
                print ('Enter a number from 0 to 10')
         return self.get_configDict ()
 
+    def hardwareTest (self):
+        """
+        Tests functionality, gives user a chance to change settings
+        """
+        pass
+
+    def setdown (self):
+        """
+        Writes session end and closes log file
+        """
+        pass
 
     def set_gain (self):
         """
@@ -324,7 +335,7 @@ class AHF_Camera_PiCam (AHF_Camera, picamera):
     def dict_from_user (paramDict):
         """
             static method that leys user make or edit a dictionary object that holds camera setttings
-        
+
             configure gets info from user with the input function, which returns strings
         """
         if paramDict is None:
@@ -386,8 +397,8 @@ if __name__ == '__main__':
     import PTSimpleGPIO
     from PTSimpleGPIO import PTSimpleGPIO, Pulse, Train, Infinite_train
 
-    t1 = Train (PTSimpleGPIO.INIT_FREQ, 14.4, 0.5, 30, 17, PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
-    
+    t1 = Train (PTSimpleGPIO.MODE_FREQ, 14.4, 0.5, 30, 17, PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
+
     videoFormat = 'rgb'
     quality = 0
     resolution = (256,256)
@@ -424,7 +435,7 @@ if __name__ == '__main__':
         indexOld = frameIndex
         #sleep (0.01)
     time_end=time.time()
-    
+
     previous_frame = 0
     total_time = 0
     for k in range(len(frameNow_array)-1):
@@ -434,7 +445,7 @@ if __name__ == '__main__':
         if (frameNow_array[k+1] is None) or (frameNow_array[k] is None):
             print (frameIndex_array[k], frameNow_array[k-1], frameNow_array[k], frameNow_array[k+1])
             continue
-        
+
         print (frameIndex_array[k], 1E6/(frameNow_array[k+1]-frameNow_array[k]))
 
         total_time +=(frameNow_array[k+1]-frameNow_array[k])*1E-6
@@ -443,7 +454,7 @@ if __name__ == '__main__':
     print (total_time)
 
     #class picamera.PiVideoFrame(index, frame_type, frame_size, video_size, split_size, timestamp)
-    
+
     camera.stop_recording()
     #camera.adjust_config_from_user ()
     #videoPath = '/home/pi/Documents/testMod.' + camera.AHFvideoFormat
