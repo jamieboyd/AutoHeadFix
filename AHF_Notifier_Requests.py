@@ -7,14 +7,14 @@ class AHF_Notifier_Requests (AHF_Notifier):
     sends text messages to a tuple of phone numbers using a web service, textbelt.com
     You need to get an account and pay for some messages to get an account key
     As it uses http requests to send the message to the web service, your Pi needs to be online
-    
+
     AHF_Notifier_Requests needs requests module, which is not installed by default.
     The best way to install python modules is with pip. Assuming you are using Python 3:
     sudo apt-get install python3-pip
     sudo pip-3 install requests
     """
     textBeltURL = 'http://textbelt.com/text'
-    
+
     @staticmethod
     def about():
         return 'Sends a text message using a paid web service, textbelt.com'
@@ -23,19 +23,19 @@ class AHF_Notifier_Requests (AHF_Notifier):
     def config_user_get(starterDict = {}):
         phoneList = starterDict.get ('phoneList', ()) # no useful default values for phonelist or textbelt key
         response = input('Enter phone numbers to receive text messages, currently %s :' % str (phoneList))
-        if response != '':''
+        if response != '':
             phoneList =tuple (response.split(','))
         textBeltKey = starterDict.get ('textBeltKey', '') # no useful default values for phonelist or textbelt key
         response = input ('Enter the textBelt code, currently %s: ' % textBeltKey)
-        if response |= '':
+        if response != '':
             textBeltKey = response
         starterDict.update ({'phoneList': phoneList, 'textBeltKey' : textBeltKey})
-        return starterDict  
+        return starterDict
 
     def setup(self):
         self.phoneList = self.settingsDict.get ('phoneList')
         self.textBeltKey = self.settingsDict.get ('textBeltKey')
-        
+
     def setdown (self):
         pass
 
@@ -56,17 +56,17 @@ class AHF_Notifier_Requests (AHF_Notifier):
             alertString = 'Mouse {:d}'.format(tag) + ', the erstwhile stuck mouse in cage ' + cageID + ' has finally left the chamber after being inside for {:.2f}'.format (durationSecs/60) + ' minutes.'
         for i in self.phoneList:
             requests.post(self.textBeltURL, data={'number': i, 'message': alertString, 'key': self.textBeltKey,})
-            sleep (2) 
+            sleep (2)
         print (alertString, ' Messages have been sent.')
-    
-    
+
+
     def notify (self, msgStr):
         for i in self.phoneList:
             requests.post(self.textBeltURL, data={'number': i, 'message': msgStr, 'key': self.textBeltKey,})
-            sleep (2) 
+            sleep (2)
         print (msgStr, ' Messages have been sent.')
-        
-    
+
+
 
 if __name__ == '__main__':
     import requests

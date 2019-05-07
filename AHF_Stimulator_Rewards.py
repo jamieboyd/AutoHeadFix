@@ -39,13 +39,14 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
         print ('Rewards stimulator set down')
 
 
-    def run(self, mouse):
+    def run(self, resultsDict = {}, settingsDict = {}):
         self.rewardTimes = []
         for reward in range(self.nRewards):
             self.rewardTimes.append (time())
             self.rewarder.giveReward('task')
             sleep(self.rewardInterval)
-        mouse.headFixRewards += self.nRewards
+        newRewards = resultsDict.get('rewards', 0) + self.nRewards
+        resultsDict.update({'rewards': newRewards})
 
     def logFile (self):
         event = '\treward'
@@ -75,7 +76,8 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
         pass
 
 
-    def hardwareTest (self, task):
+    def hardwareTest (self):
+        # TODO: Test this
         pass
 
 

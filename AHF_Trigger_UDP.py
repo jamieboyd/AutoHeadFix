@@ -12,26 +12,26 @@ class AHF_Trigger_UDP (AHF_Trigger):
     AHF_UDPTrig uses the socket module to do the UDP stuff, but it should be part of
     the default install
     """
-    default_UDP_PORT = 5007         # port used for UDP 
-    default_UDP_LIST = '127.0.0.1'  # list of IP addresses to send to 
-    
+    default_UDP_PORT = 5007         # port used for UDP
+    default_UDP_LIST = '127.0.0.1'  # list of IP addresses to send to
+
     @staticmethod
     def about():
         return 'Sends/receives trigger signals over UDP as to another pi to start/stop recording movies.'
 
     @staticmethod
     def config_user_get (starterDict = {}):
-        IPlist = starterDict.get ('IPlist', default_UDP_LIST)
+        IPlist = starterDict.get ('IPlist',AHF_Trigger_UDP.default_UDP_LIST)
         response = input ('Enter comma-separated list of IP addresses to trigger, currently {:s}: '.format (IPlist))
         if response != '':
             IPlist =tuple (response.split (','))
-        portNum = starterDict.get ('UDPport', default_UDP_PORT)
+        portNum = starterDict.get ('UDPport', AHF_Trigger_UDP.default_UDP_PORT)
         response = input ('Enter port number to use for UDP, currently {:d}: '.format (portNum))
         if response != '':
             portNum = int (response)
         starterDict.update({'IPlist' : IPlist, 'UDPport' : portNum})
         return starterDict
-    
+
     def setup (self):
         """Makes a new AHF_UDPtrig object using passed in list of ip addresses.
 
@@ -39,7 +39,7 @@ class AHF_Trigger_UDP (AHF_Trigger):
         sets hasUDP to false if object creation fails because of network error, else True
         """
         hasUDP = True
-        try: 
+        try:
             self.UDPlist = self.settingsDict.get ('IPlist')
             self.portNum = self.settingsDict.get ('UDPport')
             self.sock=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -51,7 +51,7 @@ class AHF_Trigger_UDP (AHF_Trigger):
 
     def setdown (self):
         del self.sock
-    
+
     def doTrigger (self, message):
         """
         Sends a UDP message to the stored list of  ip addresses
@@ -70,8 +70,8 @@ class AHF_Trigger_UDP (AHF_Trigger):
         data, addr=self.sock.recvfrom(1024)
         dataStr = data.decode("utf-8")
         return (addr[0], dataStr)
-    
-    
+
+
     def hardwareTest (self):
         from time import sleep
         response = input ('Enter L to check local (127.0.0.1) only, or R to send to IP list: ')
@@ -88,4 +88,3 @@ class AHF_Trigger_UDP (AHF_Trigger):
             self.setdown()
             self.settingsDict = self.config_user_get (self.settingsDict)
             self.setup()
-            

@@ -9,12 +9,14 @@ into a single object called Task
 """
 import inspect
 import collections
+from collections import OrderedDict
 import json
 import os
 import pwd
 import grp
 import AHF_ClassAndDictUtils as CAD
 from abc import ABCMeta
+from AHF_Base import AHF_Base
 import RPi.GPIO as GPIO
 
 gTask = None
@@ -113,7 +115,7 @@ class Task(object):
         if not hasattr (self, 'NotifierClass') or not hasattr (self, 'NotifierDict'):
             tempInput = input ('Send notifications if subject exceeds criterion time in chamber?(Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.NotifierClass = CAD.Class_from_file('Notifier', '')
+                self.NotifierClass = CAD.Class_from_file('Notifier',  CAD.File_from_user ('Notifier', 'Text Messaging Notifier', '.py'))
                 self.NotifierDict = self.NotifierClass.config_user_get()
                 self.NotifierDict.update ({'cageID' : self.DataLoggerDict.get('cageID')})
             else:
@@ -124,7 +126,7 @@ class Task(object):
         if not hasattr (self, 'TriggerClass') or not hasattr (self, 'TriggerDict'):
             tempInput = input ('Send triggers to start tasks on secondary computers (Y or N):')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.TriggerClass = CAD.Class_from_file('Trigger', '')
+                self.TriggerClass = CAD.Class_from_file('Trigger', CAD.File_from_user ('Trigger', 'Trigger', '.py'))
                 self.TriggerDict = self.TriggerClass.config_user_get()
             else:
                 self.TriggerClass = None
@@ -134,7 +136,7 @@ class Task(object):
         if not hasattr (self, 'LickDetectorClass') or not hasattr (self, 'LickDetectorDict'):
             tempInput = input ('Does this setup have a Lick Detector installed? (Y or N)')
             if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.LickDetectorClass = CAD.Class_from_file('LickDetector', '')
+                self.LickDetectorClass = CAD.Class_from_file('LickDetector', CAD.File_from_user ('LickDetector', 'Lick Detector', '.py'))
                 self.LickDetectorDict = self.LickDetectorClass.config_user_get()
             else:
                 self.LickDetectorClass = None
@@ -143,11 +145,12 @@ class Task(object):
         ############################## Subjects only 1 subclass so far (generic mice) ##############
         if not hasattr (self, 'SubjectsClass') or not hasattr (self, 'SubjectsDict'):
             self.SubjectsClass = CAD.Class_from_file('Subjects', CAD.File_from_user ('Subjects', 'test subjects', '.py'))
-            self.SubjectsClass = self.SubjectsClass.config_user_get ()
+            self.SubjectsDict = self.SubjectsClass.config_user_get ()
             fileErr = True
         ###################### things we track in the main program #################################
         self.tag = 0    # RFIG tag number, 0 for no tag, updated by threaded callback
         self.contact = False # true if contact is true
+        self.contactTime = 0
         self.lastFixedTag = 0
         self.entryTime = 0.0
         self.fixAgainTime = float ('inf')
@@ -235,7 +238,7 @@ class Task(object):
 
     def hardwareTester (self):
         while True:
-            showDict = Show_testable_objects ()
+            showDict = self.Show_testable_objects ()
             inputStr = input ('Enter number of object to test, or 0 to exit:')
             try:
                 inputNum = int (inputStr)

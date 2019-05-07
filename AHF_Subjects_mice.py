@@ -49,7 +49,7 @@ class AHF_Subjects_mice (AHF_Subjects):
         return starterDict
 
 
-    def setup():
+    def setup(self):
         resultsTuple = ('HeadFixer', 'Rewarder', 'Stimulator', 'TagReader') # results tuple defines dictionaries for subjects we will read from and write results to
         settingsTuple= ('HeadFixer', 'Rewarder', 'Stimulator')
         self.freshMiceAllowed = self.settingsDict.get ('freshMiceAllowed')
@@ -122,7 +122,7 @@ class AHF_Subjects_mice (AHF_Subjects):
             yield item
 
 
-    def newSubjectDict (starterDict = {}):
+    def newSubjectDict (self, starterDict = {}):
         """
         New dictionary made for each individual mouse, dictionaries for headFixer, rewarder, Stmiulator, and
         TagReader
@@ -134,9 +134,9 @@ class AHF_Subjects_mice (AHF_Subjects):
         resultsDict.update ({'Stimulator' : self.task.Stimulator.newResultsDict ()})
         resultsDict.update ({'TagReader' : self.task.TagReader.newResultsDict ()})
         settingsDict = starterDict.get ('settingsDict', {})
-        settingsDict.update ({'HeadFixer' : self.task.HeadFixer.settingsDict ()})
-        settingsDict.update ({'Rewarder' : self.task.Rewarder.settingsDict ()})
-        settingsDict.update ({'Stimulator' : self.task.Stimulator.settingsDict ()})
+        settingsDict.update ({'HeadFixer' : self.task.HeadFixer.settingsDict })
+        settingsDict.update ({'Rewarder' : self.task.Rewarder.settingsDict })
+        settingsDict.update ({'Stimulator' : self.task.Stimulator.settingsDict })
         return {'resultsDict' : resultsDict, 'settingsDict' : settingsDict}
 
     def clearResultsDict(self, resultsDict):
@@ -160,8 +160,8 @@ class AHF_Subjects_mice (AHF_Subjects):
         returns a reference to the dictionary for the mouse with given IDtag. if the mouse tag is not found, makes a new dictionary
         if fresh mice can be added, else returns an empty dicitonary if fresh mice are to be ignored
         """
-        if not IDnum in self.miceDict.keys and self.freshMiceAllowed:
-            self.miceDict.update ({IDnum, self.newResultsDict()})
+        if (not self.miceDict or not IDnum in self.miceDict) and self.freshMiceAllowed:
+            self.miceDict[IDnum]= self.newSubjectDict()
         return self.miceDict.get (IDnum, None)
 
 
