@@ -87,7 +87,8 @@ def main():
                 task.ContactCheck.stopLogging()
             except KeyboardInterrupt:
 
-
+                    task.Stimulator.quitting()
+                    task.HeadFixer.releaseMouse(task.tag)
                     task.ContactCheck.stopLogging()
                     if hasattr (task, 'LickDetector'):
                         task.lickDetector.stop_logging ()

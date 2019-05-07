@@ -14,6 +14,7 @@ class AHF_Trigger_UDP (AHF_Trigger):
     """
     default_UDP_PORT = 5007         # port used for UDP
     default_UDP_LIST = '127.0.0.1'  # list of IP addresses to send to
+    start_delay = 3.0
 
     @staticmethod
     def about():
@@ -39,6 +40,7 @@ class AHF_Trigger_UDP (AHF_Trigger):
         sets hasUDP to false if object creation fails because of network error, else True
         """
         hasUDP = True
+        self.cameraStartDelay = AHF_Trigger_UDP.start_delay
         try:
             self.UDPlist = self.settingsDict.get ('IPlist')
             self.portNum = self.settingsDict.get ('UDPport')

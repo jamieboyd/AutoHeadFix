@@ -10,7 +10,7 @@ class AHF_Trigger(AHF_Base, metaclass = ABCMeta):
     Sends/receives signals as to another pi to start/stop recording
 
     """
-
+    
     @abstractmethod
     def doTrigger (self, message):
        pass

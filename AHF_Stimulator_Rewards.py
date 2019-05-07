@@ -40,6 +40,7 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
 
 
     def run(self, resultsDict = {}, settingsDict = {}):
+        super().startVideo()
         self.rewardTimes = []
         for reward in range(self.nRewards):
             self.rewardTimes.append (time())
@@ -47,6 +48,7 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
             sleep(self.rewardInterval)
         newRewards = resultsDict.get('rewards', 0) + self.nRewards
         resultsDict.update({'rewards': newRewards})
+        super().stopVideo()
 
     def logFile (self):
         event = '\treward'
@@ -73,6 +75,7 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
 
             A stimulator may, e.g., open files and wish to close them before exiting, or use hardware that needs to be cleaned up
         """
+        self.task.Camera.stop_recording()
         pass
 
 
