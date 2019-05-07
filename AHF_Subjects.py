@@ -41,7 +41,7 @@ class AHF_Subjects (AHF_Base, metaclass = ABCMeta):
         """
         return -1
 
-    
+
     @abstractmethod
     def generator (self):
         """
@@ -94,12 +94,3 @@ class AHF_Subjects (AHF_Base, metaclass = ABCMeta):
         for settings in settingsTuple:
             settingsDict.update (settings, {})
         return {'results' : resultsDict, 'settings' : settingsDict}
-            
-
-    
-
-    
-
-
-    
-        

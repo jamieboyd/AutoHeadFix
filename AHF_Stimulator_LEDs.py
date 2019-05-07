@@ -28,9 +28,9 @@ class AHF_Stimulator_LEDs (AHF_Stimulator_Rewards):
         train_time = float (input ('Enter the total time in seconds for each train of flashes:'))
         configDict.update ({'left_led_pin' : left_led_pin, 'center_led_pin' : center_led_pin, 'right_led_pin' : right_led_pin})
         configDict.update ({'led_on_time' : led_on_time, 'led_off_time' : led_off_time, 'train_time' : train_time})
-        return configDict                                   
-    
-    
+        return configDict
+
+
     def __init__(self, taskP):
         # init of superclass sets number of rewards  and reward interval
         # this class will flash an LED in the center of each inter-reward interval
@@ -94,7 +94,7 @@ class AHF_Stimulator_LEDs (AHF_Stimulator_Rewards):
         return self.stimStr
 
 
-    def run(self):
+    def run(self, resultsDict = {}, settingsDict = {}):
         self.rewardTimes = []
         self.stimTimes = []
         fudge = 0.25e-03 # offset time added to array, so first pulse is same length as following pulses
@@ -121,7 +121,8 @@ class AHF_Stimulator_LEDs (AHF_Stimulator_Rewards):
                     pass
             self.stimTimes.append (offset)
             sleep(self.waitTime2)
-        self.mouse.headFixRewards += self.nRewards
+        newRewards = resultsDict.get('rewards', 0) + self.nRewards
+        resultsDict.update({'rewards': newRewards})
 
 
     def logfile(self):
@@ -151,7 +152,7 @@ class AHF_Stimulator_LEDs (AHF_Stimulator_Rewards):
 
            Or you may wish to override with pass and log from the run method
         """
-        
+
         event = 'stim'
         mStr = '{:013}'.format(self.mouse.tag) + '\t'
         outPutStr = mStr + datetime.fromtimestamp (int (time())).isoformat (' ') + '\t' + event
@@ -162,9 +163,9 @@ class AHF_Stimulator_LEDs (AHF_Stimulator_Rewards):
             self.textfp.flush()
 
 
-    def hardwareTest (self, task):
+    def hardwareTest (self):
         pass
-            
+
 """
 if __name__ == '__main__':
     import RPi.GPIO as GPIO

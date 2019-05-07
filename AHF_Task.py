@@ -9,12 +9,14 @@ into a single object called Task
 """
 import inspect
 import collections
+from collections import OrderedDict
 import json
 import os
 import pwd
 import grp
 import AHF_ClassAndDictUtils as CAD
 from abc import ABCMeta
+from AHF_Base import AHF_Base
 import RPi.GPIO as GPIO
 
 gTask = None
@@ -143,7 +145,7 @@ class Task(object):
         ############################## Subjects only 1 subclass so far (generic mice) ##############
         if not hasattr (self, 'SubjectsClass') or not hasattr (self, 'SubjectsDict'):
             self.SubjectsClass = CAD.Class_from_file('Subjects', CAD.File_from_user ('Subjects', 'test subjects', '.py'))
-            self.SubjectsClass = self.SubjectsClass.config_user_get ()
+            self.SubjectsDict = self.SubjectsClass.config_user_get ()
             fileErr = True
         ###################### things we track in the main program #################################
         self.tag = 0    # RFIG tag number, 0 for no tag, updated by threaded callback
@@ -235,7 +237,7 @@ class Task(object):
 
     def hardwareTester (self):
         while True:
-            showDict = Show_testable_objects ()
+            showDict = self.Show_testable_objects ()
             inputStr = input ('Enter number of object to test, or 0 to exit:')
             try:
                 inputNum = int (inputStr)

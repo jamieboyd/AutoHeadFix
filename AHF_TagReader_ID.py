@@ -2,6 +2,7 @@
 #-*-coding: utf-8 -*-
 from time import time, sleep
 from _thread import start_new_thread, interrupt_main
+import RPi.GPIO as GPIO
 
 import RFIDTagReader
 import AHF_Task
@@ -12,8 +13,8 @@ class AHF_TagReader_ID (AHF_TagReader):
     TIME_OUT_SECS = 0.05
     DO_CHECK_SUM = True
 
-    defaultPort = '/dev/serial0'
-    defaultPin = 21
+    defaultPort = '/dev/ttyUSB0'
+    defaultPin = 7
     defaultChamberTimeLimit = 600
 
     gStillThere = False
@@ -30,11 +31,15 @@ class AHF_TagReader_ID (AHF_TagReader):
             try:
                 AHF_Task.gTask.tag = RFIDTagReader.globalReader.readTag ()
                 AHF_Task.gTask.DataLogger.writeToLogFile(AHF_Task.gTask.tag, 'entry', None, time())
-                newVal = AHF_Task.gTask.Subjects.get(AHF_Task.gTask.tag).get('resultsDict').get('TagReader').get('entries') + 1
-                AHF_Task.gTask.Subjects.get(AHF_Task.gTask.tag).get('resultsDict').get('TagReader').update ({'entries' : newVal})
-                AHF_Task.gtask.entryTime = time()
+                if AHF_Task.gTask.Subjects.get(AHF_Task.gTask.tag) is not None:
+                    newVal = AHF_Task.gTask.Subjects.get(AHF_Task.gTask.tag).get('resultsDict').get('TagReader').get('entries')
+                    newVal = newVal + 1
+                    AHF_Task.gTask.Subjects.get(AHF_Task.gTask.tag).get('resultsDict').get('TagReader').update ({'entries' : newVal})
+                else:
+                    raise Exception('There are no fresh mice allowed, and this is a fresh mouse')
+                AHF_Task.gTask.entryTime = time()
                 AHF_TagReader_ID.stillThere = True
-                start_new_thread (AHF_TagReader_ID.timeInChamberThread,(time () + AHF_TagReader_ID.gInChamberTimeLimit))
+                start_new_thread (AHF_TagReader_ID.timeInChamberThread,(time () + AHF_TagReader_ID.gInChamberTimeLimit,))
             except Exception as e:
                 AHF_Task.gTask.tag =0
         else: # tag just left
@@ -46,7 +51,7 @@ class AHF_TagReader_ID (AHF_TagReader):
 
     @staticmethod
     def timeInChamberThread (sleepEndTime):
-        while AHF_TagReader_ID.stillThere & time () < sleepEndTime:
+        while AHF_TagReader_ID.stillThere and (time () < sleepEndTime):
             sleep (0.1)
         if AHF_TagReader_ID.stillThere:
             stuckMouse = AHF_Task.gTask.tag
@@ -86,7 +91,8 @@ class AHF_TagReader_ID (AHF_TagReader):
         return starterDict
 
     def newResultsDict (self, starterDict = {}):
-        return starterDict.update({'entries' : starterDict.get ('entries', 0)})
+        starterDict.update({'entries' : starterDict.get ('entries', 0)})
+        return starterDict
 
     def clearResultsDict(self, resultsDict):
         resultsDict.update({'entries' : 0})
@@ -115,7 +121,7 @@ class AHF_TagReader_ID (AHF_TagReader):
     def stopLogging (self):
         if self.isLogging:
             self.tagReader.removeCallback()
-            GPIO.remove_event_detect (self.tag_in_range_pin)
+            GPIO.remove_event_detect (self.TIRpin)
             self.isLogging = False
 
     def hardwareTest (self):
@@ -127,13 +133,16 @@ class AHF_TagReader_ID (AHF_TagReader):
         lastTag = -1
         startTime = time()
         while time () < startTime + 10:
-            thisTag = self.readTag ()
-            if thisTag != lastTag:
-                if thisTag == 0:
-                    print ('No Tag in Range.')
-                else:
-                    print ('Tag value is now %d.' % thisTag)
-                lastTag = thisTag
+            try:
+                thisTag = self.readTag ()
+                if thisTag != lastTag:
+                    if thisTag == 0:
+                        print ('No Tag in Range.')
+                    else:
+                        print ('Tag value is now %d.' % thisTag)
+                    lastTag = thisTag
+            except Exception as e:
+                print (str(e))
             sleep (AHF_TagReader_ID.TIME_OUT_SECS)
         result = input ('Do you wish to edit Tag Reader settings?')
         if result [0] == 'y' or result [0] == 'Y':
