@@ -54,6 +54,7 @@ def main():
         while True:
             try:
                 print ('Waiting for a mouse....')
+                task.ContactCheck.startLogging()
                 # loop with a brief sleep, waiting for a tag to be read, or a new day to dawn
                 while True:
                     if task.tag != 0:
@@ -80,14 +81,14 @@ def main():
                             task.Rewarder.countermandReward (resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
                             doCountermand = False
                         task.Stimulator.run (resultsDict.get('Stimulator'), settingsDict.get('Stimulator'))
+                        task.HeadFixer.releaseMouse(thisTag)
                 if doCountermand:
                     task.Rewarder.countermandReward (resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
-
+                task.ContactCheck.stopLogging()
             except KeyboardInterrupt:
 
 
-
-
+                    task.ContactCheck.stopLogging()
                     if hasattr (task, 'LickDetector'):
                         task.lickDetector.stop_logging ()
                     inputStr = '\n************** Auto Head Fix Manager ********************\nEnter:\n'
@@ -128,12 +129,12 @@ def main():
     finally:
         task.Stimulator.quitting()
         #GPIO.output(task.ledPin, GPIO.LOW)
-        task.HeadFixer.releaseMouse()
+        task.HeadFixer.releaseMouse(task.tag)
         #GPIO.output(task.rewardPin, GPIO.LOW)
         GPIO.cleanup()
-        writeToLogFile(task.logFP, None, 'SeshEnd')
-        task.logFP.close()
-        task.statsFP.close()
+        # task.DataLogger.writeToLogFile(task.logFP, None, 'SeshEnd')
+        # task.logFP.close()
+        # task.statsFP.close()
         print ('AutoHeadFix Stopped')
 
 

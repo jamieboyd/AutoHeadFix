@@ -69,7 +69,7 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
 
     def releaseMouse(self, thisTag, resultsDict = {}, settingsDict= {}):
         self.setPWM (self.servoReleasedPosition)
-        super().releaseMouse (thisTag, resultsDict, individualDict)
+        super().releaseMouse (thisTag, resultsDict, settingsDict)
 
     # each PWM subclass must implement its own code to set the pulse width
     @abstractmethod

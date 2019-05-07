@@ -11,7 +11,7 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
     """
     hasLevels = False
     defaultPropHeadFix = 0.75
-    defaultSkeddadleTime = 0.5
+    defaultSkeddadleTime = 5
 
     @staticmethod
     @abstractmethod

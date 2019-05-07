@@ -150,6 +150,7 @@ class Task(object):
         ###################### things we track in the main program #################################
         self.tag = 0    # RFIG tag number, 0 for no tag, updated by threaded callback
         self.contact = False # true if contact is true
+        self.contactTime = 0
         self.lastFixedTag = 0
         self.entryTime = 0.0
         self.fixAgainTime = float ('inf')
