@@ -95,6 +95,7 @@ class AHF_Stimulator_LEDs (AHF_Stimulator_Rewards):
 
 
     def run(self, resultsDict = {}, settingsDict = {}):
+        super().startVideo()
         self.rewardTimes = []
         self.stimTimes = []
         fudge = 0.25e-03 # offset time added to array, so first pulse is same length as following pulses
@@ -123,6 +124,7 @@ class AHF_Stimulator_LEDs (AHF_Stimulator_Rewards):
             sleep(self.waitTime2)
         newRewards = resultsDict.get('rewards', 0) + self.nRewards
         resultsDict.update({'rewards': newRewards})
+        super().stopVideo()
 
 
     def logfile(self):

@@ -99,8 +99,9 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
                 result = 'check-'
         else:
             result = 'unfixed'
-        self.task.DataLogger.writeToLogFile (thisTag, 'Fix', {'result' : result}, time())
-
+        fixTime = time()
+        self.task.DataLogger.writeToLogFile (thisTag, 'Fix', {'result' : result}, fixTime)
+        self.task.lastFixedTime = fixTime
         if hasContact:
             if isFixed:
                 newFixes = resultsDict.get ('headFixes', 0) + 1

@@ -152,6 +152,7 @@ class Task(object):
         self.contact = False # true if contact is true
         self.contactTime = 0
         self.lastFixedTag = 0
+        self.lastFixedTime = 0
         self.entryTime = 0.0
         self.fixAgainTime = float ('inf')
         self.inChamberLimitExceeded = False
