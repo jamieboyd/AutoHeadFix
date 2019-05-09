@@ -535,7 +535,10 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             with File(self.hdf_path, 'r+') as hdf:
                 for tag, mouse in hdf.items():
                     tempMouse = self.task.Subjects.get(tag)
-                    tempMouse.update({'targets': mouse['targets'][:]})
+                    if(mouse.__contains__('targets')):
+                        tempMouse.update({'targets': mouse['targets'][:]})
+                    if(mouse.__contains__('ref_im')):
+                        tempMouse.update({'ref_im': mouse['ref_im'][:]})
         mice = self.task.Subjects.get_all()
         #GUI function for the selecting targets
         def manual_annot(img):
@@ -552,29 +555,33 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             print('Need to perform the matching first before selecting targets')
             return None
         else:
-            for mouse in mice:
-                if hasattr(mouse,'targets'):
+            for tag, mouse in mice.items():
+                if 'targets' in mouse:
                     inputStr = input('Certain/All mice already have brain targets.\n0: Select targets for remaining mice\n1: Select targets for all registered mice.\n')
                     break
                 else:
                     inputStr = str(1)
             if inputStr == str(0):
-                for mouse in mice:
-                    if (not hasattr(mouse,'targets') and hasattr(mouse,'ref_im')):
-                        print('Mouse: ',mouse.tag)
-                        targets_coords = manual_annot(mouse.ref_im)
-                        mouse.targets=np.asarray(targets_coords).astype(int)
+                for tag, mouse in mice.items():
+                    if ( 'targets' not in mouse and 'ref_im' in mouse):
+                        print('Mouse: ', tag)
+                        targets_coords = manual_annot(mouse.get('ref_im'))
+                        mouse.update({'targets': np.asarray(targets_coords).astype(int)})
                         print('TARGET\tx\ty')
-                        print('{0}\t{1}\t{2}'.format('0',mouse.targets[0],mouse.targets[1]))
+                        print('{0}\t{1}\t{2}'.format('0',mouse.get('targets')[0],mouse.get('targets')[1]))
             if inputStr == str(1):
-                for mouse in mice:
-                    if hasattr(mouse,'ref_im'):
-                        print('Mouse: ',mouse.tag)
-                        targets_coords = manual_annot(mouse.ref_im)
-                        mouse.targets=np.asarray(targets_coords).astype(int)
+                for tag, mouse in mice.items():
+                    if 'ref_im' in mouse:
+                        print('Mouse: ', tag)
+                        targets_coords = manual_annot(mouse.get('ref_im'))
+                        mouse.update({'targets': np.asarray(targets_coords).astype(int)})
                         print('TARGET\tx\ty')
-                        print('{0}\t{1}\t{2}'.format('0',mouse.targets[0],mouse.targets[1]))
-
+                        print('{0}\t{1}\t{2}'.format('0',mouse.get('targets')[0],mouse.get('targets')[1]))
+            with File(self.hdf_path, 'r+') as hdf:
+                for tag, mouse in hdf.items():
+                    tempMouse = self.task.Subjects.get(tag)
+                    if 'targets' in tempMouse:
+                        mouse.require_dataset('targets',shape=(2,),dtype=np.uint8,data=tempMouse.get('targets'))
     def image_registration(self):
         #Runs at the beginning of a new trial
         def trans_mat(angle,x,y,scale):
@@ -591,8 +598,8 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         self.mouse.update({'trial_image' : np.empty((self.camera.resolution()[0], self.camera.resolution()[1], 3),dtype=np.uint8)})
         self.camera.capture(self.mouse.get('trial_image'),'rgb')
         timestamp = time()
-        self.mouse.update({'trial_name': "M" + str(self.task.tag % 10000) + '_' + timestamp})
-        self.task.DataLogger.writeToLogFile (this.task.tag, 'Image', {'name': self.mouse.get('trial_name'), 'type': 'trial', 'reference': self.mouse.get('ref_name')}, timestamp)
+        self.mouse.update({'trial_name': "M" + str(self.tag % 10000) + '_' + str(timestamp)})
+        self.task.DataLogger.writeToLogFile (self.tag, 'Image', {'name': self.mouse.get('trial_name'), 'type': 'trial', 'reference': self.mouse.get('ref_name')}, timestamp)
         #Image registration
         #IMPROVE: Could run the registration on a different processor
         warnings.filterwarnings("ignore",".*the returned array has changed*")
@@ -603,35 +610,41 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         if all((abs(tf['angle'])<=self.max_angle,all(np.abs(tf['tvec'])<=self.max_trans),self.max_scale[0]<=tf['scale']<=self.max_scale[1])):
             #Transform the target to new position
             self.R = trans_mat(tf['angle'],tf['tvec'][1],tf['tvec'][0],tf['scale'])
-            cent_targ = self.mouse.targets - np.array([int(self.camera.resolution()[0]/2),int(self.camera.resolution()[0]/2)]) #translate targets to center of image
+            cent_targ = self.mouse.get('targets') - np.array([int(self.camera.resolution()[0]/2),int(self.camera.resolution()[0]/2)]) #translate targets to center of image
             trans_coord = np.dot(self.R,np.append(cent_targ,1))+np.array([int(self.camera.resolution()[0]/2),int(self.camera.resolution()[0]/2)])
             targ_pos = np.dot(self.coeff,np.append(trans_coord,1))
             print('TARGET\ttx\tty')
             print('{0}\t{1:.01f}\t{2:.01f}'.format('0',trans_coord[0],trans_coord[1]))
+            self.task.DataLogger.writeToLogFile(self.tag, 'ImageRegistration', {'scale': tf['scale'], 'angle': tf['angle'], 'trans_x': tf['tvec'][0], 'trans_y': tf['tvec'][1]}, time())
             return targ_pos
         else:
             print('No laser stimulation: Image registration failed.')
-            self.task.DataLogger.writeToLogFile (this.task.tag, 'ImageRegFail', None, time())
+            self.task.DataLogger.writeToLogFile (self.tag, 'ImageRegFail', None, time())
             return None
 
 
 #=================Main functions called from outside===========================
     def run(self, resultsDict = {}, settingsDict = {}):
+        self.tag = self.task.tag
+        self.mouse = self.task.Subjects.get(self.tag)
         self.loadH5()
-        self.mouse = self.task.Subjects.get(self.task.tag)
         self.rewardTimes = []
         saved_targ_pos = None
         if self.task.isFixTrial:
-            if not hasattr(self.mouse,'ref_im'):
+            if not 'ref_im' in self.mouse:
                 print('Take reference image')
                 self.get_ref_im()
                 timestamp = time()
-                self.mouse.get('ref_name') = "M" + str(self.task.tag % 10000) + '_' + timestamp + '_R'
-                self.task.DataLogger.writeToLogFile (this.task.tag, 'ReferenceImage', {'name': self.mouse.get('ref_name')}, timestamp)
+                self.mouse.update({'ref_name': "M" + str(self.tag % 10000) + '_' + str(timestamp) + '_R'})
+                self.mouse.update({'trial_name': "M" + str(self.tag % 10000) + '_' + str(timestamp) + '_R'})
+                self.mouse.update({'trial_image': self.mouse.get('ref_im')})
+                self.task.DataLogger.writeToLogFile (self.tag, 'ReferenceImage', {'name': self.mouse.get('ref_name')}, timestamp)
+                self.h5updater()
+                self.mouse.pop('ref_im')
                 return
-            elif not hasattr(self.mouse,'targets'):
+            elif not 'targets' in self.mouse:
                 print('Select targets')
-                writeToLogFile(self.expSettings.logFP, self.mouse, 'no targets selected')
+                self.task.DataLogger.writeToLogFile(self.tag, 'TargetError', {'type': 'no targets selected'}, time())
                 #If targets haven't been choosen -> release mouse again
                 return
 
@@ -650,21 +663,21 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                     saved_targ_pos = targ_pos
                     print('Moving laser to target and capture image to assert correct laser position')
                     self.move_to(np.flipud(targ_pos),topleft=True,join=True) #Move laser to target and wait until target reached
-                    self.mouse.laser_spot = np.empty((self.camera.resolution()[0], self.camera.resolution()[1], 3),dtype=np.uint8)
+                    self.mouse.update({'laser_spot': np.empty((self.camera.resolution()[0], self.camera.resolution()[1], 3),dtype=np.uint8)})
                     self.pulse(70,self.duty_cycle) #At least 60 ms needed to capture laser spot
-                    self.camera.capture(self.mouse.laser_spot,'rgb',use_video_port=True)
-                    self.mouse.laser_name = "M" + str(self.task.tag % 10000) + '_' + timestamp + '_LS'
-                    self.task.DataLogger.writeToLogFile (this.task.tag, 'Image', {'name': self.mouse.laser_name, 'type': 'LaserSpot', 'reference': self.mouse.get('ref_im')}, timestamp)
+                    self.camera.capture(self.mouse.get('laser_spot'),'rgb',use_video_port=True)
+                    self.mouse.laser_name = "M" + str(self.tag % 10000) + '_' + str(timestamp) + '_LS'
+                    self.task.DataLogger.writeToLogFile (self.tag, 'Stimulus', {'image_name': self.mouse.laser_name, 'type': 'LaserSpot', 'adjusted_targets': targ_pos, 'intended_targets': self.mouse.get('targets'), 'reference': self.mouse.get('ref_im')}, timestamp)
                     sleep(0.1)
                 # Repeatedly give a reward and pulse simultaneously
-                timeInterval = self.rewardInterval - self.rewarder.rewardDict.get ('task')
+                timeInterval = self.rewardInterval # - self.rewarder.rewardDict.get ('task')
                 self.rewardTimes = []
                 self.camera.start_preview()
                 for reward in range(self.nRewards):
                     self.rewardTimes.append (time())
                     if targ_pos is not None:
                         self.pulse(self.laser_on_time,self.duty_cycle)
-                        self.task.DataLogger.writeToLogFile (this.task.tag, 'LaserPulse', None, time())
+                        self.task.DataLogger.writeToLogFile (self.tag, 'LaserPulse', None, time())
                     self.rewarder.giveReward('task')
                     sleep(timeInterval)
                 newRewards = resultsDict.get('rewards', 0) + self.nRewards
@@ -673,6 +686,11 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
 
             finally:
                 self.h5updater()
+                self.mouse.pop('ref_im', None)
+                self.mouse.pop('trial_image', None)
+                self.mouse.pop('trial_name', None)
+                self.mouse.pop('laser_spot', None)
+                self.mouse.pop('laser_name', None)
                 #Move laser back to zero position at the end of the trial
                 self.move_to(np.array([0,0]),topleft=True,join=False)
         else:
@@ -687,14 +705,17 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             resultsDict.update({'rewards': newRewards})
             self.camera.stop_preview()
 
+
     def hardwareTest(self):
         #Tester function called from the hardwareTester. Includes Stimulator
         #specific hardware tester.
         while(True):
-            inputStr = input ('m= matching, t= targets, v = vib. motor, p= laser tester, c= motor check, a= camera/LED, s= speaker, q= quit: ')
+            inputStr = input ('r=reference image, m= matching, t= targets, v = vib. motor, p= laser tester, c= motor check, a= camera/LED, s= speaker, q= quit: ')
             if inputStr == 'm':
                 self.matcher()
                 self.settingsDict.update({'coeff_matrix' : self.coeff.tolist()})
+            elif inputStr == 'r':
+                self.editReference()
             elif inputStr == 't':
                 self.select_targets()
             elif inputStr == 'p':
@@ -721,41 +742,96 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             elif inputStr == 'q':
                 break
 
+    def setdown (self):
+        #Remove portions saved in h5
+        super().setdown()
+
     def loadH5 (self):
 
         if(path.exists(self.hdf_path)):
             with File(self.hdf_path, 'r+') as hdf:
                 for tag, mouse in hdf.items():
-                    if tag == self.task.tag:
-                        self.mouse.update({'ref_im' : mouse['ref_im'][:]})
-                        self.mouse.update({'ref_name': mouse['ref_im'].get("name")})
+                    if str(tag) == str(self.tag):
+                        if(mouse.__contains__('ref_im')):
+                            self.mouse.update({'ref_im' : mouse['ref_im'][:]})
+                            attrs = mouse['ref_im'].attrs
+                            self.mouse.update({'ref_name': attrs.get('NAME')})
+                        if(mouse.__contains__('targets')):
+                            self.mouse.update({'targets': mouse['targets'][:]})
         else:
             with File(self.hdf_path, 'w') as hdf:
                 pass
+    def editReference (self):
+        tag = ""
+        if(path.exists(self.hdf_path)):
+            with File(self.hdf_path, 'r+') as hdf:
+                while (not hdf.__contains__(tag) and tag != "e"):
+                    print('Select a Mouse to edit: (e to exit)', hdf.keys())
+                    tag = input('Mouse tag: ')
+                if(tag != 'e'):
+                    mouse = hdf[tag]
+                    nextInput = ""
+                    fig = plt.figure(figsize=(10,10))
+                    img = mouse['ref_im'][:]
+                    imgplot = plt.imshow(img)
+                    plt.title('Reference Image (click to hide)')
+                    plt.show(block=False)
+                    plt.ginput(n=1,show_clicks=False,timeout=0)
+                    while nextInput.lower() != "n" and nextInput.lower() != "y":
+                        nextInput = input('Delete reference image? (Y/N):')
+                    if(nextInput.lower() == "y"):
+                        del mouse['ref_im']
+                        nextInput = ""
+                        confirm = False
+                        self.task.DataLogger.writeToLogFile(int(tag), "ReferenceDelete", None, time())
+                        while( not confirm):
+                            while (not mouse['trial_image'].__contains__(nextInput) and nextInput != "n"):
+                                print('Select a new reference image: (n for no image) ', mouse['trial_image'].keys())
+                                nextInput = input('Image: ')
+                            if(nextInput.lower() != 'n'):
+                                fig = plt.figure(figsize=(10,10))
+                                img = mouse['trial_image/' + nextInput][:]
+                                imgplot = plt.imshow(img)
+                                plt.title('Selected (click to hide):')
+                                plt.show(block=False)
+                                plt.ginput(n=1,show_clicks=False,timeout=0)
+                                plt.close()
+                                conf = input('Use this? (Y/N)')
+                                if(conf.lower() == 'y'):
+                                    confirm = True
+                        if(nextInput.lower() != 'n'):
+                            mouse['ref_im'] = mouse['trial_image/' + nextInput]
+                            self.task.DataLogger.writeToLogFile(int(tag), "ReferenceImage", {'name': nextInput}, time())
+
+
+
+
 
     def h5updater (self):
         with File(self.hdf_path, 'r+') as hdf:
-            if hasattr(self.mouse,'ref_im'):
-                ref = hdf.require_dataset('ref_im',shape=tuple(self.camera.resolution()+[3]),dtype=np.uint8,data=self.mouse.get('ref_im'))
+            mouse = hdf.require_group(str(self.tag))
+            resolution_shape = ( self.camera.resolution()[0], self.camera.resolution()[1], 3) #rgb layers
+            if 'ref_im' in self.mouse:
+                ref = mouse.require_dataset('ref_im',shape=tuple(resolution_shape),dtype=np.uint8,data=self.mouse.get('ref_im'))
                 ref.attrs.modify('CLASS', np.string_('IMAGE'))
                 ref.attrs.modify('IMAGE_VERSION', np.string_('1.2'))
                 ref.attrs.modify('IMAGE_SUBCLASS', np.string_('IMAGE_TRUECOLOR'))
                 ref.attrs.modify('INTERLACE_MODE', np.string_('INTERLACE_PIXEL'))
                 ref.attrs.modify('IMAGE_MINMAXRANGE', [0,255])
                 ref.attrs.modify('NAME', np.string_(self.mouse.get('ref_name')))
-            if hasattr(self.mouse,'targets'):
-                hdf.require_dataset('targets',shape=(2,),dtype=np.uint8,data=self.mouse.targets)
-            t = hdf.require_group('trial_image')
-            if hasattr(self.mouse,'trial_image'):
-                tr = t.require_dataset(self.mouse.get('trial_name'),shape=tuple(self.camera.resolution()+[3]),dtype=np.uint8,data=self.mouse.get('trial_image'))
+            if 'targets' in self.mouse:
+                mouse.require_dataset('targets',shape=(2,),dtype=np.uint8,data=self.mouse.get('targets'))
+            t = mouse.require_group('trial_image')
+            if 'trial_image' in self.mouse:
+                tr = t.require_dataset(self.mouse.get('trial_name'),shape=tuple(resolution_shape),dtype=np.uint8,data=self.mouse.get('trial_image'))
                 tr.attrs.modify('CLASS', np.string_('IMAGE'))
                 tr.attrs.modify('IMAGE_VERSION', np.string_('1.2'))
                 tr.attrs.modify('IMAGE_SUBCLASS', np.string_('IMAGE_TRUECOLOR'))
                 tr.attrs.modify('INTERLACE_MODE', np.string_('INTERLACE_PIXEL'))
                 tr.attrs.modify('IMAGE_MINMAXRANGE', [0,255])
                 tr.attrs.modify('timestamp', self.mouse.get('timestamp'))
-            if hasattr(self.mouse,'laser_spot'):
-                ls = t.require_dataset(self.mouse.laser_name+'_laser_spot',shape=tuple(self.camera.resolution()+[3]),dtype=np.uint8,data=self.mouse.laser_spot)
+            if 'laser_spot' in self.mouse:
+                ls = t.require_dataset(self.mouse.get('laser_name') +'_laser_spot',shape=tuple(resolution_shape),dtype=np.uint8,data=self.mouse.get('laser_spot'))
                 ls.attrs.modify('CLASS', np.string_('IMAGE'))
                 ls.attrs.modify('IMAGE_VERSION', np.string_('1.2'))
                 ls.attrs.modify('IMAGE_SUBCLASS', np.string_('IMAGE_TRUECOLOR'))

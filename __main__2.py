@@ -129,6 +129,7 @@ def main():
         raise anError
     finally:
         task.Stimulator.quitting()
+        #task.DataLogger.setdown()
         #GPIO.output(task.ledPin, GPIO.LOW)
         task.HeadFixer.releaseMouse(task.tag)
         #GPIO.output(task.rewardPin, GPIO.LOW)

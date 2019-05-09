@@ -17,7 +17,7 @@ class AHF_Camera_PiCam (AHF_Camera):
         defaultFrameRate = 30
         defaultISO = 200
         defaultShutterSpeed = 30000
-        defaultFormat = 'h264'
+        defaultFormat = 'rgb'
         defaultQuality = 20
         # resolution
         resolution = starterDict.get ('resolution', defaultRes)
