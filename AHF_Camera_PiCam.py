@@ -96,6 +96,9 @@ class AHF_Camera_PiCam (AHF_Camera):
         self.set_gain ()
         return
 
+    def resolution(self):
+        return self.piCam.resolution
+
     def hardwareTest (self):
         """
         Tests functionality, gives user a chance to change settings
@@ -174,8 +177,20 @@ class AHF_Camera_PiCam (AHF_Camera):
         else:
             self.piCam.start_recording(video_name_path, format = self.AHFvideoFormat, quality = self.AHFvideoQuality)
         self.piCam.start_preview(fullscreen = False, window= self.AHFpreview)
-
         return
+
+    def add_overlay(self, bytes, layer, alpha):
+        return self.piCam.add_overlay(bytes, layer=layer, alpha = alpha, fullscreen=False, window= self.AHFpreview)
+
+    def remove_overlay(self, overlay):
+        self.piCam.remove_overlay(overlay)
+
+
+    def start_preview(self):
+        self.piCam.start_preview(fullscreen = False, window= self.AHFpreview)
+
+    def stop_preview(self):
+        self.piCam.stop_preview()
 
     def stop_recording(self):
         """
