@@ -531,6 +531,12 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         self.camera.capture(self.mouse.ref_im,'rgb')
 
     def select_targets(self):
+        if(path.exists(self.hdf_path)):
+            with File(self.hdf_path, 'r+') as hdf:
+                for tag, mouse in hdf.items():
+                    tempMouse = self.Subjects.get(tag)
+                    tempMouse.targets = mouse['targets'][:]
+        mice = self.Subjects.get_all()
         #GUI function for the selecting targets
         def manual_annot(img):
             warnings.filterwarnings("ignore",".*GUI is implemented.*")
@@ -546,14 +552,14 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             print('Need to perform the matching first before selecting targets')
             return None
         else:
-            for mouse in mice.mouseArray:
+            for mouse in mice:
                 if hasattr(mouse,'targets'):
                     inputStr = input('Certain/All mice already have brain targets.\n0: Select targets for remaining mice\n1: Select targets for all registered mice.\n')
                     break
                 else:
                     inputStr = str(1)
             if inputStr == str(0):
-                for mouse in mice.mouseArray:
+                for mouse in mice:
                     if (not hasattr(mouse,'targets') and hasattr(mouse,'ref_im')):
                         print('Mouse: ',mouse.tag)
                         targets_coords = manual_annot(mouse.ref_im)
@@ -561,7 +567,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                         print('TARGET\tx\ty')
                         print('{0}\t{1}\t{2}'.format('0',mouse.targets[0],mouse.targets[1]))
             if inputStr == str(1):
-                for mouse in mice.mouseArray:
+                for mouse in mice:
                     if hasattr(mouse,'ref_im'):
                         print('Mouse: ',mouse.tag)
                         targets_coords = manual_annot(mouse.ref_im)
@@ -611,6 +617,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
 
 #=================Main functions called from outside===========================
     def run(self, resultsDict = {}, settingsDict = {}):
+        self.loadH5()
         self.mouse = self.task.Subjects.get(self.task.tag)
         self.rewardTimes = []
         saved_targ_pos = None
@@ -684,10 +691,12 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         #Tester function called from the hardwareTester. Includes Stimulator
         #specific hardware tester.
         while(True):
-            inputStr = input ('m= matching, v = vib. motor, p= laser tester, c= motor check, a= camera/LED, s= speaker, q= quit: ')
+            inputStr = input ('m= matching, t= targets, v = vib. motor, p= laser tester, c= motor check, a= camera/LED, s= speaker, q= quit: ')
             if inputStr == 'm':
                 self.matcher()
                 self.settingsDict.update({'coeff_matrix' : self.coeff.tolist()})
+            elif inputStr = 't':
+                self.select_targets()
             elif inputStr == 'p':
                 self.camera.start_preview()
                 self.pulse(1000,self.duty_cycle)
