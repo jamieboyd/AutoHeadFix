@@ -18,6 +18,8 @@ class AHF_Rewarder_solenoid_pt (AHF_Rewarder_solenoid):
         super().setup()
         self.cmPulse = CountermandPulse (self.rewardPin, 0, 0, self.rewards.get('entry'), 1)
 
+    def setdown (self):
+        del self.cmPulse
 
     def threadReward (self, sleepTime):
         self.cmPulse.set_delay(0)
