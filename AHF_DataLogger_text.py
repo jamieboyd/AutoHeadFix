@@ -111,6 +111,9 @@ class AHF_DataLogger_text (AHF_DataLogger):
         if getattr(self, 'logFP', None) is not None:
             self.writeToLogFile (0, 'SeshEnd', None, time())
             self.logFP.close()
+        configs = self.configGenerator()
+        for config in configs:
+            self.storeConfig(config[0], config[1])
 
     def configGenerator (self):
         """

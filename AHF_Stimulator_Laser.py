@@ -535,7 +535,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
             with File(self.hdf_path, 'r+') as hdf:
                 for tag, mouse in hdf.items():
                     tempMouse = self.task.Subjects.get(tag)
-                    tempMouse.targets = mouse['targets'][:]
+                    tempMouse.update({'targets': mouse['targets'][:]})
         mice = self.task.Subjects.get_all()
         #GUI function for the selecting targets
         def manual_annot(img):
