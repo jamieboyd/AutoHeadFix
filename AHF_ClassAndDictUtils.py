@@ -24,8 +24,8 @@ transferring structured data between JSON text files <-> dictionaries <-> object
 def Class_from_file(nameTypeStr, nameStr):
     """
     Imports a module from a fileName (stripped of the .py) and returns the class
-    
-    Assumes the class is named the same as the module. To get 
+
+    Assumes the class is named the same as the module. To get
     """
     if nameStr == '':
         fileName = 'AHF_' + nameTypeStr
@@ -63,7 +63,7 @@ def Subclass_from_user(aSuperClass):
     fileList = []
     classList = []
     superclassName = aSuperClass.__name__
-    
+
     for f in os.listdir(os.curdir):
         try:
             moduleObj=__import__ (f.rstrip('.py'))
@@ -91,12 +91,12 @@ def Subclass_from_user(aSuperClass):
         while classNum < 1 or classNum > iFile:
             classNum =  int(input (inputStr))
         return classList[classNum -1]
-    
+
 
 def File_from_user (nameTypeStr, longName, typeSuffix, makeNew = False):
     """
     Static method that trawls through current folder looking for python files matching nameTypeStr
-    
+
     Allows user to choose from the list of files found. Files are recognized by names starting
     with 'AHF_' + nameTypeStr' + '_' and ending with '.py'
     Raises: FileNotFoundError if no nameStr class files found
@@ -124,16 +124,18 @@ def File_from_user (nameTypeStr, longName, typeSuffix, makeNew = False):
                     if isAbstractClass == False:
                         fileList.append (fname + ": " + classObj.about())
                         iFile += 1
+                    # else:
+                    #     print(classObj.__abstractmethods__)
                 except Exception as e: # exception will be thrown if imported module imports non-existant modules, for instance
                     print (f, " : ", e)
-                    continue     
+                    continue
     if iFile == 0:
         print ('Could not find any %s files in the current directory' % longName)
         raise FileNotFoundError
     else:
         if not makeNew and iFile ==1:
             ClassFile =  fileList[0]
-            print ('One %s file found: %s' % (longName, ClassFile)) 
+            print ('One %s file found: %s' % (longName, ClassFile))
             return ClassFile.split (':')[0]
         else:
             if makeNew:
@@ -193,7 +195,7 @@ def Show_ordered_object (anObject, longName):
        if not (inspect.isroutine (item [1]) or isinstance(item[1],  AHF_Base) or item[0].startswith ('_')):
             showDict.update ({nP:{item [0]: item [1]}})
             nP +=1
-    # print to screen 
+    # print to screen
     for ii in range (0, nP):
         itemDict.update (showDict.get (ii))
         kvp = itemDict.popitem()
@@ -203,7 +205,7 @@ def Show_ordered_object (anObject, longName):
 
 
 def Edit_Obj_fields (anObject, longName):
-    
+
     while True:
         showDict = Show_ordered_object (anObject, longName)
         inputStr = input ('Enter number of setting to edit, or 0 to exit:')
@@ -278,7 +280,7 @@ def Edit_Obj_fields (anObject, longName):
             elif type (itemValue) is dict:
                 Edit_dict (itemValue, itemKey)
                 setattr (anObject, itemKey, itemValue)
-            
+
 
 def Edit_dict (anyDict, longName):
     """
@@ -346,7 +348,7 @@ def Edit_dict (anyDict, longName):
 
 
 ########################################################################################################################
-## methods for moving data between.json files and python dicitonaries or object fields 
+## methods for moving data between.json files and python dicitonaries or object fields
 #########################################################################################################################
 
 def File_to_dict (nameTypeStr, nameStr, typeSuffix, dir = ''):
@@ -377,7 +379,7 @@ def Dict_to_file (anyDict, nameTypeStr, nameStr, typeSuffix, dir = ''):
         gid = grp.getgrnam ('pi').gr_gid
         os.chown (configFile, uid, gid) # we may run as root for pi PWM, so we need to expicitly set ownership
 
-        
+
 def Obj_fields_to_file (anObject, nameTypeStr, nameStr, typeSuffix, dir = ''):
     """
     Writes a file containing a json dictionary of all the fields of the object anObject
@@ -400,7 +402,7 @@ def Obj_fields_to_file (anObject, nameTypeStr, nameStr, typeSuffix, dir = ''):
         os.chown (configFile, uid, gid) # we may run as root for pi PWM, so we need to expicitly set ownership
 
 
-        
+
 def File_to_obj_fields (nameTypeStr, nameStr, typeSuffix, anObject, dir = ''):
     """
     Sets attributes for the object anObject from the keys and values of dictionay aDict loaded from the file

@@ -6,16 +6,17 @@ from grp import getgrnam
 from time import time, localtime,timezone
 from datetime import datetime
 import AHF_ClassAndDictUtils as CAD
+from AHF_DataLogger import AHF_DataLogger
 class AHF_DataLogger_text (AHF_DataLogger):
     """
     Simple text-based data logger modified from the original Auto Head Fix code
     makes a new text logfile for each day, saved in default data path.
-    
+
     Mouse data is stored in a specified folder, also as text files, one text file per mouse
     containing JSON formatted configuration and performance data. These files will opened and
     updated after each exit from the experimental tube, in case the program needs to be restarted
     The file name for each mouse contains RFID tag 0-padded to 13 spaces: AHF_mouse_1234567890123.jsn
-    
+
     """
     PSEUDO_MUTEX =0
     """
@@ -30,7 +31,7 @@ class AHF_DataLogger_text (AHF_DataLogger):
     defaultCage = 'cage1'
     defaultDataPath='/home/pi/Documents/'
     defaultConfigPath = '/home/pi/Documents/MiceConfig/'
-    
+
     @staticmethod
     def about ():
         return 'Simple text-based data logger that prints mouse id, time, event type, and event dictionary to a text file, and to the shell.'
@@ -39,20 +40,20 @@ class AHF_DataLogger_text (AHF_DataLogger):
     def config_user_get (starterDict = {}):
         # cage ID
         cageID = starterDict.get('cageID', AHF_DataLogger_text.defaultCage)
-        response = input('Enter a name for the cage ID (currently %s): ' & cageID)
-        if reponse != '':
+        response = input('Enter a name for the cage ID (currently %s): ' % cageID)
+        if response != '':
             cageID = response
-        # data path 
+        # data path
         dataPath = starterDict.get('dataPath', AHF_DataLogger_text.defaultDataPath)
         response = input ('Enter the path to the directory where the data will be saved (currently %s): ' % dataPath)
-        if reponse != '':
+        if response != '':
             dataPath = response
         if not dataPath.endswith('/'):
             dataPath += '/'
         # config path
         configPath = starterDict.get('mouseConfigPath', AHF_DataLogger_text.defaultConfigPath)
         response = input ('Enter the path to the directory from which to load and store mouse configuration (currently %s): ' % configPath)
-        if reponse != '':
+        if response != '':
             configPath = response
         # update and return dict
         starterDict.update ({'cageID' : cageID, 'dataPath' : dataPath, 'mouseConfigPath' : configPath})
@@ -68,10 +69,9 @@ class AHF_DataLogger_text (AHF_DataLogger):
                  |         |
              logFilePath  statsFilePath paths to individual files within corresponding subfolders
         """
-        super.setup()
         self.cageID = self.settingsDict.get ('cageID')
         self.dataPath = self.settingsDict.get('dataPath')
-        self.configPath = self.settingsDict.get('mouseConfigPath') 
+        self.configPath = self.settingsDict.get('mouseConfigPath')
         self.logFP = None # reference to log file that will be created
         self.logPath = self.dataPath + 'LogFiles/' # path to the folder containing log files
         self.logFilePath = '' # path to the log file
@@ -98,13 +98,22 @@ class AHF_DataLogger_text (AHF_DataLogger):
         self.makeLogFile () # makes and opens a file for today's data inside logFilePath folder, sets logFP
         self.writeToLogFile (0, 'SeshStart', None, time())
 
+    def hardwareTest (self):
+        """
+        Tests functionality, gives user a chance to change settings
+        """
+        pass
+
     def setdown (self):
         """
         Writes session end and closes log file
         """
-        if self.logFP is not None:
+        if getattr(self, 'logFP', None) is not None:
             self.writeToLogFile (0, 'SeshEnd', None, time())
             self.logFP.close()
+        mice = self.task.Subjects.get_all()
+        for tag, mouse in mice.items():
+            self.storeConfig(tag, mouse)
 
     def configGenerator (self):
         """
@@ -115,14 +124,14 @@ class AHF_DataLogger_text (AHF_DataLogger):
             if fname.startswith ('AHF_mouse_') and fname.endswith ('.jsn'):
                 tagStr = fname[10:len (fname)-4]
                 yield (int (tagStr), CAD.File_to_dict ('mouse', tagStr, '.jsn', dir = self.configPath))
-                
+
 
     def getConfigData (self, tag):
         """
         returns saved dictionary for given tag
         """
         return CAD.File_to_dict ('mouse', '{:013}'.format(tag), '.jsn', dir = self.configPath)
-    
+
 
     def storeConfig (self, tag, configDict):
         """
@@ -136,7 +145,7 @@ class AHF_DataLogger_text (AHF_DataLogger):
         self.writeToLogFile (0, 'SeshEnd', None, time())
         if self.logFP is not None:
             self.logFP.close()
-        self.setDateStr () 
+        self.setDateStr ()
         self.makeLogFile ()
         self.makeQuickStatsFile (mice)
 
@@ -151,7 +160,7 @@ class AHF_DataLogger_text (AHF_DataLogger):
             chown (self.logFilePath, self.uid, self.gid)
         except Exception as e:
                 print ("Error maing log file\n", str(e))
-    
+
 
     def writeToLogFile(self, tag, eventKind, eventDict, timeStamp):
         """
@@ -161,20 +170,20 @@ class AHF_DataLogger_text (AHF_DataLogger):
         The computer-parsable time_epoch is printed to the log file and user-friendly datetime is printed to the shell
         :param tag: the tag of mouse, usually from RFIDTagreader.globalTag
         :param eventKind: the type of event to be printed, entry, exit, reward, etc.
-        :param eventDict: a dictionary containing data about the event (may be None if no associated data) 
+        :param eventDict: a dictionary containing data about the event (may be None if no associated data)
         returns: nothing
         """
         if eventKind == 'SeshStart' or eventKind == 'SeshEnd':
             tag = 0
             eventDict = None
         LogOutputStr = '{:013}\t{:s}\t{:s}\t{:s}\n'.format (tag, eventKind, str(eventDict), datetime.fromtimestamp (int (timeStamp)).isoformat (' '))
-        while AHF_DataLogger.PSEUDO_MUTEX ==1:
+        while AHF_DataLogger_text.PSEUDO_MUTEX ==1:
             sleep (0.01)
-        AHF_DataLogger.PSEUDO_MUTEX = 1
+        AHF_DataLogger_text.PSEUDO_MUTEX = 1
         print (LogOutputStr)
-        AHF_DataLogger.PSEUDO_MUTEX = 0
-        if self.logFP is not None and self.task.logToFile: # logMouse is set to False for test mice, or unknown mice
-            FileOutputStr = '{:013}\t{:s}\t{:s}\t{:.2f}'.format(tag, eventKind, str(eventDict), timeStamp)                                 
+        AHF_DataLogger_text.PSEUDO_MUTEX = 0
+        if getattr(self, 'logFP', None) is not None and self.task.logToFile: # logMouse is set to False for test mice, or unknown mice
+            FileOutputStr = '{:013}\t{:s}\t{:s}\t{:.2f}'.format(tag, eventKind, str(eventDict), timeStamp)
             self.logFP.write(FileOutputStr)
             self.logFP.flush()
 
@@ -190,7 +199,7 @@ class AHF_DataLogger_text (AHF_DataLogger):
     def makeQuickStatsFile (self, mice):
         """
         makes a quickStats file for today's results.
-        
+
         QuickStats file contains daily totals of rewards and headFixes for each mouse
         """
         statsFilePath = self.statsPath + 'quickStats_' + self.cageID + '_' + self.dateStr + '.txt'
@@ -198,18 +207,18 @@ class AHF_DataLogger_text (AHF_DataLogger):
         statsFP.write('Mouse_ID\tentries\tent_rew\thfixes\thf_rew')
         if mice is not None:
             keyList = self.task.Stimulator.MousePrecis (mice)
-                mice.addMiceFromFile(self.statsFP)
-                mice.show()
-                    else:
-                        self.statsFP = open(self.statsFilePath, 'w')
-                        self.statsFP.write('Mouse_ID\tentries\tent_rew\thfixes\thf_rew\n')
-                        self.statsFP.close()
-                        self.statsFP = open(self.statsFilePath, 'r+')
-                        uid = getpwnam ('pi').pw_uid
-                        gid = getgrnam ('pi').gr_gid
-                        chown (self.statsFilePath, uid, gid)
-                        
+            mice.addMiceFromFile(self.statsFP)
+            mice.show()
+        else:
+            self.statsFP = open(self.statsFilePath, 'w')
+            self.statsFP.write('Mouse_ID\tentries\tent_rew\thfixes\thf_rew\n')
+            self.statsFP.close()
+            self.statsFP = open(self.statsFilePath, 'r+')
+            uid = getpwnam ('pi').pw_uid
+            gid = getgrnam ('pi').gr_gid
+            chown (self.statsFilePath, uid, gid)
+
 
     def __del__ (self):
-        self.writeToLogFile ('SeshEnd')
+        self.writeToLogFile (0, 'SeshEnd', None, time())
         self.setdown()

@@ -4,12 +4,12 @@
 from AHF_ContactCheck_Elec import AHF_ContactCheck_Elec
 
 class AHF_ContactCheck_BeamBreak (AHF_ContactCheck_Elec):
-    defaultPin = 21
-    
+    defaultPin = 12
+
     @staticmethod
     def about ():
         return 'Beam-Break contact checker for Adafruit IR Beam Break Sensors'
-    
+
     @staticmethod
     def config_user_get (starterDict = {}):
         contactPin = starterDict.get ('contactPin', AHF_ContactCheck_BeamBreak.defaultPin)
@@ -18,6 +18,3 @@ class AHF_ContactCheck_BeamBreak (AHF_ContactCheck_Elec):
             contactPin = int (response)
         starterDict.update({'contactPin': contactPin, 'contactPolarity' : 'FALLING', 'contactPUD' : 'PUD_UP'})
         return starterDict
-
-
-    

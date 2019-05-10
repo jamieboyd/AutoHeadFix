@@ -3,15 +3,17 @@
 
 from abc import ABCMeta, abstractmethod
 
-import AHF_ClassAndDictUtils as CAD
+#This creates a cyclic import - doesn't seem to be a problem on it's own, but
+#it is creating problems in debugging.
+#import AHF_ClassAndDictUtils as CAD
 
 class AHF_Base (metaclass = ABCMeta):
     """
     Defines conventions for classes used for accesing hardware and doing subtasks in AutoHeadFix code
     Each class has a static method, config_user_get, to create or edit a settings dictionary, and will be inititialized
-    with a settings dictionary. The setup function does hardware initialization, or other inititialization. 
+    with a settings dictionary. The setup function does hardware initialization, or other inititialization.
     """
-    
+
     @staticmethod
     @abstractmethod
     def about():
@@ -19,7 +21,7 @@ class AHF_Base (metaclass = ABCMeta):
         Returns a brief message describing your sub-class, used when asking user to pick a sub-class of this class
         """
         return 'A description of your sub-class goes here'
-    
+
     @staticmethod
     @abstractmethod
     def config_user_get (starterDict = {}):
@@ -30,15 +32,15 @@ class AHF_Base (metaclass = ABCMeta):
         """
         return starterDict
 
-    
+
     def newResultsDict (self, starterDict = {}):
         """
         Returns a dictionary with fields, initialized to 0, for storing settings/results from actions of the object, used e.g., by head fixer, stimulator, or rewarder
         not all classes may need results, so not an abstract function
         """
         return starterDict
-    
-    
+
+
     def clearResultsDict(self, resultsDict):
         """
         Clears values in the results dictionary, useful when you want daily totals
@@ -59,8 +61,8 @@ class AHF_Base (metaclass = ABCMeta):
         Initialization of a subclass object may be just making a link to the settings dict and running setup
         so this does not need to be an abtract function - your class can use as is
         __init__ will be passed both the settings dict andthe entire Task including the settings dict
-        Class names need to start with AHF_ and the dictionary must follow convention, named for the class with 'Dict' appended. 
-        
+        Class names need to start with AHF_ and the dictionary must follow convention, named for the class with 'Dict' appended.
+
         """
         self.task=taskP
         self.settingsDict = settingsDictP
@@ -80,7 +82,7 @@ class AHF_Base (metaclass = ABCMeta):
     def setdown (self):
         """
         oppposite of setup. Releases any hardware resouces. can be run before editing settings so GPIO
-        pins can be reused, for example. This strategy should be used in hardwareTest method.  
+        pins can be reused, for example. This strategy should be used in hardwareTest method.
         """
         pass
 

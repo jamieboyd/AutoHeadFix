@@ -5,22 +5,22 @@ from AHF_Camera import AHF_Camera
 from picamera import PiCamera
 from time import sleep
 
-class AHF_Camera_PiCam (AHF_Camera, picamera):
+class AHF_Camera_PiCam (AHF_Camera):
 
     @staticmethod
     def about ():
         return 'uses picamera.PiCamera to run the standard Raspberry Pi camera'
-        
+
     @staticmethod
     def config_user_get (starterDict = {}):
         defaultRes = (640,480)
         defaultFrameRate = 30
         defaultISO = 200
         defaultShutterSpeed = 30000
-        defaultFormat = 'h264'
+        defaultFormat = 'rgb'
         defaultQuality = 20
         # resolution
-        resolution = starterDict.get ('resolution', AHF_Camera_PiCam.defaultRes)
+        resolution = starterDict.get ('resolution', defaultRes)
         tempInput = input ('set X,Y resolution (currently {0}): '.format(resolution))
         if tempInput != '':
             resolution = tuple (int(x) for x in tempInput.split (','))
@@ -36,59 +36,39 @@ class AHF_Camera_PiCam (AHF_Camera, picamera):
         tempInput = input ('Set ISO for video, or 0 to auto set gains (currently ' + str (iso) + ') to :')
         if tempInput != '':
             iso = int (tempInput)
-        paramDict.update ({'iso' : iso})
+        starterDict.update ({'iso' : iso})
         # shutter speed
-        shutter_speed = paramDict.get ('shutter_speed', 30000)
+        shutter_speed = starterDict.get ('shutter_speed', 30000)
         tempInput = input ('Set Shutter speed (in microseconds) for recorded video (currently ' + str (shutter_speed) + ') to :')
         if tempInput != '':
             shutter_speed= int (tempInput)
-        paramDict.update ({'shutter_speed' : shutter_speed})
+        starterDict.update ({'shutter_speed' : shutter_speed})
         # videoFormat
-        videoFormat = paramDict.get ('format', 'h264' )
+        videoFormat = starterDict.get ('format', 'h264' )
         tempInput = input ('Set Video format for recording movies (currently ' + videoFormat + ') to :')
         if tempInput != '':
             videoFormat = tempInput
-        paramDict.update ({'format' : videoFormat})
+        starterDict.update ({'format' : videoFormat})
         # quality
-        quality = paramDict.get ('quality', 20)
+        quality = starterDict.get ('quality', 20)
         tempInput = input ('Set Video quality for h264 movies, best=1, worst =40,0 for auto (currently ' + str (quality) + ') to :')
         if tempInput != '':
             quality = int (tempInput)
-        paramDict.update ({'quality' : quality})
+        starterDict.update ({'quality' : quality})
         # preview window
-        previewWin = paramDict.get ('previewWin', (0,0,640,480))
+        previewWin = starterDict.get ('previewWin', (0,0,640,480))
         tempInput = input ('Set video preview window, left, top, right, bottom, (currently ' + str(previewWin) + ') to :')
         if tempInput != '':
             previewWin = tuple (int(x) for x in tempInput.split (','))
-        paramDict.update ({'previewWin' : previewWin})
+        starterDict.update ({'previewWin' : previewWin})
         # white balance
-        whiteBalance = paramDict.get ('whiteBalance', False)
-        tempInput = input ('Set white balancing for video, 1 for True, or 0 for Flase (currently ' + str (whiteBalance) + ') to :')
+        whiteBalance = starterDict.get ('whiteBalance', False)
+        tempInput = input ('Set white balancing for video, 1 for True, or 0 for False (currently ' + str (whiteBalance) + ') to :')
         if tempInput !='':
             tempInput = bool (int (tempInput))
-        paramDict.update ({'whiteBalance' : whiteBalance})
+        starterDict.update ({'whiteBalance' : whiteBalance})
         # return already modified dictionary, needed when making a new dictionary
-        return paramDict
-
-
-        
-    def __init__(self, paramDict):
-        """
-        Initializes an AHF_Camera from a dictonary
-
-        :param paramDict.format: video format for recording, default='.h264'
-        :param paramDict.quality: different video formats interpret quality paramater differently, default = 10
-        :param paramDict.resolution: two-tuple of horizontal pixel number and vertical pixel number default= (640, 480)
-        :param paramDict.framerate: rate,1 in Hz, at which to record video, default = 30
-        :param paramDict.shutter_speed: camera exposure time, in microseconds, inverse must be less than frame rate default = 30
-        :param paramDict.iso: used to set gain of camera directly, or use 0 to have camera calculate gain from a preview
-        :param paramDict.whiteBalance: set to True if you want camera to auto white balance, set to False to set all color gains to 1, default = False
-        :param paramDict.previewWin: set the size of the preview window, in pixels a tuple of (left, top, right, bottom) coordinates. default = (0,0,640,480)
-        :raises PiCameraError: error raised by superclass PiCamera if camera is not found, or can't be initialized
-        """
-        self.paramDict = paramDict
-        # init PiCamera
-        self.setup()
+        return starterDict
 
 
     def setup (self):
@@ -98,137 +78,49 @@ class AHF_Camera_PiCam (AHF_Camera, picamera):
             print ("Error initializing camera.." + str (anError))
             raise anError
         # set fields in Picamera
-        self.piCam.resolution = paramDict.get ('resolution', (640, 480))
-        self.piCam.framerate = paramDict.get ('framerate', 30)
-        self.piCam.iso = paramDict.get ('iso', 0)
-        self.piCam.shutter_speed = paramDict.get ('shutter_speed', 30000)
+        self.piCam.resolution = self.settingsDict.get ('resolution', (640, 480))
+        self.piCam.framerate = self.settingsDict.get ('framerate', 30)
+        self.piCam.iso = self.settingsDict.get ('iso', 0)
+        self.piCam.shutter_speed = self.settingsDict.get ('shutter_speed', 30000)
         # set fields that are in AHF_Camera class
-        self.AHFvideoFormat = paramDict.get ('format', 'h264')
-        self.piCam.AHFvideoQuality = paramDict.get ('quality', 20)
-        self.piCam.AHFframerate= paramDict.get ('framerate', 30)
-        self.piCam.AHFpreview = paramDict.get('previewWin', (0,0,640,480))
-        whiteBalance = paramDict.get ('whiteBalance', False)
-        self.piCam.AHFgainMode = (whiteBalance == True) # set bit 0 of gain for auto white balancing
-        self.piCam.AHFgainMode += 2 * (self.iso == 0) # set bit 1 for auto gain
+        self.AHFvideoFormat = self.settingsDict.get ('format', 'h264')
+        self.AHFvideoQuality = self.settingsDict.get ('quality', 20)
+        self.AHFframerate= self.settingsDict.get ('framerate', 30)
+        self.AHFpreview = self.settingsDict.get('previewWin', (0,0,640,480))
+        whiteBalance = self.settingsDict.get ('whiteBalance', False)
+        self.AHFgainMode = (whiteBalance == True) # set bit 0 of gain for auto white balancing
+        self.AHFgainMode += 2 * (self.piCam.iso == 0) # set bit 1 for auto gain
         # turn off LED on camera
         self.piCam.led = False
         # set gain based on 2 sec preview
         self.set_gain ()
         return
 
-    def get_configDict (self):
+    def resolution(self):
+        return self.piCam.resolution
+
+    def hardwareTest (self):
         """
-        Loads camera settings into a dictionary with same keys as used in __init__ and returns that dictionary
-
-        Note that we use float () on framerate becuase it is a Fraction, i,e, 30 is represented as Fraction (30, 1)
-        and it doen't serialize for storing as a JSON dict
+        Tests functionality, gives user a chance to change settings
         """
-        paramDict = {'resolution' : self.resolution, 'framerate' : float (self.framerate), 'iso' : self.iso}
-        paramDict.update ({'shutter_speed' : self.shutter_speed, 'format' : self.AHFvideoFormat})
-        paramDict.update ({'quality' : self.AHFvideoQuality, 'framerate' : self.AHFframerate})
-        paramDict.update ({'previewWin' : self.AHFpreview, 'whiteBalance' : bool(self.AHFgainMode & 1)})
-        return paramDict
+        print('Now displaying current output')
+        self.piCam.start_preview(fullscreen = False, window=self.AHFpreview)
+        result = input('Do you wish to edit Camera settings?')
+        while result [0].lower() != 'y' and result[0].lower() !='n':
+            result = input('Do you wish to edit Camera settings? (Y/N)')
+        if result [0] == 'y' or result [0] == 'Y':
+            self.setdown ()
+            self.settingsDict = self.config_user_get (self.settingsDict)
+            self.setup ()
+        self.piCam.stop_preview()
+        pass
 
-    def set_params (self, paramDict):
+    def setdown (self):
         """
-        modifies paramaters for an AHF_Camera object from a dictonary
-
-        :param paramDict: dictionary of setings to change, same format as for __init__()
+        Writes session end and closes log file
         """
-
-        # set fields in  super-class
-        if 'resolution' in paramDict:
-            self.resolution = paramDict ['resolution']
-        if 'framerate' in paramDict:
-            self.framerate = paramDict ['framerate']
-        if 'iso' in paramDict:
-            self.iso = paramDict ['iso']
-            if self.iso == 0 and (self.AHFgainMode & 2) == 0:
-                self.AHFgainMode = self.AHFgainMode | 2  # set bit 1 for auto gain
-            elif self.iso != 0 and (self.AHFgainMode & 2) == 2:
-                self.AHFgainMode -= 2 # unset bit 1 for auto gain
-        if 'shutter_speed' in paramDict:
-            self.shutter_speed = paramDict ['shutter_speed']
-        # set fields that are in AFF_Camera class
-        if 'format' in paramDict:
-            self.AHFvideoFormat = str (paramDict ['format'])
-        if 'quality' in paramDict:
-            self.AHFvideoQuality = int (paramDict ['quality'])
-        if 'framerate' in paramDict:
-            self.AHFframerate= paramDict ['framerate']
-        if 'previewWin' in paramDict:
-            self.AHFpreview = paramDict['previewWin']
-        if 'whiteBalance' in paramDict:
-            if paramDict ['whiteBalance'] == True and (self.AHFgainMode & 1) == 0:
-                self.AHFgainMode = self.AHFgainMode | 1 # set bit 0 of gain for auto white balancing
-            elif paramDict ['whiteBalance'] == False and (self.AHFgainMode & 1) == 1:
-                self.AHFgainMode -= 1 # unset bit 0 of gain for auto white balancing
-        return
-
-
-    def show_config (self):
-        """
-        prints the settings for the camera
-        """
-        print ('----------------Current Settings for AHFCamera----------------')
-        print ('1:Video resolution = ' + str (self.resolution))
-        print ('2:Video Frame Rate = ' + str(self.framerate))
-        print ('3:Camera ISO = ' + str (self.iso) + '; Do Auto-Gain = ' + str (bool(self.AHFgainMode & 2)))
-        print ('4:Shutter Speed (in microseconds) = ' + str (self.shutter_speed))
-        print ('5:Video Format = ' + self.AHFvideoFormat)
-        print ('6:Video Quality =' + str (self.AHFvideoQuality))
-        print ('7:Frame Rate = ' + str (self.AHFframerate))
-        print ('8:Preview Window = ' + str (self.AHFpreview))
-        print ('9:White Balancing =' + str (bool(self.AHFgainMode & 1)))
-        return
-
-
-    def adjust_config_from_user (self):
-        """
-        Lets the user change the settings for the camera
-        :returns: a dictionary containing the new, modified  version fo the settings
-        """
-        while True:
-            try:
-                self.show_config()
-                print ('10:Run Auto-Gain Now')
-                event = int (input ('Enter number of paramater to Edit, or 0 when done:'))
-            except ValueError:
-                continue
-            if event == 1:
-               self.resolution = tuple (int(x) for x in input('X/Y resolution for video, e.g. 640, 480:').split (','))
-            elif event == 2:
-                self.framerate = float (input ('Frame rate in Hz of recorded movie:'))
-            elif event == 3:
-                self.iso= int (input ('ISO for video, or 0 to auto set gains:'))
-                if self.iso == 0 and (self.AHFgainMode & 2) == 0:
-                    self.AHFgainMode = self.AHFgainMode | 2  # set bit 1 for auto gain
-                elif self.iso != 0 and (self.AHFgainMode & 2) == 2:
-                    self.AHFgainMode -= 2 # unset bit 1 for auto gain
-            elif event == 4:
-               self.shutter_speed = int (input ('Shutter speed (in microseconds) for recorded video:'))
-            elif event == 5:
-               self.AHFvideoFormat = str (input ('Video format for recording movies, e.g. h264 or rgb:'))
-            elif event == 6:
-               self.AHFvideoQuality = int (input ('Video quality for h264 movies (best=1, worst =40,0 for auto, not used for rgb format):'))
-            elif event == 7:
-               self.AHFframerate = float (input ('Frame rate in Hz of recorded movie:'))
-            elif event == 8:
-               self.AHFpreview = tuple (int(x) for x in input ('video preview window, a tuple (left, top, right, bottom):').split (','))
-            elif event == 9:
-                tempVal =  bool(int (input('Do white balance for video (1 for yes, or 0 for no:')))
-                if tempVal == True and (self.AHFgainMode & 1) == 0:
-                    self.AHFgainMode = self.AHFgainMode | 1 # set bit 0 of gain for auto white balancing
-                elif tempVal == False and (self.AHFgainMode & 1) == 1:
-                    self.AHFgainMode -= 1 # unset bit 0 of gain for auto white balancing
-            elif event == 10:
-               self.set_gain()
-            elif event == 0:
-               break
-            else:
-               print ('Enter a number from 0 to 10')
-        return self.get_configDict ()
-
+        self.piCam.close()
+        pass
 
     def set_gain (self):
         """
@@ -242,35 +134,38 @@ class AHF_Camera_PiCam (AHF_Camera, picamera):
         if (self.AHFgainMode & 2):
             DescStr += 'from current illumination'
         else:
-            DescStr += "from ISO " + str (self.iso)
+            DescStr += "from ISO " + str (self.piCam.iso)
         if (self.AHFgainMode & 1):
             DescStr += ' with white balancing'
         else:
             DescStr += " with No white balancing"
         print (DescStr)
         if (self.AHFgainMode & 1):
-            self.awb_mode='auto'
+            self.piCam.awb_mode='auto'
         else:
-            self.awb_mode='off'
-            self.awb_gains = (1,1)
+            self.piCam.awb_mode='off'
+            self.piCam.awb_gains = (1,1)
         #if (self.AHFgainMode & 2):
         self.exposure_mode = 'auto'
         #else:
         #    self.exposure_mode = 'off'
-        super().start_preview(fullscreen = False, window=self.AHFpreview)
+        self.piCam.start_preview(fullscreen = False, window=self.AHFpreview)
         sleep(2.0) # let gains settle, then fix values
         if (self.AHFgainMode & 1):
-            savedGain = self.awb_gains
-            self.awb_gains = savedGain
-            self.awb_mode = "off"
+            savedGain = self.piCam.awb_gains
+            self.piCam.awb_gains = savedGain
+            self.piCam.awb_mode = "off"
         #if (self.AHFgainMode & 2):
         self.exposure_mode = 'off'
-        super().stop_preview ()
-        print ("Red Gain for white balance =" + str (float(self.awb_gains [0])))
-        print ("Blue Gain for white balance =" + str (float(self.awb_gains [1])))
-        print ("Analog Gain = " + str(float (self.analog_gain)))
-        print ("Digital Gain = " + str (float(self.digital_gain)))
+        self.piCam.stop_preview ()
+        print ("Red Gain for white balance =" + str (float(self.piCam.awb_gains [0])))
+        print ("Blue Gain for white balance =" + str (float(self.piCam.awb_gains [1])))
+        print ("Analog Gain = " + str(float (self.piCam.analog_gain)))
+        print ("Digital Gain = " + str (float(self.piCam.digital_gain)))
         return
+
+    def capture(self, path, type):
+        self.piCam.capture(path, type )
 
     def start_recording(self, video_name_path):
         """
@@ -281,20 +176,32 @@ class AHF_Camera_PiCam (AHF_Camera, picamera):
         :param video_name_path: a full path to the file where the video will be stored. Always save to a file, not a PIL, for, example
         """
         if self.AHFvideoFormat == 'rgb':
-            super().start_recording(output=video_name_path, format=self.AHFvideoFormat)
+            self.piCam.start_recording(output=video_name_path, format=self.AHFvideoFormat)
         else:
-            super().start_recording(video_name_path, format = self.AHFvideoFormat, quality = self.AHFvideoQuality)
-        super().start_preview(fullscreen = False, window= self.AHFpreview)
-
+            self.piCam.start_recording(video_name_path, format = self.AHFvideoFormat, quality = self.AHFvideoQuality)
+        self.piCam.start_preview(fullscreen = False, window= self.AHFpreview)
         return
+
+    def add_overlay(self, bytes, layer, alpha):
+        return self.piCam.add_overlay(bytes, layer=layer, alpha = alpha, fullscreen=False, window= self.AHFpreview)
+
+    def remove_overlay(self, overlay):
+        self.piCam.remove_overlay(overlay)
+
+
+    def start_preview(self):
+        self.piCam.start_preview(fullscreen = False, window= self.AHFpreview)
+
+    def stop_preview(self):
+        self.piCam.stop_preview()
 
     def stop_recording(self):
         """
         Stops a video recording previously started with start_recording.
         """
-        if self.recording:
-            super().stop_recording()
-            super().stop_preview()
+        if self.piCam.recording:
+            self.piCam.stop_recording()
+            self.piCam.stop_preview()
         return
 
     def timed_recording(self, video_name_path, recTime):
@@ -308,77 +215,13 @@ class AHF_Camera_PiCam (AHF_Camera, picamera):
         :param recTime: duration of the recorded video, in seconds
         """
         if self.AHFvideoFormat == 'rgb':
-            super().start_recording(output=video_name_path, format=self.AHFvideoFormat)
+            self.piCam.start_recording(output=video_name_path, format=self.AHFvideoFormat)
         else:
-            super().start_recording(output=video_name_path, format=self.AHFvideoFormat)
-        super().start_preview(fullscreen = False, window= self.AHFpreview)
-        super().wait_recording(timeout=recTime)
+            self.piCam.start_recording(output=video_name_path, format=self.AHFvideoFormat)
+        self.piCam.start_preview(fullscreen = False, window= self.AHFpreview)
+        self.piCam.wait_recording(timeout=recTime)
         self.stop_recording ()
         return
-
-    def __del__(self):
-        super().close()
-
-
-    @staticmethod
-    def dict_from_user (paramDict):
-        """
-            static method that leys user make or edit a dictionary object that holds camera setttings
-        
-            configure gets info from user with the input function, which returns strings
-        """
-        if paramDict is None:
-            paramDict = {}
-        # resolution
-        resolution = paramDict.get ('resolution', (640, 480))
-        tempInput = input ('set X,Y resolution (currently ' + str (resolution) + ') to :')
-        if tempInput != '':
-            resolution = tuple (int(x) for x in tempInput.split (','))
-        paramDict.update ({'resolution' : resolution})
-        # framerate
-        frameRate = paramDict.get ('framerate', 30)
-        tempInput = input ('Set Frame rate in Hz of recorded movie (currently ' + str (frameRate) + ') to :')
-        if tempInput != '':
-            frameRate = float (tempInput)
-        paramDict.update ({'framerate' : frameRate})
-        # ISO
-        iso = paramDict.get ('iso', 0)
-        tempInput = input ('Set ISO for video, or 0 to auto set gains (currently ' + str (iso) + ') to :')
-        if tempInput != '':
-            iso = int (tempInput)
-        paramDict.update ({'iso' : iso})
-        # shutter speed
-        shutter_speed = paramDict.get ('shutter_speed', 30000)
-        tempInput = input ('Set Shutter speed (in microseconds) for recorded video (currently ' + str (shutter_speed) + ') to :')
-        if tempInput != '':
-            shutter_speed= int (tempInput)
-        paramDict.update ({'shutter_speed' : shutter_speed})
-        # videoFormat
-        videoFormat = paramDict.get ('format', 'h264' )
-        tempInput = input ('Set Video format for recording movies (currently ' + videoFormat + ') to :')
-        if tempInput != '':
-            videoFormat = tempInput
-        paramDict.update ({'format' : videoFormat})
-        # quality
-        quality = paramDict.get ('quality', 20)
-        tempInput = input ('Set Video quality for h264 movies, best=1, worst =40,0 for auto (currently ' + str (quality) + ') to :')
-        if tempInput != '':
-            quality = int (tempInput)
-        paramDict.update ({'quality' : quality})
-        # preview window
-        previewWin = paramDict.get ('previewWin', (0,0,640,480))
-        tempInput = input ('Set video preview window, left, top, right, bottom, (currently ' + str(previewWin) + ') to :')
-        if tempInput != '':
-            previewWin = tuple (int(x) for x in tempInput.split (','))
-        paramDict.update ({'previewWin' : previewWin})
-        # white balance
-        whiteBalance = paramDict.get ('whiteBalance', False)
-        tempInput = input ('Set white balancing for video, 1 for True, or 0 for Flase (currently ' + str (whiteBalance) + ') to :')
-        if tempInput !='':
-            tempInput = bool (int (tempInput))
-        paramDict.update ({'whiteBalance' : whiteBalance})
-        # return already modified dictionary, needed when making a new dictionary
-        return paramDict
 
 
 if __name__ == '__main__':
@@ -386,8 +229,8 @@ if __name__ == '__main__':
     import PTSimpleGPIO
     from PTSimpleGPIO import PTSimpleGPIO, Pulse, Train, Infinite_train
 
-    t1 = Train (PTSimpleGPIO.INIT_FREQ, 14.4, 0.5, 30, 17, PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
-    
+    t1 = Train (PTSimpleGPIO.MODE_FREQ, 14.4, 0.5, 30, 17, PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
+
     videoFormat = 'rgb'
     quality = 0
     resolution = (256,256)
@@ -424,7 +267,7 @@ if __name__ == '__main__':
         indexOld = frameIndex
         #sleep (0.01)
     time_end=time.time()
-    
+
     previous_frame = 0
     total_time = 0
     for k in range(len(frameNow_array)-1):
@@ -434,7 +277,7 @@ if __name__ == '__main__':
         if (frameNow_array[k+1] is None) or (frameNow_array[k] is None):
             print (frameIndex_array[k], frameNow_array[k-1], frameNow_array[k], frameNow_array[k+1])
             continue
-        
+
         print (frameIndex_array[k], 1E6/(frameNow_array[k+1]-frameNow_array[k]))
 
         total_time +=(frameNow_array[k+1]-frameNow_array[k])*1E-6
@@ -443,7 +286,7 @@ if __name__ == '__main__':
     print (total_time)
 
     #class picamera.PiVideoFrame(index, frame_type, frame_size, video_size, split_size, timestamp)
-    
+
     camera.stop_recording()
     #camera.adjust_config_from_user ()
     #videoPath = '/home/pi/Documents/testMod.' + camera.AHFvideoFormat

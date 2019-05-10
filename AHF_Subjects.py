@@ -41,7 +41,7 @@ class AHF_Subjects (AHF_Base, metaclass = ABCMeta):
         """
         return -1
 
-    
+
     @abstractmethod
     def generator (self):
         """
@@ -55,6 +55,10 @@ class AHF_Subjects (AHF_Base, metaclass = ABCMeta):
         Adds a new subject to the pool of subjects, initializing subject fields with data from a dictionary
         returns True if subject was added, false if subjet with IDnum already exists in subject pool
         """
+        pass
+
+    @abstractmethod
+    def get_all (self):
         pass
 
     @abstractmethod
@@ -94,12 +98,3 @@ class AHF_Subjects (AHF_Base, metaclass = ABCMeta):
         for settings in settingsTuple:
             settingsDict.update (settings, {})
         return {'results' : resultsDict, 'settings' : settingsDict}
-            
-
-    
-
-    
-
-
-    
-        
