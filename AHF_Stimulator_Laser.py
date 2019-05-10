@@ -54,7 +54,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         defaultQ7S = 6
         defaultSHCP = 5
         defaultSTCP = 17
-        defaultDelay = 0.3
+        defaultDelay = 0.03
         defaultH5 = "mice_images.h5"
         #mode
         PWM_mode = starterDict.get ('PWM_mode', defaultMode)
@@ -425,7 +425,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         mp.daemon = True
         mp.start()
         if join:
-            timeout = 8
+            timeout = 30
             start = time()
             while time() - start <= timeout:
                 if mp.is_alive():
@@ -665,9 +665,10 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                     self.move_to(np.flipud(targ_pos),topleft=True,join=True) #Move laser to target and wait until target reached
                     self.mouse.update({'laser_spot': np.empty((self.camera.resolution()[0], self.camera.resolution()[1], 3),dtype=np.uint8)})
                     self.pulse(70,self.duty_cycle) #At least 60 ms needed to capture laser spot
-                    self.camera.capture(self.mouse.get('laser_spot'),'rgb',use_video_port=True)
-                    self.mouse.laser_name = "M" + str(self.tag % 10000) + '_' + str(timestamp) + '_LS'
-                    self.task.DataLogger.writeToLogFile (self.tag, 'Stimulus', {'image_name': self.mouse.laser_name, 'type': 'LaserSpot', 'adjusted_targets': targ_pos, 'intended_targets': self.mouse.get('targets'), 'reference': self.mouse.get('ref_im')}, timestamp)
+                    self.camera.capture(self.mouse.get('laser_spot'),'rgb')
+                    timestamp = time()
+                    self.mouse.update({}'laser_name': "M" + str(self.tag % 10000) + '_' + str(timestamp) + '_LS'})
+                    self.task.DataLogger.writeToLogFile (self.tag, 'Stimulus', {'image_name': self.mouse.get('laser_name'), 'type': 'LaserSpot', 'adjusted_targets': targ_pos, 'intended_targets': self.mouse.get('targets'), 'reference': self.mouse.get('ref_name')}, timestamp)
                     sleep(0.1)
                 # Repeatedly give a reward and pulse simultaneously
                 timeInterval = self.rewardInterval # - self.rewarder.rewardDict.get ('task')
@@ -799,6 +800,8 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                                 conf = input('Use this? (Y/N)')
                                 if(conf.lower() == 'y'):
                                     confirm = True
+                            else:
+                                confirm = True
                         if(nextInput.lower() != 'n'):
                             mouse['ref_im'] = mouse['trial_image/' + nextInput]
                             self.task.DataLogger.writeToLogFile(int(tag), "ReferenceImage", {'name': nextInput}, time())
