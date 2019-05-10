@@ -115,7 +115,7 @@ class AHF_TagReader_ID (AHF_TagReader):
 
     def startLogging (self):
         if not self.isLogging:
-            self.tagReader.installCallback (self.TIRpin, AHF_TagReader_ID.customCallback)
+            self.tagReader.installCallBack (AHF_TagReader_ID.customCallback)
             self.isLogging = True
 
     def stopLogging (self):
