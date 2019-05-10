@@ -91,7 +91,7 @@ def main():
                     task.HeadFixer.releaseMouse(task.tag)
                     task.ContactCheck.stopLogging()
                     if hasattr (task, 'LickDetector'):
-                        task.lickDetector.stop_logging ()
+                        task.LickDetector.stopLogging ()
                     inputStr = '\n************** Auto Head Fix Manager ********************\nEnter:\n'
                     inputStr +='V to run rewarder (valve) control\n'
                     inputStr += 'H for hardware tester\n'
@@ -104,7 +104,7 @@ def main():
                         event = input (inputStr)
                         if event == 'r' or event == "R":
                             if hasattr (task, 'LickDetector'):
-                                task.lickDetector.start_logging ()
+                                task.LickDetector.startLogging ()
                             break
                         elif event == 'q' or event == 'Q':
                             return
@@ -129,6 +129,7 @@ def main():
         raise anError
     finally:
         task.Stimulator.quitting()
+        #task.DataLogger.setdown()
         #GPIO.output(task.ledPin, GPIO.LOW)
         task.HeadFixer.releaseMouse(task.tag)
         #GPIO.output(task.rewardPin, GPIO.LOW)

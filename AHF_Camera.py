@@ -9,6 +9,36 @@ class AHF_Camera(AHF_Base, metaclass = ABCMeta):
     """
     AHF_Camera is the base class for the main brain imaging camera used in Auto Head Fix
     """
+    @abstractmethod
+    def resolution():
+        """
+        Return the resolution of the camera. Used for certain stimulators.
+        """
+        pass
+    @abstractmethod
+    def start_preview():
+        """
+        Starts a preview of the camera's current vision.
+        """
+        pass
+    @abstractmethod
+    def stop_preview():
+        """
+        Ends a preview of the camera's current vision.
+        """
+        pass
+    @abstractmethod
+    def start_recording():
+        """
+        Starts a recording of the camera's current vision.
+        """
+        pass
+    @abstractmethod
+    def stop_recording():
+        """
+        Ends a recording of the camera's current vision.
+        """
+        pass
 
 if __name__ == '__main__':
     import time
