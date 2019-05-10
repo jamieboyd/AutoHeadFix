@@ -111,6 +111,9 @@ class AHF_DataLogger_text (AHF_DataLogger):
         if getattr(self, 'logFP', None) is not None:
             self.writeToLogFile (0, 'SeshEnd', None, time())
             self.logFP.close()
+        mice = self.task.Subjects.get_all()
+        for tag, mouse in mice.items():
+            self.storeConfig(tag, mouse)
 
     def configGenerator (self):
         """

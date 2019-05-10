@@ -58,6 +58,10 @@ class AHF_Subjects (AHF_Base, metaclass = ABCMeta):
         pass
 
     @abstractmethod
+    def get_all (self):
+        pass
+
+    @abstractmethod
     def remove (self, IDnum):
         """
         Removes a subject from the pool of subjects, based on IDnumber. Returns true if subject with given OD was

@@ -164,7 +164,8 @@ class AHF_Subjects_mice (AHF_Subjects):
             self.miceDict[IDnum]= self.newSubjectDict()
         return self.miceDict.get (IDnum, None)
 
-
+    def get_all (self):
+        return self.miceDict
 
     def hardwareTest(self):
         """
