@@ -8,7 +8,7 @@ import AHF_ClassAndDictUtils as CAD
 
 class AHF_Subjects_mice (AHF_Subjects):
     """
-    class for the mice, as experimental subjects.Contains a dictionary where key id IDtag, and value is a dicitonary
+    class for the mice, as experimental subjects. Contains a dictionary where key id IDtag, and value is a dictionary
     of configuration information for corresponding mouse.
     {mouseid1:{settingsDict:{},resultsDict{}}, mouseid2:{settingsDict:{},resultsDict{}}}
     Dictionaries from Stimulator, 1 for results, stimResults, and 1 for parameters, stimParams
@@ -85,12 +85,13 @@ class AHF_Subjects_mice (AHF_Subjects):
             return 0
         else:
             return -1
+        
+    
+    def add(self, IDnum, dataDict):
 
-
-    def add (self, IDnum, dataDict):
         """
         Adds a new subject to the pool of subjects, initializing subject fields with data from a dictionary
-        returns True if subject was added, false if subjet with IDnum already exists in sibject pool
+        returns True if subject was added, false if subjet with IDnum already exists in subject pool
         """
         if not IDnum in self.miceDict.keys:
             self.miceDict.update ({IDnum, dataDict})

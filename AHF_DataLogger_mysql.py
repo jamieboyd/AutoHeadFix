@@ -1,16 +1,27 @@
 #! /usr/bin/python
 # -*-coding: utf-8 -*-
-from os import path, makedirs, chown
-from pwd import getpwnam
-from grp import getgrnam
-from time import time, localtime, timezone
+from time import time
 from datetime import datetime
+import pymysql
+from ast import literal_eval
+import AHF_ClassAndDictUtils as CAD
 
 
 class AHF_DataLogger_mysql(AHF_DataLogger):
     """
-    Simple mysql-based data logger modified from the original Auto Head Fix code
-    makes a new mysql file for each day, saved in default path.
+    Simple text-based data logger modified from the original Auto Head Fix code
+    makes a new text logfile for each day, saved in default data path.
+
+    Mouse data is stored in a specified folder, also as text files, one text file per mouse
+    containing JSON formatted configuration and performance data. These files will opened and
+    updated after each exit from the experimental tube, in case the program needs to be restarted
+    The file name for each mouse contains RFID tag 0-padded to 13 spaces: AHF_mouse_1234567890123.jsn
+
+    REQUESTED VALUES:
+    "exit" for exits as event
+    "lever_pull" as event for lever data
+    "positions" as key for the lever positions in the event_dictionary of "lever_pull"
+
     """
     PSEUDO_MUTEX = 0
     """
@@ -23,148 +34,239 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
     both threads think they have the mutex
     """
     defaultCage = 'cage1'
-    defaultPath = '/home/pi/Documents/'
+    defaultHost = 'localhost'
+    defaultUser = 'root'
+    defaultDatabase = 'raw_data'
+    defaultPassword = 'insecure'
 
     @staticmethod
     def about():
-        return 'Simple mysql-based data logger that prints mouse id, time, and event to shell and to a mysql file.'
+        return 'Data logger that prints mouse id, time, event type, and event dictionary to the shell and  to a mysql database.'
 
     @staticmethod
     def config_user_get(starterDict={}):
+        # cage ID
         cageID = starterDict.get('cageID', AHF_DataLogger_mysql.defaultCage)
-        response = input('Enter a name for the cage ID (currently %s): ' & cageID)
-        if reponse != '':
+        response = input('Enter a name for the cage ID (currently {}): '.format(cageID))
+        if response != '':
             cageID = response
-        dataPath = starterDict.get('dataPath', AHF_DataLogger_mysql.defaultPath)
-        response = input('Enter the path to the directory where the data will be saved (currently %s): ' % dataPath)
-        if reponse != '':
-            dataPath = response
-        starterDict.update({'cageID': cageID, 'dataPath': dataPath})
+        # mysql log
+        # host
+        DBhost = starterDict.get('DBhost', AHF_DataLogger_mysql.defaultHost)
+        response = input('Enter a host for the database (currently {}): '.format(DBhost))
+        if response != '':
+            DBhost = response
+        # user
+        DBuser =starterDict.get('DBuser', AHF_DataLogger_mysql.defaultUser)
+        response = input('Enter your user name for the database (currently {}): '.format(DBuser))
+        if response != '':
+            DBuser = response
+        # database
+        DB = starterDict.get('DB', AHF_DataLogger_mysql.defaultDatabase)
+        response = input('Enter the database you want to connect to (currently {}): '.format(DB))
+        if response != '':
+            DB = response
+        # password
+        DBpwd = starterDict.get('DBpwd', AHF_DataLogger_mysql.defaultPassword)
+        response = input('Enter your user password (currently {}): '.format(DBpwd))
+        if response != '':
+            DBpwd = response
+        # update and return dict
+        starterDict.update({'cageID': cageID, 'DBhost': DBhost, 'DBuser': DBuser,'DB': DB, 'DBpwd': DBpwd })
+
         return starterDict
 
+
+    def saveToDatabase(self,query, values,remote):
+        if remote == True:
+            try:
+                db1 = pymysql.connect(host=self.DBhost, user=self.DBuser, db=self.DB, password=self.DBpwd)
+            except:
+                print("Wasn't able to connect to remote database")
+        else:
+            db1 = pymysql.connect(host="localhost", user="root", db="working_database", password="SlavePi")
+        cur1 = db1.cursor()
+        try:
+            cur1.executemany(query, values)
+            db1.commit()
+        except pymysql.Error as e:
+            try:
+                print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                return None
+            except IndexError:
+                print("MySQL Error: %s" % str(e))
+                return None
+        except TypeError as e:
+            print("MySQL Error: TypeError: %s" % str(e))
+            return None
+        except ValueError as e:
+            print("MySQL Error: ValueError: %s" % str(e))
+            return None
+        db1.close()
+
+    def getFromDatabase(self,query,values,remote):
+        if remote == True:
+            try:
+                db2 = pymysql.connect(host=self.DBhost, user=self.DBuser, db=self.DB, password=self.DBpwd)
+            except:
+                print("Wasn't able to connect to remote database")
+        else:
+            db2 = pymysql.connect(host="localhost", user="root", db="working_database", password="SlavePi")
+        cur2 = db2.cursor()
+        try:
+            cur2.execute(query,values)
+            rows = cur2.fetchall()
+        except pymysql.Error as e:
+            try:
+                print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                return None
+            except IndexError:
+                print("MySQL Error: %s" % str(e))
+                return None
+        except TypeError as e:
+            print("MySQL Error: TypeError: %s" % str(e))
+            return None
+        except ValueError as e:
+            print("MySQL Error: ValueError: %s" % str(e))
+            return None
+        db2.close()
+        return rows
+
+
+    def makeLogFile (self):
+        """
+        Initiating database creation
+        """
+        raw_data_table_generation = """CREATE TABLE IF NOT EXISTS `raw_data` (`ID` int(11) NOT NULL AUTO_INCREMENT,`Tag` varchar(18) NOT NULL,`Event` varchar(50) NOT NULL,
+                                    `Event_dict` varchar(2000) DEFAULT NULL,`Timestamp` timestamp(2) NULL DEFAULT NULL,`Cage` varchar(20) NOT NULL,
+                                     `positions` blob, PRIMARY KEY (`ID`), UNIQUE KEY `Tag` (`Tag`,`Event`,`Timestamp`,`Cage`))
+                                      ENGINE=InnoDB DEFAULT CHARSET=latin1"""
+
+        config_data_table_generation = """CREATE TABLE IF NOT EXISTS `configs` (`ID` int(11) NOT NULL AUTO_INCREMENT,`Tag` varchar(18) NOT NULL,
+                                        `Config` varchar(2000) NOT NULL,`Timestamp` timestamp(2) NULL DEFAULT NULL,`Cage` varchar(20) NOT NULL,
+                                        PRIMARY KEY (`ID`),UNIQUE KEY `Tag` (`Tag`,`Timestamp`,`Cage`))
+                                         ENGINE=InnoDB DEFAULT CHARSET=latin1"""
+        hardwaretest_table_generation = """CREATE TABLE IF NOT EXISTS `hardwaretest` (`ID` int(11) NOT NULL AUTO_INCREMENT,
+                                        `Timestamp` timestamp(2) NULL DEFAULT NULL,PRIMARY KEY (`ID`)) ENGINE=InnoDB DEFAULT CHARSET=latin1"""
+
+        try:
+            self.saveToDatabase(raw_data_table_generation, [[]], True) # create table on remote DB
+            self.saveToDatabase(raw_data_table_generation, [[]], False) # create table on local DB
+            self.saveToDatabase(config_data_table_generation, [[]], False) # create config data table locally, no need to create it in remote DB
+            self.saveToDatabase(hardwaretest_table_generation, [[]], True) # create hardware test table in remote DB
+            self.saveToDatabase(hardwaretest_table_generation, [[]], False)  # create hardware test table in local DB
+        except Exception as e:
+                print("Tables could not be created. Error: ", str(e))
+
+
     def setup(self):
+
+        super.setup()
         self.cageID = self.settingsDict.get('cageID')
-        self.dataPath = self.settingsDict.get('dataPath')
-        self.logFP = None
-        self.setDateStr()
-        self.makeDayFolderPath()
-        self.makeLogFile()
+        self.DBhost = self.settingsDict.get('DBhost')
+        self.DBuser = self.settingsDict.get('DBuser')
+        self.DB = self.settingsDict.get('DB')
+        self.DBpwd = self.settingsDict.get('DBpwd')
+
+        self.raw_save_query = """INSERT INTO `raw_data`(`Tag`,`Event`,`Event_dict`,`Timestamp`,`Cage`)
+        VALUES(%s,%s,%s,FROM_UNIXTIME(%s),%s)"""
+        self.config_save_query = """INSERT INTO `configs` (`Tag`,`Config`,`Timestamp`,`Cage`) VALUES(%s,%s,FROM_UNIXTIME(%s),%s)"""
+        self.events = []
+        self.water_available = False
+
+        self.events.append([0, 'SeshStart', None, time(),self.cageID,None])
+        self.saveToDatabase(self.raw_save_query, self.events, False)
+        self.events = []
 
     def setdown(self):
-        if self.logFP is not None:
-            self.logFP.close()
-        if self.statsFP is not None:
-            self.statsFP.close()
-
-    def newDay(self, mice):
-        self.writeToLogFile(0, 'SeshEnd')
-        if self.logFP is not None:
-            self.logFP.close()
-        if self.statsFP is not None:
-            self.statsFP.close()
-        self.setDateStr()
-        self.makeDayFolderPath()
-        self.makeLogFile()
-        self.makeQuickStatsFile(mice)
-
-    def writeToLogFile(self, tag, event, timeStamp):
         """
-        Writes the time and type of each event to a mysql log file, and also to the shell
-
-        Format of the output string: tag     time_epoch or datetime       event
-        The computer-parsable time_epoch is printed to the log file and user-friendly datetime is printed to the shell
-        :param tag: the tag of mouse, usually from RFIDTagreader.globalTag
-        :param event: the type of event to be printed, entry, exit, reward, etc.
-        returns: nothing
+        Writes session end and closes log file
         """
-        if event == 'SeshStart' or event == 'SeshEnd':
-            tag = 0
-        outPutStr = '{:013}'.format(tag)
-        logOutPutStr = outPutStr + '\t' + '{:.2f}'.format(time()) + '\t' + event + '\t' + datetime.fromtimestamp(
-            int(time())).isoformat(' ')
-        printOutPutStr = outPutStr + '\t' + datetime.fromtimestamp(int(time())).isoformat(' ') + '\t' + event
-        while AHF_DataLogger.PSEUDO_MUTEX == 1:
-            sleep(0.01)
-        AHF_DataLogger.PSEUDO_MUTEX = 1
-        print(printOutPutStr)
-        if self.logFP is not None:
-            self.logFP.write(logOutPutStr + '\n')
-            self.logFP.flush()
-        AHF_DataLogger.PSEUDO_MUTEX = 0
+        self.events.append([0, 'SeshEnd', None, time(),self.cageID,None])
+        self.saveToDatabase(self.raw_save_query,self.events, False)
+        self.saveToDatabase(self.raw_save_query, self.events, True)
+        self.events = []
 
-    def setDateStr(self):
-        dateTimeStruct = localtime()
-        self.dateStr = str(dateTimeStruct.tm_year) + (str(dateTimeStruct.tm_mon)).zfill(2) + (
-            str(dateTimeStruct.tm_mday)).zfill(2)
-
-    def makeDayFolderPath(self):
+#####################################################################################
+    def configGenerator(self):
         """
-        Makes data folders for a day's data,including movies, log file, and quick stats file
-
-        Format: dayFolder = cageSettings.dataPath + cageSettings.cageID + YYYMMMDD
-        within which will be /Videos and /mysqlFiles
-
+        Each configuration file has config data for a single subject. This function loads data
+        from all of them in turn, and returning each as a a tuple of (tagID, dictionary)
         """
-        self.dayFolderPath = self.dataPath + self.dateStr + '/' + self.cageID + '/'
-        if not path.exists(self.dayFolderPath):
-            makedirs(self.dayFolderPath, mode=0o777, exist_ok=True)
-            makedirs(self.dayFolderPath + 'mysqlFiles/', mode=0o777, exist_ok=True)
-            makedirs(self.dayFolderPath + 'Videos/', mode=0o777, exist_ok=True)
-            uid = getpwnam('pi').pw_uid
-            gid = getgrnam('pi').gr_gid
-            chown(self.dayFolderPath, uid, gid)
-            chown(self.dayFolderPath + 'mysqlFiles/', uid, gid)
-            chown(self.dayFolderPath + 'Videos/', uid, gid)
+        # get the mice first, therefore we need them in the `mice` table, at least their tag number and their cage
+        # we will call the mice by their cage which is a class variable
+        query_mice = """SELECT `Tag` FROM `mice` WHERE `Cage` = %s"""
+        mouse_list = [i[0] for i in list(self.getFromDatabase(query_mice,[str(self.cageID)],False))]
+        query_config = """SELECT `Tag`,`Config` FROM `Configs` WHERE `Tag` = %s ORDER BY `Timestamp` DESC LIMIT 1"""
+        for mouse in mouse_list:
+            mouse,dictio = self.getFromDatabase(query_config,[str(mouse)],False)[0]
+            data = (int(mouse),literal_eval("{}".format(dictio)))
+            yield(data)
 
-    def makeQuickStatsFile(self, mice):
-        """
-        makes a new quickStats file for today, or opens an existing file to append.
+    def getConfigData(self, tag):
+        configs_get = """SELECT * FROM `Configs` WHERE `Tag` = %s  ORDER BY `Timestamp` DESC LIMIT 1"""
+        values=[str(tag)]
+        config_data = self.getFromDatabase(configs_get,values,False)[0][0]
+        config_data = literal_eval("{}".format(config_data))
+        return config_data
+    def storeConfig(self, tag, configDict):
+        # store in raw data
+        self.events.append([tag, "config", str(configDict), time(), self.cageID,None])
+        self.saveToDatabase(self.raw_save_query, self.events, False)
+        self.saveToDatabase(self.raw_save_query, self.events, True)
+        self.events = []
+        # store in the config table
+        self.saveToDatabase(self.config_save_query,[[tag, str(configDict), time(), self.cageID]], False)
+        self.saveToDatabase(self.config_save_query, [[tag, str(configDict), time(), self.cageID]], True)
 
-        QuickStats file contains daily totals of rewards and headFixes for each mouse
-        :param expSettings: experiment-specific settings, everything you need to know is stored in this object
-        :param cageSettings: settings that are expected to stay the same for each setup, including hardware pin-outs for GPIO
-        :param mice: the array of mice objects for this cage
-    """
-        self.statsFilePath = self.dayFolderPath + 'mysqlFiles/quickStats_' + self.cageID + '_' + self.dateStr + '.txt'
-        if path.exists(self.statsFilePath):
-            self.statsFP = open(self.statsFilePath, 'r+')
-            if mice is not None:
-                mice.addMiceFromFile(self.statsFP)
-                mice.show()
-        else:
-            self.statsFP = open(self.statsFilePath, 'w')
-            self.statsFP.write('Mouse_ID\tentries\tent_rew\thfixes\thf_rew\n')
-            self.statsFP.close()
-            self.statsFP = open(self.statsFilePath, 'r+')
-            uid = getpwnam('pi').pw_uid
-            gid = getgrnam('pi').gr_gid
-            chown(self.statsFilePath, uid, gid)
+#######################################################################################
+    def newDay(self):
+        self.events.append([0, 'SeshEnd', None, time(),self.cageID,None])
+        self.saveToDatabase(self.raw_save_query, self.events, False)
+        self.saveToDatabase(self.raw_save_query, self.events, True)
+        self.events = []
 
-    def updateStats(self, numMice):
-        """ Updates the quick stats mysql file after every exit, mostly for the benefit of folks logged in remotely
-        :param statsFP: file pointer to the stats file
-        :param mice: the array of mouse objects
-        returns:nothing
-        """
-        pos = self.mouse.arrayPos
-        self.statsFP.seek(39 + 38 * pos)  # calculate this mouse pos, skipping the 39 char header
-        # we are in the right place in the file and new and existing values are zero-padded to the same length, so overwriting should work
-        outPutStr = '{:013}'.format(self.mouse.tag) + "\t" + '{:05}'.format(self.mouse.entries)
-        outPutStr += "\t" + '{:05}'.format(self.mouse.entranceRewards) + "\t" + '{:05}'.format(self.mouse.headFixes)
-        outPutStr += "\t" + '{:05}'.format(self.mouse.headFixRewards) + "\n"
-        self.statsFP.write(outPutStr)
-        self.statsFP.flush()
-        self.statsFP.seek(39 + 38 * numMice)  # leave file position at end of file so when we quit, nothing is truncated
 
-    def addMouseToStats(self, newMouse, numMice):
-        # add a blank line to the quik stats file
-        if self.statsFP is not None:
-            self.statsFP.seek(39 + 38 * numMice)
-            outPutStr = '{:013}'.format(int(newMouse.tag)) + "\t" + '{:05}'.format(0) + "\t" + '{:05}'.format(0) + "\t"
-            outPutStr += '{:05}'.format(0) + "\t" + '{:05}'.format(0) + "\n"
-            self.statsFP.write(outPutStr)
-            self.statsFP.flush()
+
+    def writeToLogFile(self, tag, eventKind, eventDict, timeStamp,toShellOrFile):
+        if toShellOrFile & self.TO_FILE:
+            if eventKind == "lever_pull":
+                lever_postions = eventDict.get("positions")
+                del eventDict["positions"]
+                self.events.append([tag, eventKind, str(eventDict), timeStamp, self.cageID, lever_postions])
+            else:
+                self.events.append([tag, eventKind, str(eventDict), timeStamp, self.cageID, None])
+        if eventKind == "exit" and toShellOrFile & self.TO_FILE:
+            self.saveToDatabase(self.raw_save_query, self.events, False)
+            self.saveToDatabase(self.raw_save_query, self.events, True)
+            self.events = []
+        if toShellOrFile & self.TO_SHELL:
+            print('{:013}\t{:s}\t{:s}\t{:s}\t{:s}\n'.format (tag, eventKind, str(eventDict), datetime.fromtimestamp(int(timeStamp)).isoformat(' '), self.cageID))
+
+
+    def hardwareTest(self):
+        query_save = """INSERT INTO `hardwaretest`(`Timestamp`)
+        VALUES(FROM_UNIXTIME(%s))"""
+        values = [[time()]]
+        query_get = """SELECT * FROM `hardwaretest` WHERE 1  
+                    ORDER BY `hardwaretest`.`timestamp` DESC
+                    LIMIT 1"""
+        try:
+            self.saveToDatabase(query_save, values,False)
+            response = str(self.getFromDatabase(query_get,[],False))
+            print("last test entry local DB: ", response)
+        except:
+            print("no connection to localhost")
+        try:
+            self.saveToDatabase(query_save, values, True)
+            response = str(self.getFromDatabase(query_get, [],True))
+            print("last test entry remote DB: ", response)
+        except:
+            print("no connection to remote host")
 
     def __del__(self):
-        self.writeToLogFile('SeshEnd')
+        self.events.append([0, 'SeshEnd', None, time(),self.cageID,None])
+        self.saveToDatabase(self.raw_save_query, self.events, False)
+        self.saveToDatabase(self.raw_save_query, self.events, True)
+        self.events = []
         self.setdown()
