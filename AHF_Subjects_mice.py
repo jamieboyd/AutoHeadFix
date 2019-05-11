@@ -8,7 +8,7 @@ import AHF_ClassAndDictUtils as CAD
 
 class AHF_Subjects_mice (AHF_Subjects):
     """
-    class for the mice, as experimental subjects.Contains a dictionary where key id IDtag, and value is a dicitonary
+    class for the mice, as experimental subjects. Contains a dictionary where key id IDtag, and value is a dictionary
     of configuration information for corresponding mouse.
     {mouseid1:{settingsDict:{},resultsDict{}}, mouseid2:{settingsDict:{},resultsDict{}}}
     Dictionaries from Stimulator, 1 for results, stimResults, and 1 for parameters, stimParams
@@ -19,9 +19,9 @@ class AHF_Subjects_mice (AHF_Subjects):
     loadConfigsDefault = True
     propHeadFixDefault = 1
     skeddadleTimeDefault =2
-    
+    inChamberTimeLimitDefault = 300 #seconds
 
-    
+
     @staticmethod
     def about():
         return 'Contains configuration data and results for a group of mice as experimental subjects in Auto Head Fix'
@@ -49,7 +49,7 @@ class AHF_Subjects_mice (AHF_Subjects):
         return starterDict
 
 
-    def setup():
+    def setup(self):
         resultsTuple = ('HeadFixer', 'Rewarder', 'Stimulator', 'TagReader') # results tuple defines dictionaries for subjects we will read from and write results to
         settingsTuple= ('HeadFixer', 'Rewarder', 'Stimulator')
         self.freshMiceAllowed = self.settingsDict.get ('freshMiceAllowed')
@@ -62,7 +62,18 @@ class AHF_Subjects_mice (AHF_Subjects):
             dataLogger=self.task.DataLogger
             for configTuple in DataLogger.configGenerator ():
                 self.miceDict.update ({configTuple[0] : configTuple[1]})
-            
+
+    def setdown (self):
+        # TODO: Finish this
+        pass
+    def show (self, IDnum = 0):
+        """
+        Prints out attributes for subject with given IDNum. If IDNum is 0, prints attributes for all subjects in pool.
+        The attributes will be defined by subclass, results provided by stimulator, etc. Retyrns true if IDNum was found in
+        pool, else False
+        """
+        pass
+
 
     def check (self, IDnum):
         """
@@ -76,10 +87,11 @@ class AHF_Subjects_mice (AHF_Subjects):
             return -1
         
     
-    def add (self, IDnum, dataDict):
+    def add(self, IDnum, dataDict):
+
         """
         Adds a new subject to the pool of subjects, initializing subject fields with data from a dictionary
-        returns True if subject was added, false if subjet with IDnum already exists in sibject pool
+        returns True if subject was added, false if subjet with IDnum already exists in subject pool
         """
         if not IDnum in self.miceDict.keys:
             self.miceDict.update ({IDnum, dataDict})
@@ -87,7 +99,7 @@ class AHF_Subjects_mice (AHF_Subjects):
         else:
             return False
 
-    
+
     def remove (self, IDnum):
         if IDnum in self.miceDict.keys:
             self.miceDict.pop(IDnum)
@@ -98,9 +110,9 @@ class AHF_Subjects_mice (AHF_Subjects):
     def userEdit (self):
         """
         Allows user interaction to add and remove subjects, print out and edit individual configuration
-        """ 
+        """
         CAD.Edit_dict (self.miceDict, 'Mice')
-        
+
 
     def generator(self):
         """
@@ -109,9 +121,9 @@ class AHF_Subjects_mice (AHF_Subjects):
         """
         for item in self.miceDict.items():
             yield item
-                
 
-    def newSubjectDict (starterDict = {}):
+
+    def newSubjectDict (self, starterDict = {}):
         """
         New dictionary made for each individual mouse, dictionaries for headFixer, rewarder, Stmiulator, and
         TagReader
@@ -123,10 +135,10 @@ class AHF_Subjects_mice (AHF_Subjects):
         resultsDict.update ({'Stimulator' : self.task.Stimulator.newResultsDict ()})
         resultsDict.update ({'TagReader' : self.task.TagReader.newResultsDict ()})
         settingsDict = starterDict.get ('settingsDict', {})
-        settingsDict.update ({'HeadFixer' : self.task.HeadFixer.settingsDict ()})
-        settingsDict.update ({'Rewarder' : self.task.Rewarder.settingsDict ()})
-        settingsDict.update ({'Stimulator' : self.task.Stimulator.settingsDict ()})
-        return {'resultsDict' : resultsDict, 'settingsDict' : settingsDict)
+        settingsDict.update ({'HeadFixer' : self.task.HeadFixer.settingsDict })
+        settingsDict.update ({'Rewarder' : self.task.Rewarder.settingsDict })
+        settingsDict.update ({'Stimulator' : self.task.Stimulator.settingsDict })
+        return {'resultsDict' : resultsDict, 'settingsDict' : settingsDict}
 
     def clearResultsDict(self, resultsDict):
         """
@@ -137,23 +149,24 @@ class AHF_Subjects_mice (AHF_Subjects):
             self.task.Rewarder.clearResultsDict (value)
             self.task.Stimulator.clearResultsDict (value)
             self.task.TagReader.clearResultsDict
-            
+
 
     def individualSettings (self, starterDict={}):
         starterDict.update ({'propHeadFix' : self.propHeadFix})
-        
-        
-    
+
+
+
     def get (self, IDnum):
         """
-        returns a reference to the dictionary for the mouse with given IDtag. if the mouse tag is not found, makes a new dictionary 
+        returns a reference to the dictionary for the mouse with given IDtag. if the mouse tag is not found, makes a new dictionary
         if fresh mice can be added, else returns an empty dicitonary if fresh mice are to be ignored
         """
-        if not IDnum in self.miceDict.keys and self.freshMiceAllowed:
-            self.miceDict.update ({IDnum, self.newResultsDict()})
+        if (not self.miceDict or not IDnum in self.miceDict) and self.freshMiceAllowed:
+            self.miceDict[IDnum]= self.newSubjectDict()
         return self.miceDict.get (IDnum, None)
 
-
+    def get_all (self):
+        return self.miceDict
 
     def hardwareTest(self):
         """
@@ -188,10 +201,10 @@ class AHF_Subjects_mice (AHF_Subjects):
                         sleep (0.1)
                 elif event == 'a' or event == 'A':
                     tag = int(input ('Enter the RFID tag for new mouse: '))
-                
 
-     
-                
+
+
+
 from AHF_Task import Task
 
 from AHF_TagReader import AHF_TagReader

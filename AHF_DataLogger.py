@@ -1,4 +1,4 @@
-#! /usr/bin/python
+ #! /usr/bin/python
 #-*-coding: utf-8 -*-
 
 from abc import ABCMeta, abstractmethod
@@ -17,7 +17,7 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
     """
     TO_SHELL =1
     TO_FILE = 2
-    
+
     @abstractmethod
     def makeLogFile (self):
         """
@@ -57,7 +57,8 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
         such as a JSON file, or a database. Will be called when program is started, or restarted and settings
         need to be reloaded.
         """
-    
+        pass
+
     @abstractmethod
     def getConfigData (self, tag):
         """
@@ -71,6 +72,6 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
     def storeConfig (self, tag, dictionary):
         """
         Stores configuration data, given as an IDtag, and dictionary for that tag, in some more permanent storage
-        as a JSON text file, or a database or hd5 file, so it can be later retrived by IDtag
+        as a JSON text file, or a database or hd5 file, so it can be later retrieved by IDtag
         """
         pass

@@ -9,14 +9,14 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
     defaultRewards = 5
     defaultInterval = 3
 
-    
+
     @staticmethod
     def about():
         return 'Rewards stimulator gives periodic rewards, no interaction from mouse required.'
 
 
     @staticmethod
-    def config_user_get (starterDict):
+    def config_user_get (starterDict = {}):
         nRewards = starterDict.get ('nRewards', AHF_Stimulator_Rewards.defaultRewards)
         response = input('Enter the number of rewards you want to give per head fixing session (currently %d): ' % nRewards)
         if response != '':
@@ -27,8 +27,8 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
             rewardInterval = float (response)
         starterDict.update({'nRewards' : nRewards, 'rewardInterval' : rewardInterval})
         return starterDict
-    
-        
+
+
     def setup (self):
         self.nRewards = self.settingsDict.get ('nRewards')
         self.rewardInterval = self.settingsDict.get ('rewardInterval')
@@ -39,14 +39,17 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
         print ('Rewards stimulator set down')
 
 
-    def run(self, mouse):
+    def run(self, resultsDict = {}, settingsDict = {}):
+        super().startVideo()
         self.rewardTimes = []
         for reward in range(self.nRewards):
             self.rewardTimes.append (time())
             self.rewarder.giveReward('task')
             sleep(self.rewardInterval)
-        mouse.headFixRewards += self.nRewards
-        
+        newRewards = resultsDict.get('rewards', 0) + self.nRewards
+        resultsDict.update({'rewards': newRewards})
+        super().stopVideo()
+
     def logFile (self):
         event = '\treward'
         mStr = '{:013}'.format(self.mouse.tag) + '\t'
@@ -72,10 +75,12 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
 
             A stimulator may, e.g., open files and wish to close them before exiting, or use hardware that needs to be cleaned up
         """
+        self.task.Camera.stop_recording()
         pass
 
 
-    def hardwareTest (self, task):
+    def hardwareTest (self):
+        # TODO: Test this
         pass
 
 
@@ -103,6 +108,4 @@ if __name__ == '__main__':
         print ('File not found')
     finally:
         GPIO.cleanup ()
-"""    
-
-    
+"""

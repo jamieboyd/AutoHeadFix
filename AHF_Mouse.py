@@ -14,7 +14,7 @@ class Mice (object):
     Dictionary from HeadFixer, either headFix% or headFix type (loose, strong, a scale from 1 -8)
     Dictionary from Rewarder, task and entry reward size, max entry rewards, daily reward totals
     """
-    
+
     def __init__(self, task):
         """
         Initializes the list of mice with an empty list, or from configuration from DataLogger, and keeps a reference to the task object
@@ -25,11 +25,11 @@ class Mice (object):
             self.mouseList=self.task.DataLoger.loadAllMiceData ()
         else:
             self.mouseList=[]
-        
 
 
-    
-    
+
+
+
     def userConfigure (self):
         """
         Allows user to add mice to file, maybe use TagReader, give initial values to paramaters
@@ -59,9 +59,9 @@ class Mice (object):
                     tag = self.task.TagReader.readTag()
                 elif event == 'a' or event == 'A':
                     tag = int(input ('Enter the RFID tag for new mouse: '))
-                
-                
-              
+
+
+
 
 
     def tagExists (self, RFIDTag):
@@ -79,7 +79,7 @@ class Mice (object):
         stimDictKeys = self.mouseList [0].stimResultsDict.keys()
         print ('Mouse\tEntries\tEntry Rewards\tHeadFixes\tHeadFix Rewards'.join('\t' + key for key in stimDictKeys))
         for mouse in self.mouseList:
-            printStr = '{:013}\t{:d}\t{:d}\t{:d}\t{:d}'.format(self.tag, self.entries, self.headFixes, self.entranceRewards, ,self.headFixRewards)
+            printStr = '{:013}\t{:d}\t{:d}\t{:d}\t{:d}'.format(self.tag, self.entries, self.headFixes, self.entranceRewards, self.headFixRewards)
             printStr.join ('\t' + str(self.mouseList [0].stimDict.get(key)) for key in stimDictKeys)
             print (printStr)
 
@@ -89,8 +89,8 @@ class Mice (object):
         Appends a mouse object to the array and updates quickstats file with new mouse
         :param tag: the mouse's RFID tag, must be unique
         """
-        
-        aMouse = Mouse (tag, stimResultsDict = 
+
+        aMouse = Mouse (tag, stimResultsDict = {})
         self.mouseList.append(aMouse)
         # add a blank line to the quik stats file
         if statsfp is not None:
@@ -118,15 +118,15 @@ class Mouse:
         """
         self.tag = tag
         self.entries = 0 # no object that tracks entries, so we track them separately
-        self.StimulatorDict = StimulatorDict # 
+        self.StimulatorDict = StimulatorDict #
         self.StimulatorResultsDict = StimulatorResultsDict
         self.RewarderDict = RewarderDict # params for rewarder, specialized for this mouse, e.g., reward sizes, reward limits
         self.RewarderResultsDict = RewarderResultsDict # rewarder results, e.g. number of rewrads of different types given to this mouse
         self.headFixerDict =headFixerDict
         self.headFixerResultsDict =headFixerResultsDict
 
-    
-        
+
+
 
     def clear (self):
         """
@@ -140,7 +140,7 @@ class Mouse:
         if self.stimResultsDict is not None:
             for key in self.stimResultsDict:
                 self.stimResultsDict [key] = 0
-    
+
     def reward (self, rewarder, rewardName):
         """
         Gives a reward to the mouse and increments the reward count for task or entries
@@ -152,8 +152,8 @@ class Mouse:
             self.entranceRewards +=1
         elif rewardName == 'task':
             self.headFixRewards += 1
-            
-        
+
+
     def show (self):
         """
         Prints all the data for this mouse, including any stimResults info
@@ -167,7 +167,7 @@ class Mouse:
 
 
 
-    
+
 
 
 
@@ -183,8 +183,8 @@ class Mouse:
         :param statsfp: file pointer to the quickstats file
         returns:nothing
         """
-        
-            
+
+
 
     def removeMouseByTag (self, tag):
         """
@@ -213,12 +213,12 @@ class Mouse:
         """
         for mouse in self.mouseList:
             mouse.clear()
- 
+
 
     def getMouseFromTag (self, tag):
         """
         Finds the mouse with the given tag number from the array of mice
-        
+
         :param tag: the tag ID of the  mouse to find
         :returns: the mouse object with the given tag
         """

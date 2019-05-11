@@ -4,6 +4,7 @@
 from abc import ABCMeta, abstractmethod
 from AHF_HeadFixer import AHF_HeadFixer
 from time import sleep
+from random import random
 
 class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
     """
@@ -12,9 +13,9 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
     """
     hasLevels = True
     numLevels =8
-    defaultReleasePosition = 540
-    defaultFixedPosition = 325
-    
+    defaultReleasePosition = 933
+    defaultFixedPosition = 685
+
     @staticmethod
     @abstractmethod
     def config_user_get (starterDict = {}):
@@ -39,7 +40,7 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
         starterDict.update ({'servoFixedPosition' : self.servoFixedPosition})
         return starterDict
 
-    
+
     @abstractmethod
     def setup (self):
         super().setup()
@@ -47,28 +48,28 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
         self.servoFixedPosition = self.settingsDict.get ('servoFixedPosition')
         if self.__class__.hasLevels:
             self.servoIncrement = (self.servoFixedPosition - self.servoReleasedPosition)/self.numLevels
-    
+
     def fixMouse(self, thisTag, resultsDict = {}, individualDict= {}):
-        self.task.isFixTrial = settingsDict.get ('propHeadFix', self.propHeadFix) > random()
+        self.task.isFixTrial = self.settingsDict.get ('propHeadFix', self.propHeadFix) > random()
         hasContact = False
         if self.task.isFixTrial:
-            if self.waitForMouse (): # contact was made
+            if self.waitForMouse (thisTag): # contact was made
                 self.setPWM (individualDict.get ('servoFixedPosition', self.servoFixedPosition))
                 sleep (0.5)
                 hasContact = self.task.contact
                 if not hasContact: # tried to fix and failed
                     self.setPWM (self.servoReleasedPosition)
-                self.hasMouseLog (hasContact, isFixTrial, resultsDict, settingsDict)
+                self.hasMouseLog (hasContact, self.task.isFixTrial, thisTag, resultsDict)
         else: # noFix trial, wait for contact and return
-            hasContact = self.waitForMouse ()
+            hasContact = self.waitForMouse (thisTag)
             if hasContact:
-                self.hasMouseLog (True, isFixTrial, resultsDict, settingsDict)
+                self.hasMouseLog (True, self.task.isFixTrial, thisTag, resultsDict)
         return hasContact
 
 
     def releaseMouse(self, thisTag, resultsDict = {}, settingsDict= {}):
         self.setPWM (self.servoReleasedPosition)
-        super().releaseMouse (thisTag, resultsDict, individualDict)
+        super().releaseMouse (thisTag, resultsDict, settingsDict)
 
     # each PWM subclass must implement its own code to set the pulse width
     @abstractmethod
@@ -79,13 +80,14 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
     # Head-Fixer hardware test overwritten to just modify fixed and released servo positions, other settings not likely to change
     def hardwareTest (self):
         print ('servo moving to Head-Fixed position for 3 seconds')
-        self.fixMouse()
+        #Fix and release have extra overhead, so replace with position
+        #self.fixMouse()
+        self.setPWM(self.servoFixedPosition)
         sleep (3)
         print ('servo moving to Released position')
-        self.releaseMouse()
+        self.setPWM (self.servoReleasedPosition)
         inputStr= input('Do you want to change fixed position (currently %d) or released position (currently %d)? ' % (self.servoFixedPosition ,self.servoReleasedPosition))
         if inputStr[0] == 'y' or inputStr[0] == "Y":
             self.settingsDict = AHF_HeadFixer_PWM.config_user_get (self.settingsDict)
             self.servoReleasedPosition = self.settingsDict.get ('servoReleasedPosition')
             self.servoFixedPosition = self.settingsDict.get ('servoFixedPosition')
-

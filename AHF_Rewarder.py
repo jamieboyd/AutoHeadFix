@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 #-*-coding: utf-8 -*-
+from time import sleep
 from abc import ABCMeta, abstractmethod
 
 from AHF_Base import AHF_Base
@@ -13,15 +14,7 @@ class AHF_Rewarder(AHF_Base, metaclass = ABCMeta):
     maxEntryRewardsDefault =1000
     entryRewardDelayDefault = 1.0
 
-    @staticmethod
-    @abstractmethod
-    def config_user_get (starterDict = {}):
-        """
-        static method that querries user for settings, with default responses from starterDict,
-        and returns starterDict with settings as edited by the user.
-
-        """
-  
+    
     @abstractmethod
     def giveReward(self, rewardName, resultsDict={}, settingsDict = {}):
         return 0
@@ -44,25 +37,15 @@ class AHF_Rewarder(AHF_Base, metaclass = ABCMeta):
 
     def addRewardToDict (self, rewardName, rewardSize):
         self.rewards.update ({rewardName : rewardSize})
-            
+
 
     def setCountermandTime (self, countermandTime):
         self.countermandTime = countermandTime
 
-    @abstractmethod
-    def hardwareTest (self):
-        pass
-        
+
     def rewardControl (self):
         """
         Opens and closes valve, as for testing, or draining the lines
-
-        when run as a module, valveControl assumes GPIO is setup as defined in cageSet and offers to open/close water
-        delivery solenoid. ValveControl takes an instance of AHF_CageSet as a paramater and assumes
-        that the GPIO pin connected to the water delivery solenoid us as defined in the cageSet, and
-        that GPIO is already setup.
-        param:cageSet: an instance of AHF_CageSet describing which pin is used for water reward solenoid
-        returns:nothing
         """
         try:
             while (True):
@@ -75,12 +58,23 @@ class AHF_Rewarder(AHF_Base, metaclass = ABCMeta):
                     print ("Rewarder is OFF (closed)")
                 elif s == 'q':
                     print ("RewardControl quitting.")
-                    break
+                    return
                 else:
                     print ("I understand 1 for open, 0 for close, q for quit.")
         except KeyboardInterrupt:
             print ("RewardControl quitting.")
-            
 
 
-
+    def hardwareTest (self):
+        print ('\nReward Solenoid opening for %.2f %s' % (self.testAmount, self.rewardUnits))
+        self.giveReward('test')
+        sleep (self.testAmount)
+        inputStr= input('Reward Solenoid closed.\nDo you want to change the Reward Solenoid Pin (currently %d)? ' % self.rewardPin)
+        if inputStr[0] == 'y' or inputStr[0] == "Y":
+            self.setdown ()
+            self.settingsDict = self.config_user_get (self.settingsDict)
+            self.setup()
+        inputStr= input ('\nDo you want to run the control program to turn rewarder ON and OFF?(y or n): ')
+        if inputStr[0] == 'y' or inputStr[0] == "Y":
+            self.rewardControl ()
+        

@@ -49,10 +49,10 @@ class AHF_ContactCheck (AHF_Base, metaclass = ABCMeta):
                 else:
                     print ('Contact Broken! test passed')
                     passed = True
+        self.stopLogging()
         if not passed:
             result = input ('Would you like to edit settings for contact check, Y or N?')
             if result[0] == 'Y' or result [0] == 'y':
                 self.setdown ()
                 self.settingsDict = self.config_user_get (self.settingsDict)
-                self.setup()                         
-
+                self.setup()
