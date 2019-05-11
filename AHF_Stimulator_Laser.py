@@ -523,6 +523,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                 lp = np.array([i[0][1][1],i[1][1][1],i[2][1][1]])
                 self.coeff.append(solver(ip, lp))
             self.coeff = np.mean(np.asarray(self.coeff),axis=0)
+        print("Center in laser coords:", np.dot(self.coeff, np.asarray([128, 128, 1])))
 
     def get_ref_im(self):
         #Save a reference image whithin the mouse object
@@ -581,6 +582,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                 for tag, mouse in hdf.items():
                     tempMouse = self.task.Subjects.get(tag)
                     if 'targets' in tempMouse:
+                        del mouse['targets']
                         mouse.require_dataset('targets',shape=(2,),dtype=np.uint8,data=tempMouse.get('targets'))
     def image_registration(self):
         #Runs at the beginning of a new trial
