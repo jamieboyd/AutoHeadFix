@@ -164,8 +164,8 @@ class AHF_Camera_PiCam (AHF_Camera):
         print ("Digital Gain = " + str (float(self.piCam.digital_gain)))
         return
 
-    def capture(self, path, type):
-        self.piCam.capture(path, type )
+    def capture(self, path, type, video_port =False):
+        self.piCam.capture(path, type, use_video_port=video_port)
 
     def start_recording(self, video_name_path):
         """

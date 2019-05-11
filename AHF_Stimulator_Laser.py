@@ -666,11 +666,11 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                     print('Moving laser to target and capture image to assert correct laser position')
                     self.move_to(np.flipud(targ_pos),topleft=True,join=True) #Move laser to target and wait until target reached
                     self.mouse.update({'laser_spot': np.empty((self.camera.resolution()[0], self.camera.resolution()[1], 3),dtype=np.uint8)})
-                    self.pulse(70,self.duty_cycle) #At least 60 ms needed to capture laser spot
-                    self.camera.capture(self.mouse.get('laser_spot'),'rgb')
+                    self.pulse(self.laser_on_time,self.duty_cycle) #At least 60 ms needed to capture laser spot
+                    self.camera.capture(self.mouse.get('laser_spot'),'rgb', video_port=True)
                     timestamp = time()
-                    self.mouse.update({}'laser_name': "M" + str(self.tag % 10000) + '_' + str(timestamp) + '_LS'})
-                    self.task.DataLogger.writeToLogFile (self.tag, 'Stimulus', {'image_name': self.mouse.get('laser_name'), 'type': 'LaserSpot', 'adjusted_targets': targ_pos, 'intended_targets': self.mouse.get('targets'), 'reference': self.mouse.get('ref_name')}, timestamp)
+                    self.mouse.update({'laser_name': "M" + str(self.tag % 10000) + '_' + str(timestamp) + '_LS'})
+                    self.task.DataLogger.writeToLogFile (self.tag, 'Stimulus', {'image_name': self.mouse.get('laser_name'), 'type': 'LaserSpot', 'coeff_matrix': self.coeff, 'duty_cycle': self.duty_cycle, "laser_on_time": self.laser_on_time, 'laser_targets': targ_pos, 'intended_targets': self.mouse.get('targets'), 'reference': self.mouse.get('ref_name')}, timestamp)
                     sleep(0.1)
                 # Repeatedly give a reward and pulse simultaneously
                 timeInterval = self.rewardInterval # - self.rewarder.rewardDict.get ('task')
