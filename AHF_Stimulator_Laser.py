@@ -23,7 +23,7 @@ from queue import Queue as queue
 from threading import Thread
 from multiprocessing import Process, Queue
 from time import sleep, time
-from random import random
+from random import randrange
 from datetime import datetime
 from itertools import combinations,product
 import imreg_dft as ird
@@ -713,7 +713,7 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
         #Tester function called from the hardwareTester. Includes Stimulator
         #specific hardware tester.
         while(True):
-            inputStr = input ('r=reference image, m= matching, t= targets, v = vib. motor, p= laser tester, c= motor check, a= camera/LED, s= speaker, q= quit: ')
+            inputStr = input ('r=reference image, m= matching, t= targets, a = accuracy, v = vib. motor, p= laser tester, c= motor check, a= camera/LED, s= speaker, q= quit: ')
             if inputStr == 'm':
                 self.matcher()
                 self.settingsDict.update({'coeff_matrix' : self.coeff.tolist()})
@@ -721,6 +721,8 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                 self.editReference()
             elif inputStr == 't':
                 self.select_targets()
+            elif inputStr == "a":
+                self.accuracyTest()
             elif inputStr == 'p':
                 self.camera.start_preview()
                 self.pulse(1000,self.duty_cycle)
@@ -744,6 +746,50 @@ class AHF_Stimulator_Laser (AHF_Stimulator_Rewards):
                 self.move_to(np.array([0,0]),topleft=True,join=False)
             elif inputStr == 'q':
                 break
+
+    def accuracyTest(self):
+        """
+        For the given coefficient matrix, moves the laser to the center, then takes an image.
+        Then, moves to 100 random points, and then back to center, taking another image.
+        These images can then be compared to determine the long-term accuracy of the stepper motors.
+        """
+        continueStr = input("This may take a while. Are you sure? (Y/N)")
+        if continueStr.lower() == "y":
+            self.camera.start_preview()
+            self.pulse(1000,self.duty_cycle)
+            print("Center in laser coords:", np.dot(self.coeff, np.asarray([128, 128, 1])))
+            self.move_to(np.flipud(np.dot(self.coeff, np.asarray([128, 128, 1]))), topleft=True,join=True)
+            self.accuracyStart = np.empty((self.camera.resolution()[0], self.camera.resolution()[1], 3),dtype=np.uint8)
+            self.camera.stop_preview()
+            self.camera.capture(self.accuracyStart,'rgb')
+            self.pulse(0)
+            for i in range (0, 100):
+                x = randrange(0, 256)
+                y = randrange(0, 256)
+                self.move_to(np.flipud(np.dot(self.coeff, np.asarray([x, y, 1]))), topleft=True,join=True)
+            print("Completed, moving to center.")
+            self.camera.start_preview()
+            self.pulse(1000,self.duty_cycle)
+            self.move_to(np.flipud(np.dot(self.coeff, np.asarray([128, 128, 1]))), topleft=True,join=True)
+            self.accuracyEnd = np.empty((self.camera.resolution()[0], self.camera.resolution()[1], 3),dtype=np.uint8)
+            self.camera.stop_preview()
+            self.camera.capture(self.accuracyEnd,'rgb')
+            self.pulse(0)
+            if(path.exists(self.hdf_path)):
+                with File(self.hdf_path, 'r+') as hdf:
+                    resolution_shape = ( self.camera.resolution()[0], self.camera.resolution()[1], 3) #rgb layers
+                    ref = hdf.require_dataset('accuracyStart',shape=tuple(resolution_shape),dtype=np.uint8,data=self.accuracyStart)
+                    ref.attrs.modify('CLASS', np.string_('IMAGE'))
+                    ref.attrs.modify('IMAGE_VERSION', np.string_('1.2'))
+                    ref.attrs.modify('IMAGE_SUBCLASS', np.string_('IMAGE_TRUECOLOR'))
+                    ref.attrs.modify('INTERLACE_MODE', np.string_('INTERLACE_PIXEL'))
+                    ref.attrs.modify('IMAGE_MINMAXRANGE', [0,255])
+                    ref = hdf.require_dataset('accuracyEnd',shape=tuple(resolution_shape),dtype=np.uint8,data=self.accuracyEnd)
+                    ref.attrs.modify('CLASS', np.string_('IMAGE'))
+                    ref.attrs.modify('IMAGE_VERSION', np.string_('1.2'))
+                    ref.attrs.modify('IMAGE_SUBCLASS', np.string_('IMAGE_TRUECOLOR'))
+                    ref.attrs.modify('INTERLACE_MODE', np.string_('INTERLACE_PIXEL'))
+                    ref.attrs.modify('IMAGE_MINMAXRANGE', [0,255])
 
     def setdown (self):
         #Remove portions saved in h5
