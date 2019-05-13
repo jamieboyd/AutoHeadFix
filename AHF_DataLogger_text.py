@@ -41,6 +41,7 @@ class AHF_DataLogger_text (AHF_DataLogger):
         # cage ID
         cageID = starterDict.get('cageID', AHF_DataLogger_text.defaultCage)
         response = input('Enter a name for the cage ID (currently %s): ' % cageID)
+
         if response != '':
             cageID = response
         # data path
@@ -123,8 +124,13 @@ class AHF_DataLogger_text (AHF_DataLogger):
         for fname in listdir(self.configPath):
             if fname.startswith ('AHF_mouse_') and fname.endswith ('.jsn'):
                 tagStr = fname[10:len (fname)-4]
+<<<<<<< Updated upstream
                 yield (int (tagStr), CAD.File_to_dict ('mouse', tagStr, '.jsn', dir = self.configPath))
 
+=======
+                yield (int(tagStr), CAD.File_to_dict('mouse', tagStr, '.jsn', dir = self.configPath))
+                
+>>>>>>> Stashed changes
 
     def getConfigData (self, tag):
         """
@@ -183,7 +189,7 @@ class AHF_DataLogger_text (AHF_DataLogger):
         print (LogOutputStr)
         AHF_DataLogger_text.PSEUDO_MUTEX = 0
         if getattr(self, 'logFP', None) is not None and self.task.logToFile: # logMouse is set to False for test mice, or unknown mice
-            FileOutputStr = '{:013}\t{:s}\t{:s}\t{:.2f}'.format(tag, eventKind, str(eventDict), timeStamp)
+            FileOutputStr = '{:013}\t{:s}\t{:s}\t{:.2f}\n'.format(tag, eventKind, str(eventDict), timeStamp)
             self.logFP.write(FileOutputStr)
             self.logFP.flush()
 
@@ -217,7 +223,11 @@ class AHF_DataLogger_text (AHF_DataLogger):
             uid = getpwnam ('pi').pw_uid
             gid = getgrnam ('pi').gr_gid
             chown (self.statsFilePath, uid, gid)
+<<<<<<< Updated upstream
 
+=======
+                        
+>>>>>>> Stashed changes
 
     def __del__ (self):
         self.writeToLogFile (0, 'SeshEnd', None, time())

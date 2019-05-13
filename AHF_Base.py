@@ -59,14 +59,14 @@ class AHF_Base (metaclass = ABCMeta):
     def __init__(self, taskP, settingsDictP):
         """
         Initialization of a subclass object may be just making a link to the settings dict and running setup
-        so this does not need to be an abtract function - your class can use as is
+        so this does not need to be an abstract function - your class can use as is
         __init__ will be passed both the settings dict andthe entire Task including the settings dict
         Class names need to start with AHF_ and the dictionary must follow convention, named for the class with 'Dict' appended.
 
         """
         self.task=taskP
         self.settingsDict = settingsDictP
-        self.setup ()
+        self.setup()
 
 
     @abstractmethod
@@ -90,7 +90,7 @@ class AHF_Base (metaclass = ABCMeta):
         """
         For clean up purposes, releases hardware resources with setdown method
         """
-        self.setdown ()
+        self.setdown()
 
 
     @abstractmethod
