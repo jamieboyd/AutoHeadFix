@@ -116,6 +116,8 @@ def main():
                             logEvent = input ('Enter your log message\n: ')
                             task.DataLogger.writeToLogFile (0, 'logMsg:%s' % logEvent, None, time())
                         elif event == 'T' or event == 't':
+                            if hasattr(task, "Camera"):
+                                task.Camera.setdown()
                             task.editSettings()
                             response = input ('Save edited settings to file?')
                             if response [0] == 'Y' or response [0] == 'y':
