@@ -121,7 +121,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
         if tempInput != '':
             hdf_path = str (tempInput)
         starterDict.update ({'hdf_path' : hdf_path})
-        return AHF_Stimulator_Rewards.config_user_get(starterDict)
+        return starterDict
 
     def setup (self):
         self.camera = self.task.Camera
@@ -204,8 +204,8 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
         self.hdf_path = '/home/pi/Documents/' + self.settingsDict.get('hdf_path')
         #Experiment settings
         #self.headFixTime = float (self.settingsDict.get ('headFixTime', 30))
-        #self.lickWitholdTime = float (self.settingsDict.get ('lickWitholdTime', 1))
-        #self.afterStimWitholdTime = float(self.settingsDict.get ('after_Stim_Withold_Time', 0.2))
+        #self.lickWithholdTime = float (self.settingsDict.get ('lickWithholdTime', 1))
+        #self.afterStimWithholdTime = float(self.settingsDict.get ('after_Stim_Withhold_Time', 0.2))
         super().setup()
         # self.rewardInterval = float (self.settingsDict.get ('rewardInterval', 2))
         # self.nRewards = int (self.settingsDict.get('nRewards', 2))
@@ -213,14 +213,18 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
         #Mouse scores
         #self.buzzTimes = []
         #self.buzzTypes = []
-        #self.lickWitholdTimes = []
+        #self.lickWithholdTimes = []
         self.rewardTimes = []
 
     def trialPrep(self):
-        self.align()
+        return self.align()
 
     def stimulate (self):
         self.pulse(self.laser_on_time, self.duty_cycle)
+
+    def trialEnd(self):
+        #Move laser back to zero position at the end of the trial
+        self.move_to(np.array([0,0]),topleft=True,join=False)
 
 #============== Utility functions for the stepper motors and laser =================
 
@@ -520,7 +524,8 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
             b1=laser_points[:,0]
             b2=laser_points[:,1]
             return np.vstack((np.linalg.solve(a, b1),np.linalg.solve(a, b2)))
-
+        #I don't know why this has to be here, but it does
+        print(self.laser_points)
         #Average the coefficient matrix obatained by solving all combinations of triplets.
         if len(list(set([x[0] for x in self.laser_points])))>=3:
             self.coeff = []
@@ -642,7 +647,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
         self.loadH5()
         self.rewardTimes = []
         saved_targ_pos = None
-        if not 'ref_im' in self.mouse:
+        if not 'ref_im' in self.mouse and self.mouse.get('ref_im') is not None:
             print('Take reference image')
             self.get_ref_im()
             timestamp = time()
@@ -661,13 +666,13 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
 
         try:
             # Run this only if headfixed
-            self.rewarder.giveReward('task')
+            # self.rewarder.giveReward('task')
             print('Image registration')
             # ref_path = self.cageSettings.dataPath+'sample_im/'+datetime.fromtimestamp (int (time())).isoformat ('-')+'_'+str(self.mouse.tag)+'.jpg'
             self.mouse.update({'timestamp': time()})
             # self.camera.capture(ref_path)
             targ_pos = self.image_registration()
-            self.rewarder.giveReward('task')
+            # self.rewarder.giveReward('task')
             if targ_pos is None and saved_targ_pos is not None:
                 targ_pos = saved_targ_pos
             if targ_pos is not None:
@@ -694,8 +699,9 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
             #     sleep(timeInterval)
             # newRewards = resultsDict.get('rewards', 0) + self.nRewards
             # resultsDict.update({'rewards': newRewards})
-            self.camera.stop_preview()
-
+            # self.camera.stop_preview()
+        except Exception as e:
+            print(str(e))
         finally:
             self.h5updater()
             self.mouse.pop('ref_im', None)
@@ -704,7 +710,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
             self.mouse.pop('laser_spot', None)
             self.mouse.pop('laser_name', None)
             #Move laser back to zero position at the end of the trial
-            self.move_to(np.array([0,0]),topleft=True,join=False)
+            # self.move_to(np.array([0,0]),topleft=True,join=False)
             return True
 
 

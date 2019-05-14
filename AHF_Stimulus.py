@@ -15,3 +15,10 @@ class AHF_Stimulus (AHF_Base, metaclass = ABCMeta):
     @abstractmethod
     def stimulate (self):
         pass
+
+    @abstractmethod
+    def trialEnd (self):
+        """
+        Code to be run at end of trial. E.g. moving laser to zero position
+        """
+        pass

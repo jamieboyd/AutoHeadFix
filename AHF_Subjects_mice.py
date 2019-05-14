@@ -135,6 +135,7 @@ class AHF_Subjects_mice (AHF_Subjects):
         resultsDict.update ({'Rewarder' : self.task.Rewarder.newResultsDict ()})
         resultsDict.update ({'Stimulator' : self.task.Stimulator.newResultsDict ()})
         resultsDict.update ({'TagReader' : self.task.TagReader.newResultsDict ()})
+        resultsDict.update ({'LickDetector' : self.task.LickDetector.newResultsDict ()})
         settingsDict = starterDict.get ('settingsDict', {})
         settingsDict.update ({'HeadFixer' : self.task.HeadFixer.settingsDict })
         settingsDict.update ({'Rewarder' : self.task.Rewarder.settingsDict })
