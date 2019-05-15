@@ -154,7 +154,7 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
         self.task.Stimulus.stimulate()
         self.task.DataLogger.writeToLogFile (self.tag, 'Stimulus', {'trial': "GO"}, time())
         anyLicks = self.task.LickDetector.waitForLick (self.stim_lead)
-        if anyLicks != 0:
+        if anyLicks is not 0:
             self.rewardTimes.append (time())
             self.rewarder.giveReward('task')
         else:
@@ -197,6 +197,7 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
         self.laserTimes = []
         if self.task.isFixTrial:
             if not self.task.Stimulus.trialPrep():
+                self.task.Stimulus.trialEnd()
                 return
 
             #every time lickWithholdtime passes with no licks, make a buzz then give a reward after buzz_lead time.
@@ -205,7 +206,7 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
             self.laserTimes = []
             endTime = time() + self.mouse.get('headFixTime', 40)
             speakerIsOn = False
-            OffForRewardEnd = 0.0
+            self.OffForRewardEnd = 0.0
             self.camera.start_preview()
             while time() < endTime:
                 # setup to start a trial, withholding licking for lickWithholdRandom secs till buzzer
@@ -224,8 +225,7 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
                 }
                 levels[level]()
                 #print ('{:013}\t{:s}\treward'.format(self.mouse.tag, datetime.fromtimestamp (int (time())).isoformat (' ')))
-                sleep(self.speakerOffForReward)
-                # OffForRewardEnd = time() + self.speakerOffForReward
+                self.OffForRewardEnd = time() + self.speakerOffForReward
             # make sure to turn off buzzer at end of loop when we exit
             if speakerIsOn == True:
                 self.speaker.stop_train()

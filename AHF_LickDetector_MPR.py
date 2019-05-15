@@ -81,7 +81,8 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
         """
         Returns a dictionary with fields, initialized to 0,
         """
-        return starterDict.update ({'licks' : starterDict.get ('licks', 0)})
+        starterDict.update ({'licks' : starterDict.get ('licks', 0)})
+        return starterDict
 
 
     def clearResultsDict(self, resultsDict):

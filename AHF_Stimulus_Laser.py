@@ -224,6 +224,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
 
     def trialEnd(self):
         #Move laser back to zero position at the end of the trial
+        self.camera.stop_preview()
         self.move_to(np.array([0,0]),topleft=True,join=False)
 
 #============== Utility functions for the stepper motors and laser =================
@@ -647,7 +648,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
         self.loadH5()
         self.rewardTimes = []
         saved_targ_pos = None
-        if not 'ref_im' in self.mouse and self.mouse.get('ref_im') is not None:
+        if not 'ref_im' in self.mouse or self.mouse.get('ref_im') is None:
             print('Take reference image')
             self.get_ref_im()
             timestamp = time()
@@ -663,7 +664,9 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
             self.task.DataLogger.writeToLogFile(self.tag, 'TargetError', {'type': 'no targets selected'}, time())
             #If targets haven't been choosen -> release mouse again
             return False
-
+        elif self.coeff is None:
+            print("Match laser and camera coordinates")
+            return False
         try:
             # Run this only if headfixed
             # self.rewarder.giveReward('task')
@@ -702,6 +705,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
             # self.camera.stop_preview()
         except Exception as e:
             print(str(e))
+            return False
         finally:
             self.h5updater()
             self.mouse.pop('ref_im', None)
