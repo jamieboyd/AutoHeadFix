@@ -39,7 +39,7 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
         print ('Rewards stimulator set down')
 
 
-    def run(self, resultsDict = {}, settingsDict = {}):
+    def run(self, level = 0, resultsDict = {}, settingsDict = {}):
         super().startVideo()
         self.rewardTimes = []
         for reward in range(self.nRewards):

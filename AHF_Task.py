@@ -71,6 +71,12 @@ class Task(object):
             self.HeadFixerDict = self.HeadFixerClass.config_user_get ()
             fileErr = True
         ################################ Stimulator (Obligatory) makes its own dictionary #######################
+        if not hasattr (self, 'StimulusClass') or not hasattr (self, 'StimulusDict'):
+            self.StimulusClass = CAD.Class_from_file('Stimulus', CAD.File_from_user ('Stimulus', 'Experiment Stimulus Class', '.py'))
+            #requires a starter dict?
+            self.StimulusDict = self.StimulusClass.config_user_get ()
+            fileErr = True
+        ################################ Stimulator (Obligatory) makes its own dictionary #######################
         if not hasattr (self, 'StimulatorClass') or not hasattr (self, 'StimulatorDict'):
             self.StimulatorClass = CAD.Class_from_file('Stimulator', CAD.File_from_user ('Stimulator', 'Experiment Stimulator Class', '.py'))
             #requires a starter dict?

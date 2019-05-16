@@ -4,6 +4,7 @@
 from TouchDetectorMPR121 import TouchDetector
 from AHF_LickDetector import AHF_LickDetector
 import AHF_Task
+from time import time
 
 class AHF_LickDetector_MPR (AHF_LickDetector):
     """
@@ -20,11 +21,11 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
         """
         custom callback using global task reference from AHF_Task
         """
-        AHF_Task.gTask.DataLogger.writeToLogFile(gTask.tag, 'lick', {'chan' : touchedChannel}, time(), 3)
-        newVal = AHF_Task.gTask.Subjects.get(gTask.tag).get('resultsDict').get('LickDetector').get('licks', 0) + 1
-        AHF_Task.gTask.Subjects.get(gTask.tag).get('resultsDict').get('LickDetector').update ({'licks' : newVal})
+        AHF_Task.gTask.DataLogger.writeToLogFile(AHF_Task.gTask.tag, 'lick', {'chan' : touchedChannel}, time())
+        newVal = AHF_Task.gTask.Subjects.get(AHF_Task.gTask.tag).get('resultsDict').get('LickDetector', {}).get('licks', 0) + 1
+        AHF_Task.gTask.Subjects.get(AHF_Task.gTask.tag).get('resultsDict').get('LickDetector').update ({'licks' : newVal})
 
-    
+
     @staticmethod
     def about ():
         return 'Lick detector using the mpr121 capacitive touch sensor breakout from sparkfun over i2c bus'
@@ -58,7 +59,7 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
         starterDict.update ({'mprAddress' : mprAddress, 'IRQpin' : pin, 'touchThresh' : touchThresh})
         starterDict.update ({'unTouchThresh' : unTouchThresh, 'touchChans' : touchChans})
         return starterDict
-    
+
 
     def setup (self):
         # read dictionary
@@ -80,7 +81,8 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
         """
         Returns a dictionary with fields, initialized to 0,
         """
-        return starterDict.update ({'licks' : starterDict.get ('licks', 0)})
+        starterDict.update ({'licks' : starterDict.get ('licks', 0)})
+        return starterDict
 
 
     def clearResultsDict(self, resultsDict):
@@ -95,7 +97,7 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
         gets touches from mpr121
         """
         return self.touchDetector.touched ()
-        
+
 
     def startLickCount (self):
         """
@@ -135,7 +137,7 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
         """
         self.isLogging = False
         self.touchDetector.stopCustomCallback()
-        
+
 
     def waitForLick (self, timeOut_secs, startFromZero=False):
         """
@@ -143,7 +145,7 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
         or -1 if startFromZero was True and the detector was touched for entire time
          """
         return self.touchDetector.waitForTouch(timeOut_secs, startFromZero)
-    
+
 
     def resetDetector (self):
         """

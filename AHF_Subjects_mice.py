@@ -20,6 +20,7 @@ class AHF_Subjects_mice (AHF_Subjects):
     propHeadFixDefault = 1
     skeddadleTimeDefault =2
     inChamberTimeLimitDefault = 300 #seconds
+    headFixTimeDefault = 40 #seconds
 
 
     @staticmethod
@@ -46,6 +47,7 @@ class AHF_Subjects_mice (AHF_Subjects):
         if response != '':
             self.inChamberTimeLimit = int(inChamberTimeLimit * 60)
         starterDict.update ({'loadMiceConfigs' : loadConfigs, 'freshMiceAllowed' : freshMiceAllowed, 'inChamberTimeLimit' : inChamberTimeLimit})
+
         return starterDict
 
 
@@ -134,11 +136,12 @@ class AHF_Subjects_mice (AHF_Subjects):
         resultsDict.update ({'Rewarder' : self.task.Rewarder.newResultsDict ()})
         resultsDict.update ({'Stimulator' : self.task.Stimulator.newResultsDict ()})
         resultsDict.update ({'TagReader' : self.task.TagReader.newResultsDict ()})
+        resultsDict.update ({'LickDetector' : self.task.LickDetector.newResultsDict ()})
         settingsDict = starterDict.get ('settingsDict', {})
         settingsDict.update ({'HeadFixer' : self.task.HeadFixer.settingsDict })
         settingsDict.update ({'Rewarder' : self.task.Rewarder.settingsDict })
         settingsDict.update ({'Stimulator' : self.task.Stimulator.settingsDict })
-        return {'resultsDict' : resultsDict, 'settingsDict' : settingsDict}
+        return {'resultsDict' : resultsDict, 'settingsDict' : settingsDict, 'headFixTime': AHF_Subjects_mice.headFixTimeDefault}
 
     def clearResultsDict(self, resultsDict):
         """
