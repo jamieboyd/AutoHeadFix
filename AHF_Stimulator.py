@@ -19,13 +19,15 @@ class AHF_Stimulator (AHF_Base, metaclass = ABCMeta):
 
 
     @abstractmethod
-    def run (self, resultsDict = {}, settingsDict = {}):
+    def run (self, level = 0, resultsDict = {}, settingsDict = {}):
         """
         Called at start of each head fix. Does whatever
         """
         pass
 
-
+    @abstractmethod
+    def quitting(self):
+        pass
 
 
     def startVideo (self):
