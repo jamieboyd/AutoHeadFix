@@ -119,6 +119,7 @@ def main():
                         elif event == 'T' or event == 't':
                             if hasattr(task, "Camera"):
                                 task.Camera.setdown()
+                                task.BrainLight.setdown()
                             task.editSettings()
                             response = input ('Save edited settings to file?')
                             if response [0] == 'Y' or response [0] == 'y':

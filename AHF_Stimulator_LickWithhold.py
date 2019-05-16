@@ -140,7 +140,7 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
                     self.speaker.stop_train()
                     speakerIsOn = False
             else: # there were licks in withholding period
-                if (speakerIsOn == False) and (time() > OffForRewardEnd):
+                if (speakerIsOn == False) and (time() > self.OffForRewardEnd):
                     self.speaker.start_train()
                     speakerIsOn = True
                 lickWithholdRandom = self.lickWithholdTime + (0.5 - random())
