@@ -88,6 +88,11 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
         if tempInput != '':
             lickWrongTimeout = int (tempInput)
         starterDict.update ({'lickWrongTimeout' : lickWrongTimeout})
+        defaultLevel = starterDict.get ('defaultLevel', 0)
+        tempInput = input ('Set default level for mouse (currently {0}): '.format(defaultLevel))
+        if tempInput != '':
+            defaultLevel = int (tempInput)
+        starterDict.update ({'defaultLevel' : defaultLevel})
 
         return AHF_Stimulator_Rewards.config_user_get(starterDict)
 
@@ -103,6 +108,7 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
         self.speakerDuty = float(self.settingsDict.get ('speakerDuty', self.speakerDuty_def))
         self.speakerOffForReward = float(self.settingsDict.get ('speakerOffForReward', self.speakerOffForReward_def))
         self.lickWrongTimeout = float(self.settingsDict.get('lickWrongTimeout', self.lickWrongTimeout_def))
+        self.defaultLevel = int(self.settingsDict.get('defaultLevel', 0))
         self.speaker=Infinite_train (PTSimpleGPIO.MODE_FREQ, self.speakerPin, self.speakerFreq, self.speakerDuty,  PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
         self.nRewards = self.settingsDict.get ('nRewards')
         self.rewardInterval = self.settingsDict.get ('rewardInterval')
@@ -189,12 +195,15 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
 
 
 #=================Main functions called from outside===========================
-    def run(self, level = 0, resultsDict = {}, settingsDict = {}):
+    def run(self, level = -1, resultsDict = {}, settingsDict = {}):
         self.tag = self.task.tag
+        if level < 0:
+            level = self.defaultLevel
         self.mouse = self.task.Subjects.get(self.tag)
         self.lickWithholdTimes = []
         self.rewardTimes = []
         self.laserTimes = []
+        n = self.nRewards
         if self.task.isFixTrial:
             if not self.task.Stimulus.trialPrep():
                 self.task.Stimulus.trialEnd()
@@ -224,6 +233,14 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
                     3: self.discrimTask
                 }
                 levels[level]()
+                if level ==0:
+                    sleep(self.rewardInterval)
+                    n = n -1
+                    if n == 0:
+                        newRewards = resultsDict.get('rewards', 0) + len (self.rewardTimes)
+                        resultsDict.update({'rewards': newRewards})
+                        self.task.Stimulus.trialEnd()
+                        return
                 #print ('{:013}\t{:s}\treward'.format(self.mouse.tag, datetime.fromtimestamp (int (time())).isoformat (' ')))
                 self.OffForRewardEnd = time() + self.speakerOffForReward
             # make sure to turn off buzzer at end of loop when we exit

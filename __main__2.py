@@ -81,7 +81,7 @@ def main():
                             task.Rewarder.countermandReward (resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
                             doCountermand = False
                                             #temporary
-                        task.Stimulator.run (1, resultsDict.get('Stimulator'), settingsDict.get('Stimulator'))
+                        task.Stimulator.run (-1, resultsDict.get('Stimulator'), settingsDict.get('Stimulator'))
                         task.HeadFixer.releaseMouse(thisTag)
                 if doCountermand:
                     task.Rewarder.countermandReward (resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
