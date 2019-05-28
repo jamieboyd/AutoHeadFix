@@ -34,10 +34,16 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
     both threads think they have the mutex
     """
     defaultCage = 'cage1'
-    defaultHost = 'localhost'
-    defaultUser = 'root'
-    defaultDatabase = 'raw_data'
-    defaultPassword = 'insecure'
+    defaultHost = "142.103.107.236"
+    defaultUser = "slavePi"
+    defaultDatabase = "AHF_laser_cage"
+    defaultPassword = "iamapoorslave"
+
+    localHost = 'localhost'
+    localUser = 'slavePi'
+    localDatabase = 'raw_data'
+    localPassword = 'iamapoorslave'
+
 
     @staticmethod
     def about():
@@ -84,7 +90,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
             except:
                 print("Wasn't able to connect to remote database")
         else:
-            db1 = pymysql.connect(host="localhost", user="root", db="working_database", password="SlavePi")
+            db1 = pymysql.connect(host=self.localHost, user=self.localUser, db=self.localDatabase, password=self.localPassword)
         cur1 = db1.cursor()
         try:
             cur1.executemany(query, values)
@@ -111,7 +117,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
             except:
                 print("Wasn't able to connect to remote database")
         else:
-            db2 = pymysql.connect(host="localhost", user="root", db="working_database", password="SlavePi")
+            db2 = pymysql.connect(host=self.localHost, user=self.localUser, db=self.localDatabase, password=self.localPassword)
         cur2 = db2.cursor()
         try:
             cur2.execute(query,values)
@@ -144,7 +150,8 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
 
         config_data_table_generation = """CREATE TABLE IF NOT EXISTS `configs` (`ID` int(11) NOT NULL AUTO_INCREMENT,`Tag` varchar(18) NOT NULL,
                                         `Config` varchar(2000) NOT NULL,`Timestamp` timestamp(2) NULL DEFAULT NULL,`Cage` varchar(20) NOT NULL,
-                                        PRIMARY KEY (`ID`),UNIQUE KEY `Tag` (`Tag`,`Timestamp`,`Cage`))
+                                        `Dictionary_source` varchar(50) NOT NULL, 
+                                        PRIMARY KEY (`ID`),UNIQUE KEY `Tag` (`Tag`,`Timestamp`,`Cage`,`Dictionary_source`))
                                          ENGINE=InnoDB DEFAULT CHARSET=latin1"""
         hardwaretest_table_generation = """CREATE TABLE IF NOT EXISTS `hardwaretest` (`ID` int(11) NOT NULL AUTO_INCREMENT,
                                         `Timestamp` timestamp(2) NULL DEFAULT NULL,PRIMARY KEY (`ID`)) ENGINE=InnoDB DEFAULT CHARSET=latin1"""
@@ -168,9 +175,9 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         self.DB = self.settingsDict.get('DB')
         self.DBpwd = self.settingsDict.get('DBpwd')
 
-        self.raw_save_query = """INSERT INTO `raw_data`(`Tag`,`Event`,`Event_dict`,`Timestamp`,`Cage`)
-        VALUES(%s,%s,%s,FROM_UNIXTIME(%s),%s)"""
-        self.config_save_query = """INSERT INTO `configs` (`Tag`,`Config`,`Timestamp`,`Cage`) VALUES(%s,%s,FROM_UNIXTIME(%s),%s)"""
+        self.raw_save_query = """INSERT INTO `raw_data`(`Tag`,`Event`,`Event_dict`,`Timestamp`,`Cage`,`positions`)
+        VALUES(%s,%s,%s,FROM_UNIXTIME(%s),%s,%s)"""
+        self.config_save_query = """INSERT INTO `configs` (`Tag`,`Config`,`Timestamp`,`Cage`,`Dictionary_source`) VALUES(%s,%s,FROM_UNIXTIME(%s),%s,%s)"""
         self.events = []
         self.water_available = False
 
@@ -196,28 +203,32 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         # get the mice first, therefore we need them in the `mice` table, at least their tag number and their cage
         # we will call the mice by their cage which is a class variable
         query_mice = """SELECT `Tag` FROM `mice` WHERE `Cage` = %s"""
-        mouse_list = [i[0] for i in list(self.getFromDatabase(query_mice,[str(self.cageID)],False))]
-        query_config = """SELECT `Tag`,`Config` FROM `Configs` WHERE `Tag` = %s ORDER BY `Timestamp` DESC LIMIT 1"""
-        for mouse in mouse_list:
-            mouse,dictio = self.getFromDatabase(query_config,[str(mouse)],False)[0]
-            data = (int(mouse),literal_eval("{}".format(dictio)))
-            yield(data)
+        query_sources = """SELECT DISTINCT `Dictionary_source` FROM `configs` WHERE `Cage` = %s"""
+        mice_list = [i[0] for i in list(self.getFromDatabase(query_mice,[str(self.cageID)],False))]
+        sources_list = [i[0] for i in list(self.getFromDatabase(query_sources, [str(self.cageID)], False))]
+        query_config = """SELECT `Tag`,`Dictionary_source`,`Config` FROM `configs` WHERE `Tag` = %s
+                                AND `Dictionary_source` = %s ORDER BY `Timestamp` DESC LIMIT 1"""
+        for mice in mice_list:
+            for sources in sources_list:
+                mouse, source, dictio = self.getFromDatabase(query_config, [str(mice), str(sources)], False)[0]
+                data = (int(mouse), str(source), str(literal_eval("{}".format(dictio))))
+                yield(data)
 
-    def getConfigData(self, tag):
-        configs_get = """SELECT * FROM `Configs` WHERE `Tag` = %s  ORDER BY `Timestamp` DESC LIMIT 1"""
-        values=[str(tag)]
+    def getConfigData(self, tag,source):
+        configs_get = """SELECT `Config` FROM `configs` WHERE `Tag` = %s AND `Dictionary_source` = %s  ORDER BY `Timestamp` DESC LIMIT 1"""
+        values=[str(tag),str(source)]
         config_data = self.getFromDatabase(configs_get,values,False)[0][0]
         config_data = literal_eval("{}".format(config_data))
         return config_data
-    def storeConfig(self, tag, configDict):
+    def storeConfig(self, tag, configDict,source):
         # store in raw data
-        self.events.append([tag, "config", str(configDict), time(), self.cageID,None])
+        self.events.append([tag, "config_{}".format(source), str(configDict), time(), self.cageID,None])
         self.saveToDatabase(self.raw_save_query, self.events, False)
         self.saveToDatabase(self.raw_save_query, self.events, True)
         self.events = []
         # store in the config table
-        self.saveToDatabase(self.config_save_query,[[tag, str(configDict), time(), self.cageID]], False)
-        self.saveToDatabase(self.config_save_query, [[tag, str(configDict), time(), self.cageID]], True)
+        self.saveToDatabase(self.config_save_query, [[tag, str(configDict), time(), self.cageID, str(source)]], False)
+        self.saveToDatabase(self.config_save_query, [[tag, str(configDict), time(), self.cageID, str(source)]], True)
 
 #######################################################################################
     def newDay(self):
@@ -226,14 +237,12 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         self.saveToDatabase(self.raw_save_query, self.events, True)
         self.events = []
 
-
-
     def writeToLogFile(self, tag, eventKind, eventDict, timeStamp,toShellOrFile):
         if toShellOrFile & self.TO_FILE:
             if eventKind == "lever_pull":
-                lever_postions = eventDict.get("positions")
+                lever_positions = eventDict.get("positions")
                 del eventDict["positions"]
-                self.events.append([tag, eventKind, str(eventDict), timeStamp, self.cageID, lever_postions])
+                self.events.append([tag, eventKind, str(eventDict), timeStamp, self.cageID, lever_positions])
             else:
                 self.events.append([tag, eventKind, str(eventDict), timeStamp, self.cageID, None])
         if eventKind == "exit" and toShellOrFile & self.TO_FILE:
@@ -253,13 +262,13 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
                     LIMIT 1"""
         try:
             self.saveToDatabase(query_save, values,False)
-            response = str(self.getFromDatabase(query_get,[],False))
+            response = str(self.getFromDatabase(query_get,[],False)[0][0])
             print("last test entry local DB: ", response)
         except:
             print("no connection to localhost")
         try:
             self.saveToDatabase(query_save, values, True)
-            response = str(self.getFromDatabase(query_get, [],True))
+            response = str(self.getFromDatabase(query_get,[],True)[0][0])
             print("last test entry remote DB: ", response)
         except:
             print("no connection to remote host")

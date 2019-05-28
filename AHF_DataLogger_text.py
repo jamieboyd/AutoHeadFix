@@ -124,13 +124,7 @@ class AHF_DataLogger_text (AHF_DataLogger):
         for fname in listdir(self.configPath):
             if fname.startswith ('AHF_mouse_') and fname.endswith ('.jsn'):
                 tagStr = fname[10:len (fname)-4]
-<<<<<<< Updated upstream
-                yield (int (tagStr), CAD.File_to_dict ('mouse', tagStr, '.jsn', dir = self.configPath))
-
-=======
                 yield (int(tagStr), CAD.File_to_dict('mouse', tagStr, '.jsn', dir = self.configPath))
-                
->>>>>>> Stashed changes
 
     def getConfigData (self, tag):
         """
