@@ -96,6 +96,6 @@ class AHF_Base (metaclass = ABCMeta):
     @abstractmethod
     def hardwareTest (self):
         """
-        Tests functionality, gives user a chance to change settings
+        Tests functionality, gives user a chance to change settings. Returns True if any settings have changed
         """
-        pass
+        return False

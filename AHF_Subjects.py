@@ -12,7 +12,6 @@ class AHF_Subjects (AHF_Base, metaclass = ABCMeta):
 
     @abstractmethod
     def setup(self):
-        resultsTuple = ('HeadFixer', 'Rewarder', 'Stimulator', 'TagReader')
         """
         results tuple defines dictionaries for subjects that our favorite objects will write results to
         for making daily tallies of results
@@ -98,3 +97,12 @@ class AHF_Subjects (AHF_Base, metaclass = ABCMeta):
         for settings in settingsTuple:
             settingsDict.update (settings, {})
         return {'results' : resultsDict, 'settings' : settingsDict}
+
+    @abstractmethod
+    def animalSettings(self):
+        """
+        changes the subject specific parameters that are (usually) independent from basic hardware settings
+        e.g. headfix time, headfix tightness, reward size, add or remove a subject to a cage, stimulation specifications,
+        task settings
+        """
+        pass

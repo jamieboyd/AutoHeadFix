@@ -94,8 +94,9 @@ def main():
                     if hasattr (task, 'LickDetector'):
                         task.LickDetector.stopLogging ()
                     inputStr = '\n************** Auto Head Fix Manager ********************\nEnter:\n'
-                    inputStr +='V to run rewarder (valve) control\n'
+                    inputStr += 'V to run rewarder (valve) control\n'
                     inputStr += 'H for hardware tester\n'
+                    inputStr += 'A to edit Animals\' individualized settings\n'
                     inputStr += 'S to edit Stimulator settings\n'
                     inputStr += 'T to edit Task configuration\n'
                     inputStr += 'L to log a note\n'
@@ -109,8 +110,10 @@ def main():
                             break
                         elif event == 'q' or event == 'Q':
                             return
-                        elif event == 'v' or event== "V":
+                        elif event == 'v' or event == 'V':
                             task.Rewarder.rewardControl()
+                        elif event == 'a' or event == 'A':
+                            task.Subjects.animalSettings()
                         elif event == 'h' or event == 'H':
                             task.hardwareTester ()
                         elif event == 'L' or event == 'l':
