@@ -32,7 +32,6 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
         starterDict.update ({'servoReleasedPosition' : servoReleasedPosition, 'servoFixedPosition' : servoFixedPosition})
         return starterDict
 
-    @abstractmethod
     def config_user_subject_get(self,starterDict = {}):
         tightnessHeadFix = starterDict.get('tightnessHeadFix', AHF_HeadFixer.defaultTightnessHeadFix)
         response = input(
@@ -41,13 +40,12 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
         if response != '':
             tightnessHeadFix = float(response)
         starterDict.update({'tightnessHeadFix': tightnessHeadFix})
-        return starterDict
+        return super().config_user_subject_get(self, starterDict)
 
-    @abstractmethod
     def config_subject_get(self, starterDict={}):
         tightnessHeadFix = starterDict.get('propHeadFix', AHF_HeadFixer_PWM.defaultTightnessHeadFix)
         starterDict.update({'propHeadFix': tightnessHeadFix})
-        return starterDict
+        return super().config_subject_get(starterDict)
 
     def individualSettings (self, starterDict={}):
         """

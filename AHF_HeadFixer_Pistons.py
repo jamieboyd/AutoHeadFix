@@ -29,6 +29,12 @@ class AHF_HeadFixer_Pistons(AHF_HeadFixer):
         starterDict.update ({'pistonsPin': pin})
         return starterDict
 
+    def config_subject_get (self, starterDict = {}):
+        return super().config_subject_get(self, starterDict)
+
+    def config_user_subject_get  (self, starterDict = {}):
+        return super().config_user_subject_get(self, starterDict)
+
     def setup (self):
         hasFixer = True
         super().setup ()
