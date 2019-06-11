@@ -98,7 +98,7 @@ def File_from_user (nameTypeStr, longName, typeSuffix, makeNew = False):
     Static method that trawls through current folder looking for python files matching nameTypeStr
 
     Allows user to choose from the list of files found. Files are recognized by names starting
-    with 'AHF_' + nameTypeStr' + '_' and ending with '.py'
+    with 'AHF_' + nameTypeStr' + '_' and ending with '.typeSuffix'
     Raises: FileNotFoundError if no nameStr class files found
     """
     iFile=0
