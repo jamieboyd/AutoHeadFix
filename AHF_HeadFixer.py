@@ -16,17 +16,28 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
     @staticmethod
     @abstractmethod
     def config_user_get (starterDict = {}):
-        propHeadFix = starterDict.get ('propHeadFix', AHF_HeadFixer.defaultPropHeadFix)
-        response = input('Enter proportion (0 to 1) of trials that are head-fixed, currently {:.2f}: '.format(propHeadFix))
-        if response != '':
-            propHeadFix = float (response)
         skeddadleTime = starterDict.get ('skeddadleTime', AHF_HeadFixer.defaultSkeddadleTime)
         response = input ('Enter time, in seconds, for mouse to get head off the contacts when session ends, currently {:.2f}: '.format(skeddadleTime))
         if response != '':
             skeddadleTime = float (skeddadleTime)
-        starterDict.update ({'propHeadFix' : propHeadFix, 'skeddadleTime' : skeddadleTime})
+        starterDict.update ({'skeddadleTime' : skeddadleTime})
         return starterDict
 
+    @abstractmethod
+    def config_user_subject_get(self,starterDict = {}):
+        propHeadFix = starterDict.get('propHeadFix', AHF_HeadFixer.defaultPropHeadFix)
+        response = input(
+            'Enter proportion (0 to 1) of trials that are head-fixed, currently {:.2f}: '.format(propHeadFix))
+        if response != '':
+            propHeadFix = float(response)
+        starterDict.update({'propHeadFix': propHeadFix})
+        return starterDict
+
+    @abstractmethod
+    def config_subject_get(self, starterDict={}):
+        propHeadFix = starterDict.get('propHeadFix', AHF_HeadFixer.defaultPropHeadFix)
+        starterDict.update({'propHeadFix': propHeadFix})
+        return starterDict
 
     def setup (self):
         """

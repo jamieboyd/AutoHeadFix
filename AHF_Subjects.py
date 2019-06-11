@@ -52,7 +52,7 @@ class AHF_Subjects (AHF_Base, metaclass = ABCMeta):
     def add (self, IDnum, dataDict):
         """
         Adds a new subject to the pool of subjects, initializing subject fields with data from a dictionary
-        returns True if subject was added, false if subjet with IDnum already exists in subject pool
+        returns True if subject was added, false if subject with IDnum already exists in subject pool
         """
         pass
 
@@ -79,7 +79,7 @@ class AHF_Subjects (AHF_Base, metaclass = ABCMeta):
     def show (self, IDNum = 0):
         """
         Prints out attributes for subject with given IDNum. If IDNum is 0, prints attributes for all subjects in pool.
-        The attributes will be defined by subclass, results provided by stimulator, etc. Retyrns true if IDNum was found in
+        The attributes will be defined by subclass, results provided by stimulator, etc. Returns true if IDNum was found in
         pool, else False
         """
 
@@ -99,7 +99,7 @@ class AHF_Subjects (AHF_Base, metaclass = ABCMeta):
         return {'results' : resultsDict, 'settings' : settingsDict}
 
     @abstractmethod
-    def animalSettings(self):
+    def subjectSettings(self):
         """
         changes the subject specific parameters that are (usually) independent from basic hardware settings
         e.g. headfix time, headfix tightness, reward size, add or remove a subject to a cage, stimulation specifications,

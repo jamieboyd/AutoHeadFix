@@ -66,9 +66,7 @@ def main():
                             sleep (kTIMEOUTSECS)
                 # a Tag has been read, get a reference to the dictionaries for this subject
                 thisTag = task.tag
-                subjectDict = task.Subjects.get (thisTag)
-                resultsDict = subjectDict.get ('resultsDict')
-                settingsDict = subjectDict.get ('settingsDict')
+                settingsDict = task.Subjects.miceDict.get(str(thisTag))
                 # queue up an entrance reward, that can be countermanded if a) mouse leaves early, or b) fixes right away
                 task.Rewarder.giveRewardCM('entry', resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
                 doCountermand = True
@@ -87,7 +85,7 @@ def main():
                     task.Rewarder.countermandReward (resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
                 task.ContactCheck.stopLogging()
             except KeyboardInterrupt:
-
+                    # tag, eventKind, eventDict, timeStamp, toShellOrFile
                     task.Stimulator.quitting()
                     task.HeadFixer.releaseMouse(task.tag)
                     task.ContactCheck.stopLogging()
@@ -113,12 +111,12 @@ def main():
                         elif event == 'v' or event == 'V':
                             task.Rewarder.rewardControl()
                         elif event == 'a' or event == 'A':
-                            task.Subjects.animalSettings()
+                            task.Subjects.subjectSettings()
                         elif event == 'h' or event == 'H':
                             task.hardwareTester ()
                         elif event == 'L' or event == 'l':
-                            logEvent = input ('Enter your log message\n: ')
-                            task.DataLogger.writeToLogFile (0, 'logMsg:%s' % logEvent, None, time())
+                            logEvent = {"logMsg":input ('Enter your log message\n: ')}
+                            task.DataLogger.writeToLogFile (0, 'logMsg', logEvent, time(),2)
                         elif event == 'T' or event == 't':
                             if hasattr(task, "Camera"):
                                 task.Camera.setdown()

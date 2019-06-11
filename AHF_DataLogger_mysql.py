@@ -160,7 +160,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         hardwaretest_table_generation = """CREATE TABLE IF NOT EXISTS `hardwaretest` (`ID` int(11) NOT NULL AUTO_INCREMENT,
                                         `Timestamp` timestamp(2) NULL DEFAULT NULL,PRIMARY KEY (`ID`)) ENGINE=InnoDB DEFAULT CHARSET=latin1"""
         mice_table_generation = """CREATE TABLE IF NOT EXISTS `mice` (`ID` int(11) NOT NULL AUTO_INCREMENT,
-                                    `Timestamp` timestamp(2) NULL DEFAULT NULL,`Cage` varchar(20) NOT NULL,`Tag` varchar(18) NOT NULL,`Activity` varchar(10) NOT NULL,
+                                    `Timestamp` timestamp(2) NULL DEFAULT NULL,`Cage` varchar(20) NOT NULL,`Tag` varchar(18) NOT NULL,`Note` varchar(100) NULL DEFAULT NULL,
                                     PRIMARY KEY (`ID`),UNIQUE KEY `Tag` (`Tag`,`Cage`)) ENGINE=InnoDB DEFAULT CHARSET=latin1"""
         try:
             self.saveToDatabase(raw_data_table_generation, [[]], True) # create table on remote DB
@@ -188,6 +188,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         self.add_mouse_query = """INSERT INTO `mice` (`Timestamp`,`Cage`,`Tag`,`Activity`) VALUES(FROM_UNIXTIME(%s),%s,%s,%s)"""
         self.events = []
         self.water_available = False
+        showDict = self.task.hardwareTester.Show_testable_objects(task)
 
         self.events.append([0, 'SeshStart', None, time(),self.cageID,None])
         self.saveToDatabase(self.raw_save_query, self.events, False)
@@ -214,33 +215,37 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         sources_list = [i[0] for i in list(self.getFromDatabase(query_sources, [str(self.cageID)], False))]
         query_config = """SELECT `Tag`,`Dictionary_source`,`Config` FROM `configs` WHERE `Tag` = %s
                                             AND `Dictionary_source` = %s ORDER BY `Timestamp` DESC LIMIT 1"""
-        if settings == "current_mice":
+        if settings == "current_subjects":
             mice_list = self.getMice()
-            s = {}
             for mice in mice_list:
+                s = {}
                 for sources in sources_list:
-                    mouse, source, dictio = self.getFromDatabase(query_config, [str(mice), str(sources)], False)[0]
+                    try:
+                        mouse, source, dictio = self.getFromDatabase(query_config, [str(mice), str(sources)], False)[0]
+                    except:
+                        mouse, source, dictio = self.getFromDatabase(query_config, ["default_subjects", str(sources)], False)[0]
+                        mouse = mice
                     s.update({str(source): literal_eval("{}".format(dictio))})
-                    data = {mouse: s}
-                    yield(data)
-        if settings == "default_mice":
+                data = {int(mouse): s}
+                yield(data)
+        if settings == "default_subjects":
             for sources in sources_list:
-                mouse, source, dictio = self.getFromDatabase(query_config, ["mice_default", str(sources)], False)[0]
+                mouse, source, dictio = self.getFromDatabase(query_config, ["default_subjects", str(sources)], False)[0]
                 data = {str(source): literal_eval("{}".format(dictio))}
                 yield (data)
         if settings == "default_hardware":
             for sources in sources_list:
-                mouse, source, dictio = self.getFromDatabase(query_config, ["hardware_default", str(sources)], False)[0]
+                mouse, source, dictio = self.getFromDatabase(query_config, ["default_hardware", str(sources)], False)[0]
                 data = {str(source): literal_eval("{}".format(dictio))}
                 yield (data)
-        if settings == "change_hardware":
+        if settings == "changed_hardware":
             for sources in sources_list:
-                mouse, source, dictio = self.getFromDatabase(query_config, ["hardware_change", str(sources)], False)[0]
+                mouse, source, dictio = self.getFromDatabase(query_config, ["changed_hardware", str(sources)], False)[0]
                 data = {str(source), literal_eval("{}".format(dictio))}
                 yield (data)
 
     def getMice(self):
-        query_mice = """SELECT `Tag` FROM `mice` WHERE `Cage` = %s AND `Activity` = "active" """
+        query_mice = """SELECT `Tag` FROM `mice` WHERE `Cage` = %s"""
         mice_list = [i[0] for i in list(self.getFromDatabase(query_mice, [str(self.cageID)], False))]
         return mice_list
 
@@ -261,30 +266,32 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         self.saveToDatabase(self.config_save_query, [[tag, str(configDict), time(), self.cageID, str(source)]], False)
         self.saveToDatabase(self.config_save_query, [[tag, str(configDict), time(), self.cageID, str(source)]], True)
 
-    def saveNewMouse(self,tag):
-        # store new mouse `Timestamp`,`Cage`,`Tag`,`Activity`
-        self.events.append([tag, 'added_to_cage', None, time(), self.cageID, None])
+    def saveNewMouse(self,tag,note):
+        # store new mouse `Timestamp`,`Cage`,`Tag`,`Note`
+        self.events.append([tag, 'added_to_cage', str(dict([("Notes",note)])), time(), self.cageID, None])
         self.saveToDatabase(self.raw_save_query, self.events, False)
         self.saveToDatabase(self.raw_save_query, self.events, True)
         self.events = []
-        self.saveToDatabase(self.add_mouse_query, [[time(), self.cageID, tag, "active"]], False)
+        self.saveToDatabase(self.add_mouse_query, [[time(), self.cageID, tag,str(note)]], False)
 
     def retireMouse(self,tag,reason):
         # update information about a mouse `Timestamp`,`Cage`,`Tag`,`Activity`
-        self.events.append([tag, 'retired', dict([("reason", reason)]), time(), self.cageID, None])
+        self.events.append([tag, 'retired', str(dict([("reason", reason)])), time(), self.cageID, None])
         self.saveToDatabase(self.raw_save_query, self.events, False)
         self.saveToDatabase(self.raw_save_query, self.events, True)
         self.events = []
-        self.saveToDatabase(self.add_mouse_query, [[time(), self.cageID, tag, "retired"]], False)
+        delete_mouse_query = """DELETE FROM `mice` WHERE `Tag`=%s"""
+        self.saveToDatabase(delete_mouse_query, [[tag]], False)
+
 
 #######################################################################################
     def newDay(self):
-        self.events.append([0, 'SeshEnd', None, time(),self.cageID,None])
+        self.events.append([0, 'NewDay', None, time(),self.cageID,None])
         self.saveToDatabase(self.raw_save_query, self.events, False)
         self.saveToDatabase(self.raw_save_query, self.events, True)
         self.events = []
 
-    def writeToLogFile(self, tag, eventKind, eventDict, timeStamp,toShellOrFile):
+    def writeToLogFile(self, tag, eventKind, eventDict, timeStamp, toShellOrFile):
         if toShellOrFile & self.TO_FILE:
             if eventKind == "lever_pull":
                 lever_positions = eventDict.get("positions")
@@ -349,15 +356,16 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
                 if response != '':
                     jsonDict = {}
                     if response[0] == 'D' or response[0] == 'd':
-                        nameStr = "default_hardware"
-                        for config in self.configGenerator(nameStr):
+                        settings = "hardware_default"
+                        for config in self.configGenerator(settings):
                             jsonDict.update(config)
                     elif response[0] == 'L' or response[0] == 'l':
-                        nameStr = "change_hardware"
-                        for config in self.configGenerator(nameStr):
+                        settings = "changed_hardware"
+                        for config in self.configGenerator(settings):
                             jsonDict.update(config)
                     if len(jsonDict) > 0:
-                        configFile = 'AHF_' + nameStr + '_settings_'+ self.cageID + ".json"
+                        nameStr = input('please enter the filename. your file will be automatically named: AHF_filename_hardware.json')
+                        configFile = 'AHF_' + nameStr + '_hardware.json'
                         with open(configFile, 'w') as fp:
                             fp.write(json.dumps(jsonDict, separators=('\n', '='), sort_keys=True, skipkeys=True))
                             fp.close()
