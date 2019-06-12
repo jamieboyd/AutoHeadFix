@@ -117,15 +117,15 @@ def File_from_user (nameTypeStr, longName, typeSuffix, makeNew = False):
             else:
                 try:
                     moduleObj=__import__ (f.rstrip(typeSuffix))
-                    #print ('module=' + str (moduleObj))
+                    print ('module=' + str (moduleObj))
                     classObj = getattr(moduleObj, moduleObj.__name__)
-                    #print (classObj)
+                    print (classObj)
                     isAbstractClass = inspect.isabstract (classObj)
                     if isAbstractClass == False:
                         fileList.append (fname + ": " + classObj.about())
                         iFile += 1
-                    # else:
-                    #     print(classObj.__abstractmethods__)
+                    else:
+                        print(classObj.__abstractmethods__)
                 except Exception as e: # exception will be thrown if imported module imports non-existant modules, for instance
                     print (f, " : ", e)
                     continue
