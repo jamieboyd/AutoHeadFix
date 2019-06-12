@@ -45,9 +45,9 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
     defaultPassword = "iamapoorslave"
 
     localHost = 'localhost'
-    localUser = 'slavePi'
+    localUser = 'pi'
     localDatabase = 'raw_data'
-    localPassword = 'iamapoorslave'
+    localPassword = 'AutoHead2015'
 
 
     @staticmethod
@@ -176,7 +176,6 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
 
     def setup(self):
 
-        super.setup()
         self.cageID = self.settingsDict.get('cageID')
         self.DBhost = self.settingsDict.get('DBhost')
         self.DBuser = self.settingsDict.get('DBuser')
@@ -189,7 +188,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         self.add_mouse_query = """INSERT INTO `mice` (`Timestamp`,`Cage`,`Tag`,`Activity`) VALUES(FROM_UNIXTIME(%s),%s,%s,%s)"""
         self.events = []
         self.water_available = False
-        showDict = self.task.hardwareTester.Show_testable_objects(task)
+        showDict = self.task.Show_testable_objects()
 
         self.events.append([0, 'SeshStart', None, time(),self.cageID,None])
         self.saveToDatabase(self.raw_save_query, self.events, False)

@@ -38,6 +38,10 @@
 "unTouchThresh"=4}
 "NotifierClass"=null
 "NotifierDict"=null
+"ReaderClass"="AHF_Reader_ID"
+"ReaderDict"={"TIRpin"=7
+"inChamberTimeLimit"=600
+"serialPort"="/dev/ttyUSB0"}
 "RewarderClass"="AHF_Rewarder_solenoid_rpi"
 "RewarderDict"={"entryRewardDelay"=1.0
 "maxEntryRewards"=1000

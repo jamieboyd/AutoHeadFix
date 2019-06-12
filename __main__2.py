@@ -46,7 +46,7 @@ def main():
     now = datetime.fromtimestamp (int (time()))
     nextDay = datetime (now.year, now.month, now.day, kDAYSTARTHOUR,0,0) + timedelta (hours=24)
     # start TagReader and Lick Detector, the two background task things, logging
-    task.TagReader.startLogging ()
+    task.Reader.startLogging ()
     if hasattr(task, 'LickDetector'):
         task.LickDetector.startLogging ()
      # Top level infinite Loop running mouse entries

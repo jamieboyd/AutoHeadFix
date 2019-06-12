@@ -154,7 +154,7 @@ class AHF_Subjects_mice (AHF_Subjects):
         if IDnum == 't' or IDnum == 'T':
             tag = 0
             while tag == 0:
-                tag = self.task.TagReader.readTag()
+                tag = self.task.Reader.readTag()
                 sleep(0.1)
 
         elif IDnum == 'a' or IDnum == 'A':
