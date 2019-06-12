@@ -58,7 +58,7 @@ class AHF_Subjects_mice (AHF_Subjects):
         # hardware.json subject.json
 
         self.settingsTuple = ('HeadFixer', 'Rewarder', 'Stimulator')
-        self.loadConfigs = self.settingsDict.get('loadMiceConfig')
+        self.loadConfigs = self.settingsDict.get('loadMiceConfigs')
         self.jsonName = self.settingsDict.get('jsonName')
         self.inChamberTimeLimit = self.settingsDict.get('inChamberTimeLimit')
         self.miceDict = {}

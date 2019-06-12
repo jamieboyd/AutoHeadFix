@@ -87,10 +87,10 @@ class Task(object):
             self.RewarderClass = CAD.Class_from_file('Rewarder', CAD.File_from_user ('Rewarder', 'Rewarder', '.py'))
             self.RewarderDict = self.RewarderClass.config_user_get ()
             fileErr = True
-        ############################ TagReader (Obligatory) makes its own dictionary ##############
-        if not hasattr (self, 'TagReaderClass') or not hasattr (self, 'TagReaderDict'):
-            self.TagReaderClass = CAD.Class_from_file('TagReader', CAD.File_from_user ('TagReader', 'RFID-Tag Reader', '.py'))
-            self.TagReaderDict = self.TagReaderClass.config_user_get ()
+        ############################ Reader (Obligatory) makes its own dictionary ##############
+        if not hasattr (self, 'ReaderClass') or not hasattr (self, 'ReaderDict'):
+            self.ReaderClass = CAD.Class_from_file('Reader', CAD.File_from_user ('Reader', 'RFID-Tag Reader', '.py'))
+            self.ReaderDict = self.ReaderClass.config_user_get ()
             fileErr = True
         ################################ Camera (optional) makes its own dictionary of settings ####################
         if not hasattr (self, 'CameraClass') or not hasattr (self, 'CameraDict'):
@@ -177,7 +177,7 @@ class Task(object):
         """
         GPIO.setmode (GPIO.BCM)
         GPIO.setwarnings(False)
-        fields = sorted (inspect.getmembers (self))
+        fields = sorted(inspect.getmembers (self))
         for item in fields:
             if isinstance(item [1],  ABCMeta):
                 baseName = (item [0], item[0][:-5])[item[0].endswith('Class')]
