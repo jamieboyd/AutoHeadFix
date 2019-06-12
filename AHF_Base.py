@@ -39,11 +39,6 @@ class AHF_Base (metaclass = ABCMeta):
         """
         return starterDict
 
-    def newSubjectsDict (self, starterDict ={}):
-        """
-        Returns a dictionary of settings that can individually varied, overriding values in self.settings
-        """
-        return starterDict
 
 
     def __init__(self, taskP, settingsDictP):

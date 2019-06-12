@@ -83,20 +83,6 @@ class AHF_Subjects (AHF_Base, metaclass = ABCMeta):
         pool, else False
         """
 
-    @abstractmethod
-    def newSubjectDict (starterDict = {}):
-        """
-        New dictionary made for each individual mouse, dictionaries for headFixer, rewarder, Stmiulator, and
-        tube entries, which are not tracked by stimulator, head fixer, or rewarder
-        A separate dictionary tracks individual settings, which over-ride global settings
-        """
-        resultsDict = {}
-        for results in self.resultsTuple:
-            resultsDict.update (results, {})
-        settingsDict = {}
-        for settings in settingsTuple:
-            settingsDict.update (settings, {})
-        return {'results' : resultsDict, 'settings' : settingsDict}
 
     @abstractmethod
     def subjectSettings(self):
