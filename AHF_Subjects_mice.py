@@ -289,5 +289,5 @@ class AHF_Subjects_mice (AHF_Subjects):
         self.setup()
 from AHF_Task import Task
 
-from AHF_TagReader import AHF_TagReader
+from AHF_Reader import AHF_Reader
 from AHF_Base import AHF_Base
