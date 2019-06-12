@@ -217,12 +217,9 @@ class AHF_DataLogger_text (AHF_DataLogger):
             uid = getpwnam ('pi').pw_uid
             gid = getgrnam ('pi').gr_gid
             chown (self.statsFilePath, uid, gid)
-<<<<<<< Updated upstream
-
-=======
-                        
->>>>>>> Stashed changes
 
     def __del__ (self):
         self.writeToLogFile (0, 'SeshEnd', None, time())
         self.setdown()
+        
+        
