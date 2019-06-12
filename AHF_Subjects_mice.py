@@ -36,7 +36,7 @@ class AHF_Subjects_mice (AHF_Subjects):
     def config_user_get (starterDict = {}):
 
         loadConfigs =  starterDict.get('loadMiceConfigs', AHF_Subjects_mice.loadConfigsDefault)
-        jsonName = starterDict.get("jsonName". AHF_Subject_mice.jsonNameDefault)
+        jsonName = starterDict.get("jsonName", AHF_Subjects_mice.jsonNameDefault)
         tempInput = input ('Getting subject information:\n'
                            'type P to provide a correct json file or get help creating a new one\n'
                            'type D in case you have all information in the Database and want to use it\n'
@@ -231,6 +231,7 @@ class AHF_Subjects_mice (AHF_Subjects):
             event = input (inputStr)
             tag = 0
             if event == 'p' or event == 'P': # print mice stats
+                continue
                 #self.showMice ()
                 # TODO make queries and think of strategy
             elif event == 'r' or event == 'R': # remove a mouse
