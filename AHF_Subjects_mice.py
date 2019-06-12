@@ -143,8 +143,8 @@ class AHF_Subjects_mice (AHF_Subjects):
             return 1
         else:
             return -1
-        
-    
+
+
     def add(self, IDnum, dataDict={},default=True):
 
         """
@@ -172,13 +172,13 @@ class AHF_Subjects_mice (AHF_Subjects):
         if not tag in self.miceDict.keys:
             self.miceDict.update ({tag: dataDict})
             note = ''
-            self.task.DataLogger.saveNewMouse(tag,note)
+            self.task.DataLogger.saveNewMouse(tag,note, self.miceDict.get(tag))
 
 
     def remove (self, IDnum):
         if IDnum in self.miceDict.keys:
             self.miceDict.pop(IDnum)
-            self.task.DataLogger.retireMouse(IDnum)
+            self.task.DataLogger.retireMouse(IDnum, "")
             return True
         else:
             return False
