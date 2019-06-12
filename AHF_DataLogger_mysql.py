@@ -155,7 +155,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
 
         config_data_table_generation = """CREATE TABLE IF NOT EXISTS `configs` (`ID` int(11) NOT NULL AUTO_INCREMENT,`Tag` varchar(18) NOT NULL,
                                         `Config` varchar(2000) NOT NULL,`Timestamp` timestamp(2) NULL DEFAULT NULL,`Cage` varchar(20) NOT NULL,
-                                        `Dictionary_source` varchar(50) NOT NULL, 
+                                        `Dictionary_source` varchar(50) NOT NULL,
                                         PRIMARY KEY (`ID`),UNIQUE KEY `Tag` (`Tag`,`Timestamp`,`Cage`,`Dictionary_source`))
                                          ENGINE=InnoDB DEFAULT CHARSET=latin1"""
         hardwaretest_table_generation = """CREATE TABLE IF NOT EXISTS `hardwaretest` (`ID` int(11) NOT NULL AUTO_INCREMENT,
@@ -267,7 +267,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         self.saveToDatabase(self.config_save_query, [[tag, str(configDict), time(), self.cageID, str(source)]], False)
         self.saveToDatabase(self.config_save_query, [[tag, str(configDict), time(), self.cageID, str(source)]], True)
 
-    def saveNewMouse(self,tag,note):
+    def saveNewMouse(self,tag,note, dictionary = {}):
         # store new mouse `Timestamp`,`Cage`,`Tag`,`Note`
         self.events.append([tag, 'added_to_cage', str(dict([("Notes",note)])), time(), self.cageID, None])
         self.saveToDatabase(self.raw_save_query, self.events, False)
@@ -381,4 +381,3 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         self.saveToDatabase(self.raw_save_query, self.events, True)
         self.events = []
         self.setdown()
-

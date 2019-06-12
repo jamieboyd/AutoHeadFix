@@ -75,7 +75,7 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
         pass
 
     @abstractmethod
-    def saveNewMouse(self, tag):
+    def saveNewMouse(self, tag, note, dictionary):
         """
         store a new mouse entry in a referenced file
         """

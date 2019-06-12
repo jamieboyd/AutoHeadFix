@@ -365,7 +365,9 @@ def File_to_dict (nameTypeStr, nameStr, typeSuffix, dir = ''):
         fp.close()
     return configDict
 
-
+def Remove_file (nameTypeStr, nameStr, typeSuffix, dir = ''):
+    filename = 'AHF_' + nameTypeStr + '_' + nameStr + typeSuffix
+    os.remove(dir + filename)
 
 def Dict_to_file (anyDict, nameTypeStr, nameStr, typeSuffix, dir = ''):
     """
