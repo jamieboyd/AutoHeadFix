@@ -15,7 +15,6 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
     defaultEntry = 0.2
     defaultTask = 0.4
 
-    gTask = None
 
     @staticmethod
     def config_user_get(starterDict = {}):
@@ -53,7 +52,6 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
         self.countermandTime = self.settingsDict.get ('entryRewardDelay')
         self.maxEntryRewards = self.settingsDict.get ('maxEntryRewards')
         self.countermanded = ''
-        gTask = self.task
 
     def newResultsDict (self):
         """
