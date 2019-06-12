@@ -51,12 +51,20 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
         pass
 
     @abstractmethod
+    def getMice(self):
+        """
+        returns a list of mice that are in the dictionary/database
+        """
+        pass
+
+    @abstractmethod
     def configGenerator (self):
         """
         generates configuration data for each subject as (IDtag, dictionary) tuples from some kind of permanent storage
         such as a JSON file, or a database. Will be called when program is started, or restarted and settings
         need to be reloaded.
         """
+        pass
 
     @abstractmethod
     def getConfigData (self, tag):
@@ -66,11 +74,24 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
         """
         pass
 
+    @abstractmethod
+    def saveNewMouse(self, tag):
+        """
+        store a new mouse entry in a referenced file
+        """
+        pass
+
+    @abstractmethod
+    def retireMouse(self, tag,reason):
+        """
+        store information about a mouse retirement in a referenced file
+        """
+        pass
 
     @abstractmethod
     def storeConfig (self, tag, dictionary):
         """
         Stores configuration data, given as an IDtag, and dictionary for that tag, in some more permanent storage
-        as a JSON text file, or a database or hd5 file, so it can be later retrived by IDtag
+        as a JSON text file, or a database or hd5 file, so it can be later retrieved by IDtag
         """
         pass

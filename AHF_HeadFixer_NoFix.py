@@ -28,6 +28,14 @@ class AHF_HeadFixer_NoFix (AHF_HeadFixer):
         starterDict.update ({'propHeadFix' : 0, 'skeddadleTime' : skeddadleTime})
         return starterDict
 
+    def config_subject_get (self, starterDict = {}):
+        return super().config_subject_get(self, starterDict)
+
+    def config_user_subject_get  (self, starterDict = {}):
+        return super().config_user_subject_get(self, starterDict)
+
+    def setdown(self):
+        pass
 
     def fixMouse(self, resultsDict = {}, settingsDict = {}):
         """

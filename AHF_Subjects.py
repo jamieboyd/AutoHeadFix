@@ -12,7 +12,6 @@ class AHF_Subjects (AHF_Base, metaclass = ABCMeta):
 
     @abstractmethod
     def setup(self):
-        resultsTuple = ('HeadFixer', 'Rewarder', 'Stimulator', 'TagReader')
         """
         results tuple defines dictionaries for subjects that our favorite objects will write results to
         for making daily tallies of results
@@ -53,7 +52,7 @@ class AHF_Subjects (AHF_Base, metaclass = ABCMeta):
     def add (self, IDnum, dataDict):
         """
         Adds a new subject to the pool of subjects, initializing subject fields with data from a dictionary
-        returns True if subject was added, false if subjet with IDnum already exists in subject pool
+        returns True if subject was added, false if subject with IDnum already exists in subject pool
         """
         pass
 
@@ -80,21 +79,16 @@ class AHF_Subjects (AHF_Base, metaclass = ABCMeta):
     def show (self, IDNum = 0):
         """
         Prints out attributes for subject with given IDNum. If IDNum is 0, prints attributes for all subjects in pool.
-        The attributes will be defined by subclass, results provided by stimulator, etc. Retyrns true if IDNum was found in
+        The attributes will be defined by subclass, results provided by stimulator, etc. Returns true if IDNum was found in
         pool, else False
         """
 
+
     @abstractmethod
-    def newSubjectDict (starterDict = {}):
+    def subjectSettings(self):
         """
-        New dictionary made for each individual mouse, dictionaries for headFixer, rewarder, Stmiulator, and
-        tube entries, which are not tracked by stimulator, head fixer, or rewarder
-        A separate dictionary tracks individual settings, which over-ride global settings
+        changes the subject specific parameters that are (usually) independent from basic hardware settings
+        e.g. headfix time, headfix tightness, reward size, add or remove a subject to a cage, stimulation specifications,
+        task settings
         """
-        resultsDict = {}
-        for results in self.resultsTuple:
-            resultsDict.update (results, {})
-        settingsDict = {}
-        for settings in settingsTuple:
-            settingsDict.update (settings, {})
-        return {'results' : resultsDict, 'settings' : settingsDict}
+        pass

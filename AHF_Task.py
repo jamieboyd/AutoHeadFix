@@ -112,22 +112,6 @@ class Task(object):
             self.BrainLightClass = CAD.Class_from_file('BrainLight', CAD.File_from_user ('BrainLight', 'Brain illuminator', '.py'))
             self.BrainLightDict = self.BrainLightClass.config_user_get ()
             fileErr = True
-        ###################### DataLogger (Obligatory) for logging data in text files, or database of HD5,or .... #################
-        if not hasattr (self, 'DataLoggerClass') or not hasattr (self, 'DataLoggerDict'):
-            self.DataLoggerClass = CAD.Class_from_file('DataLogger', CAD.File_from_user ('DataLogger', 'Data Logger', '.py'))
-            self.DataLoggerDict = self.DataLoggerClass.config_user_get ()
-            fileErr = True
-        ############################ text messaging using textbelt service (Optional) only 1 subclass so far ######################
-        if not hasattr (self, 'NotifierClass') or not hasattr (self, 'NotifierDict'):
-            tempInput = input ('Send notifications if subject exceeds criterion time in chamber?(Y or N):')
-            if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.NotifierClass = CAD.Class_from_file('Notifier',  CAD.File_from_user ('Notifier', 'Text Messaging Notifier', '.py'))
-                self.NotifierDict = self.NotifierClass.config_user_get()
-                self.NotifierDict.update ({'cageID' : self.DataLoggerDict.get('cageID')})
-            else:
-                self.NotifierClass = None
-                self.NotifierDict = None
-            fileErr = True
         ####################################### triggers for alerting other computers (Optional) only 1 subclass so far ######################3
         if not hasattr (self, 'TriggerClass') or not hasattr (self, 'TriggerDict'):
             tempInput = input ('Send triggers to start tasks on secondary computers (Y or N):')
@@ -148,10 +132,26 @@ class Task(object):
                 self.LickDetectorClass = None
                 self.LickDetectorDict = None
             fileErr = True
+        ###################### DataLogger (Obligatory) for logging data in text files, or database of HD5,or .... #################
+        if not hasattr(self, 'DataLoggerClass') or not hasattr(self, 'DataLoggerDict'):
+            self.DataLoggerClass = CAD.Class_from_file('DataLogger', CAD.File_from_user('DataLogger', 'Data Logger', '.py'))
+            self.DataLoggerDict = self.DataLoggerClass.config_user_get()
+            fileErr = True
+        ############################ text messaging using textbelt service (Optional) only 1 subclass so far ######################
+        if not hasattr(self, 'NotifierClass') or not hasattr(self, 'NotifierDict'):
+            tempInput = input('Send notifications if subject exceeds criterion time in chamber?(Y or N):')
+            if tempInput[0] == 'y' or tempInput[0] == 'Y':
+                self.NotifierClass = CAD.Class_from_file('Notifier', CAD.File_from_user('Notifier', 'Text Messaging Notifier','.py'))
+                self.NotifierDict = self.NotifierClass.config_user_get()
+                self.NotifierDict.update({'cageID': self.DataLoggerDict.get('cageID')})
+            else:
+                self.NotifierClass = None
+                self.NotifierDict = None
+            fileErr = True
         ############################## Subjects only 1 subclass so far (generic mice) ##############
-        if not hasattr (self, 'SubjectsClass') or not hasattr (self, 'SubjectsDict'):
-            self.SubjectsClass = CAD.Class_from_file('Subjects', CAD.File_from_user ('Subjects', 'test subjects', '.py'))
-            self.SubjectsDict = self.SubjectsClass.config_user_get ()
+        if not hasattr(self, 'SubjectsClass') or not hasattr(self, 'SubjectsDict'):
+            self.SubjectsClass = CAD.Class_from_file('Subjects',CAD.File_from_user('Subjects', 'test subjects', '.py'))
+            self.SubjectsDict = self.SubjectsClass.config_user_get()
             fileErr = True
         ###################### things we track in the main program #################################
         self.tag = 0    # RFIG tag number, 0 for no tag, updated by threaded callback

@@ -15,6 +15,7 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
     numLevels =8
     defaultReleasePosition = 933
     defaultFixedPosition = 685
+    defaultTightnessHeadFix = 1
 
     @staticmethod
     @abstractmethod
@@ -31,6 +32,20 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
         starterDict.update ({'servoReleasedPosition' : servoReleasedPosition, 'servoFixedPosition' : servoFixedPosition})
         return starterDict
 
+    def config_user_subject_get(self,starterDict = {}):
+        tightnessHeadFix = starterDict.get('tightnessHeadFix', AHF_HeadFixer.defaultTightnessHeadFix)
+        response = input(
+            'Enter percentage (0 to 1) of head-fix tightness (0 equals release, 1 equals full head-fix)\n'
+            ' values below 0.5 might allow the mouse to leave the tunnel , currently {:.2f}: '.format(tightnessHeadFix))
+        if response != '':
+            tightnessHeadFix = float(response)
+        starterDict.update({'tightnessHeadFix': tightnessHeadFix})
+        return super().config_user_subject_get(self, starterDict)
+
+    def config_subject_get(self, starterDict={}):
+        tightnessHeadFix = starterDict.get('propHeadFix', AHF_HeadFixer_PWM.defaultTightnessHeadFix)
+        starterDict.update({'propHeadFix': tightnessHeadFix})
+        return super().config_subject_get(starterDict)
 
     def individualSettings (self, starterDict={}):
         """
@@ -49,12 +64,18 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
         if self.__class__.hasLevels:
             self.servoIncrement = (self.servoFixedPosition - self.servoReleasedPosition)/self.numLevels
 
+    def calculate_steps(self,individualDict):
+        percentage = individualDict.get('servoFixedPosition', self.servoFixedPosition)
+        percentage = min(max(percentage,0),1)
+        target_pos = int(self.servoReleasedPosition + (self.servoFixedPosition-self.servoReleasedPosition)*percentage)
+        return target_pos
+
     def fixMouse(self, thisTag, resultsDict = {}, individualDict= {}):
-        self.task.isFixTrial = self.settingsDict.get ('propHeadFix', self.propHeadFix) > random()
+        self.task.isFixTrial = self.individualDict.get ('propHeadFix', self.propHeadFix) > random()
         hasContact = False
         if self.task.isFixTrial:
             if self.waitForMouse (thisTag): # contact was made
-                self.setPWM (individualDict.get ('servoFixedPosition', self.servoFixedPosition))
+                self.setPWM (self.calculate_steps(individualDict))
                 sleep (0.5)
                 hasContact = self.task.contact
                 if not hasContact: # tried to fix and failed
@@ -65,7 +86,7 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
             if hasContact:
                 self.hasMouseLog (True, self.task.isFixTrial, thisTag, resultsDict)
         return hasContact
-
+    # TODO get rid of resultsdict
 
     def releaseMouse(self, thisTag, resultsDict = {}, settingsDict= {}):
         self.setPWM (self.servoReleasedPosition)

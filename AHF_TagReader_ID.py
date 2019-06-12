@@ -115,7 +115,7 @@ class AHF_TagReader_ID (AHF_TagReader):
 
     def startLogging (self):
         if not self.isLogging:
-            self.tagReader.installCallback (self.TIRpin, AHF_TagReader_ID.customCallback)
+            self.tagReader.installCallBack (AHF_TagReader_ID.customCallback)
             self.isLogging = True
 
     def stopLogging (self):
@@ -128,7 +128,6 @@ class AHF_TagReader_ID (AHF_TagReader):
         wasLogging = self.isLogging
         if wasLogging:
             self.stopLogging()
-        self.stopLogging()
         print ('Monitoring RFID Reader for next 10 seconds....')
         lastTag = -1
         startTime = time()
@@ -145,9 +144,13 @@ class AHF_TagReader_ID (AHF_TagReader):
                 print (str(e))
             sleep (AHF_TagReader_ID.TIME_OUT_SECS)
         result = input ('Do you wish to edit Tag Reader settings?')
+        returnValue = False
         if result [0] == 'y' or result [0] == 'Y':
             self.setdown ()
             self.settingsDict = self.config_user_get (self.settingsDict)
             self.setup ()
+            returnValue = True
         if wasLogging:
             self.startLogging()
+
+        return returnValue

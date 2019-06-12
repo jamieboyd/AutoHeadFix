@@ -15,7 +15,6 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
     defaultEntry = 0.2
     defaultTask = 0.4
 
-    gTask = None
 
     @staticmethod
     def config_user_get(starterDict = {}):
@@ -53,24 +52,26 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
         self.countermandTime = self.settingsDict.get ('entryRewardDelay')
         self.maxEntryRewards = self.settingsDict.get ('maxEntryRewards')
         self.countermanded = ''
-        gTask = self.task
 
     def newResultsDict (self):
         """
         Return a dictionary of keys = rewardNames, values = number of rewards given, each mouse will get one of these for reward monitoring each day
         """
         rDict = {}
-        for key in self.settingsDict.get ('rewards').items():
-            if key != 'test':
-                rDict.update({key : 0})
+        for item in self.settingsDict.get ('rewards').items():
+            itemKey = item [0]
+            #itemVal = item [1]
+            if itemKey != 'test':
+                rDict.update({itemKey : 0})
         return rDict
 
     def clearResultsDict(self, resultsDict):
         """
         Clears results for daily totals of reward types
         """
-        for key in resultsDict.items():
-            resultsDict.update({key : 0})
+        for item in resultsDict.items():
+            itemKey = item [0]
+            resultsDict.update({itemKey : 0})
 
 
     def giveReward(self, rewardName, resultsDict={}, settingsDict = {}):
@@ -127,13 +128,3 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
     def threadCountermand (self):
         pass
 
-
-    def hardwareTest (self):
-        print ('\nReward Solenoid opening for %.2f %s' % (self.testAmount, self.rewardUnits))
-        self.giveReward('test')
-        sleep (self.testAmount)
-        inputStr= input('Reward Solenoid closed.\nDo you want to change the Reward Solenoid Pin (currently %d)? ' % self.rewardPin)
-        if inputStr[0] == 'y' or inputStr[0] == "Y":
-            self.setdown ()
-            self.settingsDict = self.config_user_get (self.settingsDict)
-            self.setup()
