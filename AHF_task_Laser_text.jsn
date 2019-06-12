@@ -64,7 +64,7 @@
 "SubjectsDict"={"inChamberTimeLimit"=300
 "jsonName"="test"
 "loadMiceConfigs"="provide_json"}
-"TagReaderClass"="AHF_TagReader_ID"
+"TagReaderClass"="AHF_Reader_ID"
 "TagReaderDict"={"TIRpin"=7
 "inChamberTimeLimit"=600
 "serialPort"="/dev/ttyUSB0"}

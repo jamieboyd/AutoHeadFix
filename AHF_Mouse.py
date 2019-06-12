@@ -3,7 +3,7 @@
 
 from AHF_Task import Task
 import AHF_ClassAndDictUtils as CAD
-from AHF_TagReader import AHF_TagReader
+from AHF_Reader import AHF_Reader
 from AHF_Base import AHF_Base
 
 class Mice (object):

@@ -3,7 +3,7 @@
 from abc import ABCMeta, abstractmethod
 from AHF_Base import AHF_Base
 
-class AHF_TagReader (AHF_Base, metaclass = ABCMeta):
+class AHF_Reader (AHF_Base, metaclass = ABCMeta):
 
     @abstractmethod
     def readTag (self):
