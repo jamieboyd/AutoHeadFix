@@ -304,6 +304,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         return (event, eventDict)
 
     def writeToLogFile(self, tag, eventKind, eventDict, timeStamp, toShellOrFile=True):
+        super().writeToLogFile(tag, eventKind, eventDict, timeStamp, toShellOrFile)
         if toShellOrFile & self.TO_FILE:
             if eventKind == "lever_pull":
                 lever_positions = eventDict.get("positions")

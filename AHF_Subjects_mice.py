@@ -213,7 +213,8 @@ class AHF_Subjects_mice (AHF_Subjects):
         returns a reference to the dictionary for the mouse with given IDtag. if the mouse tag is not found, makes a new dictionary
         if fresh mice can be added, else returns an empty dicitonary if fresh mice are to be ignored
         """
-        return self.miceDict.get (IDnum, None)
+        print(self.miceDict.get(str(IDnum)))
+        return self.miceDict.get (str(IDnum), None)
 
     def get_all (self):
         return self.miceDict

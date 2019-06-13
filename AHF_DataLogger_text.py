@@ -136,7 +136,7 @@ class AHF_DataLogger_text (AHF_DataLogger):
         return CAD.File_to_dict ('mouse', '{:013}'.format(tag), '.jsn', dir = self.configPath)
 
 
-    def storeConfig (self, tag, configDict):
+    def storeConfig (self, tag, configDict, source = ""):
         """
         saves data to corresponding json text file, overwriting old file
         """

@@ -1,0 +1,15 @@
+{"801010205"={"HeadFixer"={"propHeadFix"=1}
+"Rewarder"={"entrySize"=0.2
+"taskSize"=0.4}
+"Stimulator"={"nRewards"=5
+"rewardInterval"=3}}
+"2016091113"={"HeadFixer"={"propHeadFix"=1}
+"Rewarder"={"entrySize"=0.2
+"taskSize"=0.4}
+"Stimulator"={"nRewards"=5
+"rewardInterval"=3}}
+"124563082491"={"HeadFixer"={"propHeadFix"=1}
+"Rewarder"={"entrySize"=0.2
+"taskSize"=0.4}
+"Stimulator"={"nRewards"=5
+"rewardInterval"=3}}}

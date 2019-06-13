@@ -51,6 +51,7 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
         try:
             return self.trackingDict.get(eventKind).get(dictKey).get("values").get(tag)
         except Exception as e:
+            print(str(e))
             return None
 
     def stopTracking(self, eventKind, dictKey):
@@ -75,7 +76,7 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
             pass
 
     @abstractmethod
-    def writeToLogFile(self, tag, eventKind, eventDict, timeStamp, toShellOrFile=True):
+    def writeToLogFile(self, tag, eventKind, eventDict, timeStamp, toShellOrFile = True):
         """
         The original standard text file method was 4 tab-separated columns, mouse tag, or 0
         if no single tag was applicaple, unix time stamp, ISO formatted time, and event. Event
@@ -87,16 +88,16 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
         eventTracking  = self.trackingDict.get(eventKind, None)
         if eventTracking is not None:
             for key in eventDict.keys():
-                keyTracking = eventTracking.get(dictKey, None)
+                keyTracking = eventTracking.get(key, None)
                 if keyTracking is not None:
                     if keyTracking["type"] is "buffer":
                         if tag not in keyTracking["values"].keys():
-                            keyTracking["values"]["tag"] = deque(maxlen = self.BUFFER_SIZE)
-                        keyTracking["values"]["tag"].append(eventDict["dictKey"])
+                            keyTracking["values"][tag] = deque(maxlen = self.BUFFER_SIZE)
+                        keyTracking["values"][tag].append(eventDict[key])
                     elif keyTracking["type"] is "totals":
                         if tag not in keyTracking["values"].keys():
-                            keyTracking["values"]["tag"] = 0
-                        keyTracking["values"]["tag"] += eventDict["dictKey"]
+                            keyTracking["values"][tag] = 0
+                        keyTracking["values"][tag] += eventDict[key]
 
         pass
 
@@ -151,7 +152,7 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
         pass
 
     @abstractmethod
-    def storeConfig (self, tag, dictionary):
+    def storeConfig (self, tag, dictionary, source = ""):
         """
         Stores configuration data, given as an IDtag, and dictionary for that tag, in some more permanent storage
         as a JSON text file, or a database or hd5 file, so it can be later retrieved by IDtag

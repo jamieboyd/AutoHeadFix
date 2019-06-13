@@ -32,15 +32,17 @@ class AHF_Reader_ID (AHF_Reader):
                 AHF_Task.gTask.tag = RFIDTagReader.globalReader.readTag ()
                 AHF_Task.gTask.DataLogger.writeToLogFile(AHF_Task.gTask.tag, 'entry', None, time())
                 if AHF_Task.gTask.Subjects.get(AHF_Task.gTask.tag) is not None:
-                    newVal = AHF_Task.gTask.Subjects.get(AHF_Task.gTask.tag).get('resultsDict').get('TagReader').get('entries')
-                    newVal = newVal + 1
-                    AHF_Task.gTask.Subjects.get(AHF_Task.gTask.tag).get('resultsDict').get('TagReader').update ({'entries' : newVal})
+                    # newVal = AHF_Task.gTask.Subjects.get(AHF_Task.gTask.tag).get('resultsDict').get('TagReader').get('entries')
+                    # newVal = newVal + 1
+                    # AHF_Task.gTask.Subjects.get(AHF_Task.gTask.tag).get('resultsDict').get('TagReader').update ({'entries' : newVal})
+                    pass
                 else:
                     raise Exception('There are no fresh mice allowed, and this is a fresh mouse')
                 AHF_Task.gTask.entryTime = time()
                 AHF_Reader_ID.stillThere = True
                 start_new_thread (AHF_Reader_ID.timeInChamberThread,(time () + AHF_Reader_ID.gInChamberTimeLimit,))
             except Exception as e:
+                print(str(e))
                 AHF_Task.gTask.tag =0
         else: # tag just left
             AHF_Task.gTask.DataLogger.writeToLogFile(AHF_Task.gTask.tag, 'exit', None, time())
