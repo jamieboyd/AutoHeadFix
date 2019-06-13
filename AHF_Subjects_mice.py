@@ -74,7 +74,7 @@ class AHF_Subjects_mice (AHF_Subjects):
                     raise Exception('Could not confirm dictionary')
             except Exception as e:
                 print('Unable to open and fully load task configuration, we will create a fillable json for you.\n'
-                      'Copy the content into your json or rename the file after you are finished')
+                      'Edit the contents to your liking, then COPY the file to your filename. DO NOT rename.')
                 self.create_fillable_json()
             while self.check_miceDict(self.miceDict) == False:
                 input('could not load json, please edit and try again. Press enter when done')
@@ -92,7 +92,7 @@ class AHF_Subjects_mice (AHF_Subjects):
             stillmore = input('add another mouse? Y or N')
             if stillmore[0] == "n" or stillmore[0] == "N":
                 moreMice = False
-        print(self.miceDict)            
+        print(self.miceDict)
         CAD.Dict_to_file (self.miceDict, "mice_fillable", self.jsonName, ".jsn")
         input('Please edit the values now. Press enter when done')
         self.miceDict = CAD.File_to_dict('mice', self.jsonName, '.jsn')
