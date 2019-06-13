@@ -221,7 +221,10 @@ class Task(object):
 
 
     def editSettings (self):
-        CAD.Edit_Obj_fields (self,  'Auto Head Fix Task')
+        if (CAD.Edit_Obj_fields (self,  'Auto Head Fix Task')):
+            response = input ('Save changes in settings to a file?')
+            if response [0] == 'Y' or response [0] == 'y':
+                self.saveSettings ()
 
 
     def Show_testable_objects (self):
