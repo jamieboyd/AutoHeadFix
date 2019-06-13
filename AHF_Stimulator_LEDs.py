@@ -23,12 +23,20 @@ class AHF_Stimulator_LEDs (AHF_Stimulator_Rewards):
         left_led_pin = int (input('Enter the number of GPIO pin used for left LED:'))
         center_led_pin = int (input('Enter the number of GPIO pin used for center LED:'))
         right_led_pin = int (input('Enter the number of GPIO pin used for right LED:'))
-        led_on_time = float (input ('Enter the ON time in seconds for each flash in the train:'))
-        led_off_time = float (input ('Enter the OFF time in seconds between each flash in the train:'))
-        train_time = float (input ('Enter the total time in seconds for each train of flashes:'))
+
         configDict.update ({'left_led_pin' : left_led_pin, 'center_led_pin' : center_led_pin, 'right_led_pin' : right_led_pin})
         configDict.update ({'led_on_time' : led_on_time, 'led_off_time' : led_off_time, 'train_time' : train_time})
         return configDict
+
+    def config_user_subject_get(self,starterDict = {}):
+        led_on_time = float (input ('Enter the ON time in seconds for each flash in the train:'))
+        led_off_time = float (input ('Enter the OFF time in seconds between each flash in the train:'))
+        train_time = float (input ('Enter the total time in seconds for each train of flashes:'))
+        starterDict.update ({'led_on_time' : led_on_time, 'led_off_time' : led_off_time, 'train_time' : train_time})
+        return starterDict
+
+    def config_subject_get(self, starterDict={}):
+        return starterDict
 
 
     def __init__(self, taskP):
