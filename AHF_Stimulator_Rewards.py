@@ -17,6 +17,9 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
 
     @staticmethod
     def config_user_get (starterDict = {}):
+        return starterDict
+
+    def config_user_subject_get(self,starterDict = {}):
         nRewards = starterDict.get ('nRewards', AHF_Stimulator_Rewards.defaultRewards)
         response = input('Enter the number of rewards you want to give per head fixing session (currently %d): ' % nRewards)
         if response != '':
@@ -28,10 +31,14 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
         starterDict.update({'nRewards' : nRewards, 'rewardInterval' : rewardInterval})
         return starterDict
 
+    def config_subject_get(self, starterDict={}):
+        nRewards = starterDict.get ('nRewards', AHF_Stimulator_Rewards.defaultRewards)
+        rewardInterval = starterDict.get ('rewardInterval', AHF_Stimulator_Rewards.defaultInterval)
+        starterDict.update({'nRewards' : nRewards, 'rewardInterval' : rewardInterval})
+        return starterDict
+
 
     def setup (self):
-        self.nRewards = self.settingsDict.get ('nRewards')
-        self.rewardInterval = self.settingsDict.get ('rewardInterval')
         self.rewarder = self.task.Rewarder
 
 
@@ -42,25 +49,14 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
     def run(self, level = 0, resultsDict = {}, settingsDict = {}):
         super().startVideo()
         self.rewardTimes = []
-        for reward in range(self.nRewards):
+        for reward in range(self.task.Subjects.get(self.task.tag).get("Stimulator").get("nRewards")):
             self.rewardTimes.append (time())
             self.rewarder.giveReward('task')
-            sleep(self.rewardInterval)
+            sleep(self.task.Subjects.get(self.task.tag).get("Stimulator").get("rewardInterval"))
         newRewards = resultsDict.get('rewards', 0) + self.nRewards
         resultsDict.update({'rewards': newRewards})
         super().stopVideo()
 
-    def logFile (self):
-        event = '\treward'
-        mStr = '{:013}'.format(self.mouse.tag) + '\t'
-        for rewardTime in self.rewardTimes:
-            outPutStr = mStr + datetime.fromtimestamp (int (rewardTime)).isoformat (' ') + event
-            print (outPutStr)
-        if self.textfp != None:
-            for rewardTime in self.rewardTimes:
-                outPutStr = mStr + datetime.fromtimestamp (int (rewardTime)).isoformat (' ') + "\t" + '{:.2f}'.format (rewardTime)  + event
-                self.textfp.write(outPutStr + '\n')
-            self.textfp.flush()
 
     def nextDay (self):
         """
