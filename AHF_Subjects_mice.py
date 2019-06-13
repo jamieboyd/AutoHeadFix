@@ -83,12 +83,6 @@ class AHF_Subjects_mice (AHF_Subjects):
             for tag in self.miceDict.keys():
                 for source in self.miceDict.get(tag):
                     self.task.DataLogger.storeConfig(tag, self.miceDict.get(tag).get(source), source)
-        for tag in self.miceDict.keys()
-            self.resultsDict.update({tag: {}})
-            for source in self.settingsTuple:
-                reference = getattr(self.task,source)
-                refResults = reference.results_subject_get()
-                self.resultsDict.get(tag).update({source: })
     def create_fillable_json(self):
         tempInput = input('A for adding a mouse with the tag number \n'
                           'T for using the RFID Tag reader ')

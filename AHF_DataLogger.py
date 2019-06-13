@@ -75,7 +75,7 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
             pass
 
     @abstractmethod
-    def writeToLogFile(self, tag, eventKind, eventDict, timeStamp, toShellOrFile):
+    def writeToLogFile(self, tag, eventKind, eventDict, timeStamp, toShellOrFile=True):
         """
         The original standard text file method was 4 tab-separated columns, mouse tag, or 0
         if no single tag was applicaple, unix time stamp, ISO formatted time, and event. Event

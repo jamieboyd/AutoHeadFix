@@ -176,8 +176,10 @@ class AHF_DataLogger_text (AHF_DataLogger):
         except Exception as e:
                 print ("Error maing log file\n", str(e))
 
+    def readFromLogFile(self, tag, index):
+        pass
 
-    def writeToLogFile(self, tag, eventKind, eventDict, timeStamp):
+    def writeToLogFile(self, tag, eventKind, eventDict, timeStamp, toShellOrFile=True):
         """
         Writes the time and type of each event to a text log file, and also to the shell
 
