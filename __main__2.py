@@ -67,6 +67,8 @@ def main():
                 # a Tag has been read, get a reference to the dictionaries for this subject
                 thisTag = task.tag
                 settingsDict = task.Subjects.miceDict.get(str(thisTag))
+                #temp
+                resultsDict = {"HeadFixer": {}, "Rewarder": {}, "Stimulator": {}}
                 # queue up an entrance reward, that can be countermanded if a) mouse leaves early, or b) fixes right away
                 task.Rewarder.giveRewardCM('entry', resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
                 doCountermand = True

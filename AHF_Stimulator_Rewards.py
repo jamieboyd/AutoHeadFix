@@ -53,8 +53,6 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
             self.rewardTimes.append (time())
             self.rewarder.giveReward('task')
             sleep(self.task.Subjects.get(self.task.tag).get("Stimulator").get("rewardInterval"))
-        newRewards = resultsDict.get('rewards', 0) + self.nRewards
-        resultsDict.update({'rewards': newRewards})
         super().stopVideo()
 
 

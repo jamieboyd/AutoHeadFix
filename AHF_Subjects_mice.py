@@ -62,6 +62,7 @@ class AHF_Subjects_mice (AHF_Subjects):
         self.jsonName = self.settingsDict.get('jsonName')
         self.inChamberTimeLimit = self.settingsDict.get('inChamberTimeLimit')
         self.miceDict = {}
+        self.resultsDict = {}
         if self.loadConfigs == "database" and hasattr(self.task,
                                                       'DataLogger'):  # try to load mice configuration from dataLogger
             dataLogger = self.task.DataLogger
@@ -74,7 +75,7 @@ class AHF_Subjects_mice (AHF_Subjects):
                     raise Exception('Could not confirm dictionary')
             except Exception as e:
                 print('Unable to open and fully load task configuration, we will create a fillable json for you.\n'
-                      'Copy the content into your json or rename the file after you are finished')
+                      'Edit the contents to your liking, then COPY the file to your filename. DO NOT rename.')
                 self.create_fillable_json()
             while self.check_miceDict(self.miceDict) == False:
                 input('could not load json, please edit and try again. Press enter when done')
@@ -82,7 +83,6 @@ class AHF_Subjects_mice (AHF_Subjects):
             for tag in self.miceDict.keys():
                 for source in self.miceDict.get(tag):
                     self.task.DataLogger.storeConfig(tag, self.miceDict.get(tag).get(source), source)
-
     def create_fillable_json(self):
         tempInput = input('A for adding a mouse with the tag number \n'
                           'T for using the RFID Tag reader ')
@@ -213,7 +213,7 @@ class AHF_Subjects_mice (AHF_Subjects):
         returns a reference to the dictionary for the mouse with given IDtag. if the mouse tag is not found, makes a new dictionary
         if fresh mice can be added, else returns an empty dicitonary if fresh mice are to be ignored
         """
-        return self.miceDict.get (IDnum, None)
+        return self.miceDict.get (str(IDnum), None)
 
     def get_all (self):
         return self.miceDict

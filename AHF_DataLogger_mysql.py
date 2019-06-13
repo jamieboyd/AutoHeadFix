@@ -183,7 +183,6 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         self.DB = self.settingsDict.get('DB')
         self.DBpwd = self.settingsDict.get('DBpwd')
         self.makeLogFile()
-        
         self.raw_save_query = """INSERT INTO `raw_data`(`Tag`,`Event`,`Event_dict`,`Timestamp`,`Cage`,`positions`)
         VALUES(%s,%s,%s,FROM_UNIXTIME(%s),%s,%s)"""
         self.config_save_query = """INSERT INTO `configs` (`Tag`,`Config`,`Timestamp`,`Cage`,`Dictionary_source`) VALUES(%s,%s,FROM_UNIXTIME(%s),%s,%s)"""
@@ -244,7 +243,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         if settings == "changed_hardware":
             for sources in sources_list:
                 mouse, source, dictio = self.getFromDatabase(query_config, ["changed_hardware", str(sources)], False)[0]
-                data = {str(source), literal_eval("{}".format(dictio))}
+                data = {str(source): literal_eval("{}".format(dictio))}
                 yield (data)
 
     def getMice(self):
@@ -296,7 +295,15 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         self.saveToDatabase(self.raw_save_query, self.events, True)
         self.events = []
 
-    def writeToLogFile(self, tag, eventKind, eventDict, timeStamp, toShellOrFile):
+    def readFromLogFile(self, index):
+        eventQuery = """SELECT `Event` from `raw_data` WHERE 1 ORDER BY `raw_data`.`Timestamp` LIMIT %s-1, 1"""
+        eventDictQuery = """SELECT `Event_dict` from `raw_data` WHERE 1 ORDER BY `raw_data`.`Timestamp` LIMIT %s-1, 1"""
+        event = self.getFromDatabase(eventQuery, [index], False)
+        eventDict = self.getFromDatabase(eventDictQuery, [index], False)
+        return (event, eventDict)
+
+    def writeToLogFile(self, tag, eventKind, eventDict, timeStamp, toShellOrFile=3):
+        super().writeToLogFile(tag, eventKind, eventDict, timeStamp, toShellOrFile)
         if toShellOrFile & self.TO_FILE:
             if eventKind == "lever_pull":
                 lever_positions = eventDict.get("positions")
@@ -357,11 +364,11 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
             elif event == 'T' or event == 't': # send timestamps to servers and then request the last timestamp
                 self.pingServers()
             elif event == 'j' or event == 'J':
-                response = input('generate json file from Database. D for default settings, L for last settings, type nothing to abort')
+                response = input('generate json file from Database.\n D for default settings,\n L for last settings,\n type nothing to abort')
                 if response != '':
                     jsonDict = {}
                     if response[0] == 'D' or response[0] == 'd':
-                        settings = "hardware_default"
+                        settings = "default_hardware"
                         for config in self.configGenerator(settings):
                             jsonDict.update(config)
                     elif response[0] == 'L' or response[0] == 'l':

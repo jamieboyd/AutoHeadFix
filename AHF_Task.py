@@ -162,6 +162,7 @@ class Task(object):
         self.entryTime = 0.0
         self.fixAgainTime = float ('inf')
         self.inChamberLimitExceeded = False
+        self.edited = False
         self.logToFile = True # a flag for writing to the shell only, or to the shall and the log
         ################ if some of the paramaters were set by user, give option to save ###############
         if fileErr:
@@ -185,7 +186,18 @@ class Task(object):
                 setattr (self, baseName, item [1](self, classDict))
         global gTask
         gTask = self
-
+        default = False
+        if self.edited:
+            temp = input("Do you want to make these your default settings? (y/n)")
+            if str(temp[0]).lower() == "y":
+                default = True
+            for item in fields:
+                if isinstance(item [1],  ABCMeta):
+                    baseName = (item [0], item[0][:-5])[item[0].endswith('Class')]
+                    classDict = getattr (self, baseName + 'Dict')
+                    self.DataLogger.storeConfig("changed_hardware", classDict, baseName)
+                    if default:
+                        self.DataLogger.storeConfig("default_hardware", classDict, baseName)
 
     def saveSettings(self):
         """
@@ -195,6 +207,7 @@ class Task(object):
         :param: none
         :returns: nothing
         """
+        self.edited = True
         # get name for new config file and massage it a bit
         if self.fileName == '':
             promptStr = 'Enter a name to save task settings as file:'
@@ -221,7 +234,10 @@ class Task(object):
 
 
     def editSettings (self):
-        CAD.Edit_Obj_fields (self,  'Auto Head Fix Task')
+        if (CAD.Edit_Obj_fields (self,  'Auto Head Fix Task')):
+            response = input ('Save changes in settings to a file?')
+            if response [0] == 'Y' or response [0] == 'y':
+                self.saveSettings ()
 
 
     def Show_testable_objects (self):

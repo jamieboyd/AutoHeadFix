@@ -4,6 +4,7 @@
 from abc import ABCMeta, abstractmethod
 from AHF_Rewarder import AHF_Rewarder
 from time import sleep, time
+from collections import deque
 
 class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
     """
@@ -67,6 +68,9 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
         starterDict.update({'taskSize': taskSize})
         return starterDict
 
+    def results_subject_get (self):
+        return self.results
+
     @abstractmethod
     def setup (self):
         self.rewardPin = self.settingsDict.get('rewardPin')
@@ -74,6 +78,8 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
         self.countermandTime = self.settingsDict.get ('entryRewardDelay')
         self.maxEntryRewards = self.settingsDict.get ('maxEntryRewards')
         self.countermanded = ''
+        self.results = deque(maxlen=25)
+        self.task.DataLogger.startTracking("Reward", "kind", "buffer")
 
     def newResultsDict (self):
         """
@@ -109,6 +115,7 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
             else:
                 resultsDict.update ({rewardName: resultsDict.get (rewardName, 0) + 1})
                 self.task.DataLogger.writeToLogFile(self.task.tag, 'Reward', {'kind' : rewardName, 'size' : sleepTime}, time())
+                print("Rewards so far: ", self.task.DataLogger.getTrackedEvent(self.task.tag, "Reward", "kind"))
                 self.threadReward (sleepTime)
                 return sleepTime
 

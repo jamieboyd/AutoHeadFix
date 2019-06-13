@@ -205,7 +205,7 @@ def Show_ordered_object (anObject, longName):
 
 
 def Edit_Obj_fields (anObject, longName):
-
+    changes = False
     while True:
         showDict = Show_ordered_object (anObject, longName)
         inputStr = input ('Enter number of setting to edit, or 0 to exit:')
@@ -217,6 +217,7 @@ def Edit_Obj_fields (anObject, longName):
         if inputNum == 0:
             break
         else:
+            changes = True
             itemDict = {}
             itemDict.update (showDict [inputNum -1]) #itemDict = OrderedDict.get (inputNum -1)
             kvp = itemDict.popitem()
@@ -280,7 +281,7 @@ def Edit_Obj_fields (anObject, longName):
             elif type (itemValue) is dict:
                 Edit_dict (itemValue, itemKey)
                 setattr (anObject, itemKey, itemValue)
-
+    return changes
 
 def Edit_dict (anyDict, longName):
     """

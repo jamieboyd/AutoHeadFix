@@ -136,7 +136,7 @@ class AHF_DataLogger_text (AHF_DataLogger):
         return CAD.File_to_dict ('mouse', '{:013}'.format(tag), '.jsn', dir = self.configPath)
 
 
-    def storeConfig (self, tag, configDict):
+    def storeConfig (self, tag, configDict, source = ""):
         """
         saves data to corresponding json text file, overwriting old file
         """
@@ -176,8 +176,10 @@ class AHF_DataLogger_text (AHF_DataLogger):
         except Exception as e:
                 print ("Error maing log file\n", str(e))
 
+    def readFromLogFile(self, tag, index):
+        pass
 
-    def writeToLogFile(self, tag, eventKind, eventDict, timeStamp):
+    def writeToLogFile(self, tag, eventKind, eventDict, timeStamp, toShellOrFile=3):
         """
         Writes the time and type of each event to a text log file, and also to the shell
 

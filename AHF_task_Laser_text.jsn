@@ -18,10 +18,12 @@
 "ContactCheckDict"={"contactPUD"="PUD_UP"
 "contactPin"=12
 "contactPolarity"="FALLING"}
-"DataLoggerClass"="AHF_DataLogger_text"
-"DataLoggerDict"={"cageID"="cage1"
-"dataPath"="/home/pi/Documents/"
-"mouseConfigPath"="/home/pi/Documents/MiceConfig/"}
+"DataLoggerClass"="AHF_DataLogger_mysql"
+"DataLoggerDict"={"DB"="AHF_laser_cage"
+"DBhost"="142.103.107.236"
+"DBpwd"="iamapoorslave"
+"DBuser"="slavePi"
+"cageID"="cage1"}
 "HeadFixerClass"="AHF_HeadFixer_PWM_PCA9685"
 "HeadFixerDict"={"servoAddress"=64
 "servoFixedPosition"=685
@@ -76,6 +78,7 @@
 "TriggerDict"=null
 "contact"=false
 "contactTime"=0
+"edited"=true
 "entryTime"=0.0
 "fileName"="Laser_text"
 "fixAgainTime"=Infinity
