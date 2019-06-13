@@ -117,15 +117,15 @@ def File_from_user (nameTypeStr, longName, typeSuffix, makeNew = False):
             else:
                 try:
                     moduleObj=__import__ (f.rstrip(typeSuffix))
-                    #print ('module=' + str (moduleObj))
+                    print ('module=' + str (moduleObj))
                     classObj = getattr(moduleObj, moduleObj.__name__)
-                    #print (classObj)
+                    print (classObj)
                     isAbstractClass = inspect.isabstract (classObj)
                     if isAbstractClass == False:
                         fileList.append (fname + ": " + classObj.about())
                         iFile += 1
-                    # else:
-                    #     print(classObj.__abstractmethods__)
+                    else:
+                        print(classObj.__abstractmethods__)
                 except Exception as e: # exception will be thrown if imported module imports non-existant modules, for instance
                     print (f, " : ", e)
                     continue
@@ -355,17 +355,22 @@ def File_to_dict (nameTypeStr, nameStr, typeSuffix, dir = ''):
     """
     Sets attributes for the object anObject from the keys and values of dictionay aDict loaded from the file
     """
-    filename = 'AHF_' + nameTypeStr + '_' + nameStr + typeSuffix
-    errFlag = False
-    with open (dir + filename, 'r') as fp:
-        data = fp.read()
-        data=data.replace('\n', ',')
-        data=data.replace('=', ':')
-        configDict = json.loads(data)
-        fp.close()
+    try:
+        filename = 'AHF_' + nameTypeStr + '_' + nameStr + typeSuffix
+        errFlag = False
+        with open (dir + filename, 'r') as fp:
+            data = fp.read()
+            data=data.replace('\n', ',')
+            data=data.replace('=', ':')
+            configDict = json.loads(data)
+            fp.close()
+    except FileNotFoundError as e:
+        raise e
     return configDict
 
-
+def Remove_file (nameTypeStr, nameStr, typeSuffix, dir = ''):
+    filename = 'AHF_' + nameTypeStr + '_' + nameStr + typeSuffix
+    os.remove(dir + filename)
 
 def Dict_to_file (anyDict, nameTypeStr, nameStr, typeSuffix, dir = ''):
     """

@@ -787,6 +787,10 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
             if(path.exists(self.hdf_path)):
                 with File(self.hdf_path, 'r+') as hdf:
                     folder = hdf.require_group("accuracy")
+                    if folder.__contains__('start'):
+                        del folder['start']
+                    if folder.__contains__('end'):
+                        del folder['end']
                     resolution_shape = ( self.camera.resolution()[0], self.camera.resolution()[1], 3) #rgb layers
                     ref = folder.require_dataset('start',shape=tuple(resolution_shape),dtype=np.uint8,data=self.accuracyStart)
                     ref.attrs.modify('CLASS', np.string_('IMAGE'))

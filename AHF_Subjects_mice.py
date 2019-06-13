@@ -36,7 +36,7 @@ class AHF_Subjects_mice (AHF_Subjects):
     def config_user_get (starterDict = {}):
 
         loadConfigs =  starterDict.get('loadMiceConfigs', AHF_Subjects_mice.loadConfigsDefault)
-        jsonName = starterDict.get("jsonName". AHF_Subject_mice.jsonNameDefault)
+        jsonName = starterDict.get("jsonName", AHF_Subjects_mice.jsonNameDefault)
         tempInput = input ('Getting subject information:\n'
                            'type P to provide a correct json file or get help creating a new one\n'
                            'type D in case you have all information in the Database and want to use it\n'
@@ -58,7 +58,7 @@ class AHF_Subjects_mice (AHF_Subjects):
         # hardware.json subject.json
 
         self.settingsTuple = ('HeadFixer', 'Rewarder', 'Stimulator')
-        self.loadConfigs = self.settingsDict.get('loadMiceConfig')
+        self.loadConfigs = self.settingsDict.get('loadMiceConfigs')
         self.jsonName = self.settingsDict.get('jsonName')
         self.inChamberTimeLimit = self.settingsDict.get('inChamberTimeLimit')
         self.miceDict = {}
@@ -88,10 +88,11 @@ class AHF_Subjects_mice (AHF_Subjects):
                           'T for using the RFID Tag reader ')
         moreMice =True
         while moreMice:
-            self.add(tempInput)
+            self.add(tempInput[0])
             stillmore = input('add another mouse? Y or N')
             if stillmore[0] == "n" or stillmore[0] == "N":
                 moreMice = False
+        print(self.miceDict)            
         CAD.Dict_to_file (self.miceDict, "mice_fillable", self.jsonName, ".jsn")
         input('Please edit the values now. Press enter when done')
         self.miceDict = CAD.File_to_dict('mice', self.jsonName, '.jsn')
@@ -106,15 +107,17 @@ class AHF_Subjects_mice (AHF_Subjects):
     def check_miceDict(self,starterDict={}):
         check= True
         if len(starterDict) > 0 and self.depth(starterDict) == 3:
+            print(starterDict.keys())
             for mouse in starterDict.keys():
                 mice_list = list(starterDict.get(mouse).keys())
                 if sorted(self.settingsTuple) == sorted(mice_list):
                     for source in self.settingsTuple:
                         reference = getattr(self.task,source)
                         sourceDict = reference.config_subject_get()
-                        if set(sourceDict.keys()) != set(starterDict.get(mouse).keys()):
+                        if set(sourceDict.keys()) != set(starterDict.get(mouse).get(source).keys()):
                             check = False
                 else:
+                    print("mid")
                     check = False
         else:
             check = False
@@ -143,8 +146,8 @@ class AHF_Subjects_mice (AHF_Subjects):
             return 1
         else:
             return -1
-        
-    
+
+
     def add(self, IDnum, dataDict={},default=True):
 
         """
@@ -154,14 +157,13 @@ class AHF_Subjects_mice (AHF_Subjects):
         if IDnum == 't' or IDnum == 'T':
             tag = 0
             while tag == 0:
-                tag = self.task.TagReader.readTag()
+                tag = self.task.Reader.readTag()
                 sleep(0.1)
 
         elif IDnum == 'a' or IDnum == 'A':
             tag = int(input('Enter the RFID tag for new mouse: '))
         elif isinstance(IDnum, int):
             tag = IDnum
-
         for source in self.settingsTuple:
             reference = getattr(self.task,source)
             if default:
@@ -169,16 +171,16 @@ class AHF_Subjects_mice (AHF_Subjects):
             else:
                 sourceDict = reference.config_user_subject_get(dataDict.get(source,{}))
             dataDict.update({source:sourceDict})
-        if not tag in self.miceDict.keys:
+        if not tag in self.miceDict.keys():
             self.miceDict.update ({tag: dataDict})
             note = ''
-            self.task.DataLogger.saveNewMouse(tag,note)
+            self.task.DataLogger.saveNewMouse(tag,note, self.miceDict.get(tag))
 
 
     def remove (self, IDnum):
         if IDnum in self.miceDict.keys:
             self.miceDict.pop(IDnum)
-            self.task.DataLogger.retireMouse(IDnum)
+            self.task.DataLogger.retireMouse(IDnum, "")
             return True
         else:
             return False
@@ -231,6 +233,7 @@ class AHF_Subjects_mice (AHF_Subjects):
             event = input (inputStr)
             tag = 0
             if event == 'p' or event == 'P': # print mice stats
+                continue
                 #self.showMice ()
                 # TODO make queries and think of strategy
             elif event == 'r' or event == 'R': # remove a mouse
@@ -288,5 +291,5 @@ class AHF_Subjects_mice (AHF_Subjects):
         self.setup()
 from AHF_Task import Task
 
-from AHF_TagReader import AHF_TagReader
+from AHF_Reader import AHF_Reader
 from AHF_Base import AHF_Base

@@ -6,6 +6,7 @@ import pymysql
 from ast import literal_eval
 from AHF_Task import Task
 import AHF_ClassAndDictUtils as CAD
+from AHF_DataLogger import AHF_DataLogger
 import json
 import os
 import pwd
@@ -44,9 +45,9 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
     defaultPassword = "iamapoorslave"
 
     localHost = 'localhost'
-    localUser = 'slavePi'
+    localUser = 'pi'
     localDatabase = 'raw_data'
-    localPassword = 'iamapoorslave'
+    localPassword = 'AutoHead2015'
 
 
     @staticmethod
@@ -147,6 +148,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         """
         Initiating database creation
         """
+        print("setting up")
         raw_data_table_generation = """CREATE TABLE IF NOT EXISTS `raw_data` (`ID` int(11) NOT NULL AUTO_INCREMENT,`Tag` varchar(18) NOT NULL,`Event` varchar(50) NOT NULL,
                                     `Event_dict` varchar(2000) DEFAULT NULL,`Timestamp` timestamp(2) NULL DEFAULT NULL,`Cage` varchar(20) NOT NULL,
                                      `positions` blob, PRIMARY KEY (`ID`), UNIQUE KEY `Tag` (`Tag`,`Event`,`Timestamp`,`Cage`))
@@ -154,7 +156,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
 
         config_data_table_generation = """CREATE TABLE IF NOT EXISTS `configs` (`ID` int(11) NOT NULL AUTO_INCREMENT,`Tag` varchar(18) NOT NULL,
                                         `Config` varchar(2000) NOT NULL,`Timestamp` timestamp(2) NULL DEFAULT NULL,`Cage` varchar(20) NOT NULL,
-                                        `Dictionary_source` varchar(50) NOT NULL, 
+                                        `Dictionary_source` varchar(50) NOT NULL,
                                         PRIMARY KEY (`ID`),UNIQUE KEY `Tag` (`Tag`,`Timestamp`,`Cage`,`Dictionary_source`))
                                          ENGINE=InnoDB DEFAULT CHARSET=latin1"""
         hardwaretest_table_generation = """CREATE TABLE IF NOT EXISTS `hardwaretest` (`ID` int(11) NOT NULL AUTO_INCREMENT,
@@ -165,7 +167,8 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         try:
             self.saveToDatabase(raw_data_table_generation, [[]], True) # create table on remote DB
             self.saveToDatabase(raw_data_table_generation, [[]], False) # create table on local DB
-            self.saveToDatabase(config_data_table_generation, [[]], False) # create config data table locally, no need to create it in remote DB
+            self.saveToDatabase(config_data_table_generation, [[]], False) # create config data table locally,
+            self.saveToDatabase(config_data_table_generation, [[]], True) # create config data table remote
             self.saveToDatabase(hardwaretest_table_generation, [[]], True) # create hardware test table in remote DB
             self.saveToDatabase(hardwaretest_table_generation, [[]], False)  # create hardware test table in local DB
             self.saveToDatabase(mice_table_generation, [[]], False)  # create hardware test table in local DB
@@ -174,24 +177,24 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
 
 
     def setup(self):
-
-        super.setup()
         self.cageID = self.settingsDict.get('cageID')
         self.DBhost = self.settingsDict.get('DBhost')
         self.DBuser = self.settingsDict.get('DBuser')
         self.DB = self.settingsDict.get('DB')
         self.DBpwd = self.settingsDict.get('DBpwd')
-
+        self.makeLogFile()
+        
         self.raw_save_query = """INSERT INTO `raw_data`(`Tag`,`Event`,`Event_dict`,`Timestamp`,`Cage`,`positions`)
         VALUES(%s,%s,%s,FROM_UNIXTIME(%s),%s,%s)"""
         self.config_save_query = """INSERT INTO `configs` (`Tag`,`Config`,`Timestamp`,`Cage`,`Dictionary_source`) VALUES(%s,%s,FROM_UNIXTIME(%s),%s,%s)"""
-        self.add_mouse_query = """INSERT INTO `mice` (`Timestamp`,`Cage`,`Tag`,`Activity`) VALUES(FROM_UNIXTIME(%s),%s,%s,%s)"""
+        self.add_mouse_query = """INSERT INTO `mice` (`Timestamp`,`Cage`,`Tag`,`Note`) VALUES(FROM_UNIXTIME(%s),%s,%s,%s)"""
         self.events = []
         self.water_available = False
-        showDict = self.task.hardwareTester.Show_testable_objects(task)
+        showDict = self.task.Show_testable_objects()
 
         self.events.append([0, 'SeshStart', None, time(),self.cageID,None])
         self.saveToDatabase(self.raw_save_query, self.events, False)
+        self.saveToDatabase(self.raw_save_query, self.events, True)
         self.events = []
 
     def setdown(self):
@@ -266,13 +269,14 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         self.saveToDatabase(self.config_save_query, [[tag, str(configDict), time(), self.cageID, str(source)]], False)
         self.saveToDatabase(self.config_save_query, [[tag, str(configDict), time(), self.cageID, str(source)]], True)
 
-    def saveNewMouse(self,tag,note):
+    def saveNewMouse(self,tag,note, dictionary = {}):
         # store new mouse `Timestamp`,`Cage`,`Tag`,`Note`
         self.events.append([tag, 'added_to_cage', str(dict([("Notes",note)])), time(), self.cageID, None])
         self.saveToDatabase(self.raw_save_query, self.events, False)
         self.saveToDatabase(self.raw_save_query, self.events, True)
         self.events = []
         self.saveToDatabase(self.add_mouse_query, [[time(), self.cageID, tag,str(note)]], False)
+        self.saveToDatabase(self.add_mouse_query, [[time(), self.cageID, tag,str(note)]], True)
 
     def retireMouse(self,tag,reason):
         # update information about a mouse `Timestamp`,`Cage`,`Tag`,`Activity`
@@ -282,6 +286,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         self.events = []
         delete_mouse_query = """DELETE FROM `mice` WHERE `Tag`=%s"""
         self.saveToDatabase(delete_mouse_query, [[tag]], False)
+        self.saveToDatabase(delete_mouse_query, [[tag]], True)
 
 
 #######################################################################################
@@ -310,7 +315,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         query_save = """INSERT INTO `hardwaretest`(`Timestamp`)
                                 VALUES(FROM_UNIXTIME(%s))"""
         values = [[time()]]
-        query_get = """SELECT * FROM `hardwaretest` WHERE 1 ORDER BY `hardwaretest`.`timestamp` DESC LIMIT 1"""
+        query_get = """SELECT `Timestamp` FROM `hardwaretest` WHERE 1 ORDER BY `hardwaretest`.`Timestamp` DESC LIMIT 1"""
         try:
             self.saveToDatabase(query_save, values, False)
             response = str(self.getFromDatabase(query_get, [], False)[0][0])
@@ -327,9 +332,9 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
     def hardwareTest(self):
         while True:
             inputStr = '\n************** Mouse Configuration ********************\nEnter:\n'
-            inputStr += 'C to Change Remote server settings and cageID'
-            inputStr += 'T to Test database connections'
-            inputStr += 'J to generate a Json file of hardware settings from database'
+            inputStr += 'C to Change Remote server settings and cageID\n'
+            inputStr += 'T to Test database connections\n'
+            inputStr += 'J to generate a Json file of hardware settings from database\n'
             event = input (inputStr)
             if event == 'c' or event == 'C':
                 result = input('Enter cageID, currently {:}: '.format(self.cageID))
@@ -380,4 +385,3 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         self.saveToDatabase(self.raw_save_query, self.events, True)
         self.events = []
         self.setdown()
-

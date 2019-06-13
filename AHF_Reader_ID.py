@@ -6,9 +6,9 @@ import RPi.GPIO as GPIO
 
 import RFIDTagReader
 import AHF_Task
-from AHF_TagReader import AHF_TagReader
+from AHF_Reader import AHF_Reader
 
-class AHF_TagReader_ID (AHF_TagReader):
+class AHF_Reader_ID (AHF_Reader):
 
     TIME_OUT_SECS = 0.05
     DO_CHECK_SUM = True
@@ -38,22 +38,22 @@ class AHF_TagReader_ID (AHF_TagReader):
                 else:
                     raise Exception('There are no fresh mice allowed, and this is a fresh mouse')
                 AHF_Task.gTask.entryTime = time()
-                AHF_TagReader_ID.stillThere = True
-                start_new_thread (AHF_TagReader_ID.timeInChamberThread,(time () + AHF_TagReader_ID.gInChamberTimeLimit,))
+                AHF_Reader_ID.stillThere = True
+                start_new_thread (AHF_Reader_ID.timeInChamberThread,(time () + AHF_Reader_ID.gInChamberTimeLimit,))
             except Exception as e:
                 AHF_Task.gTask.tag =0
         else: # tag just left
             AHF_Task.gTask.DataLogger.writeToLogFile(AHF_Task.gTask.tag, 'exit', None, time())
             AHF_Task.gTask.tag = 0
             RFIDTagReader.globalReader.clearBuffer()
-            AHF_TagReader_ID.stillThere = False
+            AHF_Reader_ID.stillThere = False
 
 
     @staticmethod
     def timeInChamberThread (sleepEndTime):
-        while AHF_TagReader_ID.stillThere and (time () < sleepEndTime):
+        while AHF_Reader_ID.stillThere and (time () < sleepEndTime):
             sleep (0.1)
-        if AHF_TagReader_ID.stillThere:
+        if AHF_Reader_ID.stillThere:
             stuckMouse = AHF_Task.gTask.tag
             AHF_Task.gTask.inChamberLimitExceeded = True
             AHF_Task.gTask.headFixer.releaseMouse ()
@@ -75,15 +75,15 @@ class AHF_TagReader_ID (AHF_TagReader):
 
     @staticmethod
     def config_user_get (starterDict = {}):
-        serialPort = starterDict.get('serialPort', AHF_TagReader_ID.defaultPort)
+        serialPort = starterDict.get('serialPort', AHF_Reader_ID.defaultPort)
         response = input ('Enter port used by tag reader, dev/serial0 if conected to Pi serial port, or dev/ttyUSB0 if connected to a USB breakout, currently %s :' % serialPort)
         if response != '':
             serialPort = response
-        TIRpin = starterDict.get('TIRpin', AHF_TagReader_ID.defaultPin)
+        TIRpin = starterDict.get('TIRpin', AHF_Reader_ID.defaultPin)
         response = input ('Enter the GPIO pin connected to the Tag-In-Range pin of the Tag Reader, currently %s :' % TIRpin)
         if response != '':
             TIRpin = int (response)
-        inChamberTimeLimit = starterDict.get ('inChamberTimeLimit', AHF_TagReader_ID.defaultChamberTimeLimit)
+        inChamberTimeLimit = starterDict.get ('inChamberTimeLimit', AHF_Reader_ID.defaultChamberTimeLimit)
         response = input('Enter in-Chamber duration limit, in minutes, before stopping head-fix trials, currently {:.2f}: '.format(inChamberTimeLimit/60))
         if response != '':
             inChamberTimeLimit = int(inChamberTimeLimit * 60)
@@ -100,10 +100,10 @@ class AHF_TagReader_ID (AHF_TagReader):
     def setup (self):
         self.serialPort = self.settingsDict.get('serialPort')
         self.TIRpin = self.settingsDict.get('TIRpin')
-        self.tagReader =RFIDTagReader.TagReader (self.serialPort, doChecksum = AHF_TagReader_ID.DO_CHECK_SUM, timeOutSecs = AHF_TagReader_ID.TIME_OUT_SECS, kind='ID')
+        self.tagReader =RFIDTagReader.TagReader (self.serialPort, doChecksum = AHF_Reader_ID.DO_CHECK_SUM, timeOutSecs = AHF_Reader_ID.TIME_OUT_SECS, kind='ID')
         self.isLogging = False
-        AHF_TagReader_ID.gStillThere = False
-        AHF_TagReader_ID.gInChamberTimeLimit = self.settingsDict.get ('inChamberTimeLimit')
+        AHF_Reader_ID.gStillThere = False
+        AHF_Reader_ID.gInChamberTimeLimit = self.settingsDict.get ('inChamberTimeLimit')
 
     def setdown (self):
         if self.isLogging:
@@ -111,11 +111,13 @@ class AHF_TagReader_ID (AHF_TagReader):
         del self.tagReader
 
     def readTag (self):
-        return self.tagReader.readTag ()
-
+        try:
+            return self.tagReader.readTag ()
+        except ValueError:
+            return 0
     def startLogging (self):
         if not self.isLogging:
-            self.tagReader.installCallBack (AHF_TagReader_ID.customCallback)
+            self.tagReader.installCallback (self.TIRpin, AHF_Reader_ID.customCallback)
             self.isLogging = True
 
     def stopLogging (self):
@@ -142,7 +144,7 @@ class AHF_TagReader_ID (AHF_TagReader):
                     lastTag = thisTag
             except Exception as e:
                 print (str(e))
-            sleep (AHF_TagReader_ID.TIME_OUT_SECS)
+            sleep (AHF_Reader_ID.TIME_OUT_SECS)
         result = input ('Do you wish to edit Tag Reader settings?')
         returnValue = False
         if result [0] == 'y' or result [0] == 'Y':

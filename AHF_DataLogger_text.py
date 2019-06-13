@@ -3,7 +3,7 @@
 from os import path, makedirs, chown, listdir
 from pwd import getpwnam
 from grp import getgrnam
-from time import time, localtime,timezone
+from time import time, localtime,timezone, sleep
 from datetime import datetime
 import AHF_ClassAndDictUtils as CAD
 from AHF_DataLogger import AHF_DataLogger
@@ -74,6 +74,9 @@ class AHF_DataLogger_text (AHF_DataLogger):
         self.dataPath = self.settingsDict.get('dataPath')
         self.configPath = self.settingsDict.get('mouseConfigPath')
         self.logFP = None # reference to log file that will be created
+        self.dataPath = self.settingsDict.get('dataPath')
+        self.configPath = self.settingsDict.get('mouseConfigPath')
+        self.logFP = None # reference to log file that will be created
         self.logPath = self.dataPath + 'LogFiles/' # path to the folder containing log files
         self.logFilePath = '' # path to the log file
         self.statsPath = self.dataPath + 'QuickStats/'
@@ -139,7 +142,19 @@ class AHF_DataLogger_text (AHF_DataLogger):
         """
         CAD.Dict_to_file (configDict, 'mouse', '{:013}'.format(tag), '.jsn', dir = self.configPath)
 
+    def saveNewMouse (self, tag, note, dictionary = {}):
+        self.storeConfig(tag, dictionary)
+        self.writeToLogFile(tag, "NewMouse", dictionary, time())
 
+    def getMice (self):
+        mice = []
+        for config in self.configGenerator():
+            mice.append(config[0])
+        return mice
+
+    def retireMouse (self, tag, reason):
+        CAD.Remove_file('mouse', '{:013}'.format(tag), '.jsn', dir = self.configPath)
+        self.writeToLogFile(tag, "Retirement", {'reason': reason}, time())
 
     def newDay (self, mice):
         self.writeToLogFile (0, 'SeshEnd', None, time())
@@ -217,11 +232,6 @@ class AHF_DataLogger_text (AHF_DataLogger):
             uid = getpwnam ('pi').pw_uid
             gid = getgrnam ('pi').gr_gid
             chown (self.statsFilePath, uid, gid)
-<<<<<<< Updated upstream
-
-=======
-                        
->>>>>>> Stashed changes
 
     def __del__ (self):
         self.writeToLogFile (0, 'SeshEnd', None, time())
