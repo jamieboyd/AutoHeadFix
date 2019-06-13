@@ -37,12 +37,12 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
         """
         pass
 
-    def startTracking(self, eventKind, dictKey, trackingType):
+    def startTracking(self, eventKind, dictKey, trackingType, size = 0):
         """
         Begins tracking of the specified key for the specified event.
         Tracks as a circular buffer or daily totals.
         """
-        self.trackingDict.update({eventKind: {dictKey: {"type": trackingType, "values": {}}}})
+        self.trackingDict.update({eventKind: {dictKey: {"type": trackingType, "values": {}, "size": size}}})
 
     def getTrackedEvent(self, tag, eventKind, dictKey):
         """
@@ -75,7 +75,7 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
             pass
 
     @abstractmethod
-    def writeToLogFile(self, tag, eventKind, eventDict, timeStamp, toShellOrFile = True):
+    def writeToLogFile(self, tag, eventKind, eventDict, timeStamp, toShellOrFile = 3):
         """
         The original standard text file method was 4 tab-separated columns, mouse tag, or 0
         if no single tag was applicaple, unix time stamp, ISO formatted time, and event. Event
@@ -91,7 +91,7 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
                 if keyTracking is not None:
                     if keyTracking["type"] is "buffer":
                         if tag not in keyTracking["values"].keys():
-                            keyTracking["values"][tag] = deque(maxlen = self.BUFFER_SIZE)
+                            keyTracking["values"][tag] = deque(maxlen = keyTracking["size"])
                         keyTracking["values"][tag].append(eventDict[key])
                     elif keyTracking["type"] is "totals":
                         if tag not in keyTracking["values"].keys():

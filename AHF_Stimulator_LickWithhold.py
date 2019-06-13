@@ -145,6 +145,7 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
         self.lickWithholdTimes = []
         self.rewardTimes = []
         self.laserTimes = []
+        self.task.DataLogger.startTracking("Outcome", "code", "buffer", 200)
 
     def quitting (self):
         """
@@ -190,14 +191,18 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
         while time() < delayEnd:
             anyLicks = self.task.LickDetector.waitForLick (0.05)
             if anyLicks:
+                self.task.DataLogger.writeToLogFile (self.tag, 'Outcome', {code: -4}, time())
                 return
         anyLicks = self.task.LickDetector.waitForLick (self.task.Subjects.get(self.task.tag).get("Stimulator").get("responseTime"))
         if anyLicks is not 0:
             self.rewardTimes.append (time())
             self.rewarder.giveReward('task')
+            self.task.DataLogger.writeToLogFile (self.tag, 'Outcome', {code: 2}, time())
         else:
             #Wrong, mouse gets a timeout :(
+            self.task.DataLogger.writeToLogFile (self.tag, 'Outcome', {code: -2}, time())
             sleep(self.lickWrongTimeout)
+            
 
     def noGoTask (self):
         # TODO: refine noGo signal
@@ -206,12 +211,20 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
         self.task.Stimulus.stimulate()
 
         self.task.DataLogger.writeToLogFile (self.tag, 'Stimulus', {'trial': "NO-GO"}, time())
+        while time() < delayEnd:
+            anyLicks = self.task.LickDetector.waitForLick (0.05)
+            if anyLicks:
+                self.task.DataLogger.writeToLogFile (self.tag, 'Outcome', {code: -3}, time())
+                return
         anyLicks = self.task.LickDetector.waitForLick (self.task.Subjects.get(self.task.tag).get("Stimulator").get("responseTime"))
-        if anyLicks == 0 and self.task.Subjects.get(self.task.tag).get("Stimulator").get("rewardNoGo"):
-            self.rewardTimes.append (time())
-            self.rewarder.giveReward('task')
+        if anyLicks == 0:
+            if self.task.Subjects.get(self.task.tag).get("Stimulator").get("rewardNoGo"):
+                self.rewardTimes.append (time())
+                self.rewarder.giveReward('task')
+            self.task.DataLogger.writeToLogFile (self.tag, 'Outcome', {code: 1}, time())
         else:
             #Wrong, mouse gets a timeout :(
+            self.task.DataLogger.writeToLogFile (self.tag, 'Outcome', {code: -1}, time())
             sleep(self.lickWrongTimeout)
         pass
 

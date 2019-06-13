@@ -179,7 +179,7 @@ class AHF_DataLogger_text (AHF_DataLogger):
     def readFromLogFile(self, tag, index):
         pass
 
-    def writeToLogFile(self, tag, eventKind, eventDict, timeStamp, toShellOrFile=True):
+    def writeToLogFile(self, tag, eventKind, eventDict, timeStamp, toShellOrFile=3):
         """
         Writes the time and type of each event to a text log file, and also to the shell
 
