@@ -88,10 +88,11 @@ class AHF_Subjects_mice (AHF_Subjects):
                           'T for using the RFID Tag reader ')
         moreMice =True
         while moreMice:
-            self.add(tempInput)
+            self.add(tempInput[0])
             stillmore = input('add another mouse? Y or N')
             if stillmore[0] == "n" or stillmore[0] == "N":
                 moreMice = False
+        print(self.miceDict)            
         CAD.Dict_to_file (self.miceDict, "mice_fillable", self.jsonName, ".jsn")
         input('Please edit the values now. Press enter when done')
         self.miceDict = CAD.File_to_dict('mice', self.jsonName, '.jsn')
@@ -106,15 +107,17 @@ class AHF_Subjects_mice (AHF_Subjects):
     def check_miceDict(self,starterDict={}):
         check= True
         if len(starterDict) > 0 and self.depth(starterDict) == 3:
+            print(starterDict.keys())
             for mouse in starterDict.keys():
                 mice_list = list(starterDict.get(mouse).keys())
                 if sorted(self.settingsTuple) == sorted(mice_list):
                     for source in self.settingsTuple:
                         reference = getattr(self.task,source)
                         sourceDict = reference.config_subject_get()
-                        if set(sourceDict.keys()) != set(starterDict.get(mouse).keys()):
+                        if set(sourceDict.keys()) != set(starterDict.get(mouse).get(source).keys()):
                             check = False
                 else:
+                    print("mid")
                     check = False
         else:
             check = False
@@ -161,7 +164,6 @@ class AHF_Subjects_mice (AHF_Subjects):
             tag = int(input('Enter the RFID tag for new mouse: '))
         elif isinstance(IDnum, int):
             tag = IDnum
-
         for source in self.settingsTuple:
             reference = getattr(self.task,source)
             if default:
@@ -169,7 +171,7 @@ class AHF_Subjects_mice (AHF_Subjects):
             else:
                 sourceDict = reference.config_user_subject_get(dataDict.get(source,{}))
             dataDict.update({source:sourceDict})
-        if not tag in self.miceDict.keys:
+        if not tag in self.miceDict.keys():
             self.miceDict.update ({tag: dataDict})
             note = ''
             self.task.DataLogger.saveNewMouse(tag,note, self.miceDict.get(tag))

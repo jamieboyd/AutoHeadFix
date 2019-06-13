@@ -111,8 +111,10 @@ class AHF_Reader_ID (AHF_Reader):
         del self.tagReader
 
     def readTag (self):
-        return self.tagReader.readTag ()
-
+        try:
+            return self.tagReader.readTag ()
+        except ValueError:
+            return 0
     def startLogging (self):
         if not self.isLogging:
             self.tagReader.installCallback (self.TIRpin, AHF_Reader_ID.customCallback)
