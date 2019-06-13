@@ -355,14 +355,17 @@ def File_to_dict (nameTypeStr, nameStr, typeSuffix, dir = ''):
     """
     Sets attributes for the object anObject from the keys and values of dictionay aDict loaded from the file
     """
-    filename = 'AHF_' + nameTypeStr + '_' + nameStr + typeSuffix
-    errFlag = False
-    with open (dir + filename, 'r') as fp:
-        data = fp.read()
-        data=data.replace('\n', ',')
-        data=data.replace('=', ':')
-        configDict = json.loads(data)
-        fp.close()
+    try:
+        filename = 'AHF_' + nameTypeStr + '_' + nameStr + typeSuffix
+        errFlag = False
+        with open (dir + filename, 'r') as fp:
+            data = fp.read()
+            data=data.replace('\n', ',')
+            data=data.replace('=', ':')
+            configDict = json.loads(data)
+            fp.close()
+    except FileNotFoundError as e:
+        raise e
     return configDict
 
 def Remove_file (nameTypeStr, nameStr, typeSuffix, dir = ''):
