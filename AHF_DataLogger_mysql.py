@@ -183,7 +183,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         self.DB = self.settingsDict.get('DB')
         self.DBpwd = self.settingsDict.get('DBpwd')
         self.makeLogFile()
-        
+
         self.raw_save_query = """INSERT INTO `raw_data`(`Tag`,`Event`,`Event_dict`,`Timestamp`,`Cage`,`positions`)
         VALUES(%s,%s,%s,FROM_UNIXTIME(%s),%s,%s)"""
         self.config_save_query = """INSERT INTO `configs` (`Tag`,`Config`,`Timestamp`,`Cage`,`Dictionary_source`) VALUES(%s,%s,FROM_UNIXTIME(%s),%s,%s)"""
@@ -295,6 +295,13 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         self.saveToDatabase(self.raw_save_query, self.events, False)
         self.saveToDatabase(self.raw_save_query, self.events, True)
         self.events = []
+
+    def readFromLogFile(self, index):
+        eventQuery = """SELECT `Event` from `raw_data` WHERE 1 ORDER BY `raw_data`.`Timestamp` LIMIT %s-1, 1"""
+        eventDictQuery = """SELECT `Event_dict` from `raw_data` WHERE 1 ORDER BY `raw_data`.`Timestamp` LIMIT %s-1, 1"""
+        event = self.getFromDatabase(eventQuery, [index], False)
+        eventDict = self.getFromDatabase(eventDictQuery, [index], False)
+        return (event, eventDict)
 
     def writeToLogFile(self, tag, eventKind, eventDict, timeStamp, toShellOrFile):
         if toShellOrFile & self.TO_FILE:

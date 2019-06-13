@@ -62,6 +62,7 @@ class AHF_Subjects_mice (AHF_Subjects):
         self.jsonName = self.settingsDict.get('jsonName')
         self.inChamberTimeLimit = self.settingsDict.get('inChamberTimeLimit')
         self.miceDict = {}
+        self.resultsDict = {}
         if self.loadConfigs == "database" and hasattr(self.task,
                                                       'DataLogger'):  # try to load mice configuration from dataLogger
             dataLogger = self.task.DataLogger
@@ -82,7 +83,12 @@ class AHF_Subjects_mice (AHF_Subjects):
             for tag in self.miceDict.keys():
                 for source in self.miceDict.get(tag):
                     self.task.DataLogger.storeConfig(tag, self.miceDict.get(tag).get(source), source)
-
+        for tag in self.miceDict.keys()
+            self.resultsDict.update({tag: {}})
+            for source in self.settingsTuple:
+                reference = getattr(self.task,source)
+                refResults = reference.results_subject_get()
+                self.resultsDict.get(tag).update({source: })
     def create_fillable_json(self):
         tempInput = input('A for adding a mouse with the tag number \n'
                           'T for using the RFID Tag reader ')
