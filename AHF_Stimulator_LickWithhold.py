@@ -192,6 +192,7 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
             anyLicks = self.task.LickDetector.waitForLick (0.05)
             if anyLicks:
                 self.task.DataLogger.writeToLogFile (self.tag, 'Outcome', {code: -4}, time())
+
                 return
         anyLicks = self.task.LickDetector.waitForLick (self.task.Subjects.get(self.task.tag).get("Stimulator").get("responseTime"))
         if anyLicks is not 0:
@@ -222,6 +223,7 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
                 self.rewardTimes.append (time())
                 self.rewarder.giveReward('task')
             self.task.DataLogger.writeToLogFile (self.tag, 'Outcome', {code: 1}, time())
+
         else:
             #Wrong, mouse gets a timeout :(
             self.task.DataLogger.writeToLogFile (self.tag, 'Outcome', {code: -1}, time())

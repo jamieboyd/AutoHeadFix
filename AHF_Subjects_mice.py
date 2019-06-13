@@ -92,6 +92,7 @@ class AHF_Subjects_mice (AHF_Subjects):
             stillmore = input('add another mouse? Y or N')
             if stillmore[0] == "n" or stillmore[0] == "N":
                 moreMice = False
+        print(self.miceDict)            
         CAD.Dict_to_file (self.miceDict, "mice_fillable", self.jsonName, ".jsn")
         input('Please edit the values now. Press enter when done')
         self.miceDict = CAD.File_to_dict('mice', self.jsonName, '.jsn')
@@ -106,6 +107,7 @@ class AHF_Subjects_mice (AHF_Subjects):
     def check_miceDict(self,starterDict={}):
         check= True
         if len(starterDict) > 0 and self.depth(starterDict) == 3:
+            print(starterDict.keys())
             for mouse in starterDict.keys():
                 mice_list = list(starterDict.get(mouse).keys())
                 if sorted(self.settingsTuple) == sorted(mice_list):
@@ -115,6 +117,7 @@ class AHF_Subjects_mice (AHF_Subjects):
                         if set(sourceDict.keys()) != set(starterDict.get(mouse).get(source).keys()):
                             check = False
                 else:
+                    print("mid")
                     check = False
         else:
             check = False

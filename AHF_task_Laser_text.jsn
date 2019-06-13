@@ -64,7 +64,7 @@
 "coeff_matrix"=null
 "duty_cycle"=50
 "hdf_path"="mice_images.h5"
-"laser_on_time"=0
+"laser_on_time"=70
 "motor_delay"=0.03}
 "SubjectsClass"="AHF_Subjects_mice"
 "SubjectsDict"={"inChamberTimeLimit"=300

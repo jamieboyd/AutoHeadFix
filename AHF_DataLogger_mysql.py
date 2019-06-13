@@ -183,7 +183,6 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         self.DB = self.settingsDict.get('DB')
         self.DBpwd = self.settingsDict.get('DBpwd')
         self.makeLogFile()
-
         self.raw_save_query = """INSERT INTO `raw_data`(`Tag`,`Event`,`Event_dict`,`Timestamp`,`Cage`,`positions`)
         VALUES(%s,%s,%s,FROM_UNIXTIME(%s),%s,%s)"""
         self.config_save_query = """INSERT INTO `configs` (`Tag`,`Config`,`Timestamp`,`Cage`,`Dictionary_source`) VALUES(%s,%s,FROM_UNIXTIME(%s),%s,%s)"""
