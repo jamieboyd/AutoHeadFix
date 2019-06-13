@@ -51,7 +51,6 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
         try:
             return self.trackingDict.get(eventKind).get(dictKey).get("values").get(tag)
         except Exception as e:
-            print(str(e))
             return None
 
     def stopTracking(self, eventKind, dictKey):

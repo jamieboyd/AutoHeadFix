@@ -65,7 +65,6 @@ def main():
                         else:
                             sleep (kTIMEOUTSECS)
                 # a Tag has been read, get a reference to the dictionaries for this subject
-                print("tag read")
                 thisTag = task.tag
                 settingsDict = task.Subjects.miceDict.get(str(thisTag))
                 #temp
@@ -76,10 +75,8 @@ def main():
                 # loop through as many trials as this mouse wants to do before leaving chamber
                 while task.tag == thisTag:
                     # Fix mouse - returns True if 'fixed', though that may just be a True contact check if a no-fix trial
-                    print("fix check")
                     fixed = task.HeadFixer.fixMouse (thisTag, resultsDict.get('HeadFixer'), settingsDict.get('HeadFixer'))
                     if fixed:
-                        print("fixed")
                         if doCountermand:
                             task.Rewarder.countermandReward (resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
                             doCountermand = False
