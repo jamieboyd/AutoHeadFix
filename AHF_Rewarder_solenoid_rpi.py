@@ -2,7 +2,7 @@
 #-*-coding: utf-8 -*-
 
 from AHF_Rewarder_solenoid import AHF_Rewarder_solenoid
-from AHF_Task import AHF_Task
+import AHF_Task
 import RPi.GPIO as GPIO
 from _thread import start_new_thread
 from time import sleep, time
@@ -23,9 +23,10 @@ class AHF_Rewarder_solenoid_rpi (AHF_Rewarder_solenoid):
         sleep(sleepTime) # not very accurate timing, but good enough
         GPIO.output(rewardPin, GPIO.LOW)
         lickDetect = AHF_Task.gTask.LickDetector
-        lickCount = lickDetect.getCount()
-        sleep(sleepTime) #Change to some other value?
-        if lickDetect.getCount() > lickCount:
+        lickDetect.resumeLickCount()
+        lickCount = lickDetect.getLickCount()
+        sleep(1) #Change to some other value?
+        if lickDetect.getLickCount() > lickCount:
             AHF_Task.gTask.DataLogger.writeToLogFile(AHF_Task.gTask.tag, "ConsumedReward", {}, time())
 
     @staticmethod

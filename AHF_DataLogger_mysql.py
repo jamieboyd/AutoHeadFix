@@ -304,7 +304,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
 
     def writeToLogFile(self, tag, eventKind, eventDict, timeStamp, toShellOrFile=3):
         super().writeToLogFile(tag, eventKind, eventDict, timeStamp, toShellOrFile)
-        if toShellOrFile & self.TO_FILE:
+        if (toShellOrFile & self.TO_FILE) > 0:
             if eventKind == "lever_pull":
                 lever_positions = eventDict.get("positions")
                 del eventDict["positions"]
@@ -315,7 +315,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
             self.saveToDatabase(self.raw_save_query, self.events, False)
             self.saveToDatabase(self.raw_save_query, self.events, True)
             self.events = []
-        if toShellOrFile & self.TO_SHELL:
+        if (toShellOrFile & self.TO_SHELL) > 0:
             print('{:013}\t{:s}\t{:s}\t{:s}\t{:s}\n'.format (tag, eventKind, str(eventDict), datetime.fromtimestamp(int(timeStamp)).isoformat(' '), self.cageID))
 
     def pingServers(self):
