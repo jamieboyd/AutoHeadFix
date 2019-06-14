@@ -2,6 +2,7 @@
 #-*-coding: utf-8 -*-
 
 from AHF_HeadFixer import AHF_HeadFixer
+import AHF_Task
 from time import sleep
 from _thread import start_new_thread
 
@@ -30,10 +31,10 @@ class AHF_HeadFixer_NoFix (AHF_HeadFixer):
         return starterDict
 
     def config_subject_get (self, starterDict = {}):
-        return super().config_subject_get(self, starterDict)
+        return super().config_subject_get(starterDict)
 
     def config_user_subject_get  (self, starterDict = {}):
-        return super().config_user_subject_get(self, starterDict)
+        return super().config_user_subject_get(starterDict)
 
     @staticmethod
     def isFixedCheck ():
@@ -42,19 +43,26 @@ class AHF_HeadFixer_NoFix (AHF_HeadFixer):
         AHF_Task.gTask.Stimulator.stop()
         pass
 
+    def setup(self):
+        self.isChecking = False
+        super().setup()
+
     def setdown(self):
         pass
 
-    def fixMouse(self, resultsDict = {}, settingsDict = {}):
+    def fixMouse(self, tag, resultsDict = {}, settingsDict = {}):
         """
         Just does contact check with super(), does not fix
         """
-        start_new_thread(self.isFixedCheck)
-        return super().fixMouse (resultsDict, settingsDict)
+        if self.task.contact and not self.isChecking:
+            start_new_thread(self.isFixedCheck, ())
+            return True
+        return False        
+        
 
 
-    def releaseMouse(self, resultsDict = {}, settingsDict = {}):
-        super().releaseMouse (resultsDict, settingsDict)
+    def releaseMouse(self, tag, resultsDict = {}, settingsDict = {}):
+        super().releaseMouse (tag, resultsDict, settingsDict)
 
     def hardwareTest (self):
         print (self.__class__.about())
