@@ -104,11 +104,14 @@ class AHF_Stimulator_LEDs (AHF_Stimulator_Rewards):
 
     def run(self, resultsDict = {}, settingsDict = {}):
         super().startVideo()
+        super().run()
         self.rewardTimes = []
         self.stimTimes = []
         fudge = 0.25e-03 # offset time added to array, so first pulse is same length as following pulses
         sleepMin = 1e-03 # mimimum time to call a sleep before looping
         for reward in range(self.nRewards):
+            if not self.running:
+                break
             self.rewardTimes.append (time())
             self.rewarder.giveReward('task')
             sleep(self.waitTime1)

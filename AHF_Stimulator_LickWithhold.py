@@ -203,7 +203,7 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
             #Wrong, mouse gets a timeout :(
             self.task.DataLogger.writeToLogFile (self.tag, 'Outcome', {code: -2}, time())
             sleep(self.lickWrongTimeout)
-            
+
 
     def noGoTask (self):
         # TODO: refine noGo signal
@@ -244,6 +244,7 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
 
 #=================Main functions called from outside===========================
     def run(self, level = -1, resultsDict = {}, settingsDict = {}):
+        super().run()
         self.tag = self.task.tag
         if level < 0:
             level = self.defaultLevel
@@ -266,6 +267,8 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
             self.OffForRewardEnd = 0.0
             self.camera.start_preview()
             while time() < endTime:
+                if not self.running:
+                    break
                 # setup to start a trial, withholding licking for lickWithholdRandom secs till buzzer
                 # inner loop keeps resetting lickWithholdEnd time until  a succsful withhold
                 if (level > 0):
