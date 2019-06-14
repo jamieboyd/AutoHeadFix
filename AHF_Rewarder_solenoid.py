@@ -79,7 +79,7 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
         self.maxEntryRewards = self.settingsDict.get ('maxEntryRewards')
         self.countermanded = ''
         self.results = deque(maxlen=25)
-        self.task.DataLogger.startTracking("Reward", "consumed", "buffer")
+        self.task.DataLogger.startTracking("Reward", "consumed", "buffer", size=200)
 
     def newResultsDict (self):
         """

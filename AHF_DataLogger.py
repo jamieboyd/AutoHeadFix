@@ -102,8 +102,6 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
                             keyTracking["values"][tag] = 0
                         keyTracking["values"][tag] += eventDict[key]
 
-        pass
-
 
     @abstractmethod
     def newDay (self, mice):
