@@ -25,7 +25,15 @@ class AHF_LickDetector (AHF_Base, metaclass = ABCMeta):
         Zeros the array that stores lick counts for each channel, and makes sure callback is filling the array for requested channels
         """
         pass
-    
+
+    @abstractmethod
+    def resumeLickCount (self):
+        pass
+
+    @abstractmethod
+    def getLickCount (self):
+        pass
+
     @abstractmethod
     def stopLickCount (self):
         """
@@ -40,7 +48,7 @@ class AHF_LickDetector (AHF_Base, metaclass = ABCMeta):
         Zeros the array that stores lick counts for each channel, and makes sure callback is filling the array for requested channels
         """
         pass
-    
+
     @abstractmethod
     def stopLickTiming (self):
         """
@@ -48,7 +56,7 @@ class AHF_LickDetector (AHF_Base, metaclass = ABCMeta):
         call zeroLickCount, wait a while for some licks, then call getLickCount
         """
         pass
-    
+
     @abstractmethod
     def startLogging (self):
         """
@@ -56,7 +64,7 @@ class AHF_LickDetector (AHF_Base, metaclass = ABCMeta):
         """
         pass
 
-    
+
     @abstractmethod
     def stopLogging (self):
         """
@@ -72,5 +80,3 @@ class AHF_LickDetector (AHF_Base, metaclass = ABCMeta):
         or -1 if startFromZero was True and the detector was touched for entire time
         """
         pass
-
-

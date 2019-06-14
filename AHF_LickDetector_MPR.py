@@ -106,6 +106,18 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
         """
         self.touchDetector.startCount()
 
+    def resumeLickCount (self):
+        """
+        Continue the lick counting without zeroing the channels
+        """
+        self.touchDetector.resumeCount()
+
+    def getLickCount (self):
+        """
+        Get the number of licks for each channel in the global array without stopping the count.
+        """
+        return self.touchDetector.getCount()
+
 
     def stopLickCount (self, chanList):
         """
