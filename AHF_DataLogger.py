@@ -85,6 +85,10 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
         results, so an event can be more easily parsed during data analysis.
         """
         eventTracking  = self.trackingDict.get(eventKind, None)
+        if eventKind is "ConsumedReward":
+            #Special case :/
+            self.trackingDict["Reward"]["consumed"]["values"][tag].pop()
+            self.trackingDict["Reward"]["consumed"]["values"][tag].append(True)
         if eventTracking is not None:
             for key in eventDict.keys():
                 keyTracking = eventTracking.get(key, None)
