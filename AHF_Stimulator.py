@@ -23,12 +23,15 @@ class AHF_Stimulator (AHF_Base, metaclass = ABCMeta):
         """
         Called at start of each head fix. Does whatever
         """
+        self.running = True
         pass
 
     @abstractmethod
     def quitting(self):
         pass
 
+    def stop(self):
+        self.running = False
 
     def startVideo (self):
 

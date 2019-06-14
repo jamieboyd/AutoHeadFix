@@ -3,6 +3,7 @@
 
 from AHF_HeadFixer import AHF_HeadFixer
 from time import sleep
+from _thread import start_new_thread
 
 class AHF_HeadFixer_NoFix (AHF_HeadFixer):
     """
@@ -11,7 +12,7 @@ class AHF_HeadFixer_NoFix (AHF_HeadFixer):
     """
     hasLevels = False
     defaultSkeddadleTime = 0.5
-    
+
     @staticmethod
     def about():
         return 'Head Fixer that only checks for contact, does not implement a head-fixing mechanism'
@@ -19,7 +20,7 @@ class AHF_HeadFixer_NoFix (AHF_HeadFixer):
     @staticmethod
     def config_user_get (starterDict = {}):
         """
-        Querries user returns dictionary 
+        Querries user returns dictionary
         """
         skeddadleTime = starterDict.get ('skeddadleTime', AHF_HeadFixer.defaultSkeddadleTime)
         response = input ('Enter time, in seconds, for mouse to get head off the contacts when session ends, currently {:.2f}: '.format(skeddadleTime))
@@ -34,6 +35,13 @@ class AHF_HeadFixer_NoFix (AHF_HeadFixer):
     def config_user_subject_get  (self, starterDict = {}):
         return super().config_user_subject_get(self, starterDict)
 
+    @staticmethod
+    def isFixedCheck ():
+        while AHF_Task.gTask.contact:
+            sleep(0.05)
+        AHF_Task.gTask.Stimulator.stop()
+        pass
+
     def setdown(self):
         pass
 
@@ -41,6 +49,7 @@ class AHF_HeadFixer_NoFix (AHF_HeadFixer):
         """
         Just does contact check with super(), does not fix
         """
+        start_new_thread(self.isFixedCheck)
         return super().fixMouse (resultsDict, settingsDict)
 
 
@@ -50,6 +59,3 @@ class AHF_HeadFixer_NoFix (AHF_HeadFixer):
     def hardwareTest (self):
         print (self.__class__.about())
         print ('There is no hardware test for HeadFixer_NoFix')
-
-    
-    

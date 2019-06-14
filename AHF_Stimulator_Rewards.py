@@ -47,9 +47,12 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
 
 
     def run(self, level = 0, resultsDict = {}, settingsDict = {}):
+        super().run()
         super().startVideo()
         self.rewardTimes = []
         for reward in range(self.task.Subjects.get(self.task.tag).get("Stimulator").get("nRewards")):
+            if not self.running:
+                break
             self.rewardTimes.append (time())
             self.rewarder.giveReward('task')
             sleep(self.task.Subjects.get(self.task.tag).get("Stimulator").get("rewardInterval"))
