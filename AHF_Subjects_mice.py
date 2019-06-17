@@ -45,7 +45,9 @@ class AHF_Subjects_mice (AHF_Subjects):
             loadConfigs = "database"
         elif tempInput [0] == 'p' or tempInput [0] == 'P':
             loadConfigs = 'provide_json'
-            jsonName = input('Chose a FILENAME. Your file will be automatically named: AHF_mice_FILENAME.json (place it in the working directory) Currently {:}' .format(jsonName))
+            response = input('Chose a FILENAME. Your file will be automatically named: AHF_mice_FILENAME.json (place it in the working directory) Currently {:}: ' .format(jsonName))
+            if response != '':
+                jsonName = response
         inChamberTimeLimit = starterDict.get ('inChamberTimeLimit',AHF_Subjects_mice.inChamberTimeLimitDefault)
         response = input('Enter in-Chamber duration limit, in minutes, before stopping head-fix trials, currently {:.2f}: '.format(inChamberTimeLimit/60))
         if response != '':
