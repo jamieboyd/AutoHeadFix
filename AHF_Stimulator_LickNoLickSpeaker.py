@@ -49,7 +49,8 @@ class AHF_Stimulator_LickNoLickSpeaker (AHF_Stimulator_LickNoLick):
     speakerFreq_def = 300
     speakerDuty_def = 0.8
     speakerOffForReward_def = 1.5   #time for consuming reward withot getting buzzed at
-    buzz_pulseProb_def = 0.5
+    buzz_pulseProb_def = 1
+    afterStimWitholdTime_def = 0.2
     
     def __init__ (self, configDict, rewarder, lickDetector,textfp):
         super().__init__(configDict, rewarder, lickDetector, textfp)
@@ -58,6 +59,7 @@ class AHF_Stimulator_LickNoLickSpeaker (AHF_Stimulator_LickNoLick):
         self.speakerFreq=float(self.configDict.get ('speaker_freq', AHF_Stimulator_LickNoLickSpeaker.speakerFreq_def))
         self.speakerDuty = float(self.configDict.get ('speaker_duty', AHF_Stimulator_LickNoLickSpeaker.speakerDuty_def))
         self.speakerOffForReward = float(self.configDict.get ('speaker_OffForReward', AHF_Stimulator_LickNoLickSpeaker.speakerOffForReward_def))
+        self.afterStimWitholdTime = float(self.configDict.get ('after_Stim_Withold_Time', AHF_Stimulator_LickNoLickSpeaker.afterStimWitholdTime_def))
         self.speaker=Infinite_train (PTSimpleGPIO.MODE_FREQ, self.speakerPin, self.speakerFreq, self.speakerDuty,  PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
         self.pulseDelay  = self.buzz_period - self.buzz_len
         self.pulseDuration = (self.buzz_period * self.buzz_num) - self.pulseDelay
@@ -117,18 +119,18 @@ class AHF_Stimulator_LickNoLickSpeaker (AHF_Stimulator_LickNoLick):
                 break
             # at this point, mouse has just witheld licking for lickWitholdTime
             self.lickWitholdTimes.append (lickWitholdRandom)
-            # Give a buzz and monitor for no licking in next 0.5 secs
+            # Give a buzz and monitor for no licking in next approx 0.25 secs (afterStimWitholdTime)
             self.buzzTimes.append (time())
-            afterBuzzEndTime= time() + 0.5
+            afterBuzzEndTime= time() + self.afterStimWitholdTime
             buzzLeadEnd = afterBuzzEndTime + self.buzz_lead
             if random() < self.buzz_pulseProb: # set up for pulses that get rewarded
                 trialType = 2
-                self.buzzer.do_train()
+                self.buzzer1.do_train()
             else:
                 trialType = 1
-                self.buzzer1.do_train()
-            # wait for licks - there shouldn't be any for 0.5 secods after start of train
-            anyLicks = self.lickDetector.waitForLick_Soft (0.5)
+                self.buzzer.do_train()
+            # wait for licks - there shouldn't be any for afterStimWitholdTime (approx 0.25 secods) after start of train
+            anyLicks = self.lickDetector.waitForLick_Soft (self.afterStimWitholdTime)
             if anyLicks > 0: # licked before 0.75 second after buzzer wait period
                 self.speaker.start_train()  # turn on speaker and start over
                 speakerIsOn = True
@@ -137,7 +139,7 @@ class AHF_Stimulator_LickNoLickSpeaker (AHF_Stimulator_LickNoLick):
                 else:
                     self.buzzTypes.append (-3)
                 continue
-            else: # animal waited for 0.75 seconds after start of buzzer
+            else: # animal waited for 0.25 seconds after start of buzzer
                 # wait for licks. Animal SHOULD lick for trialType = 2, SHOULD NOT lick for trialType = 1
                 anyLicks = self.lickDetector.waitForLick_Soft (self.buzz_lead)
                 if trialType == 2: # 

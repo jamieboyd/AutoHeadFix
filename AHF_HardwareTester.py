@@ -4,7 +4,7 @@
 
 import RPi.GPIO as GPIO
 from time import sleep
-from RFIDTagReader import RFIDTagReader
+from RFIDTagReader import TagReader
 from AHF_HeadFixer import AHF_HeadFixer
 from AHF_CageSet import AHF_CageSet
 from time import time
@@ -32,15 +32,16 @@ if __name__ == '__main__':
             tagReader = AHF_TagReader (cageSet.serialPort, True)
         except IOError:
             tagReader = None
-        htloop (cageSet, tagReader, headFixer)
+        htloop (cageSet, tagReader, headFixer, stimulator, expSettings)
 else:
-    def hardwareTester (cageSet, tagReader, headFixer):
+    def hardwareTester (cageSet, tagReader, headFixer, stimulator, expSettings):
         """
         Hardware Tester for Auto Head Fixing, allows you to verify the various hardware bits are working
         """
-        htloop (cageSet, tagReader, headFixer)
+        htloop (cageSet, tagReader, headFixer, stimulator, expSettings)
 
-def htloop (cageSet, tagReader, headFixer):
+
+def htloop (cageSet, tagReader, headFixer, stimulator, expSettings):
     """
     Presents a menu asking user to choose a bit of hardware to test, and runs the tests
 
@@ -70,12 +71,12 @@ def htloop (cageSet, tagReader, headFixer):
           noContactState = GPIO.HIGH
     try:
         while (True):
-            inputStr = input ('t=tagReader, r=reward solenoid, c=contact check, e= entry beam break, f=head Fixer, l=LED, h=sHow config, v= saVe config, q=quit:')
+            inputStr = input ('t=tagReader, r=reward solenoid, c=contact check, e= entry beam break, f=head Fixer, l=LED, s=stimulator tester, h=sHow config, v= saVe config, q=quit:')
             if inputStr == 't': # t for tagreader
                 if tagReader == None:
                     cageSet.serialPort = input ('First, set the tag reader serial port:')
                     try:
-                        tagReader = AHF_TagReader (cageSet.serialPort, True)
+                        tagReader = TagReader (cageSet.serialPort, True)
                         inputStr =  input ('Do you want to read a tag now?')
                         if inputStr[0] == 'n' or inputStr[0] == "N":
                             continue
@@ -99,7 +100,7 @@ def htloop (cageSet, tagReader, headFixer):
                         if inputStr == 'y' or inputStr == "Y":
                             cageSet.serialPort = input ('Enter New Serial Port:')
                             # remake tagReader and open serial port
-                            tagReader = AHF_TagReader (cageSet.serialPort, True)
+                            tagReader = TagReader (cageSet.serialPort, True)
                     else:
                         print ("Tag ID =", tagID)
                         # now check Tag-In-Range pin function
@@ -165,13 +166,13 @@ def htloop (cageSet, tagReader, headFixer):
                             cageSet.contactPUD='UP'
                     GPIO.setup (cageSet.contactPin, GPIO.IN, pull_up_down=getattr (GPIO, "PUD_" + cageSet.contactPUD))
                     if cageSet.contactPolarity =='RISING':
-                        contactEdge = GPIO.RISING 
+                        contactEdge = GPIO.RISING
                         noContactEdge = GPIO.FALLING
                         contactState = GPIO.HIGH
                         noContactState = GPIO.LOW
                     else:
                         contactEdge = GPIO.FALLING
-                        noContactEdge = GPIO.RISING 
+                        noContactEdge = GPIO.RISING
                         contactState = GPIO.LOW
                         noContactState = GPIO.HIGH
             elif inputStr == 'e': # beam break at enty
@@ -197,7 +198,7 @@ def htloop (cageSet, tagReader, headFixer):
                     if inputStr[0] == 'y' or inputStr[0] == "Y":
                         cageSet.entryBBpin= int (input ('Enter the GPIO pin connected to the tube entry IR beam-breaker:'))
                         GPIO.setup (cageSet.entryBBpin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-                
+
             elif inputStr == 'f': # head Fixer, run test from headFixer class
                 headFixer.test(cageSet)
             elif inputStr == 'l': # l for LED trigger

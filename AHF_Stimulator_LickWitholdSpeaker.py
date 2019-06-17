@@ -49,9 +49,9 @@ class AHF_Stimulator_LickWitholdSpeaker (AHF_Stimulator_LickNoLick):
     speakerFreq_def = 300
     speakerDuty_def = 0.8
     speakerOffForReward_def = 1.5   #time for consuming reward withot getting buzzed at
-    
-    def __init__ (self, configDict, rewarder, lickDetector,textfp):
-        super().__init__(configDict, rewarder, lickDetector, textfp)
+
+    def __init__ (self, cageSettings, configDict, rewarder, lickDetector,textfp):
+        super().__init__(cageSettings, configDict, rewarder, lickDetector, textfp)
         self.speakerPin=int(self.configDict.get ('speaker_pin', AHF_Stimulator_LickWitholdSpeaker.speakerPin_def))
         self.speakerFreq=float(self.configDict.get ('speaker_freq', AHF_Stimulator_LickWitholdSpeaker.speakerFreq_def))
         self.speakerDuty = float(self.configDict.get ('speaker_duty', AHF_Stimulator_LickWitholdSpeaker.speakerDuty_def))
@@ -81,7 +81,7 @@ class AHF_Stimulator_LickWitholdSpeaker (AHF_Stimulator_LickNoLick):
     def run(self):
         """
         every time lickWitholdtime passes with no licks, make a buzz then give a reward after buzz_lead time.
-        turn on speaker 
+        turn on speaker
         """
         self.buzzTimes = []
         self.buzzTypes = []
@@ -128,10 +128,75 @@ class AHF_Stimulator_LickWitholdSpeaker (AHF_Stimulator_LickNoLick):
         if speakerIsOn == True:
             self.speaker.stop_train()
 
+    def tester(self,expSettings):
+        #Tester function called from the hardwareTester. Includes Stimulator
+        #specific hardware tester.
+        while(True):
+            inputStr = input ('v = vib. motor, s= speaker, q= quit: ')
+            if inputStr == 's':
+                self.speaker.start_train()
+                sleep(3)
+                self.speaker.stop_train()
+            elif inputStr == 'v':
+                self.buzzer.do_train()
+            elif inputStr == 'q':
+                break
+
+    def inspect_mice(self,mice,cageSettings,expSettings):
+        #Inspect the mice array
+        print('MouseID\t\theadFixStyle\tstimType')
+        for mouse in mice.mouseArray:
+            headFixStyle = 'fix'
+            if mouse.headFixStyle == 1:
+                headFixStyle = 'loose'
+            elif mouse.headFixStyle == 2:
+                headFixStyle = 'nofix'
+            stimType = expSettings.stimulator[mouse.stimType][15:22]
+            print(str(mouse.tag)+'\t'+headFixStyle + '\t\t' + stimType)
+        while(True):
+            inputStr = input ('c= headFixStyle, s= stimType, q= quit: ')
+            if inputStr == 'c':
+                while(True):
+                    inputStr =  int(input ('Type the tagID of mouse to change headFixStyle:'))
+                    for mouse in mice.mouseArray:
+                        if mouse.tag == inputStr:
+                            inputStr = int(input('Change headFixStyle to:\n0: fix\n1: loose\n2: nofix\n'))
+                            if inputStr == 0:
+                                mouse.headFixStyle = 0
+                            elif inputStr == 1:
+                                mouse.headFixStyle = 1
+                            elif inputStr == 2:
+                                mouse.headFixStyle = 2
+
+                    inputStr = input('Change value of another mouse?')
+                    if inputStr[0] == 'y' or inputStr[0] == "Y":
+                        continue
+                    else:
+                        break
+
+            elif inputStr == 's':
+                while(True):
+                    inputStr =  int(input ('Type the tagID of mouse to change stimType:'))
+                    for mouse in mice.mouseArray:
+                        if mouse.tag == inputStr:
+                            print('Following stimTypes are available:')
+                            for i,j in enumerate(expSettings.stimulator):
+                                print(str(i)+': '+j[15:])
+                            inputStr = int(input('Change stimType to:'))
+                            mouse.stimType = inputStr
+
+                    inputStr = input('Change value of another mouse?')
+                    if inputStr[0] == 'y' or inputStr[0] == "Y":
+                        continue
+                    else:
+                        break
+                    
+            elif inputStr == 'q':
+                break
 
 
     def logfile (self):
-        
+
         rewardStr = 'reward'
         buzz2Str = 'Buzz:N=' + str (self.buzz_num) + ',length=' + '{:.2f}'.format(self.buzz_len) + ',period=' + '{:.2f}'.format (self.buzz_period)
         buzz1Str = 'Buzz:N=1,length=' + '{:.2f}'.format (self.pulseDuration) + ',period=' + '{:.2f}'.format (self.pulseDuration + self.pulseDelay)
@@ -154,10 +219,10 @@ class AHF_Stimulator_LickWitholdSpeaker (AHF_Stimulator_LickNoLick):
                 buzzStr = buzz1Str + ',GO=-3'
             elif self.buzzTypes [i] == -4:
                 buzzStr = buzz1Str + ',GO=-4'
-            
+
             outPutStr = mStr + '\t' + datetime.fromtimestamp (int (self.buzzTimes [i])).isoformat (' ') + '\t' + lickWitholdStr + buzzStr
             print (outPutStr)
-            
+
         if self.textfp != None:
             iReward =0
             for i in range (0, len (self.buzzTypes)):

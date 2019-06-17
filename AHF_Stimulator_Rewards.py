@@ -10,8 +10,8 @@ from datetime import datetime
 
 class AHF_Stimulator_Rewards (AHF_Stimulator):
     
-    def __init__ (self, configDict, rewarder, lickDetector,textfp):
-        super().__init__(configDict, rewarder, lickDetector, textfp)
+    def __init__ (self, cageSettings, expSettings, rewarder, lickDetector):
+        super().__init__(cageSettings, expSettings, rewarder, lickDetector)
         self.setup()
 
     def setup (self):
@@ -36,6 +36,24 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
             self.rewarder.giveReward('task')
             sleep(timeInterval)
         self.mouse.headFixRewards += self.nRewards
+
+
+    def tester(self,expSettings):
+        #Tester function called from the hardwareTester. Includes Stimulator
+        #specific hardware tester.
+        while(True):
+            inputStr = input ('a= camera/LED, q= quit: ')
+            if inputStr == 'a':
+                #Display preview and turn on LED
+                self.camera.start_preview(fullscreen = False, window = tuple(self.camera.AHFpreview))
+                GPIO.output(self.cageSettings.ledPin, GPIO.HIGH)
+                GPIO.output(self.cageSettings.led2Pin, GPIO.HIGH)
+                input ('adjust camera/LED: Press any key to quit ')
+                self.camera.stop_preview()
+                GPIO.output(self.cageSettings.ledPin, GPIO.LOW)
+                GPIO.output(self.cageSettings.led2Pin, GPIO.LOW)
+            elif inputStr == 'q':
+                break
         
     def logfile (self):
         event = '\treward'

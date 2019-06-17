@@ -90,7 +90,7 @@ class AHF_Stimulator_LickNoLickDisc (AHF_Stimulator_LickNoLick):
                 buzzLeadEnd = time() + self.buzz_lead
                 self.buzzTimes.append (time())
                 if random() < self.buzz_pulseProb: # set up for pulses that get rewarded
-                    self.buzzer.do_train()
+                    self.buzzer1.do_train()
                     anyLicks = self.lickDetector.waitForLick_Soft (self.buzz_lead, startFromZero=True)
                     if anyLicks > 0: # licked when was supposed to lick
                         print ('licked when was supposed to lick')

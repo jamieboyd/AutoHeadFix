@@ -1,6 +1,10 @@
 #! /usr/bin/python
 #-*-coding: utf-8 -*-
 
+"""
+AHF_Settings provides functions to read, edit, and save settings for the AutoheadFix program
+"""
+
 import os
 import sys
 import json
@@ -204,7 +208,7 @@ class AHF_Settings (object):
         """
         Allows user to edit experiment settings, including stimulator settings, but not camera settings
 
-        user can either change the stimulaotr, or reconfigure it, but not both
+        user can either change the stimulator, or reconfigure it, but not both
         :returns: code for mods - bit 0 = 1 is set if stimulator config is changed, bit 1 =2 is set if stimulator is changed
         """
         #
@@ -262,8 +266,8 @@ class AHF_Settings (object):
                         self.stimDict.update ({key : newValue})
                         break
                     i+=1
-            else:
-                print("Key hasn't been added to the editor... Please contact Dr. Yuri Nater for help.")
+
+                print("Key hasn't been added to the editor....")
         return editVal
 
 

@@ -49,8 +49,8 @@ class Mouse:
             self.entranceRewards +=1
         elif rewardName == 'task':
             self.headFixRewards += 1
-            
-        
+
+
     def show (self):
         """
         Prints all the data for this mouse, including any stimResults info
@@ -146,12 +146,12 @@ class Mice:
         """
         for mouse in self.mouseArray:
             mouse.clear()
- 
+
 
     def getMouseFromTag (self, tag):
         """
         Finds the mouse with the given tag number from the array of mice
-        
+
         :param tag: the tag ID of the  mouse to find
         :returns: the mouse object with the given tag
         """

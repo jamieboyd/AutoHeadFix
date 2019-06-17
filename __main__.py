@@ -4,35 +4,32 @@
 # local files, part of AutoHeadFix
 from AHF_Settings import AHF_Settings
 from AHF_CageSet import AHF_CageSet
-from AHF_Rewarder import AHF_Rewarder
 from AHF_Camera import AHF_Camera
-from RFIDTagReader import RFIDTagReader
 from AHF_Notifier import AHF_Notifier
-from AHF_UDPTrig import AHF_UDPTrig
+from RFIDTagReader import TagReader
 from AHF_Stimulator import AHF_Stimulator
+from AHF_UDPTrig import AHF_UDPTrig
+from AHF_Rewarder import AHF_Rewarder
 from AHF_HardwareTester import hardwareTester
-from AHF_ValveControl import valveControl
 from AHF_Mouse import Mouse, Mice
 from AHF_HeadFixer import AHF_HeadFixer
 from AHF_LickDetector import AHF_LickDetector, Simple_Logger
-# Python modules - should all be present in default distribution
-from os import path
-from os import makedirs
-from os import chown
+
+#Standard Python modules
+from os import path, makedirs, chown
 from pwd import getpwnam
 from grp import getgrnam
-from time import time, localtime,timezone, sleep
-from datetime import datetime, timedelta
+from time import time, localtime, timezone, sleep
+from datetime import datetime,timedelta
 from random import random
-from sys import argv
-#library import - need to have RPi.GPIO installed, but should be standard on Raspbian Woody or Jessie
+from sys import argv, exit
 import RPi.GPIO as GPIO
 
 # constants used for calculating when to start a new day
 # we put each day's movies and text files in a separate folder, and keep separate stats
 KSECSPERDAY = 86400
 KSECSPERHOUR = 3600
-KDAYSTARTHOUR =7 # when we start a new day, in 24 hr format, so 7 is 7 AM and 19 is 7 PM
+KDAYSTARTHOUR =13 # when we start a new day, in 24 hr format, so 7 is 7 AM and 19 is 7 PM
 
 """
 constant for time outs when waiting on an event - instead of waiting for ever, and missing, e.g., keyboard event,
@@ -40,15 +37,6 @@ or callling sleep and maybe missing the thing we were waiting for, we loop using
 """
 kTIMEOUTmS = 50
 
-gTubePanicTime=0
-gTubeMaxTime = 1
-def entryBBCallback (channel):
-    global gTubePanicTime # the global indicates that it is the same variable declared above and also used by main loop
-    global gTubeMaxTime
-    if GPIO.input (channel) == GPIO.LOW: # mouse just entered
-        gTubePanicTime = time () + gTubeMaxTime
-    else:  # mouse just left
-        gTubePanicTime = time () + 25920000 # a month from now. 
 
 
 def main():
@@ -89,13 +77,13 @@ def main():
         GPIO.setup (cageSettings.tirPin, GPIO.IN)  # Tag-in-range output from RFID tatg reader
         GPIO.setup (cageSettings.contactPin, GPIO.IN, pull_up_down=getattr (GPIO, "PUD_" + cageSettings.contactPUD))
         if cageSettings.contactPolarity == 'RISING':
-            expSettings.contactEdge = GPIO.RISING 
+            expSettings.contactEdge = GPIO.RISING
             expSettings.noContactEdge = GPIO.FALLING
             expSettings.contactState = GPIO.HIGH
             expSettings.noContactState = GPIO.LOW
         else:
             expSettings.contactEdge = GPIO.FALLING
-            expSettings.noContactEdge = GPIO.RISING 
+            expSettings.noContactEdge = GPIO.RISING
             expSettings.contactState = GPIO.LOW
             expSettings.noContactState = GPIO.HIGH
         # make head fixer - does its own GPIO initialization from info in cageSettings
@@ -110,7 +98,7 @@ def main():
         else:
             notifier = None
         # make RFID reader
-        tagReader = RFIDTagReader(cageSettings.serialPort, False)
+        tagReader = TagReader(cageSettings.serialPort, False, None)
         # configure camera
         camera = AHF_Camera(expSettings.camParamsDict)
         # make UDP Trigger
@@ -125,21 +113,13 @@ def main():
         sleep(1)
         lickDetector.start_logging ()
         # make stimulator
-        stimulator = AHF_Stimulator.get_class (expSettings.stimulator)(expSettings.stimDict, rewarder, lickDetector, expSettings.logFP)
+        stimulator = AHF_Stimulator.get_class (expSettings.stimulator)(cageSettings, expSettings, rewarder, lickDetector)
         expSettings.stimDict = stimulator.configDict
-        # Entry beam breaker
-        if cageSettings.hasEntryBB==True:
-            global gTubePanicTime
-            global gTubeMaxTime
-            GPIO.setup (cageSettings.entryBBpin, GPIO.IN, GPIO.PUD_UP)
-            GPIO.add_event_detect (cageSettings.entryBBpin, GPIO.BOTH, entryBBCallback)
-            #GPIO.add_event_callback (cageSettings.entryBBpin, entryBBCallback)
-            gTubePanicTime = time () + 25920000 # a month from now.
-            gTubeMaxTime = expSettings.inChamberTimeLimit
+
     except Exception as anError:
         print ('Unexpected error starting AutoHeadFix:', str (anError))
         raise anError
-        return
+        exit(0)
     try:
         print ('Waiting for a mouse...')
         while True: #start main loop
@@ -169,7 +149,7 @@ def main():
                         while GPIO.input (cageSettings.tirPin)== GPIO.HIGH and time() < (entryTime + expSettings.entryRewardDelay):
                             GPIO.wait_for_edge (cageSettings.contactPin, expSettings.contactEdge, timeout= kTIMEOUTmS)
                             if (GPIO.input (cageSettings.contactPin)== expSettings.contactState):
-                                runTrial (thisMouse, expSettings, cageSettings, camera, rewarder, headFixer,stimulator, UDPTrigger)
+                                runTrial (thisMouse, expSettings, cageSettings, rewarder, headFixer,stimulator, UDPTrigger)
                                 giveEntranceReward = False
                                 break
                         if (GPIO.input (cageSettings.tirPin)== GPIO.HIGH) and giveEntranceReward == True:
@@ -182,7 +162,7 @@ def main():
                         if (GPIO.input (cageSettings.contactPin)== expSettings.noContactState):
                             GPIO.wait_for_edge (cageSettings.contactPin, expSettings.contactEdge, timeout= kTIMEOUTmS)
                         if (GPIO.input (cageSettings.contactPin)== expSettings.contactState):
-                            runTrial (thisMouse, expSettings, cageSettings, camera, rewarder, headFixer, stimulator, UDPTrigger)
+                            runTrial (thisMouse, expSettings, cageSettings, rewarder, headFixer, stimulator, UDPTrigger)
                             expSettings.doHeadFix = expSettings.propHeadFix > random() # set doHeadFix for next contact
                     # either mouse left the chamber or has been in chamber too long
                     if GPIO.input (cageSettings.tirPin)== GPIO.HIGH and time () > entryTime + expSettings.inChamberTimeLimit:
@@ -222,20 +202,7 @@ def main():
                         lickDetector.__init__((0,1),26,simpleLogger)
                         lickDetector.start_logging()
                     print ('Waiting for a mouse...')
-                else:
-                    # check for entry beam break while idling between trials
-                    if cageSettings.hasEntryBB==True and time() > gTubePanicTime:
-                        print ('Some one has been in the entrance of this tube for too long')
-                        # explictly turn off pistons, though they should be off 
-                        headFixer.releaseMouse()
-                        if expSettings.hasTextMsg == True:
-                            BBentryTime = gTubePanicTime - gTubeMaxTime
-                            notifier.notify (0, BBentryTime,  True) # we don't have an RFID for this mouse, so use 0
-                        # wait for mouse to leave chamber
-                        while time() > gTubePanicTime:
-                            sleep (kTIMEOUTmS/1000)
-                        if expSettings.hasTextMsg == True:
-                            notifier.notify (0, (time() - BBentryTime), False)
+
             except KeyboardInterrupt:
                 GPIO.output(cageSettings.ledPin, GPIO.LOW)
                 headFixer.releaseMouse()
@@ -257,19 +224,19 @@ def main():
                             GPIO.add_event_detect (cageSettings.entryBBpin, GPIO.BOTH, entryBBCallback)
                         break
                     elif event == 'q' or event == 'Q':
-                        return
+                        exit(0)
                     elif event == 'v' or event== "V":
                         valveControl (cageSettings)
                     elif event == 'h' or event == 'H':
-                        hardwareTester(cageSettings, tagReader, headFixer)
+                        hardwareTester(cageSettings, tagReader, headFixer, stimulator, expSettings)
                         if cageSettings.contactPolarity == 'RISING':
-                            expSettings.contactEdge = GPIO.RISING 
+                            expSettings.contactEdge = GPIO.RISING
                             expSettings.noContactEdge = GPIO.FALLING
                             expSettings.contactState = GPIO.HIGH
                             expSettings.noContactState = GPIO.LOW
                         else:
                             expSettings.contactEdge = GPIO.FALLING
-                            expSettings.noContactEdge = GPIO.RISING 
+                            expSettings.noContactEdge = GPIO.RISING
                             expSettings.contactState = GPIO.LOW
                             expSettings.noContactState = GPIO.HIGH
                     elif event == 'c' or event == 'C':
@@ -422,7 +389,7 @@ def makeLogFile (expSettings, cageSettings):
         writeToLogFile (expSettings.logFP, None, 'SeshStart')
     except Exception as e:
             print ("Error maing log file\n", str(e))
-            
+
 def writeToLogFile(logFP, mouseObj, event):
     """
     Writes the time and type of each event to a text log file, and also to the shell
@@ -430,7 +397,7 @@ def writeToLogFile(logFP, mouseObj, event):
     Format of the output string: tag     time_epoch or datetime       event
     The computer-parsable time_epoch is printed to the log file and user-friendly datetime is printed to the shell
     :param logFP: file pointer to the log file
-    :param mouseObj: the mouse for which the event pertains, 
+    :param mouseObj: the mouse for which the event pertains,
     :param event: the type of event to be printed, entry, exit, reward, etc.
     returns: nothing
     """
@@ -450,7 +417,6 @@ def writeToLogFile(logFP, mouseObj, event):
 def makeQuickStatsFile (expSettings, cageSettings, mice):
     """
     makes a new quickStats file for today, or opens an existing file to append.
-    
     QuickStats file contains daily totals of rewards and headFixes for each mouse
     :param expSettings: experiment-specific settings, everything you need to know is stored in this object
     :param cageSettings: settings that are expected to stay the same for each setup, including hardware pin-outs for GPIO
@@ -473,11 +439,12 @@ def makeQuickStatsFile (expSettings, cageSettings, mice):
     except Exception as e:
         print ("Error making quickStats file\n", str (e))
 
-def updateStats (statsFP, mice, mouse):
-    """ Updates the quick stats text file after every exit, mostly for the benefit of folks logged in remotely
+def updateStats (statsFP, mice, mouse=None):
+    """
+    Updates the quick stats text file after every exit, mostly for the benefit of folks logged in remotely
     :param statsFP: file pointer to the stats file
     :param mice: the array of mouse objects
-    :param mouse: the mouse which just left the chamber 
+    :param mouse: the mouse which just left the chamber
     returns:nothing
     """
     try:

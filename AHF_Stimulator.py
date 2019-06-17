@@ -12,27 +12,27 @@ from time import time, sleep
 from datetime import datetime
 
 class AHF_Stimulator (object):
-    
+
     """
     Stimulator does all stimulation and reward during a head fix task
-    
     All events and their timings in a head fix, including rewards, are controlled by a Stimulator.
- 
     """
-    
-    def __init__ (self, configDict, rewarder, lickDetector, textfp):
+
+    def __init__ (self, cageSettings, expSettings, rewarder, lickDetector):
         """
         The Stimulator class is inited with: a config dictionary of settings; the same rewarder
         object used to give entry rewards; and a file pointer to the log file
         """
         self.rewarder = rewarder
-        self.textfp = textfp
+        self.textfp = expSettings.logFP
         self.lickDetector = lickDetector
+        self.cageSettings = cageSettings
+        self.expSettings = expSettings
         self.mouse = None
-        if configDict == None:
+        if expSettings.stimDict == None:
             self.config_from_user ()
         else:
-            self.configDict = configDict
+            self.configDict = expSettings.stimDict
         self.setup()
 
     def setup (self):
@@ -51,7 +51,6 @@ class AHF_Stimulator (object):
     def config_from_user (self):
         """
             makes or edits the dictionary object that holds settings for this  stimulator
-        
             Gets info from user with the input function, which returns strings
             so your sublass methods will need to use int() or float() to convert values as appropriate
         """
@@ -70,9 +69,8 @@ class AHF_Stimulator (object):
             else:
                 value = input ('Enter a value for ' + key + ':')
                 self.configDict.update({key : value})
-    
 
-    
+
     def configStim (self, mouse):
         """
         Called before running each head fix trial, stimulator decides what to do and configures itself
@@ -88,7 +86,7 @@ class AHF_Stimulator (object):
 
         self.mouse = mouse
         return 'stim'
-         
+
 
     def run (self):
         """
@@ -106,7 +104,7 @@ class AHF_Stimulator (object):
 
            Or you may wish to override with pass and log from the run method
         """
-        
+
         event = 'stim'
         mStr = '{:013}'.format(self.mouse.tag) + '\t'
         outPutStr = mStr + datetime.fromtimestamp (int (time())).isoformat (' ') + '\t' + event
@@ -115,14 +113,14 @@ class AHF_Stimulator (object):
             outPutStr = mStr + '{:.2f}'.format (time ()) + '\t' + event
             self.textfp.write(outPutStr + '\n')
             self.textfp.flush()
-            
+
 
     def nextDay (self, newFP):
         """
             Called when the next day starts. The stimulator is given the new log file pointer. Can do other things as needed
             :param newFP: the file pointer for the new day's log file
         """
-        self.textfp = newFP 
+        self.textfp = newFP
 
 
     def quitting (self):
@@ -130,6 +128,19 @@ class AHF_Stimulator (object):
             Called before AutoHeadFix exits. Gives stimulator chance to do any needed cleanup
 
             A stimulator may, e.g., open files and wish to close them before exiting, or use hardware that needs to be cleaned up
+        """
+        pass
+
+    def tester (self,expSettings):
+        """
+            Tester function called from the hardwareTester. Includes Stimulator
+            specific hardware tester.
+        """
+        pass
+
+    def inspect_mice (self,mice,cageSettings,expSettings):
+        """
+            Helper function to show stimulator specific mouse data.
         """
         pass
 
@@ -149,7 +160,6 @@ class AHF_Stimulator (object):
     def get_stimulator_from_user ():
         """
         Static method that trawls through current folder looking for stimulator class python files
-        
         Allows user to choose from the list of files found. Files are recognized by names starting
         with 'AHF_Stimulator_' and ending with '.py'
         Raises: FileNotFoundError if no stimulator class files found
@@ -187,7 +197,6 @@ class AHF_Stimulator (object):
     def dict_from_user (stimDict):
         """
             static method that makes or edits a dictionary object that holds settings for a stimulator
-        
             configure gets info from user with the input function, which returns strings
             so your sublass methods will need to use int() or float() to convert values as appropriate
         """

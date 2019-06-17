@@ -36,10 +36,10 @@ class AHF_Stimulator_LickNoLick (AHF_Stimulator):
     buzz_len_def=0.1
     buzz_period_def =0.2
     buzz_lead_def = 1
-    
 
-    def __init__ (self, configDict, rewarder, lickDetector,textfp):
-        super().__init__(configDict, rewarder, lickDetector, textfp)
+
+    def __init__ (self, cageSettings, expSettings, rewarder, lickDetector):
+        super().__init__(cageSettings, expSettings, rewarder, lickDetector)
         self.headFixTime = float (self.configDict.get ('headFixTime', AHF_Stimulator_LickNoLick.headFixTime_def))
         self.lickWitholdTime = float (self.configDict.get ('lickWitholdTime', AHF_Stimulator_LickNoLick.lickWitholdTime_def))
         self.buzz_pin = int(self.configDict.get ('buzz_pin', AHF_Stimulator_LickNoLick.buzz_pin_def))
@@ -108,5 +108,3 @@ class AHF_Stimulator_LickNoLick (AHF_Stimulator):
                 outPutStr = mStr + '\t'  + '{:.2f}'.format (self.rewardTimes [i]) + '\t'  + rewardStr + '\t' +  datetime.fromtimestamp (int (self.rewardTimes [i])).isoformat (' ') + '\n'
                 self.textfp.write(outPutStr)
             self.textfp.flush()
-            
-        
