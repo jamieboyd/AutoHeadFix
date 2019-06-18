@@ -2,6 +2,7 @@
 #-*-coding: utf-8 -*-
 from abc import ABCMeta, abstractmethod
 import os
+import inspect
 
 class AHF_HeadFixer(metaclass = ABCMeta):
     #################################################################################
@@ -15,11 +16,15 @@ class AHF_HeadFixer(metaclass = ABCMeta):
         """
         Imports a module from a fileName (stripped of the .py) and returns the class
 
-        Assumes the class is named the same as the module
+        Assumes the class is named the same as the module. Returns none 
         """
-        module = __import__(fileName)
-        return getattr(module, fileName)
-
+        try:
+            module = __import__(fileName)
+            return getattr(module, fileName)
+        except ImportError as e:
+            print ('Could not import module {}: {}'.format(fileName, str(e)))
+            return None
+        
 
     @staticmethod
     def get_HeadFixer_from_user ():
@@ -31,33 +36,44 @@ class AHF_HeadFixer(metaclass = ABCMeta):
         Raises: FileNotFoundError if no stimulator class files found
         """
         iFile=0
-        files = ''
+        fileList = []
+        startlen = 14
+        endlen =3
         for f in os.listdir('.'):
             if f.startswith ('AHF_HeadFixer_') and f.endswith ('.py'):
-                if iFile > 0:
-                    files += ';'
-                files += f
-                iFile += 1
+                fname = f[startlen :-endlen]
+                try:
+                    moduleObj=__import__ (f.rstrip('.py'))
+                    #print ('module=' + str (moduleObj))
+                    classObj = getattr(moduleObj, moduleObj.__name__)
+                    #print (classObj)
+                    isAbstractClass = inspect.isabstract (classObj)
+                    if isAbstractClass == False:
+                        fileList.append (fname)
+                        iFile += 1
+                except ImportError as e:
+                    print ('Could not import module {}: {}'.format(f, str(e)))
+                    continue
         if iFile == 0:
             print ('Could not find an AHF_HeadFixer_ file in the current or enclosing directory')
             raise FileNotFoundError
         else:
             if iFile == 1:
-                print ('Head Fixer file found: ' + stimFile)
-                stimFile =  files.split('.')[0]
+                ClassFile =  fileList[0]
+                print ('One  Head Fixer file found: {}'.format (ClassFile))
+                return ClassFile
             else:
-                inputStr = '\nEnter a number from 0 to ' + str (iFile -1) + ' to Choose a HeadFixer class:\n'
+                inputStr = '\nEnter a number from 1 to {} to choose a Head Fixer file:\n'.format(iFile)
+
                 ii=0
-                for file in files.split(';'):
-                    inputStr += str (ii) + ': ' + file + '\n'
+                for file in fileList:
+                    inputStr += str (ii + 1) + ': ' + file + '\n'
                     ii +=1
                 inputStr += ':'
-                stimFileNum = -1
-                while stimFileNum < 0 or stimFileNum > (iFile -1):
-                    stimFileNum =  int(input (inputStr))
-                stimFile =  files.split(';')[stimFileNum]
-                stimFile =  stimFile.split('.')[0]
-            return stimFile
+                classNum = -2
+                while classNum < 1 or classNum > iFile:
+                    classNum =  int(input (inputStr))
+                return fileList[classNum -1]
 
     ##################################################################################
     #abstact methods each headfixer class must implement

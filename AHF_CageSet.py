@@ -18,7 +18,7 @@ class AHF_CageSet (object):
        :headFixer: str - name of class used for HeadFixing, can be pistons, or servo-motor with pi PWM or AdaFruit I2C PWM driver
        :pistons Pin: int - connected to solenoids that drive pistons for head fixing, (only if using pistons)
        :Servo Address: int- servo address of AdaFruit I2C PWM driver (only if using adafruit servo)
-       : PWM CHannel: int- PWM channel (0 or 1) if using pi PWM 
+       :PWM CHannel: int- PWM channel (0 or 1) if using pi PWM 
        :servoReleased: int - position of server to release mouse, (only if using adafruit servo)
        :servoFixed: int - position of servo to fix mouse (only if using servo)
        :rewardPin: int - connected to solenoid for delivering water reward
@@ -28,7 +28,6 @@ class AHF_CageSet (object):
        :ledPin: int - output pin for the Blue LED that illuminates the brain
        :serialPort: str - "/dev/ttyUSB0" for USB with sparkFun breakout or "/dev/ttyAMA0" for built-in
        :dataPath: str - path to base folder, possibly on removable media, where data will be saved in created subfolders
-       :mouseConfigPath: str - path to a folder where mouse configurations are stored. json text file, named by RFID tag, mouse_xxxxxx.jsn
     The settings are saved between program runs in a json-styled text config file, AHFconfig.jsn, in a human readable and editable key=value form.
 """
 
@@ -36,19 +35,21 @@ class AHF_CageSet (object):
         """
         Makes a new AHF_CageSet object by loading from AHFconfig.jsn or by querying the user
 
-        Either reads a dictionary from a config file, AHFconfig.jsn, in the same directory in
-        which the program is run, or if the file is not found, it querries the user for settings and then writes a new file.
+        Either reads a dictionary from a config file, AHFconfig.jsn, in the same directory in which the program is run,
+        or if the file is not found, it querries the user for settings and then writes a new file.
 
         """
         try:
             with open ('AHFconfig.jsn', 'r') as fp:
                 data = fp.read()
                 data= data.replace('\n', ",")
+                print (data)
                 configDict = json.loads(data)
                 fp.close()
                 self.cageID = configDict.get('Cage ID')
                 self.headFixer = configDict.get('Head Fixer')
-                AHF_HeadFixer.get_class (self.headFixer).configDict_read (self, configDict)
+                headFixerClass = AHF_HeadFixer.get_class (self.headFixer)
+                headFixerClass.configDict_read (self, configDict)
                 self.rewardPin = int(configDict.get('Reward Pin'))
                 self.tirPin = int(configDict.get('Tag In Range Pin'))
                 self.contactPin = int (configDict.get ('Contact Pin'))
@@ -57,7 +58,6 @@ class AHF_CageSet (object):
                 self.ledPin =  int (configDict.get ('LED Pin'))
                 self.serialPort = configDict.get ('Serial Port')
                 self.dataPath =configDict.get ('Path to Save Data')
-                self.mouseConfigPath = configDict.get ('Mouse Config Path')
         except (TypeError, IOError) as e:
             #we will make a file if we didn't find it, or if it was incomplete
             print ('Unable to open base configuration file, AHFconfig.jsn, let\'s make a new one.\n')
@@ -104,9 +104,9 @@ class AHF_CageSet (object):
         AHF_HeadFixer.get_class (self.headFixer).configDict_set (self, jsonDict)
         jsonDict.update ({'Reward Pin':self.rewardPin, 'Tag In Range Pin':self.tirPin, 'Contact Pin':self.contactPin})
         jsonDict.update ({'Contact Polarity':self.contactPolarity, 'Contact Pull Up Down':self.contactPUD})
-        jsonDict.update ({'LED Pin' : self.ledPin, 'Serial Port' : self.serialPort, 'Path to Save Data':self.dataPath, 'Mouse Config Path':self.mouseConfigPath})
+        jsonDict.update ({'LED Pin' : self.ledPin, 'Serial Port' : self.serialPort, 'Path to Save Data':self.dataPath})
         with open ('AHFconfig.jsn', 'w') as fp:
-            fp.write (json.dumps (jsonDict))
+            fp.write (json.dumps (jsonDict, separators = ('\n', ':'), sort_keys = True))
             fp.close ()
             uid = pwd.getpwnam ('pi').pw_uid
             gid = grp.getgrnam ('pi').gr_gid

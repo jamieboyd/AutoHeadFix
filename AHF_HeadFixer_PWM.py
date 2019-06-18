@@ -1,31 +1,27 @@
 #! /usr/bin/python3
 #-*-coding: utf-8 -*-
 
+from abc import ABCMeta, abstractmethod
 from AHF_HeadFixer import AHF_HeadFixer
 from AHF_CageSet import AHF_CageSet
-from PTPWM import PTPWM, PWM_simple
+from PTPWM import PTPWM, PTPWMsimp
 from time import sleep
 
-class AHF_HeadFixer_PWM (AHF_HeadFixer):
+class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
 
     def __init__(self, cageSet):
-        PTPWM.map_peripherals()
-        PTPWM.set_clock (100, 4096)
-        self.pwm =  PWM_simple(cageSet.pwmChan, PTPWM.PWM_MARK_SPACE, 4096)
         self.servoReleasedPosition = cageSet.servoReleasedPosition
         self.servoFixedPosition = cageSet.servoFixedPosition
-        self.pwm.set_PWM (self.servoReleasedPosition)
-        self.pwm.set_enable (1)
-        self.releaseMouse()
+
+    @abstractmethod
+    def set_value (self):
+        pass 
 
     def fixMouse(self):
-        self.pwm.set_enable (1)
-        self.pwm.set_PWM (self.servoFixedPosition)
+        self.pwm.set_value (self.servoFixedPosition)
 
     def releaseMouse(self):
-        self.pwm.set_PWM (self.servoReleasedPosition)
-        #sleep (0.5)
-        #self.pwm.set_enable (0)
+        self.pwm.set_value (self.servoReleasedPosition)
 
     @staticmethod
     def configDict_read (cageSet,configDict):
@@ -54,6 +50,7 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer):
         return rStr
     
 
+    
     def test (self, cageSet):
         print ('PWM moving to Head-Fixed position for 2 seconds')
         self.fixMouse()

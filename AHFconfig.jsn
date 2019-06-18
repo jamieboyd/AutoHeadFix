@@ -1,1 +1,13 @@
-{"Contact Pull Up Down": "UP", "Mouse Config Path": "/home/pi/Documents/testMice/", "Head Fixer": "AHF_HeadFixer_ServoDriver", "Contact Polarity": "FALLING", "Serial Port": "/dev/serial0", "Reward Pin": 13, "Servo Address": 64, "Fixed Servo Position": 600, "Contact Pin": 12, "Path to Save Data": "/media/pi/LPDTv2/testcage/", "Cage ID": "test2", "Tag In Range Pin": 21, "Released Servo Position": 300, "LED Pin": 22}
+{"Cage ID":"cage1"
+"Contact Pin":21
+"Contact Polarity":"FALLING"
+"Contact Pull Up Down":"UP"
+"Fixed Servo Position":700
+"Head Fixer":"AHF_HeadFixer_PWM"
+"LED Pin":22
+"PWM Channel":1
+"Path to Save Data":"/home/pi/Documents/"
+"Released Servo Position":300
+"Reward Pin":13
+"Serial Port":"/dev/serial0"
+"Tag In Range Pin":12}

@@ -10,11 +10,11 @@ class AHF_HeadFixer_PWM_Pi (AHF_HeadFixer_PWM):
 
     def __init__(self, cageSet):
         super().__init__(cageSet)
-        PTPWM.set_clock (90, 4096)
-        self.pwm =  PWM_simple(cageSet.pwmChan, PTPWM.PWM_MARK_SPACE, 4096)
+        self.pwmChan =  cageSet.pwmChan
+        self.pwm = PTPWMsimp (100, 4096)
+        self.pwm.add_channel (self.pwmChan, PTPWM.PWM_MARK_SPACE,0,0)
+        self.pwm.set_able (1, self.pwmChan)
         self.pwm.set_PWM (self.servoReleasedPosition)
-        self.pwm.set_enable (1)
-        
 
     def setPWM (self, servoPosition):
         self.pwm.set_PWM (servoPosition)
