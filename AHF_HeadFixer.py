@@ -5,19 +5,23 @@ import os
 import inspect
 
 class AHF_HeadFixer(metaclass = ABCMeta):
-    #################################################################################
-    # boolean for settability of headFixing levels, default is False. Can be used for incremental learning
-    hasLevels = False
+    """
+    Abstract base class for Head Fix methods, as several exist and we may wish to choose between them at run time
+    """
+    hasLevels = False # boolean for settability of headFixing levels, default is False. Can be used for incremental learning
     
-    ##################################################################################
-    # Static methods for base class for getting class names and importing classes
     @staticmethod
     def get_class(fileName):
+        
         """
-        Imports a module from a fileName (stripped of the .py) and returns the class
+        static method that imports a module from a fileName (stripped of the .py) and returns the class, or None if module could not be loaded
 
-        Assumes the class is named the same as the module. Returns none 
+        Assumes the class is named the same as the module.
         """
+        if fileName.endswith ('.py'):
+            fileName = fileName.rstrip('.py')
+        if not fileName.startswith ('AHF_HeadFixer_'):
+            fileName = 'AHF_HeadFixer_' + fileName
         try:
             module = __import__(fileName)
             return getattr(module, fileName)
@@ -29,11 +33,12 @@ class AHF_HeadFixer(metaclass = ABCMeta):
     @staticmethod
     def get_HeadFixer_from_user ():
         """
-        Static method that trawls through current folder looking for HeadFixer class python files
+        Static method that trawls through current folder looking for HeadFixer class python files from which user chooses one
         
         Allows user to choose from the list of files found. Files are recognized by names starting
         with 'AHF_HeadFixer_' and ending with '.py'
         Raises: FileNotFoundError if no stimulator class files found
+        Returns: name of the file the user chose, stripped of AHF_HeadFixer and .py
         """
         iFile=0
         fileList = []
@@ -161,3 +166,12 @@ class AHF_HeadFixer(metaclass = ABCMeta):
         pass
         
     
+if __name__ == "__main__":
+    from time import sleep
+    from AHF_CageSet import AHF_CageSet
+    from AHF_HeadFixer import AHF_HeadFixer
+    cageSettings = AHF_CageSet ()
+    cageSettings.edit()
+    headFixer=AHF_HeadFixer.get_class (cageSettings.headFixer) (cageSettings)
+    headFixer.test(cageSettings)
+    cageSettings.save()

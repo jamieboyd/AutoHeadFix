@@ -9,6 +9,7 @@ class AHF_HeadFixer_Pistons(AHF_HeadFixer):
 
     def __init__(self, cageSet):
         self.pistonsPin = cageSet.pistonsPin
+        GPIO.setmode(GPIO.BCM)
         GPIO.setup (self.pistonsPin, GPIO.OUT, initial = GPIO.LOW)
 
     def fixMouse(self):
@@ -33,15 +34,16 @@ class AHF_HeadFixer_Pistons(AHF_HeadFixer):
     def config_show(cageSet):
         return 'Pistons Solenoid Pin=' +  str (cageSet.pistonsPin)
 
-    
-
     def test (self, cageSet):
-        print ('Pistons Solenoid energizing for 2 sec')
-        GPIO.output(cageSet.pistonsPin, 1)
-        sleep (2)
-        GPIO.output(cageSet.pistonsPin, 0)
-        inputStr=input ('Pistons Solenoid de-energized.\nDo you want to change the Pistons Solenoid Pin (currently ' + str(cageSet.pistonsPin) + ')?')
-        if inputStr[0] == 'y' or inputStr[0] == "Y":
-            cageSet.pistonsPin = int (input('Enter New Pistons Solenoid Pin:'))
-            self.pistonsPin = cageSet.pistonsPin
-            GPIO.setup (cageSet.pistonsPin, GPIO.OUT)
+        inputStr = 'Yes'
+        while inputStr[0] == 'y' or inputStr[0] == "Y":
+            print ('Pistons Solenoid energizing for 2 sec.')
+            GPIO.output(cageSet.pistonsPin, GPIO.HIGH)
+            sleep (2)
+            GPIO.output(cageSet.pistonsPin, GPIO.LOW)
+            inputStr=input ('Pistons Solenoid de-energized.\nDo you want to change the Pistons Solenoid Pin, currently {}:'.format (cageSet.pistonsPin))
+            if inputStr[0] == 'y' or inputStr[0] == "Y":
+                GPIO.cleanup (cageSet.pistonsPin)
+                cageSet.pistonsPin = int (input('Enter New Pistons Solenoid Pin:'))
+                self.pistonsPin = cageSet.pistonsPin
+                GPIO.setup (cageSet.pistonsPin, GPIO.OUT)

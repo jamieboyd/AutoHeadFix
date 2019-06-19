@@ -1,23 +1,25 @@
 #! /usr/bin/python3
 #-*-coding: utf-8 -*-
 
-from AHF_HeadFixer_PWM import AHF_HeadFixer_PWM
-from AHF_CageSet import AHF_CageSet
-from PTPWM import PTPWM, PWM_simple
+from AHF_HeadFixer_PWM import AHF_HeadFixer_PWM # abstract base class for servo-driver headfixers using PWM
+from PTPWM import PTPWM, PTPWMsimp # wraps the c module that controls the onboard PWM peripheral on the Pi
 from time import sleep
 
 class AHF_HeadFixer_PWM_Pi (AHF_HeadFixer_PWM):
-
+    """
+    Head Fixer class that controls a servo motor with PWM using the Raspberry Pi's own
+    PWM peripheral. Requires the ptPWM C module with PTPWM python wrapper, from GPIO_Thread
+    """
     def __init__(self, cageSet):
         super().__init__(cageSet)
-        self.pwmChan =  cageSet.pwmChan
+        self.pwmChan = cageSet.pwmChan
         self.pwm = PTPWMsimp (100, 4096)
         self.pwm.add_channel (self.pwmChan, PTPWM.PWM_MARK_SPACE,0,0)
         self.pwm.set_able (1, self.pwmChan)
-        self.pwm.set_PWM (self.servoReleasedPosition)
-
-    def setPWM (self, servoPosition):
-        self.pwm.set_PWM (servoPosition)
+        self.releaseMouse ()
+        
+    def set_value (self, servoPosition):
+        self.pwm.set_value (servoPosition, self.pwmChan)
 
     @staticmethod
     def configDict_read (cageSet,configDict):
@@ -32,28 +34,14 @@ class AHF_HeadFixer_PWM_Pi (AHF_HeadFixer_PWM):
     @staticmethod
     def config_user_get (cageSet):
         super(AHF_HeadFixer_PWM_Pi, AHF_HeadFixer_PWM_Pi).config_user_get (cageSet)
-        cageSet.pwmChan = int (input ("PWM channel to use for servo: (0 on GPIO-18 or 1 on GPIO-19): "))
+        cageSet.pwmChan = int (input ("PWM channel to use for servo: (1 on GPIO-18 or 2 on GPIO-19): "))
         
     @staticmethod
     def config_show(cageSet):
         rStr = super(AHF_HeadFixer_PWM_Pi, AHF_HeadFixer_PWM_Pi).config_show(cageSet)
         rStr += '\n\tPWM channel used for servo:'
-        if cageSet.pwmChan == 0:
-            rStr += '0 on GPIO-18'
-        elif cageSet.pwmChan ==1:
-            rStr += '1 on GPIO-19'
+        if cageSet.pwmChan == 1:
+            rStr += '1 on GPIO-18'
+        elif cageSet.pwmChan ==2:
+            rStr += '2 on GPIO-19'
         return rStr
-
-if __name__ == "__main__":
-    from time import sleep
-    from AHF_CageSet import AHF_CageSet
-    from AHF_HeadFixer import AHF_HeadFixer
-    cageSettings = AHF_CageSet ()
-    cageSettings.edit()
-    cageSettings.save()
-    headFixer=AHF_HeadFixer.get_class (cageSettings.headFixer) (cageSettings)
-    headFixer.releaseMouse()
-    sleep (1)
-    headFixer.fixMouse()
-    sleep (1)
-    headFixer.releaseMouse()

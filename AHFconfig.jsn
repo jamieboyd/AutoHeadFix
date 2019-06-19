@@ -2,12 +2,12 @@
 "Contact Pin":21
 "Contact Polarity":"FALLING"
 "Contact Pull Up Down":"UP"
-"Fixed Servo Position":700
-"Head Fixer":"AHF_HeadFixer_PWM"
+"Fixed Servo Position":350
+"Head Fixer":"PWM_PCA9685"
 "LED Pin":22
-"PWM Channel":1
 "Path to Save Data":"/home/pi/Documents/"
-"Released Servo Position":300
+"Released Servo Position":650
 "Reward Pin":13
 "Serial Port":"/dev/serial0"
+"Servo Address":64
 "Tag In Range Pin":12}
