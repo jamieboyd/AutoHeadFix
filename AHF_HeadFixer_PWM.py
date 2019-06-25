@@ -11,10 +11,17 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
     Only method that needs to be provided by sub-classes is the set_value method, although additional setup and config
     information is expected
     """
+    servoReleasedPositionDef = 400
+    servoFixedPositionDef = 600
+    
     def __init__(self, cageSet):
         """
         initializes released and fixed positions for the servo
         """
+        if not hasattr (cageSet, 'servoReleasedPosition'):
+            cageSet.servoReleasedPosition = AHF_HeadFixer_PWM.servoReleasedPositionDef
+        if not hasattr (cageSet, 'servoFixedPosition'):
+            cageSet.servoFixedPosition = AHF_HeadFixer_PWM.servoFixedPositionDef
         self.servoReleasedPosition = cageSet.servoReleasedPosition
         self.servoFixedPosition = cageSet.servoFixedPosition
 
@@ -42,8 +49,8 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
         """
         Static method to read fixed and released positions from the configuration dict into the cageSet object
         """
-        cageSet.servoReleasedPosition = configDict.get('Released Servo Position')
-        cageSet.servoFixedPosition = configDict.get('Fixed Servo Position', )
+        cageSet.servoReleasedPosition = configDict.get('Released Servo Position', AHF_HeadFixer_PWM.servoReleasedPositionDef)
+        cageSet.servoFixedPosition = configDict.get('Fixed Servo Position', AHF_HeadFixer_PWM.servoFixedPositionDef)
 
     @staticmethod
     def configDict_set(cageSet,configDict):
@@ -56,7 +63,7 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
         
     @staticmethod
     def config_show(cageSet):
-        rStr = '\n\tReleased Servo Position=' + str(cageSet.servoReleasedPosition) + '\n\tFixed Servo Position=' + str(cageSet.servoFixedPosition)
+        rStr = '\n\tReleased Servo Position = {:d}\n\tFixed Servo Position= {:d}'.format(cageSet.servoReleasedPosition, cageSet.servoFixedPosition)
         return rStr
     
 

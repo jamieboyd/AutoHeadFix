@@ -114,7 +114,7 @@ class AHF_Stimulator (metaclass = ABCMeta):
         self.rewarder = rewarder
         self.lickDetector = lickDetector
         if not hasattr(expSettings, 'stimDict'):
-            setattr(expSettings, 'stimDict', self.config_from_user ({}))
+            setattr(expSettings, 'stimDict', self.dict_from_user ({}))
         self.configDict = expSettings.stimDict
         self.mouse = None
         self.setup()

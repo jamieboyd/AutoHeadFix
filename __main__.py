@@ -2,18 +2,18 @@
 #-*-coding: utf-8 -*-
 
 # local files, part of AutoHeadFix
-from AHF_Settings import AHF_Settings
 from AHF_CageSet import AHF_CageSet
-from AHF_Camera import AHF_Camera
-from AHF_Notifier import AHF_Notifier
-from RFIDTagReader import TagReader
-from AHF_Stimulator import AHF_Stimulator
-from AHF_UDPTrig import AHF_UDPTrig
+from AHF_Settings import AHF_Settings
 from AHF_Rewarder import AHF_Rewarder
+from AHF_Camera import AHF_Camera
+from RFIDTagReader import TagReader
+
+from AHF_Stimulator import AHF_Stimulator
+
+
 from AHF_HardwareTester import hardwareTester
 from AHF_Mouse import Mouse, Mice
 from AHF_HeadFixer import AHF_HeadFixer
-from AHF_LickDetector import AHF_LickDetector, Simple_Logger
 
 #Standard Python modules
 from os import path, makedirs, chown
@@ -25,18 +25,17 @@ from random import random
 from sys import argv, exit
 import RPi.GPIO as GPIO
 
-# constants used for calculating when to start a new day
-# we put each day's movies and text files in a separate folder, and keep separate stats
-KSECSPERDAY = 86400
-KSECSPERHOUR = 3600
+"""
+constant used for calculating when to start a new day
+we put each day's movies and text files in a separate folder, and keep separate stats
+"""
 KDAYSTARTHOUR =13 # when we start a new day, in 24 hr format, so 7 is 7 AM and 19 is 7 PM
 
 """
 constant for time outs when waiting on an event - instead of waiting for ever, and missing, e.g., keyboard event,
 or callling sleep and maybe missing the thing we were waiting for, we loop using wait_for_edge with a timeout
 """
-kTIMEOUTmS = 50
-
+kTIMEOUTSECS = 50e-03
 
 
 def main():
@@ -52,9 +51,9 @@ def main():
         cageSettings = AHF_CageSet()
         # get settings that may vary by experiment, including rewarder, camera parameters, and stimulator
         # More than one of these files can exist, and the user needs to choose one or make one
-        # we will add some other  variables to expSettings so we can pass them as a single argument to functions
+        # we will add some other variables to expSettings so we can pass them as a single argument to functions
         # logFP, statsFP, dateStr, dayFolderPath, doHeadFix, 
-        # configFile can be specified if launched from command line, eg, sudo python3 myconfig or sudo python3 AHFexp_myconfig.jsn
+        # configFile can be specified if launched from command line, eg, sudo python3 myconfig or sudo python3 AHF_Settings_myconfig.jsn
         if argv.__len__() > 1:
             expSettings = AHF_Settings (argv [1])
         else:
@@ -94,24 +93,28 @@ def main():
         rewarder.addToDict ('task', expSettings.taskRewardTime)
         # make a notifier object
         if expSettings.hasTextMsg == True:
+            from AHF_Notifier import AHF_Notifier
             notifier = AHF_Notifier (cageSettings.cageID, expSettings.phoneList)
         else:
             notifier = None
         # make RFID reader
-        tagReader = TagReader(cageSettings.serialPort, False, None)
+        tagReader = TagReader(cageSettings.serialPort, True, timeOutSecs = kTIMEOUTSECS)
+        tagReader.installCallback (cageSettings.tirPin)
         # configure camera
         camera = AHF_Camera(expSettings.camParamsDict)
         # make UDP Trigger
         if expSettings.hasUDP == True:
+            from AHF_UDPTrig import AHF_UDPTrig
             UDPTrigger = AHF_UDPTrig (expSettings.UDPList)
-            print (UDPTrigger)
         else:
             UDPTrigger = None
         # make a lick detector
-        simpleLogger = Simple_Logger (expSettings.logFP)
-        lickDetector = AHF_LickDetector ((0,1),26,simpleLogger)
-        sleep(1)
-        lickDetector.start_logging ()
+        if cageSettings.lickIRQ == 0:
+            lickDetector = None
+        else:
+            from AHF_LickDetector import AHF_LickDetector, Simple_Logger
+            lickDetector = AHF_LickDetector (cageSettings.lickChans, cageSettings.lickIRQ, Simple_Logger (expSettings.logFP))
+            lickDetector.start_logging ()
         # make stimulator
         stimulator = AHF_Stimulator.get_class (expSettings.stimulator)(cageSettings, expSettings, rewarder, lickDetector)
         expSettings.stimDict = stimulator.configDict
@@ -121,124 +124,101 @@ def main():
         raise anError
         exit(0)
     try:
-        print ('Waiting for a mouse...')
         while True: #start main loop
             try:
-                # wait for mouse entry, with occasional timeout to catch keyboard interrupt
-                GPIO.wait_for_edge (cageSettings.tirPin, GPIO.RISING, timeout= kTIMEOUTmS) # wait for entry based on Tag-in-range pin
-                if (GPIO.input (cageSettings.tirPin) == GPIO.HIGH):
-                    try:
-                        tag = tagReader.readTag ()
-                    except (IOError, ValueError):
-                        tagReader.clearBuffer()
-                        continue
-                    entryTime = time()
-                    if cageSettings.hasEntryBB==True:
-                        GPIO.remove_event_detect(cageSettings.entryBBpin)
-                    thisMouse = mice.getMouseFromTag (tag)
-                    if thisMouse is None:
-                        # try to open mouse config file to initialize mouse data
-                        thisMouse=Mouse(tag,1,0,0,0)
-                        mice.addMouse (thisMouse, expSettings.statsFP)
-                    writeToLogFile(expSettings.logFP, thisMouse, 'entry')
-                    thisMouse.entries += 1
-                    # if we have entrance reward, first wait for entrance reward or first head-fix, which countermands entry reward
-                    if thisMouse.entranceRewards < expSettings.maxEntryRewards:
-                        giveEntranceReward = True
-                        expSettings.doHeadFix = expSettings.propHeadFix > random()
-                        while GPIO.input (cageSettings.tirPin)== GPIO.HIGH and time() < (entryTime + expSettings.entryRewardDelay):
-                            GPIO.wait_for_edge (cageSettings.contactPin, expSettings.contactEdge, timeout= kTIMEOUTmS)
-                            if (GPIO.input (cageSettings.contactPin)== expSettings.contactState):
-                                runTrial (thisMouse, expSettings, cageSettings, rewarder, headFixer,stimulator, UDPTrigger)
-                                giveEntranceReward = False
-                                break
-                        if (GPIO.input (cageSettings.tirPin)== GPIO.HIGH) and giveEntranceReward == True:
-                            thisMouse.reward (rewarder, 'entrance') # entrance reward was not countermanded by an early headfix
-                            thisMouse.entranceRewards += 1
-                            writeToLogFile(expSettings.logFP, thisMouse, 'entryReward')
-                    # wait for contacts and run trials till mouse exits or time in chamber exceeded
+                print ('Waiting for a mouse...')
+                while True:
+                    if RFIDTagReader.globalTag != 0:
+                        break
+                    else:
+                        if datetime.fromtimestamp (int (time())) > nextDay:
+                            now = datetime.fromtimestamp (int (time()))
+                            startTime = datetime (now.year, now.month, now.day, KDAYSTARTHOUR,0,0)
+                            nextDay = startTime + timedelta (hours=24)
+                            if lickDetector is not None:
+                                lickDetector.stop_logging ()
+                            mice.show()
+                            writeToLogFile(expSettings.logFP, None, 'SeshEnd')
+                            expSettings.logFP.close()
+                            expSettings.statsFP.close()
+                            makeDayFolderPath(expSettings, cageSettings)
+                            makeLogFile (expSettings, cageSettings)
+                            makeQuickStatsFile (expSettings, cageSettings, mice)
+                            stimulator.nextDay (expSettings.logFP)
+                            mice.clear ()
+                            if lickDetector is not None:
+                                lickDetector.data_logger.logFP = expSettings.logFP
+                                lickDetector.touched()
+                                lickDetector.start_logging()
+                        else:
+                            sleep (kTIMEOUTSECS)
+                tag = RFIDTagReader.globalTag
+                entryTime = time()
+                thisMouse = mice.getMouseFromTag (tag)
+                if thisMouse is None:
+                    # try to open mouse config file to initialize mouse data
+                    thisMouse=Mouse(tag,1,0,0,0)
+                    mice.addMouse (thisMouse, expSettings.statsFP)
+                writeToLogFile(expSettings.logFP, thisMouse, 'entry')
+                thisMouse.entries += 1
+                # if we have entrance reward, first wait for entrance reward or first head-fix, which countermands entry reward
+                if thisMouse.entranceRewards < expSettings.maxEntryRewards:
+                    giveEntranceReward = True
                     expSettings.doHeadFix = expSettings.propHeadFix > random()
-                    while GPIO.input (cageSettings.tirPin)== GPIO.HIGH and time () < entryTime + expSettings.inChamberTimeLimit:
-                        if (GPIO.input (cageSettings.contactPin)== expSettings.noContactState):
-                            GPIO.wait_for_edge (cageSettings.contactPin, expSettings.contactEdge, timeout= kTIMEOUTmS)
+                    while GPIO.input (cageSettings.tirPin)== GPIO.HIGH and time() < (entryTime + expSettings.entryRewardDelay):
+                        GPIO.wait_for_edge (cageSettings.contactPin, expSettings.contactEdge, timeout= kTIMEOUTmS)
                         if (GPIO.input (cageSettings.contactPin)== expSettings.contactState):
-                            runTrial (thisMouse, expSettings, cageSettings, rewarder, headFixer, stimulator, UDPTrigger)
-                            expSettings.doHeadFix = expSettings.propHeadFix > random() # set doHeadFix for next contact
-                    # either mouse left the chamber or has been in chamber too long
-                    if GPIO.input (cageSettings.tirPin)== GPIO.HIGH and time () > entryTime + expSettings.inChamberTimeLimit:
-                        # explictly turn off pistons, though they should be off at end of trial
-                        headFixer.releaseMouse()
-                        if expSettings.hasTextMsg == True:
-                            notifier.notify (thisMouse.tag, (time() - entryTime),  True)
-                        # wait for mouse to leave chamber, with no timeout, unless it left while we did last 3 lines
-                        if GPIO.input (cageSettings.tirPin)== GPIO.HIGH:
-                            GPIO.wait_for_edge (cageSettings.tirPin, GPIO.FALLING)
-                        if expSettings.hasTextMsg == True:
-                            notifier.notify (thisMouse.tag, (time() - entryTime), False)
-                    tagReader.clearBuffer ()
-                    if cageSettings.hasEntryBB==True:
-                        #GPIO.setup (cageSettings.entryBBpin, GPIO.IN, pull_up_down = GPIO.PUD_UP)
-                        GPIO.add_event_detect (cageSettings.entryBBpin, GPIO.BOTH, entryBBCallback)
-                    # after exit, update stats
-                    writeToLogFile(expSettings.logFP, thisMouse, 'exit')
-                    updateStats (expSettings.statsFP, mice, thisMouse)
-                    # after each exit check for a new day
-                    if datetime.fromtimestamp (int (time())) > nextDay:
-                        now = datetime.fromtimestamp (int (time()))
-                        startTime = datetime (now.year, now.month, now.day, KDAYSTARTHOUR,0,0)
-                        nextDay = startTime + timedelta (hours=24)
-                        lickDetector.stop_logging ()
-                        mice.show()
-                        writeToLogFile(expSettings.logFP, None, 'SeshEnd')
-                        expSettings.logFP.close()
-                        expSettings.statsFP.close()
-                        makeDayFolderPath(expSettings, cageSettings)
-                        makeLogFile (expSettings, cageSettings)
-                        simpleLogger.logFP = expSettings.logFP
-                        makeQuickStatsFile (expSettings, cageSettings, mice)
-                        stimulator.nextDay (expSettings.logFP)
-                        mice.clear ()
-                        # reinitialize lick detector because it can lock up if too many licks when not logging
-                        lickDetector.__init__((0,1),26,simpleLogger)
-                        lickDetector.start_logging()
-                    print ('Waiting for a mouse...')
+                            runTrial (thisMouse, expSettings, cageSettings, rewarder, headFixer,stimulator, UDPTrigger)
+                            giveEntranceReward = False
+                            break
+                    if (GPIO.input (cageSettings.tirPin)== GPIO.HIGH) and giveEntranceReward == True:
+                        thisMouse.reward (rewarder, 'entrance') # entrance reward was not countermanded by an early headfix
+                        thisMouse.entranceRewards += 1
+                        writeToLogFile(expSettings.logFP, thisMouse, 'entryReward')
+                # wait for contacts and run trials till mouse exits or time in chamber exceeded
+                expSettings.doHeadFix = expSettings.propHeadFix > random()
+                while GPIO.input (cageSettings.tirPin)== GPIO.HIGH and time () < entryTime + expSettings.inChamberTimeLimit:
+                    if (GPIO.input (cageSettings.contactPin)== expSettings.noContactState):
+                        GPIO.wait_for_edge (cageSettings.contactPin, expSettings.contactEdge, timeout= kTIMEOUTmS)
+                    if (GPIO.input (cageSettings.contactPin)== expSettings.contactState):
+                        runTrial (thisMouse, expSettings, cageSettings, rewarder, headFixer, stimulator, UDPTrigger)
+                        expSettings.doHeadFix = expSettings.propHeadFix > random() # set doHeadFix for next contact
+                # either mouse left the chamber or has been in chamber too long
+                if GPIO.input (cageSettings.tirPin)== GPIO.HIGH and time () > entryTime + expSettings.inChamberTimeLimit:
+                    # explictly turn off pistons, though they should be off at end of trial
+                    headFixer.releaseMouse()
+                    if expSettings.hasTextMsg == True:
+                        notifier.notify (thisMouse.tag, (time() - entryTime),  True)
+                    # wait for mouse to leave chamber, with no timeout, unless it left while we did last 3 lines
+                    if GPIO.input (cageSettings.tirPin)== GPIO.HIGH:
+                        GPIO.wait_for_edge (cageSettings.tirPin, GPIO.FALLING)
+                    if expSettings.hasTextMsg == True:
+                        notifier.notify (thisMouse.tag, (time() - entryTime), False)
+                tagReader.clearBuffer ()
+                # after exit, update stats
+                writeToLogFile(expSettings.logFP, thisMouse, 'exit')
+                updateStats (expSettings.statsFP, mice, thisMouse)
+                    
 
             except KeyboardInterrupt:
                 GPIO.output(cageSettings.ledPin, GPIO.LOW)
                 headFixer.releaseMouse()
                 GPIO.output(cageSettings.rewardPin, GPIO.LOW)
-                lickDetector.stop_logging ()
-                if cageSettings.hasEntryBB==True:
-                    sleep (1)
-                    GPIO.remove_event_detect (cageSettings.entryBBpin)
-                    print ('removed BB event detect')
+                if lickDetector is not None:
+                    lickDetector.stop_logging ()
                 while True:
                     event = input ('Enter:\nr to return to head fix trials\nq to quit\nv to run valve control\nh for hardware tester\nc for camera configuration\ne for experiment configuration\n:')
                     if event == 'r' or event == "R":
-                        lickDetector.start_logging ()
-                        sleep (1)
-                        if cageSettings.hasEntryBB == True:
-                            sleep (1)
-                            print ('Restarting entry bb')
-                            GPIO.setup (cageSettings.entryBBpin, GPIO.IN, pull_up_down = GPIO.PUD_UP)
-                            GPIO.add_event_detect (cageSettings.entryBBpin, GPIO.BOTH, entryBBCallback)
+                        if lickDetector is not None:
+                            lickDetector.touched()
+                            lickDetector.start_logging ()
                         break
                     elif event == 'q' or event == 'Q':
                         exit(0)
                     elif event == 'v' or event== "V":
                         valveControl (cageSettings)
                     elif event == 'h' or event == 'H':
-                        hardwareTester(cageSettings, tagReader, headFixer, stimulator, expSettings)
-                        if cageSettings.contactPolarity == 'RISING':
-                            expSettings.contactEdge = GPIO.RISING
-                            expSettings.noContactEdge = GPIO.FALLING
-                            expSettings.contactState = GPIO.HIGH
-                            expSettings.noContactState = GPIO.LOW
-                        else:
-                            expSettings.contactEdge = GPIO.FALLING
-                            expSettings.noContactEdge = GPIO.RISING
-                            expSettings.contactState = GPIO.LOW
-                            expSettings.noContactState = GPIO.HIGH
+                        hardwareTester(cageSettings, expSettings, tagReader, headFixer, lickDetector, stimulator)
                     elif event == 'c' or event == 'C':
                         camParams = camera.adjust_config_from_user ()
                     elif event == 'e' or event == 'E':

@@ -36,7 +36,6 @@ class AHF_Rewarder:
         param:rewardSize: opening duration of solenoid, in seconds        
         """
         self.rewardDict.update({rewardName : rewardSize})
-        self.totalsDict.update({rewardName : 0})
         
 
     def giveReward(self, rewardName):
@@ -53,53 +52,13 @@ class AHF_Rewarder:
         GPIO.output(self.rewardPin, 1)
         sleep(sleepTime) # not very accurate timing, but good enough
         GPIO.output(self.rewardPin, 0)
-        self.totalsDict[rewardName] += 1
         return sleepTime
 
-    def getTotalDur (self):
-        """Returns the total duration in seconds of solenoid openings, of all reward types"""
-        total = 0
-        for key in self.totalsDict.keys():
-            total += self.totalsDict[key] * self.rewardDict [key]
-        return total
 
-    def getNumOfType (self, rewardName):
-        """
-        Returns the number of times rewards of a particular reward type have been disbursed
-
-        param:rewardName: the type of the reward queried, should already be in the dictionary, or exception wil be raised
-        """
-        return self.totalsDict.get(rewardName)
-
-    def setNumOfType (self, rewardName, rewardNum):
-        """
-        Sets number of rewards of a particular type, if, for example, a rewarder is associated with an existing mouse
-        """
-        self.totalsDict[rewardName] = rewardNum
-        
-    def zeroTotals (self):
-        """
-        Zeros the count of number of rewards given, for all reward types.
-
-        You might want to do this if keeping track of how many rewards have been delivered per day
-        """
-        for key in self.totalsDict.keys():
-            self.totalsDict[key]=0
-
-    def totalsToStr (self):
-        """
-        Returns a formatted string of total rewards given 
-
-        """
-        returnStr = ''
-        for key in self.totalsDict.keys():
-            if not key == 'default':
-                returnStr += str (key) +':' + str (self.totalsDict[key]) + '\t'
-        return returnStr
         
 #for testing purposes
 if __name__ == '__main__':
-    rewardPin = 18
+    rewardPin = 13
     GPIO.setmode (GPIO.BCM)
     rewarder = AHF_Rewarder (30e-03, rewardPin)
     rewarder.addToDict ("entry", 25e-03)
@@ -109,8 +68,5 @@ if __name__ == '__main__':
     sleep(50e-03)
     rewarder.addToDict ("earned", 50e-03)
     rewarder.giveReward ("earned")
-    print ('Num entries', rewarder.getNumOfType ("entry"))
-    print (rewarder.totalsDict)
-    print (rewarder.getTotalDur ())
     GPIO.cleanup()
 

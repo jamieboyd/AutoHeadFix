@@ -14,53 +14,71 @@ class AHF_CageSet (object):
     Manages settings for hardware GPIO pin-outs and some other cage-specific settings for the raspberry Pi used for Auto Head Fix
 
     The class AHF_CageSet defines the following settings:
-       :cage ID: str - whatver name you have for this cage
-       :headFixer: str - name of class used for HeadFixing, can be pistons, or servo-motor with pi PWM or AdaFruit I2C PWM driver
-       :pistons Pin: int - connected to solenoids that drive pistons for head fixing, (only if using pistons)
-       :Servo Address: int- servo address of AdaFruit I2C PWM driver (only if using adafruit servo)
-       :PWM CHannel: int- PWM channel (0 or 1) if using pi PWM 
-       :servoReleased: int - position of server to release mouse, (only if using adafruit servo)
-       :servoFixed: int - position of servo to fix mouse (only if using servo)
-       :rewardPin: int - connected to solenoid for delivering water reward
-       :tirPin: int - tag in-range pin for the ID tag reader
-       :contactMode: str - BeamBreak, or ContactCheck
-       :contactPin: int - GPIO connected to the head contacts, or IR beam-breaker
-       :ledPin: int - output pin for the Blue LED that illuminates the brain
-       :serialPort: str - "/dev/ttyUSB0" for USB with sparkFun breakout or "/dev/ttyAMA0" for built-in
-       :dataPath: str - path to base folder, possibly on removable media, where data will be saved in created subfolders
-    The settings are saved between program runs in a json-styled text config file, AHFconfig.jsn, in a human readable and editable key=value form.
-"""
-
+    :cage ID: str - whatver name you have for this cage
+    :headFixer: str - name of class used for HeadFixing, can be pistons, or servo-motor with pi PWM or AdaFruit I2C PWM driver
+    :pistons Pin: int - connected to solenoids that drive pistons for head fixing, (only if using pistons)
+    :Servo Address: int- servo address of AdaFruit I2C PWM driver (only if using adafruit servo)
+    :PWM Channel: int- PWM channel (0 or 1) if using pi PWM 
+    :servoReleased: int - position of server to release mouse, (only if using adafruit servo)
+    :servoFixed: int - position of servo to fix mouse (only if using servo)
+    :rewardPin: int - connected to solenoid for delivering water reward
+    :tirPin: int - tag in-range pin for the ID tag reader
+    :contactMode: str - BeamBreak, or ContactCheck
+    :contactPin: int - GPIO connected to the head contacts, or IR beam-breaker
+    :ledPin: int - output pin for the Blue LED that illuminates the brain
+    :lick IRQ: int - input pin for IRQ from lick detector, if using lick detector, else 0
+    :serialPort: str - "/dev/ttyUSB0" for USB with sparkFun breakout or "/dev/ttyAMA0" for built-in
+    :dataPath: str - path to base folder, possibly on removable media, where data will be saved in created subfolders
+    The settings are saved between program runs in a json-styled text config file, AHF_config.jsn, in a human readable and editable key=value form.
+    """
+    cageIDdef= 'cage1'
+    headFixerDef = 'PWM_PCA9685'
+    rewardPinDef =13
+    tirPinDef = 21
+    contactPinDef = 12
+    contactPolarityDef = 'FALLING'
+    contactPUDdef = 'UP'
+    ledPinDef = 23
+    lickIRQdef = 17
+    lickChansDef = (0,1)
+    serialPortDef = '/dev/serial0'
+    dataPathDef = '/home/pi/Documents/'
+    
     def __init__(self):
         """
-        Makes a new AHF_CageSet object by loading from AHFconfig.jsn or by querying the user
+        Makes a new AHF_CageSet object by loading from AHF_config.jsn or by querying the user
 
-        Either reads a dictionary from a config file, AHFconfig.jsn, in the same directory in which the program is run,
+        Either reads a dictionary from a config file, AHF_config.jsn, in the same directory in which the program is run,
         or if the file is not found, it querries the user for settings and then writes a new file.
 
         """
         try:
-            with open ('AHFconfig.jsn', 'r') as fp:
+            with open ('AHF_config.jsn', 'r') as fp:
                 data = fp.read()
                 data= data.replace('\n', ",")
                 #print (data)
                 configDict = json.loads(data)
                 fp.close()
-                self.cageID = configDict.get('Cage ID')
-                self.headFixer = configDict.get('Head Fixer')
+                self.cageID = configDict.get('Cage ID', AHF_CageSet.cageIDdef)
+                self.headFixer = configDict.get('Head Fixer', AHF_CageSet.headFixerDef)
                 headFixerClass = AHF_HeadFixer.get_class (self.headFixer)
                 headFixerClass.configDict_read (self, configDict)
-                self.rewardPin = int(configDict.get('Reward Pin'))
-                self.tirPin = int(configDict.get('Tag In Range Pin'))
-                self.contactPin = int (configDict.get ('Contact Pin'))
-                self.contactPolarity = configDict.get ('Contact Polarity') # RISING or FALLING, GPIO.RISING = 31, GPIO.FALLING = 32
-                self.contactPUD = configDict.get ('Contact Pull Up Down') # OFF, DOWN, or UP, GPIO.PUD_OFF=20, GPIO.PUD_DOWN =21, GPIO.PUD_UP=22
-                self.ledPin =  int (configDict.get ('LED Pin'))
-                self.serialPort = configDict.get ('Serial Port')
-                self.dataPath =configDict.get ('Path to Save Data')
+                self.rewardPin = configDict.get('Reward Pin', AHF_CageSet.rewardPinDef)
+                self.tirPin = configDict.get('Tag In Range Pin', AHF_CageSet.tirPinDef)
+                self.contactPin = configDict.get ('Contact Pin', AHF_CageSet.contactPinDef)
+                self.contactPolarity = configDict.get ('Contact Polarity', AHF_CageSet.contactPolarityDef) # RISING or FALLING, GPIO.RISING = 31, GPIO.FALLING = 32
+                self.contactPUD = configDict.get ('Contact Pull Up Down', AHF_CageSet.contactPUDdef) # OFF, DOWN, or UP, GPIO.PUD_OFF=20, GPIO.PUD_DOWN =21, GPIO.PUD_UP=22
+                self.ledPin =  configDict.get ('LED Pin', AHF_CageSet.ledPinDef)
+                self.lickIRQ = configDict.get ('Lick IRQ', AHF_CageSet.lickIRQdef)
+                if self.lickIRQ != 0:
+                    self.lickChans = configDict.get ('Lick Channels', AHF_CageSet.lickChansDef)
+                else:
+                    self.lickChans = ()
+                self.serialPort = configDict.get ('Serial Port', AHF_CageSet.serialPortDef)
+                self.dataPath =configDict.get ('Path to Save Data', AHF_CageSet.dataPathDef)
         except (TypeError, IOError) as e:
-            #we will make a file if we didn't find it, or if it was incomplete
-            print ('Unable to open base configuration file, AHFconfig.jsn, let\'s make a new one.\n')
+            #we will make a file if we didn't find it, or if it was incomplete or it could not be loaded
+            print ('Unable to open base configuration file, AHF_config.jsn, let\'s make a new one.\n')
             self.cageID = input('Enter the cage ID:')
             self.headFixer = AHF_HeadFixer.get_HeadFixer_from_user()
             AHF_HeadFixer.get_class (self.headFixer).config_user_get (self)
@@ -80,7 +98,13 @@ class AHF_CageSet (object):
             else:
                 self.contactPUD='UP'
             self.ledPin = int (input ('Enter the GPIO pin connected to the blue LED for camera illumination:'))
-            self.serialPort = input ('Enter serial port for tag reader(likely either /dev/ttyAMA0 or /dev/ttyUSB0):')
+            self.serialPort = input ('Enter serial port for tag reader(likely either /dev/serial0 or /dev/ttyUSB0):')
+            self.lickIRQ = int (input ('Enter the GPIO pin connected to lick detector IRQ, or 0 if no lick detetcor is installed:'))
+            if self.lickIRQ != 0:
+                tempInput = input ('Enter a comma-separated list of lick channels to monitor:')
+                self.lickChans = tuple (tempInput.split(','))
+            else:
+                self.lickChans = ()
             self.dataPath = input ('Enter the path to the directory where the data will be saved:')
             self.show()
             doSave = input ('Enter \'e\' to re-edit the new Cage settings, or any other character to save the new settings to a file.')
@@ -93,7 +117,7 @@ class AHF_CageSet (object):
 
     def save(self):
         """
-        Saves current configuration stored in this AHF_CageSet object into the file ./AHFconfig.jsn
+        Saves current configuration stored in this AHF_CageSet object into the file ./AHF_config.jsn
 
         Call this function after modifying the contents of the AHF_CageSet to save your changes
 
@@ -104,13 +128,14 @@ class AHF_CageSet (object):
         AHF_HeadFixer.get_class (self.headFixer).configDict_set (self, jsonDict)
         jsonDict.update ({'Reward Pin':self.rewardPin, 'Tag In Range Pin':self.tirPin, 'Contact Pin':self.contactPin})
         jsonDict.update ({'Contact Polarity':self.contactPolarity, 'Contact Pull Up Down':self.contactPUD})
-        jsonDict.update ({'LED Pin' : self.ledPin, 'Serial Port' : self.serialPort, 'Path to Save Data':self.dataPath})
-        with open ('AHFconfig.jsn', 'w') as fp:
+        jsonDict.update ({'LED Pin' : self.ledPin, 'Lick IRQ' : self.lickIRQ, 'Lick Channels' : self.lickChans})
+        jsonDict.update ({'Serial Port' : self.serialPort, 'Path to Save Data':self.dataPath})
+        with open ('AHF_config.jsn', 'w') as fp:
             fp.write (json.dumps (jsonDict, separators = ('\n', ':'), sort_keys = True))
             fp.close ()
             uid = pwd.getpwnam ('pi').pw_uid
             gid = grp.getgrnam ('pi').gr_gid
-            os.chown ('AHFconfig.jsn', uid, gid) # we may run as root for pi PWM, so we need to expicitly set ownership
+            os.chown ('AHF_config.jsn', uid, gid) # we may run as root for pi PWM, so we need to expicitly set ownership
 
     def show (self):
         """
@@ -119,17 +144,19 @@ class AHF_CageSet (object):
            :param: none
            :returns: nothing
         """
-        print ('****************Current Auto-Head-Fix Cage Settings********************************')
-        print ('1:Cage ID=' + str (self.cageID))
-        print ('2:Head Fix method=' + self.headFixer)
-        print ('3:' + AHF_HeadFixer.get_class (self.headFixer).config_show(self))
-        print ('4:Reward Solenoid Pin=' + str (self.rewardPin))
-        print ('5:Tag-In-Range Pin=' + str (self.tirPin))
-        print ('6:Contact Pin=' + str(self.contactPin))
-        print ('7:Contact Polarity =' + str(self.contactPolarity) + ' and contact Pull Up Down = ' + str(self.contactPUD))
-        print ('8:Brain LED Illumination Pin=' + str(self.ledPin))
-        print ('9:Tag Reader serialPort=' + self.serialPort)
-        print ('10:dataPath=' + self.dataPath)
+        print ('\n**************** Current Auto-Head-Fix Cage Settings ********************************')
+        print ('1:Cage ID = {:s}'.format(self.cageID))
+        print ('2:Head Fix method = {:s}'.format (self.headFixer))
+        print ('3:Head Fix Settings = {:s}'.format (AHF_HeadFixer.get_class (self.headFixer).config_show(self)))
+        print ('4:Reward Solenoid Pin = {:d}'.format(self.rewardPin))
+        print ('5:Tag-In-Range Pin = {:d}'.format (self.tirPin))
+        print ('6:Contact Pin = {:d}'.format(self.contactPin))
+        print ('7:Contact Polarity = {:s} and contact Pull Up Down = {:s}'.format(self.contactPolarity ,self.contactPUD))
+        print ('8:Brain LED Illumination Pin = {:d}'.format(self.ledPin))
+        print ('9:Lick Detector IRQ Pin = {:d}'.format(self.lickIRQ))
+        print ('10:Lick Detector channels = {}'.format (self.lickChans))
+        print ('11:Tag Reader serialPort= {:s}'.format (self.serialPort))
+        print ('12:dataPath = {:s}'.format(self.dataPath))
         print ('**************************************************************************************')
 
 
@@ -171,8 +198,13 @@ class AHF_CageSet (object):
             elif editNum == 8:
                 self.ledPin = int (input ('Enter the GPIO pin connected to the blue LED for camera illumination:'))
             elif editNum == 9:
-                self.serialPort = input ('Enter serial port for tag reader(likely either /dev/ttyAMA0 or /dev/ttyUSB0):')
+                self.lickIRQ = int (input ('Enter the GPIO pin connected to the lick detector, or 0 if no lick detector is installed:'))
             elif editNum == 10:
+                tempInput = input ('Enter a comma-separated list of lick channels to monitor:')
+                self.lickChans = tuple (tempInput.split(','))
+            elif editNum == 11:
+                self.serialPort = input ('Enter serial port for tag reader(likely either /dev/ttyAMA0 or /dev/ttyUSB0):')
+            elif editNum == 12:
                 self.dataPath = input ('Enter the path to the directory where the data will be saved:')
             else:
                 print ('I don\'t recognize that number ' + str (editNum))

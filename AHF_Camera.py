@@ -102,7 +102,7 @@ class AHF_Camera (PiCamera):
         """
         prints the settings for the camera
         """
-        print ('----------------Current Settings for AHFCamera----------------')
+        print ('----------------Current Settings for AHF_Camera----------------')
         print ('1:Video resolution = ' + str (self.resolution))
         print ('2:Video Frame Rate = ' + str(self.framerate))
         print ('3:Camera ISO = ' + str (self.iso) + '; Do Auto-Gain = ' + str (bool(self.AHFgainMode & 2)))
@@ -253,14 +253,12 @@ class AHF_Camera (PiCamera):
 
 
     @staticmethod
-    def dict_from_user (paramDict):
+    def dict_from_user (paramDict = {}):
         """
             static method that leys user make or edit a dictionary object that holds camera setttings
         
             configure gets info from user with the input function, which returns strings
         """
-        if paramDict is None:
-            paramDict = {}
         # resolution
         resolution = paramDict.get ('resolution', (640, 480))
         tempInput = input ('set X,Y resolution (currently ' + str (resolution) + ') to :')

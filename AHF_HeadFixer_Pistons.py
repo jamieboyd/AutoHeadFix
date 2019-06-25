@@ -6,8 +6,11 @@ import RPi.GPIO as GPIO
 from time import sleep
 
 class AHF_HeadFixer_Pistons(AHF_HeadFixer):
-
+    pistonsPinDef = 19
+    
     def __init__(self, cageSet):
+        if not hasattr(cageSet, 'pistonsPin'):
+            cageSet.pistonsPin = AHF_HeadFixer_Pistons.pistonsPinDef
         self.pistonsPin = cageSet.pistonsPin
         GPIO.setmode(GPIO.BCM)
         GPIO.setup (self.pistonsPin, GPIO.OUT, initial = GPIO.LOW)
@@ -32,7 +35,7 @@ class AHF_HeadFixer_Pistons(AHF_HeadFixer):
         
     @staticmethod
     def config_show(cageSet):
-        return 'Pistons Solenoid Pin=' +  str (cageSet.pistonsPin)
+        return '\n\tPistons Solenoid Pin= {:d}'.format(cageSet.pistonsPin)
 
     def test (self, cageSet):
         inputStr = 'Yes'

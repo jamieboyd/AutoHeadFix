@@ -5,8 +5,11 @@ from AHF_HeadFixer_PWM import AHF_HeadFixer_PWM # abstract base class for servo-
 import Adafruit_PCA9685 # the PCA9685 module drives the external PCA9685 stepper motor driver IC on the i2c bus
 
 class AHF_HeadFixer_PWM_PCA9685 (AHF_HeadFixer_PWM):
-
+    servoAddressDef = 0x40
+    
     def __init__(self, cageSet):
+        if not hasattr (cageSet, 'servoAddress'):
+            cageSet.servoAddress = AHF_HeadFixer_PWM_PCA9685.servoAddressDef
         super().__init__(cageSet)
         self.pwm = Adafruit_PCA9685.PCA9685 (address=cageSet.servoAddress)
         self.pwm.set_pwm_freq (90) # 40-1000Hz

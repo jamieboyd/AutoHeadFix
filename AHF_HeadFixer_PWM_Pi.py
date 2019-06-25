@@ -10,8 +10,11 @@ class AHF_HeadFixer_PWM_Pi (AHF_HeadFixer_PWM):
     Head Fixer class that controls a servo motor with PWM using the Raspberry Pi's own
     PWM peripheral. Requires the ptPWM C module with PTPWM python wrapper, from GPIO_Thread
     """
+    AHF_HeadFixer_PWM_Pi.pwmChanDef = 1
     def __init__(self, cageSet):
         super().__init__(cageSet)
+        if not hasattr (cageSet, 'pwmChan'):
+            cageSet.pwmChan = AHF_HeadFixer_PWM_Pi.pwmChanDef
         self.pwmChan = cageSet.pwmChan
         self.pwm = PTPWMsimp (100, 4096)
         self.pwm.add_channel (self.pwmChan, PTPWM.PWM_MARK_SPACE,0,0)

@@ -4,44 +4,69 @@
 
 import RPi.GPIO as GPIO
 from time import sleep
+from AHF_CageSet import AHF_CageSet
 from RFIDTagReader import TagReader
 from AHF_HeadFixer import AHF_HeadFixer
-from AHF_CageSet import AHF_CageSet
 from time import time
 
+
 if __name__ == '__main__':
+    class simpleExpSetings (object):
+        """
+        Some info about contact edges is saved in the experiment settings, so we spoof that
+        here to use the same test code for contact check
+        """
+        def __init__(cageSettings):
+            if cageSettings.contactPolarity == 'RISING':
+                self.contactEdge = GPIO.RISING
+                self.noContactEdge = GPIO.FALLING
+                self.contactState = GPIO.HIGH
+                self.noContactState = GPIO.LOW
+            else:
+                self.contactEdge = GPIO.FALLING
+                self.noContactEdge = GPIO.RISING
+                self.contactState = GPIO.LOW
+                self.noContactState = GPIO.HIGH
     def hardwareTester ():
         """
-        Hardware Tester for Auto Head Fixing, allows you to verify the various hardware bits are working
+        Hardware Tester for Auto Head Fixing, allows you to verify the various hardware bits are working, also test stimulator
         """
         cageSet = AHF_CageSet()
+        expSettings = AHF_HardwareTester.simpleExpSetings (cageSet)
         # set up GPIO to use BCM mode for GPIO pin numbering
         GPIO.setwarnings(False)
         GPIO.setmode (GPIO.BCM)
         GPIO.setup (cageSet.rewardPin, GPIO.OUT)
         GPIO.setup (cageSet.ledPin, GPIO.OUT)
         GPIO.setup (cageSet.tirPin, GPIO.IN)
-        if cageSet.hasEntryBB:
-            GPIO.setup (cageSet.entryBBpin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         # contact pin can have a pullup/down resistor enabled
         GPIO.setup (cageSet.contactPin, GPIO.IN, pull_up_down=getattr (GPIO, "PUD_" + cageSet.contactPUD))
         # initialize head fixer
         headFixer=AHF_HeadFixer.get_class (cageSet.headFixer) (cageSet)
-        # open TagReader
+        # start TagReader
         try:
             tagReader = AHF_TagReader (cageSet.serialPort, True)
         except IOError:
             tagReader = None
-        htloop (cageSet, tagReader, headFixer, stimulator, expSettings)
+        # start lick detector
+        if cageSet.lickIRQ == 0:
+            lickDetector = None
+        else:
+            from AHF_LickDetector import AHF_LickDetector, Simple_Logger
+            try:
+                lickDetector = AHF_LickDetector (cageSet.lickChans, cageSet.lickIRQ, Simple_Logger (None))
+            except IOError:
+                lickDetector = None
+        htloop (cageSet, expSettings, tagReader, headFixer, lickDetector, stimulator)
 else:
-    def hardwareTester (cageSet, tagReader, headFixer, stimulator, expSettings):
+    def hardwareTester (cageSet, expSettings, tagReader, headFixer, lickDetector, stimulator):
         """
         Hardware Tester for Auto Head Fixing, allows you to verify the various hardware bits are working
         """
-        htloop (cageSet, tagReader, headFixer, stimulator, expSettings)
+        htloop (cageSet, expSettings, tagReader, headFixer, lickDetector, stimulator)
 
 
-def htloop (cageSet, tagReader, headFixer, stimulator, expSettings):
+def htloop (cageSet, expSettings, tagReader, headFixer, lickDetector, stimulator):
     """
     Presents a menu asking user to choose a bit of hardware to test, and runs the tests
 
@@ -53,35 +78,22 @@ def htloop (cageSet, tagReader, headFixer, stimulator, expSettings):
     c = contact check:  Monitors the head contact pin until contact, and then while contact is maintained
     f = head Fixer
     e = Entry beam break
-    p = pistons solenoid: Energizes the pistons for a 2 second duration, and then de-energizes them
     l = LED: Turns on the brain illumination LED for a 2 second duration, then off
+    s = stimulator tester
     h = sHow config settings: Prints out the current pinout in the AHF_CageSet object
-    v = saVe modified config file: Saves the the AHF_CageSet object to the file ./AHF_Config.jsn
+    v = saVe modified config file: Saves the the AHF_CageSet object to the file ./AHF_config.jsn
     q = quit: quits the program
     """
-    if cageSet.contactPolarity == 'RISING':
-          contactEdge = GPIO.RISING 
-          noContactEdge = GPIO.FALLING
-          contactState = GPIO.HIGH
-          noContactState = GPIO.LOW
-    else:
-          contactEdge = GPIO.FALLING
-          noContactEdge = GPIO.RISING
-          contactState = GPIO.LOW
-          noContactState = GPIO.HIGH
     try:
         while (True):
-            inputStr = input ('t=tagReader, r=reward solenoid, c=contact check, e= entry beam break, f=head Fixer, l=LED, s=stimulator tester, h=sHow config, v= saVe config, q=quit:')
+            inputStr = input ('t=tagReader, r=reward solenoid, c=contact check, f=head Fixer, l=LED, s=stimulator tester, h=sHow config, v= saVe config, q=quit:')
             if inputStr == 't': # t for tagreader
-                if tagReader == None:
-                    cageSet.serialPort = input ('First, set the tag reader serial port:')
+                if tagReader is None:
+                    cageSet.serialPort = input ('First, set the tag reader serial port, likely /dev/serial0 or dev/ttyUSB0:')
                     try:
                         tagReader = TagReader (cageSet.serialPort, True)
-                        inputStr =  input ('Do you want to read a tag now?')
-                        if inputStr[0] == 'n' or inputStr[0] == "N":
-                            continue
                     except IOError as anError:
-                        print ('Try setting the serial port again.')
+                        print ('Tag reader not found at {:s}. Try setting the serial port again.'.format(cageSet.serialPort))
                         tagReader = None
                 if tagReader is not None:
                     try:
@@ -175,29 +187,6 @@ def htloop (cageSet, tagReader, headFixer, stimulator, expSettings):
                         noContactEdge = GPIO.RISING
                         contactState = GPIO.LOW
                         noContactState = GPIO.HIGH
-            elif inputStr == 'e': # beam break at enty
-                if GPIO.input (cageSet.entryBBpin)== GPIO.LOW:
-                    print ('Entry beam break is already broken')
-                    err=True
-                else:
-                    GPIO.wait_for_edge (cageSet.entryBBpin, GPIO.FALLING, timeout= 10000)
-                    if GPIO.input (cageSet.entryBBpin)== GPIO.HIGH:
-                        print ('Entry beam not broken after 10 seconds.')
-                        err = True
-                    else:
-                        print ('Entry Beam Broken.')
-                        GPIO.wait_for_edge (cageSet.entryBBpin, GPIO.RISING, timeout= 10000)
-                        if GPIO.input (cageSet.entryBBpin)== GPIO.LOW:
-                            print ('Entry Beam Broken maintained for 10 seconds.')
-                            err = True
-                        else:
-                            print ('Entry Beam Intact Again.')
-                            err = False
-                if err == True:
-                    inputStr= input ('Do you want to change the Entry Beam Break Pin (currently pin=' + str (cageSet.entryBBpin)+ '?')
-                    if inputStr[0] == 'y' or inputStr[0] == "Y":
-                        cageSet.entryBBpin= int (input ('Enter the GPIO pin connected to the tube entry IR beam-breaker:'))
-                        GPIO.setup (cageSet.entryBBpin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
             elif inputStr == 'f': # head Fixer, run test from headFixer class
                 headFixer.test(cageSet)
