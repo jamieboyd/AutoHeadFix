@@ -56,7 +56,7 @@ class AHF_HeadFixer(metaclass = ABCMeta):
                     if isAbstractClass == False:
                         fileList.append (fname)
                         iFile += 1
-                except ImportError as e:
+                except (ImportError, NameError) as e:
                     print ('Could not import module {}: {}'.format(f, str(e)))
                     continue
         if iFile == 0:

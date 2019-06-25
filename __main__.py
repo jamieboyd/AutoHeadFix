@@ -55,10 +55,10 @@ def main():
         # we will add some other  variables to expSettings so we can pass them as a single argument to functions
         # logFP, statsFP, dateStr, dayFolderPath, doHeadFix, 
         # configFile can be specified if launched from command line, eg, sudo python3 myconfig or sudo python3 AHFexp_myconfig.jsn
-        configFile = None
         if argv.__len__() > 1:
-            configFile = argv [1]
-        expSettings = AHF_Settings (configFile)
+            expSettings = AHF_Settings (argv [1])
+        else:
+            expSettings = AHF_Settings ()
         # nextDay starts tomorrow at KDAYSTARTHOUR
         now = datetime.fromtimestamp (int (time()))
         startTime = datetime (now.year, now.month,now.day, KDAYSTARTHOUR,0,0)
@@ -67,7 +67,7 @@ def main():
         makeDayFolderPath(expSettings, cageSettings)
         # initialize mice with zero mice
         mice = Mice()
-        # make daily Log files and quick stats file
+        # make daily Log files and quick stats file, if a quickstats file exists, we get info on mice from it
         makeLogFile (expSettings, cageSettings)
         makeQuickStatsFile (expSettings, cageSettings, mice)
         # set up the GPIO pins for each for their respective functionalities.

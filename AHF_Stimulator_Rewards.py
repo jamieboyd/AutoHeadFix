@@ -9,25 +9,46 @@ from time import time, localtime,timezone, sleep
 from datetime import datetime
 
 class AHF_Stimulator_Rewards (AHF_Stimulator):
+    """
+    A simple stimulator that just gives a reward every few seconds
+    """
+    nRewardsDefault = 5
+    rewardIntervalDefault = 5.0
     
-    def __init__ (self, cageSettings, expSettings, rewarder, lickDetector):
-        super().__init__(cageSettings, expSettings, rewarder, lickDetector)
-        self.setup()
+    @staticmethod
+    def dict_from_user (stimDict = {}):
+        nRewards = stimDict.get('nRewards', AHF_Stimulator_Rewards.nRewardsDefault)
+        tempInput = input ('set number of rewards (currently {:d}) to:'.format (nRewards))
+        if tempInput != '':
+            nRewards = int (tempInput)
+            stimDict.update({'nRewards' : nRewards})
+        rewardInterval = stimDict.get('rewardInterval', AHF_Stimulator_Rewards.rewardIntervalDefault)
+        tempInput = input ('set reward Interval (currently {:.3f} seconds) to:'.format (rewardIntervalDefault))
+        if tempInput != '':
+            rewardInterval = float (tempInput)
+        if not 'rewardInterval' in stimDict:
+            stimDict.update ({'rewardInterval' : rewardInterval})
 
     def setup (self):
-        self.nRewards = int (self.configDict.get('nRewards', 5))
-        self.rewardInterval = float (self.configDict.get ('rewardInterval', 2.5))
-        self.configDict.update({'nRewards' : self.nRewards, 'rewardInterval' : self.rewardInterval})
+        """
+        No harware setup needed, just make local references of nRewards and interval, for ease of use
+        The init function will have copied a local reference to confifuration settings dictionary 
+        """
+        self.nRewards = self.configDict.get('nRewards')
+        self.rewardInterval = self.configDict.get ('rewardInterval')
+        self.rewardTimes = []
 
 
-    @staticmethod
-    def dict_from_user (stimDict):
-        if not 'nRewards' in stimDict:
-            stimDict.update ({'nRewards' : 5})
-        if not 'rewardInterval' in stimDict:
-            stimDict.update ({'rewardInterval' : 5.0})
-        return super(AHF_Stimulator_Rewards, AHF_Stimulator_Rewards).dict_from_user (stimDict)
-        
+    def configStim (self, mouse):
+        if 'HFrewards' in mouse.stimResultsDict:
+            mouse.stimResultsDict.update ({'HFrewards' : mouse.stimResultsDict.get('HFrewards') + self.nRewards})
+        else:
+            mouse.stimResultsDict.update({'HFrewards' : self.nRewards})
+
+        self.mouse = mouse
+        return 'stim'
+
+    
     def run(self):
         timeInterval = self.rewardInterval - self.rewarder.rewardDict.get ('task')
         self.rewardTimes = []
@@ -36,6 +57,20 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
             self.rewarder.giveReward('task')
             sleep(timeInterval)
         self.mouse.headFixRewards += self.nRewards
+
+
+    def logfile (self):
+        event = '\tHeadFixReward'
+        mStr = '{:013}\t'.format(self.mouse.tag)
+        for rewardTime in self.rewardTimes:
+            
+            outPutStr = mStr + datetime.fromtimestamp (int (rewardTime)).isoformat (' ') + event
+            print (outPutStr)
+        if self.expSettings.textfp != None:
+            for rewardTime in self.rewardTimes:
+                outPutStr = mStr + datetime.fromtimestamp (int (rewardTime)).isoformat (' ') + "\t" + '{:.2f}'.format (rewardTime)  + event
+                self.textfp.write(outPutStr + '\n')
+            self.textfp.flush()
 
 
     def tester(self,expSettings):
@@ -54,20 +89,10 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
                 GPIO.output(self.cageSettings.led2Pin, GPIO.LOW)
             elif inputStr == 'q':
                 break
-        
-    def logfile (self):
-        event = '\treward'
-        mStr = '{:013}'.format(self.mouse.tag) + '\t'
-        for rewardTime in self.rewardTimes:
-            outPutStr = mStr + datetime.fromtimestamp (int (rewardTime)).isoformat (' ') + event
-            print (outPutStr)
-        if self.textfp != None:
-            for rewardTime in self.rewardTimes:
-                outPutStr = mStr + datetime.fromtimestamp (int (rewardTime)).isoformat (' ') + "\t" + '{:.2f}'.format (rewardTime)  + event
-                self.textfp.write(outPutStr + '\n')
-            self.textfp.flush()
 
 
+
+            
 
 if __name__ == '__main__':
     import RPi.GPIO as GPIO

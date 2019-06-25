@@ -34,7 +34,7 @@ class Mouse:
         self.headFixes = 0
         self.entranceRewards = 0
         self.headFixRewards = 0
-        if self.stimResultsDict is not None:
+        if self.stimResultsDict != {}:
             for key in self.stimResultsDict:
                 self.stimResultsDict [key] = 0
     

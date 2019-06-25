@@ -43,7 +43,7 @@ class AHF_CageSet (object):
             with open ('AHFconfig.jsn', 'r') as fp:
                 data = fp.read()
                 data= data.replace('\n', ",")
-                print (data)
+                #print (data)
                 configDict = json.loads(data)
                 fp.close()
                 self.cageID = configDict.get('Cage ID')

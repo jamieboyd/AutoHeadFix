@@ -17,7 +17,7 @@ class AHF_HeadFixer_PWM_PCA9685 (AHF_HeadFixer_PWM):
         
     @staticmethod
     def configDict_read (cageSet, configDict):
-        super(AHF_HeadFixer_PWM_PCA9685).configDict_read (cageSet, configDict)
+        super(AHF_HeadFixer_PWM_PCA9685, AHF_HeadFixer_PWM_PCA9685).configDict_read (cageSet, configDict)
         cageSet.servoAddress = int(configDict.get('Servo Address', 0x40))
 
         

@@ -12,94 +12,210 @@ import pwd
 import grp
 
 from AHF_Stimulator import AHF_Stimulator
+from AHF_Stimulator_Rewards import AHF_Stimulator_Rewards
 from AHF_Camera import AHF_Camera
 
 class AHF_Settings (object):
     """
-    AHF_Settings is a class that reads, edits, and saves settings for the AutoheadFix program
+    AHF_Settings is a class that loads, edits, and saves settings for the AutoheadFix program
+    It keeps the information in a dictionary, as well as in instance variables
     """
+    # define some mostly useful defaults - hard to do for phone numbers and i.p addresses
+    entranceRewardTimeDef = 0.3
+    taskRewardTimeDef = 0.6
+    maxEntryRewardsDef = 100
+    entryRewardDelayDef = 1
+    propHeadFixDef = 1.0
+    skeddadleTimeDef = 0.75
+    inChamberTimeLimitDef = 600
+    hasTextMsgDef = False
+    phoneListDef = ('15555555555','15555555555')
+    textBeltKeyDef = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+    hasUDPDef = True
+    UDPListDef=('127.0.0.1','127.0.0.1')
+    cameraStartDelayDef = 3
+    stimulatorDef = 'Rewards'
+    stimDictDef = {'nRewards' : AHF_Stimulator_Rewards.nRewardsDefault, 'rewardInterval' : AHF_Stimulator_Rewards.rewardIntervalDefault}
+    camParamsDictDef = {'format': 'rgb', 'framerate': 30.0, 'shutter_speed': 30000, 'previewWin': (0, 0, 256, 256), 'quality': 20, 'whiteBalance': False, 'resolution': (256, 256), 'iso': 400}
 
-    def __init__ (self, fileName):
+
+    @staticmethod
+    def get_SettingsFile_from_user ():
+        """
+        Static method that trawls through current folder looking for AHF_settings .jsn files from which user chooses one
+        
+        Allows user to choose from the list of files found. Files are recognized by names starting
+        with 'AHF_Settings_' and ending with '.jsn'
+        Raises: FileNotFoundError if no stimulator class files found
+        Returns: name of the file the user chose, stripped of AHF_Settings and .jsn, or empty sting if no files found, or user wants new config
+        """
+        fileList = []
+        startlen = 13
+        endlen =4
+        for f in os.listdir('.'):
+            if f.startswith ('AHF_Settings_') and f.endswith ('.jsn'):
+                fname = f[startlen :-endlen]
+                fileList.append (fname)
+        if len (fileList) == 0:
+            print ('Could not find an AHF_Settings file in the current or enclosing directory.')
+            return ''
+        else:
+            inputStr = '\nEnter a number from 1 to {} to choose a Settings file, or 0 to make new settings:\n'.format(len (fileList))
+            ii=0
+            for file in fileList:
+                inputStr += '{:d} : {:s}\n'.format((ii + 1), file)
+                ii +=1
+            inputStr += ':'
+            response = -1
+            while response < 0 or response > len(fileList):
+                response =  int(input (inputStr))
+            if response ==0:
+                return ''
+            else:
+                return fileList[response -1]
+
+
+
+    def __init__ (self, fileNameP = ''):
         """
         Makes a new settings object, loading from a given file, letting user choose from existing files, or making new settings from user
 
-        Will try to load a file if file name is passed in,
+        Will try to load a file if file name is passed in, else will get user to select a file
         """
-        hasFile = False
-        if fileName is not None:
-            if fileName.startswith ('AHFexp_'):
-                configFile = ''
-            else:
-                configFile = 'AHFexp_'
-            configFile += fileName
-            if not fileName.endswith ('.jsn'):
-                configFile += '.jsn'
-            for f in os.listdir('.'):
-                if f == configFile:
-                    hasFile=True
-                    break
+        hasFile = True
+        if fileNameP == '':
+            fileNameP = AHF_Settings.get_SettingsFile_from_user ()
+            if fileNameP == '':
+                hasFile = False
+        # if we have a file, try to load it
         if hasFile:
-            self.load (fileName)
-        else:
-            # look for experiment config files in the current directory, they start with AHFexp_ and end with .jsn
-            iFile=0
-            files = ''
-            for f in os.listdir('.'):
-                if f.startswith ('AFHexp_') and f.endswith ('.jsn'):
-                    files += '\n' + str (iFile) + ':' + f
-                    iFile +=1
-            if iFile == 0: # no files found, create one
-                print ('Unable to find an experiment config file, let\'s make a new configuration:')
-                fileNum=-1
+            # fileName may be stripped
+            if not fileNameP.startswith ('AHF_Settings_'):
+                fileNameP = 'AHF_Settings_' + fileNameP
+            if not fileNameP.endswith ('.jsn'):
+                fileNameP = fileNameP + '.jsn'
+            hasFile = False
+            for file in os.listdir('.'):
+                if file == fileNameP:
+                    hasFile = True
+                    break
+            if hasFile:
+                try:
+                    fp = open (fileNameP, 'r')
+                    data = fp.read()
+                    fp.close()
+                    data= data.replace('\n', ",")
+                    self.settingsDict = json.loads(data)
+                    self.entranceRewardTime = self.settingsDict.get ('entranceRewardTime', AHF_Settings.entranceRewardTimeDef)
+                    self.taskRewardTime = self.settingsDict.get ('taskRewardTime', AHF_Settings.taskRewardTimeDef)
+                    self.maxEntryRewards = self.settingsDict.get ('maxEntryRewards', AHF_Settings.maxEntryRewardsDef)
+                    self.entryRewardDelay = self.settingsDict.get('entryRewardDelay', AHF_Settings.entryRewardDelayDef)
+                    self.propHeadFix = self.settingsDict.get('propHeadFix', AHF_Settings.propHeadFixDef)
+                    self.skeddadleTime = self.settingsDict.get ('skeddadleTime', AHF_Settings.skeddadleTimeDef)
+                    self.inChamberTimeLimit = self.settingsDict.get ('inChamberTimeLimit',AHF_Settings.inChamberTimeLimitDef)
+                    self.hasTextMsg = self.settingsDict.get ('hasTextMsg', AHF_Settings.hasTextMsgDef)
+                    if self.hasTextMsg == True:
+                        self.phoneList = self.settingsDict.get('phoneList', AHF_Settings.phoneListDef)
+                        self.textbeltKey = self.settingsDict.get ('textBeltKey', AHF_Settings.textBeltKeyDef)
+                    self.hasUDP = self.settingsDict.get ('hasUDP', AHF_Settings.hasUDPDef)
+                    if self.hasUDP == True:
+                        self.UDPList = self.settingsDict.get ('UDPList',AHF_Settings.UDPListDef)
+                        self.cameraStartDelay = self.settingsDict.get('cameraStartDelay', AHF_Settings.cameraStartDelayDef)
+                    self.camParamsDict = self.settingsDict.get('camParams', AHF_Settings.camParamsDictDef)
+                    self.stimDict = self.settingsDict.get('stimParams', AHF_Settings.stimDictDef)
+                    self.stimulator = self.settingsDict.get('stimulator', AHF_Settings.stimulatorDef)
+                except Exception as e:
+                    print ('Could not read data from {:s}: {:s}'.format (file, str (e)))
+                    hasFile = False
+        # either a file name was nor provided, or file name did not exist, or it could not be loaded
+        if not hasFile:
+            self.fileName = ''
+            self.settingsDict = {}
+            # reward settings
+            self.entranceRewardTime = AHF_Settings.entranceRewardTimeDef
+            tempInput = input ('Solenoid opening duration for entrance rewards, currently {:.3f} seconds:'.format (self.entranceRewardTime))
+            if tempInput != '':
+                self.entranceRewardTime = float (tempInput)
+            self.settingsDict.update({'entranceRewardTime' : self.entranceRewardTime})
+            self.taskRewardTime= AHF_Settings.taskRewardTimeDef
+            tempInput = input ('Solenoid opening duration for task rewards,currently {:.3f} seconds:'.format (self.taskRewardTime))
+            if tempInput != '':
+                self.taskRewardTime = float (tempInput)
+            self.settingsDict.update({'taskRewardTime' : self.taskRewardTime})
+            self.maxEntryRewards = AHF_Settings.maxEntryRewardsDef
+            tempInput = input('Maximum number of entry rewards that will be given per day, currently {:d}:'.format (self.maxEntryRewards))
+            if tempInput != '':
+                self.maxEntryRewards = int (tempInput)
+            self.settingsDict.update({'maxEntryRewards' : self.maxEntryRewards})
+            # head fix related settings
+            self.propHeadFix = AHF_Settings.propHeadFixDef
+            tempInput = input ('proportion (0 to 1) of trials that are head-fixed, currently {:.3f}:'.format (self.propHeadFix))
+            if tempInput != '':
+                self.propHeadFix = float (tempInput)
+            self.settingsDict.update({'propHeadFix' : self.propHeadFix})
+            self.skeddadleTime = AHF_Settings.skeddadleTimeDef
+            tempInput = input ('Time for mouse to get head off the contacts when session ends, currently {:.3f} seconds:'.format (self.skeddadleTime))
+            if tempInput != '':
+                self.skeddadleTime = float (tempInput)
+            self.settingsDict.update({'skeddadleTime' : self.skeddadleTime})
+            # in-chamber time limit and text messaging
+            self.inChamberTimeLimit = AHF_Settings.inChamberTimeLimitDef
+            tempInput = input ('In-Chamber duration limit before stopping head-fix trials, currently {:.3f} seconds:'.format(self.inChamberTimeLimit))
+            if tempInput != '':
+                self.inChamberTimeLimit = float (tempInput)
+            self.settingsDict.update ({'inChamberTimeLimit' : self.inChamberTimeLimit})  
+            self.hasTextMsg = AHF_Settings.hasTextMsgDef
+            tempInput = input ('Send text messages if mouse exceeds in-Chamber duration limit? (Yes or No) currently {:s}:'.format ('Yes' if self.hasTextMsg else 'No'))
+            if tempInput != '':
+                self.hasTextMsg = bool(tempInput [0] == 'y' or tempInput [0] == 'Y')
+            self.settingsDict.update ({'hasTextMsg' : self.hasTextMsg})
+            if self.hasTextMsg == True:                  
+                self.phoneList = AHF_Settings.phoneListDef
+                tempList = ''
+                for ph in self.phoneList:
+                    tempList += ',' + ph if tempList != '' else ph
+                tempInput = input ('comma-separated list of phone numbers to receive a text message if mouse exceeds in-Chamber duration limit, currently {:s}:'.format (tempList))
+                if tempInput != '':
+                    self.phoneList =tuple (tempInput.split(','))
+                self.settingsDict.update ({'phoneList' : self.phoneList})
+                self.textbeltKey = AHF_Settings.textbeltKeyDef
+                tempInput = input ('Enter access key for textbelt.com, currently {:s}'.format (self.textbeltKey))
+                if tempInput != '':
+                    self.textbeltKey = tempInput
+                self.settingsDict.update ({'textbeltKey' : self.textbeltKey})
+            # UDP stuff - a tuple of IP address of other computers
+            self.hasUDP = AHF_Settings.hasUDPDef
+            tempInput = input ('Send UDP triggers to start secondary cameras (Yes or No) currently  {:s}:'.format ('Yes' if self.hasUDP else 'No'))
+            self.hasUDP = bool(tempInput [0] == 'y' or tempInput [0] == 'Y')
+            if self.hasUDP == True:
+                self.UDPList = AHF_Settings.UDPListDef
+                tempList = ''
+                for ip in self.UDPList:
+                    tempList += ',' + ip if tempList != '' else ip
+                tempInput = input('IP addresses of Pis running secondary cameras, currently {:s}:'.format (tempList))
+                if tempInput != '':
+                    self.UDPList =tuple (tempInput.split (','))
+                self.settingsDict.update ({'UDPList' : self.UDPList})
+                self.cameraStartDelay = AHF_Settings.cameraStartDelayDef
+                tempInput = input ('Delay between sending UDP and toggling blue LED, currently {:.3f} seconds:'.format (self.cameraStartDelay))
+                if tempInput != '': 
+                    self.cameraStartDelay = float (tempInput)
+                self.settingsDict.update ({'cameraStartDelay' : self.cameraStartDelay})
+            # Stimulator file name
+            self.stimulator = AHF_Settings.stimulatorDef
+            tempInput = input ('Stimulator = {:s}. Select different Stimulator? (Yes or No)'.format (self.stimulator))
+            if tempInput [0] == 'y' or tempInput [0] == 'Y':
+                self.stimulator = AHF_Stimulator.get_Stimulator_from_user ()
+                # static function to make a configration without needing a stimulator to configure it
+                self.stimDict = AHF_Stimulator.get_class(self.stimulator).dict_from_user({})
             else:
-                inputPrompt = 'Enter file number to load experiment config file, or -1 to make new config\n'
-                inputPrompt += files +'\n:'
-                fileNum = int (input (inputPrompt))
-            if fileNum == -1:
-                self.config_from_user()
-                self.save()
-            else:
-                # file list starts with a separator (\n) so we split the list on \n and get fileNum + 1
-                # each list item starts with fileNum: so split the list item on ":" and get item 1 to get file name
-                self.load ((files.split('\n')[fileNum + 1]).split (':')[1])
+                
 
 
-    def config_from_user (self):
-        """
-        Queries the user for settings. This function may run before a camera or stimulator has been configured
+            # Camera related settings, in a dictionary, static function, don't need a camera object to be created
+            self.camParamsDict = AHF_Camera.dict_from_user ({})
 
-        We need to run static function for stimulator configuration and camera configuration
-        """
-        self.fileName = ''
-        # solenoid opening times, for entry rewards and task rewards, and other reward related settings
-        self.entranceRewardTime = float (input ('Solenoid opening duration, in seconds, for entrance rewards:'))
-        self.taskRewardTime= float (input ('Solenoid opening duration,in seconds, for task rewards:'))
-        self.maxEntryRewards = int (input ('Maximum number of entry rewards that will be given per day:'))
-        self.entryRewardDelay = float (input('Delay, in seconds, before an entrance reward is given:'))
-        # head fix related settings
-        self.propHeadFix = float (input('proportion (0 to 1) of trials that are head-fixed:'))
-        self.propHeadFix = min (1, max (0, self.propHeadFix)) # make sure proportion is bewteen 0 and 1
-        self.skeddadleTime = float (input ('Time, in seconds, for mouse to get head off the contacts when session ends:'))
-        tempInput = input ('Send text messages if mouse exceeds criterion time in chamber?(Y or N):')
-        self.hasTextMsg = bool(tempInput [0] == 'y' or tempInput [0] == 'Y')
-        if self.hasTextMsg == True:
-            self.inChamberTimeLimit = float (input ('In-Chamber duration limit, seconds, before stopping head-fix trials and sending text messg:'))
-            self.phoneList =tuple (input('Phone numbers to receive a text message if mouse is in chamber too long:').split(','))
-        else:
-            self.inChamberTimeLimit = float(input('In-Chamber duration limit, seconds, before stopping head-fix trials:'))
-       # Camera related settings, in a dictionary, static function, don't need a camera object to be created
-        self.camParamsDict = AHF_Camera.dict_from_user ({})
-        # UDP stuff - make a tuple of IP address of other computers
-        tempInput = input ('Send UDP triggers to start secondary cameras (Y or N):')
-        self.hasUDP = bool(tempInput [0] == 'y' or tempInput [0] == 'Y')
-        if self.hasUDP == True:
-            self.UDPList =tuple (input('IP addresses of Pis running secondary cameras:').split (','))
-            self.cameraStartDelay = float (input ('Delay in seconds between sending UDP and toggling blue LED.'))
-        # Stimulator class
-        self.stimulator = AHF_Stimulator.get_stimulator_from_user ()
-        # static function to make a configration without needing a stimulator to configure it
-        self.stimDict = AHF_Stimulator.get_class(self.stimulator).dict_from_user({})
-
+ 
 
     def save (self):
         """
@@ -117,57 +233,36 @@ class AHF_Settings (object):
             newConfig = 'AFHexp_' + ''.join([c for c in newConfig if c.isalpha() or c.isdigit() or c=='_']) + '.jsn'
             self.fileName = newConfig
         # make a dictionary from configuration
-        configDict = {}
-        configDict['entranceRewardTime'] = self.entranceRewardTime
-        configDict['taskRewardTime']= self.taskRewardTime
-        configDict['maxEntryRewards'] = self.maxEntryRewards
-        configDict['entryRewardDelay'] = self.entryRewardDelay
-        configDict['propHeadFix'] = self.propHeadFix
-        configDict['skeddadleTime'] = self.skeddadleTime
-        configDict['hasTextMsg'] = self.hasTextMsg
+        settingsDict = {}
+        settingsDict['entranceRewardTime'] = self.entranceRewardTime
+        settingsDict['taskRewardTime']= self.taskRewardTime
+        settingsDict['maxEntryRewards'] = self.maxEntryRewards
+        settingsDict['entryRewardDelay'] = self.entryRewardDelay
+        settingsDict['propHeadFix'] = self.propHeadFix
+        settingsDict['skeddadleTime'] = self.skeddadleTime
+        settingsDict['hasTextMsg'] = self.hasTextMsg
         if self.hasTextMsg == True:
-            configDict['inChamberTimeLimit'] = self.inChamberTimeLimit
-            configDict['phoneList'] = self.phoneList
-        configDict['hasUDP'] = self.hasUDP
+            settingsDict['inChamberTimeLimit'] = self.inChamberTimeLimit
+            settingsDict['phoneList'] = self.phoneList
+        settingsDict['hasUDP'] = self.hasUDP
         if self.hasUDP == True:
-            configDict['UDPList']=self.UDPList
-            configDict['cameraStartDelay'] = self.cameraStartDelay
-        configDict['camParams'] = self.camParamsDict
-        configDict['stimulator'] = self.stimulator
-        configDict['stimParams'] = self.stimDict
+            settingsDict['UDPList']=self.UDPList
+            settingsDict['cameraStartDelay'] = self.cameraStartDelay
+        settingsDict['camParams'] = self.camParamsDict
+        settingsDict['stimulator'] = self.stimulator
+        settingsDict['stimParams'] = self.stimDict
 
 
         # open the file name
         with open (newConfig, 'w') as fp:
-            fp.write (json.dumps (configDict))
+            fp.write (json.dumps (settingsDict))
             fp.close ()
             uid = pwd.getpwnam ('pi').pw_uid
             gid = grp.getgrnam ('pi').gr_gid
             os.chown (newConfig, uid, gid) # we run AutoHeadFix as root for GPIO, so expicitly set ownership for easy editing
 
 
-    def load (self, file):
-        with open (file, 'r') as fp:
-            configDict = json.loads(fp.read())
-            fp.close()
-            self.fileName = file
-            self.entranceRewardTime = float (configDict.get ('entranceRewardTime', 30e-03))
-            self.taskRewardTime = float (configDict.get ('taskRewardTime', 30e-03))
-            self.maxEntryRewards = int (configDict.get ('maxEntryRewards', 100))
-            self.entryRewardDelay = float (configDict.get('entryRewardDelay', 0.5))
-            self.propHeadFix = float (configDict.get('propHeadFix', 1.0))
-            self.skeddadleTime = float (configDict.get ('skeddadleTime', 0.25))
-            self.inChamberTimeLimit = float (configDict.get ('inChamberTimeLimit',600))
-            self.hasTextMsg = bool (configDict.get ('hasTextMsg', False))
-            if self.hasTextMsg == True:
-                self.phoneList = tuple (configDict.get('phoneList'))
-            self.hasUDP = bool(configDict.get ('hasUDP', False))
-            if self.hasUDP == True:
-                self.UDPList = tuple (configDict.get ('UDPList'))
-                self.cameraStartDelay = float (configDict.get('cameraStartDelay'))
-            self.camParamsDict = configDict.get('camParams', {})
-            self.stimulator = configDict.get('stimulator')
-            self.stimDict = configDict.get('stimParams')
+
 
 
 
