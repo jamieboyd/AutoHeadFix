@@ -32,7 +32,7 @@
 "RewarderClass"="AHF_Rewarder_solenoid_rpi"
 "RewarderDict"={"entryRewardDelay"=1.0
 "maxEntryRewards"=1000
-"rewardPin"=13
+"rewardPin"=4
 "rewards"={"entry"=0.2
 "task"=0.4
 "test"=1.0}}
@@ -53,7 +53,7 @@
 "edited"=true
 "entryTime"=0.0
 "fileName"="NoFix"
-"fixAgainTime"=Infinity
+"fixAgainTime"=1561587459.0715613
 "inChamberLimitExceeded"=false
 "lastFixedTag"=0
 "lastFixedTime"=0

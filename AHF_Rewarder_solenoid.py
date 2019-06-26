@@ -106,6 +106,9 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
         """
         Gives reward, if reward name is in dictionary. If an entry reward, must be less than number of max entry rewards per day
         """
+        if rewardName is 'test':
+            self.threadReward(1)
+            return 1
         if rewardName is 'entry' and resultsDict.get ('entry', 0) > settingsDict.get ('maxEntryRewards', self.maxEntryRewards):
             return 0
         else:
