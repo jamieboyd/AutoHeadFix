@@ -1,6 +1,10 @@
 #! /usr/bin/python3
 #-*-coding: utf-8 -*-
-
+"""
+AHF_Base.py
+================================================
+The base upon which everything else is built
+"""
 from abc import ABCMeta, abstractmethod
 
 #This creates a cyclic import - doesn't seem to be a problem on it's own, but
@@ -35,7 +39,7 @@ class AHF_Base (metaclass = ABCMeta):
     @staticmethod
     def subject_user_get(starterDict = {}):
         """
-        return an updated dictionary after asking the user for subject related and maybe individualized parameters
+        :returns: dict -- an updated dictionary after asking the user for subject related and maybe individualized parameters
         """
         return starterDict
 
@@ -48,6 +52,10 @@ class AHF_Base (metaclass = ABCMeta):
         __init__ will be passed both the settings dict andthe entire Task including the settings dict
         Class names need to start with AHF_ and the dictionary must follow convention, named for the class with 'Dict' appended.
 
+        Args:
+            taskP (pointer): Task Pointer - points to the global Task object
+            settingsDictP (pointer): Points to the global settings dictionary
+
         """
         self.task=taskP
         self.settingsDict = settingsDictP
@@ -59,7 +67,8 @@ class AHF_Base (metaclass = ABCMeta):
         """
         does hardware initialization with (possibly updated) info in self.settingsDict
         Run by __init__, or can be run  separately after editing the settingsDict
-        returns the truth that setup completed without errors
+
+        :returns: bool -- the truth that setup completed without errors
         """
         return True
 
@@ -81,6 +90,7 @@ class AHF_Base (metaclass = ABCMeta):
     @abstractmethod
     def hardwareTest (self):
         """
-        Tests functionality, gives user a chance to change settings. Returns True if any settings have changed
+        Tests functionality, gives user a chance to change settings.
+        :Returns: bool -- True if any settings have changed
         """
         return False
