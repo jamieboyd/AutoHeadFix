@@ -28,6 +28,7 @@ class AHF_Reader_ID (AHF_Reader):
         also logs entries in TagReader results dict for the mouse the tag corresponds to
         """
         if GPIO.input (channel) == GPIO.HIGH: # tag just entered
+            print("hello")
             try:
                 AHF_Task.gTask.tag = RFIDTagReader.globalReader.readTag ()
                 AHF_Task.gTask.DataLogger.writeToLogFile(AHF_Task.gTask.tag, 'entry', None, time())

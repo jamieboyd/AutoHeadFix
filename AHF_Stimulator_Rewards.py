@@ -48,7 +48,8 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
 
     def run(self, level = 0, resultsDict = {}, settingsDict = {}):
         super().run()
-        super().startVideo()
+        if hasattr(self.task, 'Camera'):
+            super().startVideo()
         self.rewardTimes = []
         for reward in range(self.task.Subjects.get(self.task.tag).get("Stimulator").get("nRewards")):
             if not self.running:
@@ -56,7 +57,8 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
             self.rewardTimes.append (time())
             self.rewarder.giveReward('task')
             sleep(self.task.Subjects.get(self.task.tag).get("Stimulator").get("rewardInterval"))
-        super().stopVideo()
+        if hasattr(self.task, 'Camera'):
+            super().stopVideo()
 
 
     def nextDay (self):
@@ -72,7 +74,8 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
 
             A stimulator may, e.g., open files and wish to close them before exiting, or use hardware that needs to be cleaned up
         """
-        self.task.Camera.stop_recording()
+        if hasattr(self.task, 'Camera'):
+            self.task.Camera.stop_recording()
         pass
 
 
