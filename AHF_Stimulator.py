@@ -104,7 +104,7 @@ class AHF_Stimulator (metaclass = ABCMeta):
     
     def __init__ (self, cageSettings, expSettings, rewarder, lickDetector):
         """
-        The Stimulator class is inited with pointers to cageSettings, experiment settings (includes stimDict)
+        The Stimulator class is inited with references to cageSettings, experiment settings (includes stimDict)
         and references to the rewarder and lickDetector objects. references are copied to instance variables
         and the setup function is run. Subclasses will probably not need to overwrite this function, but will
         need to provide their own setup function

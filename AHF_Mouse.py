@@ -12,15 +12,14 @@ class Mouse:
     """
     def __init__(self, tag, entries, entranceRewards, headFixes, headFixRewards, resultsDict = {}):
         """
-        Makes a new mouse object, initializing with RFID tag and entrance and reward info
+        Makes a new mouse object, initializing with RFID tag, entrance and reward info, and results dictionary
 
-        entrance and reward info can be loaded from quickStats file if program is restarted, else each
-        mouse will probably be initialized with 1 entry, all reward 0 first time mouse enters chamber
         :param tag: RFID tag of this mouse
         :param entries: number of entries mouse has made
         :param entranceRewards: number of entrance rewards mouse has been given
         :param headFixes: number of head fixes for this mouse
         :param headFixRewards: number of head fix rewards mouse has earned
+        :param resultsDict: dictionary of results from stimulator
 
         """
         self.tag = tag
@@ -33,32 +32,18 @@ class Mouse:
     def clear (self):
         """
         Clears the stats for entries and rewards for this mouse, done at the start of every day
-        stimulator may clear results at beginning of day as well
+        stimulator may clear resultsDict at beginning of day as well
         """
         self.entries = 0
         self.headFixes = 0
         self.entranceRewards = 0
         self.headFixRewards = 0
-        
-    
-    def reward (self, rewarder, rewardName):
-        """
-        Gives a reward to the mouse and increments the reward count for task or entries
-        :param:rewarder: Rewarder object used to ive rewards for all the mice
-        :param rewardName: either entrance or task for the two types of rewards logged
-        """
-        rewarder.giveReward (rewardName)
-        if rewardName == 'entrance':
-            self.entranceRewards +=1
-        elif rewardName == 'task':
-            self.headFixRewards += 1
-
 
     def show (self):
         """
         Prints all the data for this mouse, including any stimResults info
         """
-        print ('MouseID:{:013d}\tEntries:{:05d}\tHeadFixes:{:05d}\tHFRewards:{:05d}'.format (self.tag, self.entries, self.headFixes, self.entranceRewards,self.headFixRewards))
+        print ('MouseID:{:013d}\tEntries:{:05d}\tHeadFixes:{:05d}\tHFRewards:{:05d}'.format (self.tag, self.entries, self.headFixes, self.entranceRewards, self.headFixRewards))
         if self.stimResultsDict is not None:
             stimResults = 'Stim Results:\t\t'
             for key in self.stimResultsDict:
@@ -66,31 +51,35 @@ class Mouse:
             print (stimResults)
 
 
-
     def updateStats (statsFile):
         """
-        Updates the quick stats text file after every exit, mostly for the benefit of folks logged in remotely
+        Updates the quick stats text file after every exit, mostly for the benefit of folks logged in remotely, but also to save state in case program is restarted
         :param statsFile: file pointer to the stats file
         returns:nothing
         """
-
-        # find this mouse, overwrite everything from this mouse forward, after copying to a temp list 
+         # find this mouse, when we break mouseFilePos is in place
         hasMouse = False
-        # find this mouse
         filePos = statsFile.seek (49) # skip header
+        mouseFilePos = filePos
         for line in statsFile:
+            filePos = statsFile.tell()
             mouseID, entries, entRewards, hFixes, hfRewards, resultDict = str(line).split ('\t')
             if int (mouseID) = self.tag:
                 hasMouse = True
                 break
-
-        if hasMouse
-            
-                aMouse = Mouse (int (mouseID), int (entries), int (entRewards), int (hFixes), int (hfRewards), json.loads (resultDict))
-                self.mouseArray.append(aMouse)
-        except Exception as e:
-            print ("Error writing updating stat file\n", str (e))
-
+            mouseFilePos = filePos
+        # store rest of file in temp list
+        if hasMouse:
+            lines = []
+            for line in statsFile:
+                lines.append [line]
+            # write new stats for this mouse at saved position
+            filePos = statsFile.seek (mouseFilePos)
+        statsFile.write ('{:013d}\{:05d}\t{:05d}\t{:05d}\t{:05d}\t{:s}\n'.format (self.tag, self.entries, self.headFixes, self.entranceRewards, self.headFixRewards, json.dumps (self.resultDict))
+        if hasMouse:
+            # write saved data back to file
+            for line in lines:
+                 statsFile.write (line)
 
 class Mice:
     """
@@ -155,44 +144,6 @@ class Mice:
         if not hasMouse: # we are at end of the file, so append new mouse
             outPutStr = '{:013}\t{:05}\t{:05}\t{:05}\t{:05}\t{:s}'.format(addMouse.tag, 0, 0, 0, 0,'{}')
             statsFile.write (outPutStr)
-       
-
-    def addMiceFromFile(self, statsfp):
-        """
-        Adds mouse objects to the mice array, initialzing tagID and initial values for rewards from quickstats file
-
-        If there is a problem with the quickstats file structure, the file is scrubbed and started over with 0 mice
-        :param statsfp: file pointer to the quickstats file
-        returns:nothing
-        """
-        statsfp.seek (49)
-        aline = statsfp.readline()
-        while aline:
-            try:
-                mouseID, entries, entRewards, hFixes, hfRewards = str(aline).split ('\t')
-                aMouse = Mouse (int (mouseID), int (entries), int (entRewards), int (hFixes), int (hfRewards))
-                self.addMouse(aMouse, statsfp)
-                aline = statsfp.readline()
-            except ValueError:
-                statsfp.truncate (39)
-                self.mouseArray = []
-                aline = statsfp.readline()
-                print ('Daily Quick Stats File overwritten.')
-        return
-            
-
-    def removeMouseByTag (self, tag):
-        """
-        Removes the mouse with the given tag number from the array of mice
-        :param tag: the tag ID of the  mouse to remove
-        """
-        for mouse in self.mouseArray:
-            if mouse.tag == tag:
-                self.mouseArray.remove (mouse)
-                return len (self.mouseArray)
-        #print ('Mouse with tag ' + str (aMouse.tag) + ' was not found.')
-        return -1
-
 
     def show (self):
         """
@@ -222,21 +173,6 @@ class Mice:
                return mouse
         #print ('No mouse with tag ' + str (tag) + ' is in the array')
         return None
-
-
-    def getMousePos (self, tag):
-        """
-        Finds the positon in the array of the mouse with the given tag number
-        :param tag: the tag ID of the  mouse to remove
-        :returns: the position with the array
-        """
-        iPos =0
-        for mouse in self.mouseArray:
-            if mouse.tag == tag:
-               return ipos
-            iPos +=1
-        #print ('No mouse with tag ' + str (tag) + ' is in the array')
-        return -1
 
     def nMice(self):
         """
