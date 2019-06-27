@@ -101,11 +101,10 @@ class AHF_Settings (object):
                  self.fileName = self.fileName.rstrip('.jsn')
             else:
                 fileNameP = fileNameP + '.jsn'
-            hasFile = False
-            for file in os.listdir('.'):
-                if file == fileNameP:
-                    hasFile = True
-                    break
+            # test that the file exists
+            if not os.path.exists ('./{:s}'.format (fileNameP)):
+                hasFile = False
+            # if we have a file, open the file and read json dictionary
             if hasFile:
                 try:
                     fp = open (fileNameP, 'r')

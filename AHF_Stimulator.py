@@ -160,7 +160,7 @@ class AHF_Stimulator (metaclass = ABCMeta):
         pass
     
 
-    def nextDay (self, newFP):
+    def nextDay (self, newFP, mice):
         """
             Called when the next day starts. The stimulator is given the new log file pointer. Can do other things as needed
             :param newFP: the file pointer for the new day's log file

@@ -5,21 +5,18 @@
 from AHF_CageSet import AHF_CageSet
 from AHF_Settings import AHF_Settings
 from AHF_Rewarder import AHF_Rewarder
+from AHF_HeadFixer import AHF_HeadFixer
 from AHF_Camera import AHF_Camera
 from RFIDTagReader import TagReader
-
 from AHF_Stimulator import AHF_Stimulator
-
-
 from AHF_HardwareTester import hardwareTester
 from AHF_Mouse import Mouse, Mice
-from AHF_HeadFixer import AHF_HeadFixer
 
 #Standard Python modules
 from os import path, makedirs, chown
 from pwd import getpwnam
 from grp import getgrnam
-from time import time, localtime, timezone, sleep
+from time import time, sleep
 from datetime import datetime,timedelta
 from random import random
 from sys import argv, exit
@@ -59,12 +56,12 @@ def main():
         else:
             expSettings = AHF_Settings ()
         # nextDay starts tomorrow at KDAYSTARTHOUR
-        now = datetime.fromtimestamp (int (time()))
+        now = datetime.fromtimestamp (time())
         startTime = datetime (now.year, now.month,now.day, KDAYSTARTHOUR,0,0)
         nextDay = startTime + timedelta (hours=24)
         # Create folders where the files for today will be stored
         makeDayFolderPath(expSettings, cageSettings)
-        # initialize mice with zero mice
+        # initialize mice, either with zero mice or with mice from latest quickStats
         mice = Mice()
         # make daily Log files and quick stats file, if a quickstats file exists, we get info on mice from it
         makeLogFile (expSettings, cageSettings)
@@ -97,7 +94,7 @@ def main():
             notifier = AHF_Notifier (cageSettings.cageID, expSettings.phoneList)
         else:
             notifier = None
-        # make RFID reader
+        # make RFID reader and install callback
         tagReader = TagReader(cageSettings.serialPort, True, timeOutSecs = kTIMEOUTSECS)
         tagReader.installCallback (cageSettings.tirPin)
         # configure camera
@@ -131,8 +128,8 @@ def main():
                     if RFIDTagReader.globalTag != 0:
                         break
                     else:
-                        if datetime.fromtimestamp (int (time())) > nextDay:
-                            now = datetime.fromtimestamp (int (time()))
+                        if datetime.fromtimestamp (time()) > nextDay:
+                            now = datetime.fromtimestamp (time())
                             startTime = datetime (now.year, now.month, now.day, KDAYSTARTHOUR,0,0)
                             nextDay = startTime + timedelta (hours=24)
                             if lickDetector is not None:
@@ -339,8 +336,8 @@ def makeDayFolderPath (expSettings, cageSettings):
     :param cageSettings: settings that are expected to stay the same for each setup, including hardware pin-outs for GPIO
 
     """
-    dateTimeStruct = localtime()
-    expSettings.dateStr= str (dateTimeStruct.tm_year) + (str (dateTimeStruct.tm_mon)).zfill(2) + (str (dateTimeStruct.tm_mday)).zfill(2)
+    now = datetime.fromtimestamp (time())
+    expSettings.dateStr= str (now.year) + (str (now.month)).zfill(2) + (str (now.day)).zfill(2)
     expSettings.dayFolderPath = cageSettings.dataPath + expSettings.dateStr + '/' + cageSettings.cageID + '/'
     try:
         if not path.exists(expSettings.dayFolderPath):
@@ -401,6 +398,8 @@ def makeQuickStatsFile (expSettings, cageSettings, mice):
     :param expSettings: experiment-specific settings, everything you need to know is stored in this object
     :param cageSettings: settings that are expected to stay the same for each setup, including hardware pin-outs for GPIO
     :param mice: the array of mice objects for this cage
+
+    Stimulator can add results dictionary for each mouse
 """
     try:
         textFilePath = expSettings.dayFolderPath + 'TextFiles/quickStats_' + cageSettings.cageID + '_' + expSettings.dateStr + '.txt'
@@ -410,7 +409,7 @@ def makeQuickStatsFile (expSettings, cageSettings, mice):
             mice.show()
         else:
             expSettings.statsFP = open(textFilePath, 'w')
-            expSettings.statsFP.write('Mouse_ID\tentries\tent_rew\thfixes\thf_rew\n')
+            expSettings.statsFP.write('Mouse_ID\tentries\tent_rew\thfixes\thf_rew\tstim_dict\n')
             expSettings.statsFP.close()
             expSettings.statsFP = open(textFilePath, 'r+')
             uid = getpwnam ('pi').pw_uid

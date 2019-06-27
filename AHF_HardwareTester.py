@@ -1,72 +1,17 @@
 #! /usr/bin/python3
 #-*-coding: utf-8 -*-
 
-
+from AHF_CageSet import AHF_CageSet
 import RPi.GPIO as GPIO
 from time import sleep
-from AHF_CageSet import AHF_CageSet
+
 from RFIDTagReader import TagReader
 from AHF_HeadFixer import AHF_HeadFixer
+from AHF_Rewarder import AHF_Rewarder
 from time import time
 
 
-if __name__ == '__main__':
-    class simpleExpSetings (object):
-        """
-        Some info about contact edges is saved in the experiment settings, so we spoof that
-        here to use the same test code for contact check
-        """
-        def __init__(cageSettings):
-            if cageSettings.contactPolarity == 'RISING':
-                self.contactEdge = GPIO.RISING
-                self.noContactEdge = GPIO.FALLING
-                self.contactState = GPIO.HIGH
-                self.noContactState = GPIO.LOW
-            else:
-                self.contactEdge = GPIO.FALLING
-                self.noContactEdge = GPIO.RISING
-                self.contactState = GPIO.LOW
-                self.noContactState = GPIO.HIGH
-    def hardwareTester ():
-        """
-        Hardware Tester for Auto Head Fixing, allows you to verify the various hardware bits are working, also test stimulator
-        """
-        cageSet = AHF_CageSet()
-        expSettings = AHF_HardwareTester.simpleExpSetings (cageSet)
-        # set up GPIO to use BCM mode for GPIO pin numbering
-        GPIO.setwarnings(False)
-        GPIO.setmode (GPIO.BCM)
-        GPIO.setup (cageSet.rewardPin, GPIO.OUT)
-        GPIO.setup (cageSet.ledPin, GPIO.OUT)
-        GPIO.setup (cageSet.tirPin, GPIO.IN)
-        # contact pin can have a pullup/down resistor enabled
-        GPIO.setup (cageSet.contactPin, GPIO.IN, pull_up_down=getattr (GPIO, "PUD_" + cageSet.contactPUD))
-        # initialize head fixer
-        headFixer=AHF_HeadFixer.get_class (cageSet.headFixer) (cageSet)
-        # start TagReader
-        try:
-            tagReader = AHF_TagReader (cageSet.serialPort, True)
-        except IOError:
-            tagReader = None
-        # start lick detector
-        if cageSet.lickIRQ == 0:
-            lickDetector = None
-        else:
-            from AHF_LickDetector import AHF_LickDetector, Simple_Logger
-            try:
-                lickDetector = AHF_LickDetector (cageSet.lickChans, cageSet.lickIRQ, Simple_Logger (None))
-            except IOError:
-                lickDetector = None
-        htloop (cageSet, expSettings, tagReader, headFixer, lickDetector, stimulator)
-else:
-    def hardwareTester (cageSet, expSettings, tagReader, headFixer, lickDetector, stimulator):
-        """
-        Hardware Tester for Auto Head Fixing, allows you to verify the various hardware bits are working
-        """
-        htloop (cageSet, expSettings, tagReader, headFixer, lickDetector, stimulator)
-
-
-def htloop (cageSet, expSettings, tagReader, headFixer, lickDetector, stimulator):
+def hardwareTester (cageSet, expSettings, tagReader, headFixer, rewarder, lickDetector, stimulator, stimDict):
     """
     Presents a menu asking user to choose a bit of hardware to test, and runs the tests
 
@@ -206,10 +151,76 @@ def htloop (cageSet, expSettings, tagReader, headFixer, lickDetector, stimulator
             elif inputStr == 'q':
                 break
     except KeyboardInterrupt:
-        print ("quitting.")
-    finally:
-        if __name__ == '__main__':
-            GPIO.cleanup() # this ensures a clean exit
+        print ("harware tester quitting.")
 
+            
 if __name__ == '__main__':
-    hardwareTester()
+    
+    class simpleExpSetings (AHF_Settings):
+        """
+        Some info about contact edges is translated from the cageSet and saved in the experiment settings, so we spoof that
+        here to use the same test code for contact check when run form main as when run from the hardware tester optionin the main program
+        """
+        def __init__(self, cageSettings):
+            if cageSettings.contactPolarity == 'RISING':
+                self.contactEdge = GPIO.RISING
+                self.noContactEdge = GPIO.FALLING
+                self.contactState = GPIO.HIGH
+                self.noContactState = GPIO.LOW
+            else:
+                self.contactEdge = GPIO.FALLING
+                self.noContactEdge = GPIO.RISING
+                self.contactState = GPIO.LOW
+                self.noContactState = GPIO.HIGH
+                
+    def hardwareTester_for_main ():
+        """
+        When run as main, hardware Tester allows you to verify the various hardware bits are working, also test stimulator
+        without running full Auto Head Fixing program. Initialize hardware, then runs the regular hardware tester function
+        """
+        cageSet = AHF_CageSet() # loads cage settings from AHF_config.jsn
+        expSettings = simpleExpSetings (cageSet) # exp settings contains contact edge and state, simpleExpSetings does just that and no more
+
+        GPIO.setmode (GPIO.BCM) # set up GPIO to use BCM mode for GPIO pin numbering
+        GPIO.setwarnings(False) # supresses warnings for using previously configured pins
+
+        GPIO.setup (cageSet.ledPin, GPIO.OUT) # LED for brain illumination, one simpe GPIO pin for output
+
+        rewarder = AHF_Rewarder (30e-03, cageSet.rewardPin) # make rewarder and add a test reward
+        rewarder.addToDict('test', 1.0)
+        
+        GPIO.setup (cageSet.contactPin, GPIO.IN, pull_up_down=getattr (GPIO, "PUD_" + cageSet.contactPUD)) # contact check pin can have a pullup/down resistor
+
+        
+        # make RFID reader and install callback
+        try:
+            tagReader = TagReader(cageSet.serialPort, True, timeOutSecs = 50e-03)
+            tagReader.installCallback (cageSet.tirPin)
+        except Exception as e:
+            tagReader = None
+        
+        # initialize head fixer
+        try:
+            headFixer=AHF_HeadFixer.get_class (cageSet.headFixer) (cageSet)
+        except Exception as e:
+            headFixer = None
+            
+
+        # start lick detector, if one is installed
+        if cageSet.lickIRQ == 0:
+            lickDetector = None
+        else:
+            from AHF_LickDetector import AHF_LickDetector, Simple_Logger
+            try:
+                lickDetector = AHF_LickDetector (cageSet.lickChans, cageSet.lickIRQ, Simple_Logger (None))
+            except IOError:
+                lickDetector = None
+                
+        hardwareTester (cageSet, expSettings, tagReader, headFixer, rewarder, lickDetector, stimulator, stimDict)
+        GPIO.cleanup() # this ensures a clean exit
+
+
+    hardwareTester_for_main ()
+    
+
+
