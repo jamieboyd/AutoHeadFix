@@ -179,8 +179,7 @@ def main():
                         sleep (kTIMEOUTmS)
                     if expSettings.hasTextMsg == True:
                         notifier.notify (thisMouse.tag, (time() - entryTime), False)
-                tagReader.clearBuffer ()
-                # after exit, look for countermanable entrance reward and update stats
+                # after exit, look to countermand entrance reward and update stats
                 if thisMouse.entranceRewards < expSettings.maxEntryRewards:
                    if not rewarder.countermandReward ():
                        thisMouse.entranceRewards +=1
@@ -372,6 +371,7 @@ def writeToLogFile(logFP, mouseObj, event):
             outPutStr = ''.zfill(13)
         else:
             outPutStr = '{:013}'.format(mouseObj.tag)
+            
         logOutPutStr = outPutStr + '\t' + '{:.2f}'.format (time ())  + '\t' + event +  '\t' + datetime.fromtimestamp (int (time())).isoformat (' ')
         printOutPutStr = outPutStr + '\t' + datetime.fromtimestamp (int (time())).isoformat (' ') + '\t' + event
         print (printOutPutStr)

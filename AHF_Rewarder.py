@@ -112,13 +112,17 @@ class AHF_Rewarder:
 if __name__ == '__main__':
     rewardPin = 13
     GPIO.setmode (GPIO.BCM)
+    GPIO.setwarnings (False)
     rewarder = AHF_Rewarder (30e-03, rewardPin)
-    rewarder.addToDict ("entry", 25e-03)
+    rewarder.addToDict ("entry", 100e-03)
     rewarder.giveReward ("entry")
-    sleep(50e-03)
-    rewarder.giveReward ("entry")
-    sleep(50e-03)
-    rewarder.addToDict ("earned", 50e-03)
+    sleep(1)
+    rewarder.addToDict ("earned", 150e-03)
     rewarder.giveReward ("earned")
+    sleep(1)
+    rewarder.giveRewardCM ("entry", 2)
+    sleep (0.5)
+    print (rewarder.countermandReward ())
+    sleep (1)
     GPIO.cleanup()
 

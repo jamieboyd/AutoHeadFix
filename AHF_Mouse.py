@@ -64,7 +64,7 @@ class Mouse:
         for line in statsFile:
             filePos = statsFile.tell()
             mouseID, entries, entRewards, hFixes, hfRewards, resultDict = str(line).split ('\t')
-            if int (mouseID) = self.tag:
+            if int (mouseID) == self.tag:
                 hasMouse = True
                 break
             mouseFilePos = filePos
@@ -75,7 +75,7 @@ class Mouse:
                 lines.append [line]
             # write new stats for this mouse at saved position
             filePos = statsFile.seek (mouseFilePos)
-        statsFile.write ('{:013d}\{:05d}\t{:05d}\t{:05d}\t{:05d}\t{:s}\n'.format (self.tag, self.entries, self.headFixes, self.entranceRewards, self.headFixRewards, json.dumps (self.resultDict))
+        statsFile.write ('{:013d}\{:05d}\t{:05d}\t{:05d}\t{:05d}\t{:s}\n'.format (self.tag, self.entries, self.headFixes, self.entranceRewards, self.headFixRewards, json.dumps (self.resultDict)))
         if hasMouse:
             # write saved data back to file
             for line in lines:
@@ -137,7 +137,7 @@ class Mice:
         statsFile.seek (49) # skip the header
         for line in statsFile:
             mouseID, entries, entRewards, hFixes, hfRewards, resultDict = str(line).split ('\t')
-            if mouseID = addMouse.tag:
+            if mouseID == addMouse.tag:
                 hasMouse = True
                 print ('Mouse with tag {:d} is already in stats file'.format (addMouse.tag))
                 break

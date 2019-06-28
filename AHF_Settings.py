@@ -5,7 +5,7 @@
 AHF_Settings provides functions to read, edit, and save settings for the AutoheadFix program
 """
 
-import os
+from os import path, listdir, chown
 import sys
 import json
 import pwd
@@ -52,7 +52,7 @@ class AHF_Settings (object):
         fileList = []
         startlen = 13
         endlen =4
-        for f in os.listdir('.'):
+        for f in listdir('.'):
             if f.startswith ('AHF_Settings_') and f.endswith ('.jsn'):
                 fname = f[startlen :-endlen]
                 fileList.append (fname)
@@ -102,7 +102,7 @@ class AHF_Settings (object):
             else:
                 fileNameP = fileNameP + '.jsn'
             # test that the file exists
-            if not os.path.exists ('./{:s}'.format (fileNameP)):
+            if not path.exists ('./{:s}'.format (fileNameP)):
                 hasFile = False
             # if we have a file, open the file and read json dictionary
             if hasFile:
@@ -256,7 +256,7 @@ class AHF_Settings (object):
             fp.close ()
             uid = pwd.getpwnam ('pi').pw_uid
             gid = grp.getgrnam ('pi').gr_gid
-            os.chown (newConfig, uid, gid) # we run AutoHeadFix as root for GPIO, so expicitly set ownership for easy editing
+            chown (newConfig, uid, gid) # we run AutoHeadFix as root for GPIO, so expicitly set ownership for easy editing
 
 
 

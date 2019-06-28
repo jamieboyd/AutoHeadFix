@@ -2,7 +2,7 @@
 #-*-coding: utf-8 -*-
 
 import json
-import os
+from os import chown
 import pwd
 import grp
 from AHF_HeadFixer import AHF_HeadFixer
@@ -135,7 +135,7 @@ class AHF_CageSet (object):
             fp.close ()
             uid = pwd.getpwnam ('pi').pw_uid
             gid = grp.getgrnam ('pi').gr_gid
-            os.chown ('AHF_config.jsn', uid, gid) # we may run as root for pi PWM, so we need to expicitly set ownership
+            chown ('AHF_config.jsn', uid, gid) # we may run as root for pi PWM, so we need to expicitly set ownership
 
     def show (self):
         """
