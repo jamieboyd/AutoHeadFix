@@ -8,6 +8,10 @@ Welcome to AutoHeadFix's documentation!
 .. automodule:: AHF_Base
     :members:
 
+.. automodule:: AHF_ContactCheck
+    :members:
+
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
