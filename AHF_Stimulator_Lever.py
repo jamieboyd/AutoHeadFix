@@ -47,7 +47,7 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
     defaultGoalCenter = 200 # center of goal area where mouse must maintain lever for success
     defaultGoalWidth = 100 # width of goal area where mouse must maintain lever for success, can be overridden by training settings
     """
-    Perturbation settings for starting a mouse. Force on lever is adjusted up or down relative to const force, and then left at new value, and lever must be kept in goal area 
+    Perturbation settings for starting a mouse. Force on lever is adjusted up or down relative to const force, and then left at new value, and lever must be kept in goal area
     """
     defaultPerturbPercent = 0.0 # 0 means no perturbation, just hold lever in goal area for hold time, non-zero value (0-1) means proportion of trials to perturb
     defaultPerturbRampDur = 0.25 # duration of ramp for perturbationb, in seconds, max possible duration is set by MAX_FORCE_ARRAY_SIZE / LEVER_FREQ
@@ -59,8 +59,8 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
     Training settings
     """
     defaultTrainSize = 50 # number of previous trials to examine when deciding promotion/demotion
-    defaultPromote = 0.75 # promote to next level when this performance rate is exceeded
-    defaultFail = 0.25 # drop to previous level when fail rate is not met
+    defaultPromoteRate = 0.75 # promote to next level when this performance rate is exceeded
+    defaultDemoteRate = 0.25 # drop to previous level when fail rate is not met
     """
     training for goal position
     """
@@ -75,13 +75,13 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
     defaultHoldStartTime = 0.1
     defaultHoldEndTime = 2
     defaultHoldIncr = 0.1
-    
+
     #pathToData_def = '/home/pi/Documents/' # folder where lever pos files will be saved, or maybe just pass the array to the DataLogger
-    
+
     @staticmethod
     def about():
         return 'As mice hold a lever in a set angular range, Lever stimulator records lever position and puts torque on the lever by calling ptLeverThread C-module.'
-        
+
     @staticmethod
     def config_user_get (starterDict = {}):
         recordingTime = starterDict.get ('recordingTime', AHF_Stimulator_Lever.defaultRecordingTime)
@@ -107,31 +107,196 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
         constForce = starterDict.get ('constForce', AHF_Stimulator_Lever.defaultConstForce)
         response = input ('Enter the constant force applied to the on lever at the start of a trial, from 0 to 4095 (currently {:d}): '.format (constForce))
         if response != '':
-            if ( 
             constForce = int (response)
-                
+
         trialIsCued = StarterDict.get ('trialIsCued', AHF_Stimulator_Lever.defaultTrialIsCued)
         response = input ('Do the lever pull trials have a start cue? (yes or no, currently {:.str}): '.format ('Yes' if mybool else 'No'))
         if response != '':
-            trialIsCued = True if response [0] == 'y' or response [0] == 'Y' else False
+            trialIsCued = True if response.lower()[0] == 'y' else False
+        starterDict.update({'recordingTime': recordingTime, 'leverIsReversed': leverIsReversed, 'goalCuePin': goalCuePin, 'goalCueFreq': goalCueFreq})
+        starterDict.update({'constForce': constForce, 'trialIsCued': trialIsCued})
         if trialIsCued:
-            
-        
-        rewardInterval = starterDict.get ('rewardInterval', AHF_Stimulator_Lever.defaultInterval)
-        response = input ('Enter the time interval between rewards (currently %.2f seconds): ' % rewardInterval)
-        if response != '':
-            rewardInterval = float (response)
-        starterDict.update({'nRewards' : nRewards, 'rewardInterval' : rewardInterval})
+            startCuePin = starterDict.get ('startCuePin', AHF_Stimulator_Lever.defaultStartCuePin)
+            response = input ('Enter the GPIO pin to use for cues, currently {:d}: '.format (startCuePin))
+            if response != '':
+                startCuePin = int (response)
+
+            startCueFreq = starterDict.get ('startCueFreq', AHF_Stimulator_Lever.defaultStartCueFreq)
+            response = input ('Enter the frequency to use for cues, currently {:d}: '.format (startCueFreq))
+            if response != '':
+                startCueFreq = int (response)
+
+            startCueDur = starterDict.get ('startCueDur', AHF_Stimulator_Lever.defaultStartCueDur)
+            response = input ('Enter the duration of cues, currently {:.2f}: '.format (startCueDur))
+            if response != '':
+                startCueDur = float (response)
+
+            trialTimeout = starterDict.get ('trialTimeout', AHF_Stimulator_Lever.defaultTrialTimeout)
+            response = input ('Enter the time between trials, currently {:.2f}: '.format (trialTimeout))
+            if response != '':
+                trialTimeout = float (response)
+            starterDict.update({'startCuePin': startCuePin, 'startCueFreq': startCueFreq, 'startCueDur': startCueDur, 'trialTimeout': trialTimeout})
+        else:
+            #defaultPrePullTime = 0.25 # this many seconds of time before the lever reaches goal position is saved in a circular buffer
+            prePullTime = starterDict.get ('prePullTime', AHF_Stimulus_Lever.defaultPrePullTime)
+            response = input ('Enter the duration prior to goal position to be saved, currently {:.2f}: '.format (prePullTime))
+            if response != '':
+                prePullTime = float (response)
+            starterDict.update({'prePullTime': prePullTime})
+
         return starterDict
 
+    def config_user_subject_get(self, starterDict={}):
+        print('=============== Default Pull Difficulty Settings ==================')
+        toGoalTime = starterDict.get ('toGoalTime', AHF_Stimulator_Lever.defaultToGoalTime)
+        response = input('Enter the time the mouse has to get lever into goal area, currently {:.2f}: '.format (toGoalTime))
+        if response != '':
+            toGoalTime = float (response)
 
+        holdTime = starterDict.get ('holdTime', AHF_Stimulator_Lever.defaultHoldTime)
+        response = input('Enter the time the mouse has to hold lever in the goal area, currently {:.2f}: '.format (holdTime))
+        if response != '':
+            holdTime = float (response)
 
-    def config_user_get (starterDict = {}):
+        goalCenter = starterDict.get ('goalCenter', AHF_Stimulator_Lever.defaultGoalCenter)
+        response = input('Enter the center of the goal area (currently {:d}): '.format (goalCenter))
+        if response != '':
+            goalCenter = int (response)
 
-        keyTuple = ('posBufferSize', 'isCued', 'constForce', 'toGoalOrCirc', 'isReversed', 'goalCuePin', 'goalCueFreq','pathToData')
-        for key in keyTuple:
-            value = input ('Enter a value for ' + key + ':')
-            stimDict.update({key : value})
+        goalWidth = starterDict.get ('goalWidth', AHF_Stimulator_Lever.defaultGoalWidth)
+        response = input('Enter the width of the goal area (currently {:d}): '.format (goalWidth))
+        if response != '':
+            goalWidth = int (response)
+
+        starterDict.update({'toGoalTime': toGoalTime, 'holdTime': holdTime, 'goalCenter': goalCenter, 'goalWidth': goalWidth})
+
+        print('=============== Perturbation Settings ==================')
+        perturbPercent = starterDict.get ('perturbPercent', AHF_Stimulator_Lever.defaultPerturbPercent)
+        response = input('Enter the ratio of trials with perturbations (0.0-1.0) (currently {:.2f}): '.format (perturbPercent))
+        if response != '':
+            perturbPercent = float (response)
+
+        perturbRampDur = starterDict.get ('perturbRampDur', AHF_Stimulator_Lever.defaultPerturbRampDur)
+        response = input('Enter the duration of perturbation ramp (currently {:.2f}): '.format (perturbRampDur))
+        if response != '':
+            perturbRampDur = float (response)
+
+        perturbStartTime = starterDict.get ('perturbStartTime', AHF_Stimulator_Lever.defaultPerturbStartTime)
+        response = input('Enter the time from goal to start of perturbation (currently {:.2f}): '.format (perturbStartTime))
+        if response != '':
+            perturbStartTime = float (response)
+
+        perturbStartRandom = starterDict.get ('perturbStartRandom', AHF_Stimulator_Lever.defaultPerturbStartRandom)
+        response = input('Enter the maximum randomized amount to add/subtract to perturbStartTime (currently {:.2f}): '.format (perturbStartRandom))
+        if response != '':
+            perturbStartRandom = float (response)
+
+        perturbForceOffset = starterDict.get ('perturbForceOffset', AHF_Stimulator_Lever.defaultPerturbForceOffset)
+        response = input('Enter the added force on lever during a perturbation (currently {:d}): '.format (perturbForceOffset))
+        if response != '':
+            perturbForceOffset = int (response)
+
+        perturbForceRandom = starterDict.get ('perturbForceRandom', AHF_Stimulator_Lever.defaultPerturbForceRandom)
+        response = input('Enter the randomized force range on lever during a perturbation (currently {:d}): '.format (perturbForceRandom))
+        if response != '':
+            perturbForceRandom = int (response)
+        starterDict.update({'perturbPercent': perturbPercent, 'perturbRampDur': perturbRampDur, 'perturbStartTime': perturbStartTime, 'perturbStartRandom': perturbStartRandom})
+        starterDict.update({'perturbForceOffset': perturbForceOffset, 'perturbForceRandom': perturbForceRandom})
+
+        print('=============== Training Settings ==================')
+
+        trainSize = starterDict.get ('trainSize', AHF_Stimulator_Lever.defaultTrainSize)
+        response = input('Enter the number of previous trials to examine when deciding promotion/demotion (currently {:.d}): '.format (trainSize))
+        if response != '':
+            trainSize = int (response)
+
+        promoteRate = starterDict.get ('promoteRate', AHF_Stimulator_Lever.defaultPromoteRate)
+        response = input('Enter the performance rate to exceed to be promoted (currently {:.d}): '.format (promoteRate))
+        if response != '':
+            promoteRate = float (response)
+
+        demoteRate = starterDict.get ('demoteRate', AHF_Stimulator_Lever.defaultDemoteRate)
+        response = input('Enter the performance rate below which to be demoted (currently {:.d}): '.format (demoteRate))
+        if response != '':
+            demoteRate = float (response)
+        starterDict.update({'trainSize': trainSize, 'promoteRate': promoteRate, 'demoteRate': demoteRate})
+
+        goalTrainOn = starterDict.get ('goalTrainOn', AHF_Stimulator_Lever.defaultGoalTrainOn)
+        response = input('Enter whether the goal train is on; bit 0 means training, bit 1 means demotion is not allowed, only promotion to next level (currently {:.d}): '.format (goalTrainOn))
+        if response != '':
+            goalTrainOn = int (response)
+
+        goalStartWidth = starterDict.get ('goalStartWidth', AHF_Stimulator_Lever.defautlGoalStartWidth)
+        response = input('Enter starting goal width (currently {:.d}): '.format (goalStartWidth))
+        if response != '':
+            goalStartWidth = int (response)
+
+        goalEndWidth = starterDict.get ('goalEndWidth', AHF_Stimulator_Lever.defautlGoalEndWidth)
+        response = input('Enter ending goal width (currently {:.d}): '.format (goalEndWidth))
+        if response != '':
+            goalEndWidth = int (response)
+
+        goalIncr = starterDict.get ('goalIncr', AHF_Stimulator_Lever.defautlGoalIncr)
+        response = input('Enter amount hold time increases by, by level (currently {:.d}): '.format (goalIncr))
+        if response != '':
+            goalIncr = int (response)
+        starterDict.update({'goalTrainOn': goalTrainOn, 'goalStartWidth': goalStartWidth, 'goalEndWidth': goalEndWidth, 'goalIncr': goalIncr})
+
+        holdTrainOn = starterDict.get ('holdTrainOn', AHF_Stimulator_Lever.defaultHoldsTrainOn)
+        response = input('Enter whether the hold train is on; bit 0 means training, bit 1 means demotion is not allowed, only promotion to next level (currently {:.d}): '.format (holdTrainOn))
+        if response != '':
+            holdTrainOn = int (response)
+
+        holdStartTime = starterDict.get ('holdStartTime', AHF_Stimulator_Lever.defaultHoldStartTime)
+        response = input('Enter starting hold time (currently {:.d}): '.format (holdStartTime))
+        if response != '':
+            holdStartTime = int (response)
+
+        holdEndTime = starterDict.get ('holdEndTime', AHF_Stimulator_Lever.defaultHoldEndTime)
+        response = input('Enter ending hold time (currently {:.d}): '.format (holdEndTime))
+        if response != '':
+            holdEndTime = int (response)
+
+        holdIncr = starterDict.get ('holdIncr', AHF_Stimulator_Lever.defautlHoldIncr)
+        response = input('Enter amount goal width decreases by, by level (currently {:.d}): '.format (holdIncr))
+        if response != '':
+            holdIncr = int (response)
+        starterDict.update({'holdTrainOn': holdTrainOn, 'holdStartTime': holdStartTime, 'holdEndTime': holdEndTime, 'holdIncr': holdIncr})
+        return starterDict
+
+    def config_subject_get (self):
+        toGoalTime = starterDict.get ('toGoalTime', AHF_Stimulator_Lever.defaultToGoalTime)
+        holdTime = starterDict.get ('holdTime', AHF_Stimulator_Lever.defaultHoldTime)
+        goalCenter = starterDict.get ('goalCenter', AHF_Stimulator_Lever.defaultGoalCenter)
+        goalWidth = starterDict.get ('goalWidth', AHF_Stimulator_Lever.defaultGoalWidth)
+        starterDict.update({'toGoalTime': toGoalTime, 'holdTime': holdTime, 'goalCenter': goalCenter, 'goalWidth': goalWidth})
+
+        perturbPercent = starterDict.get ('perturbPercent', AHF_Stimulator_Lever.defaultPerturbPercent)
+        perturbRampDur = starterDict.get ('perturbRampDur', AHF_Stimulator_Lever.defaultPerturbRampDur)
+        perturbStartTime = starterDict.get ('perturbStartTime', AHF_Stimulator_Lever.defaultPerturbStartTime)
+        perturbStartRandom = starterDict.get ('perturbStartRandom', AHF_Stimulator_Lever.defaultPerturbStartRandom)
+        perturbForceOffset = starterDict.get ('perturbForceOffset', AHF_Stimulator_Lever.defaultPerturbForceOffset)
+        perturbForceRandom = starterDict.get ('perturbForceRandom', AHF_Stimulator_Lever.defaultPerturbForceRandom)
+        starterDict.update({'perturbPercent': perturbPercent, 'perturbRampDur': perturbRampDur, 'perturbStartTime': perturbStartTime, 'perturbStartRandom': perturbStartRandom})
+        starterDict.update({'perturbForceOffset': perturbForceOffset, 'perturbForceRandom': perturbForceRandom})
+
+        trainSize = starterDict.get ('trainSize', AHF_Stimulator_Lever.defaultTrainSize)
+        promoteRate = starterDict.get ('promoteRate', AHF_Stimulator_Lever.defaultPromoteRate)
+        demoteRate = starterDict.get ('demoteRate', AHF_Stimulator_Lever.defaultDemoteRate)
+        starterDict.update({'trainSize': trainSize, 'promoteRate': promoteRate, 'demoteRate': demoteRate})
+
+        goalTrainOn = starterDict.get ('goalTrainOn', AHF_Stimulator_Lever.defaultGoalTrainOn)
+        goalStartWidth = starterDict.get ('goalStartWidth', AHF_Stimulator_Lever.defautlGoalStartWidth)
+        goalEndWidth = starterDict.get ('goalEndWidth', AHF_Stimulator_Lever.defautlGoalEndWidth)
+        goalIncr = starterDict.get ('goalIncr', AHF_Stimulator_Lever.defautlGoalIncr)
+        starterDict.update({'goalTrainOn': goalTrainOn, 'goalStartWidth': goalStartWidth, 'goalEndWidth': goalEndWidth, 'goalIncr': goalIncr})
+
+        holdTrainOn = starterDict.get ('holdTrainOn', AHF_Stimulator_Lever.defaultHoldsTrainOn)
+        holdStartTime = starterDict.get ('holdStartTime', AHF_Stimulator_Lever.defaultHoldStartTime)
+        holdEndTime = starterDict.get ('holdEndTime', AHF_Stimulator_Lever.defaultHoldEndTime)
+        holdIncr = starterDict.get ('holdIncr', AHF_Stimulator_Lever.defautlHoldIncr)
+        starterDict.update({'holdTrainOn': holdTrainOn, 'holdStartTime': holdStartTime, 'holdEndTime': holdEndTime, 'holdIncr': holdIncr})
+        return starterDict
 
      @staticmethod
     def dict_from_user (stimDict):

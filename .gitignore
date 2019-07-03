@@ -33,7 +33,7 @@
 *.class
 *.dll
 
-# Packages 
+# Packages
 *.7z
 *.dmg
 *.gz
@@ -52,3 +52,4 @@ ehthumbs.db
 
 #build folder
 build/
+_build/
