@@ -114,8 +114,8 @@ def main():
         if cageSettings.lickIRQ == 0:
             lickDetector = None
         else:
-            from AHF_LickDetector import AHF_LickDetector, Simple_Logger
-            lickDetector = AHF_LickDetector (cageSettings.lickChans, cageSettings.lickIRQ, Simple_Logger (expSettings.logFP))
+            from AHF_LickDetector import AHF_LickDetector
+            lickDetector = AHF_LickDetector (cageSettings.lickChans, cageSettings.lickIRQ, expSettings.logFP)
             lickDetector.start_logging ()
         # make stimulator, passing it cageSettings, expSettings, rewarder, and lickDetector. It needs to be made last
         stimulator = AHF_Stimulator.get_class (expSettings.stimulator)(cageSettings, expSettings, rewarder, lickDetector)
@@ -143,7 +143,7 @@ def main():
                         stimulator.nextDay (expSettings.logFP, mice)
                         mice.clear ()
                         if lickDetector is not None:
-                            lickDetector.data_logger.logFP = expSettings.logFP
+                            lickDetector.dataLogger.logFP = expSettings.logFP
                             lickDetector.touched()
                             lickDetector.start_logging()
                     else:

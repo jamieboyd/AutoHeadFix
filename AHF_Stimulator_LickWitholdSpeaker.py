@@ -97,7 +97,7 @@ class AHF_Stimulator_LickWitholdSpeaker (AHF_Stimulator_LickNoLick):
             lickWitholdEnd = time() + lickWitholdRandom
             # inner loop keeps resetting lickWitholdEnd time until  a succsful withhold
             while time() < lickWitholdEnd and time() < endTime:
-                anyLicks = self.lickDetector.waitForLick_Soft (0.05)
+                anyLicks = self.lickDetector.wait_for_lick(0.05)
                 if anyLicks == 0:
                     if speakerIsOn == True:
                         self.speaker.stop_train()
