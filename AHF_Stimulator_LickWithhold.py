@@ -262,7 +262,7 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
             self.lickWithholdTimes = []
             self.rewardTimes = []
             self.laserTimes = []
-            endTime = time() + self.mouse.get('headFixTime', 40)
+            endTime = time() + self.mouse.get("HeadFixer", {}).get('headFixTime')
             speakerIsOn = False
             self.OffForRewardEnd = 0.0
             self.camera.start_preview()

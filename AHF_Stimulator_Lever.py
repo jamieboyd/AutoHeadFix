@@ -6,6 +6,8 @@ from array import array
 from AHF_Stimulator import AHF_Stimulator
 from AHF_Rewarder import AHF_Rewarder
 import time
+from random import random
+from PTLeverThread import PTLeverThread
 import json
 
 
@@ -26,6 +28,14 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
     defaultGoalCueFreq = 0 # frequency for goal cue - 0 means DC, i.e., turn ON and OFF
     defaultConstForce = 1300 # constant force on lever at start of trial that mouse must pull against, as opposed to perturbForce set during a trial a 12 bit value, 0 to 4095
     defaultTrialIsCued = False # True means trials will be started with the start cue; False means mouse starts pulling lever whenever he likes
+    defaultMotorEnable = 20 # GPIO Pin to enable motor
+    defaultMotorIsReversed = False
+    defaultMotorDir = 0
+    """
+    If MOTOR_DIR_PIN = 0, 16 bit force output (0 - 4095) goes from full counterclockwise force to full clockwise force
+    with midpoint (2048) being no force on lever. If MOTOR_DIR_PIN is non-zero, 0-4095 maps from  no force to full force, and
+    MOTOR_DIR_PIN is the GPIO pin that controls the direction of the force, clockwise or counter-clockwise.
+    """
     """
     Settings for cued trials
     """
@@ -109,12 +119,28 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
         if response != '':
             constForce = int (response)
 
+        motorEnable = starterDict.get ('motorEnable', AHF_Stimulator_Lever.defaultMotorEnable)
+        response = input ('Enter the GPIO pin to enable the motor (currently {:d}): '.format (motorEnable))
+        if response != '':
+            motorEnable = int (response)
+
+        motorIsReversed = starterDict.get ('motorIsReversed', AHF_Stimulator_Lever.defaultConstForce)
+        response = input ('Is the motor direction reversed ?, (Yes or No, currently {:s}): '.format ('Yes' if motorIsReversed else 'No'))
+        if response != '':
+            motorIsReversed = True if response [0] == 'y' or response [0] == 'Y' else False
+
+        motorDir = starterDict.get ('motorDir', AHF_Stimulator_Lever.defaultConstForce)
+        response = input ('Enter the GPIO pin to control force direction, 0 for both directions, currently {:d} '.format (motorDir))
+        if response != '':
+            motorDir = int (response)
+
         trialIsCued = StarterDict.get ('trialIsCued', AHF_Stimulator_Lever.defaultTrialIsCued)
         response = input ('Do the lever pull trials have a start cue? (yes or no, currently {:.str}): '.format ('Yes' if mybool else 'No'))
         if response != '':
             trialIsCued = True if response.lower()[0] == 'y' else False
         starterDict.update({'recordingTime': recordingTime, 'leverIsReversed': leverIsReversed, 'goalCuePin': goalCuePin, 'goalCueFreq': goalCueFreq})
         starterDict.update({'constForce': constForce, 'trialIsCued': trialIsCued})
+        starterDict.update({'motorIsReversed': motorIsReversed, 'motorDir': motorDir, 'motorEnable': motorEnable})
         if trialIsCued:
             startCuePin = starterDict.get ('startCuePin', AHF_Stimulator_Lever.defaultStartCuePin)
             response = input ('Enter the GPIO pin to use for cues, currently {:d}: '.format (startCuePin))
@@ -298,19 +324,68 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
         starterDict.update({'holdTrainOn': holdTrainOn, 'holdStartTime': holdStartTime, 'holdEndTime': holdEndTime, 'holdIncr': holdIncr})
         return starterDict
 
-     @staticmethod
-    def dict_from_user (stimDict):
-        if not 'dataSaveFolder' in stimDict:
-            stimDict.update ({'dataSaveFolder' : '/home/pi/Documents/'})
+    def setup (self):
+        self.recordingTime = self.settingsDict.get('recordingTime')
+        self.leverIsReversed = self.settingsDict.get('leverIsReversed')
+        self.goalCuePin = self.settingsDict.get('goalCuePin')
+        self.goalCueFreq = self.settingsDict.get('goalCueFreq')
+        self.constForce = self.settingsDict.get('constForce')
+        self.motorEnable = self.settingsDict.get('motorEnable')
+        self.motorIsReversed = self.settingsDict.get('motorIsReversed')
+        self.motorDir = self.settingsDict.get('motorDir')
+        self.trialIsCued = self.settingsDict.get('trialIsCued')
+        if self.trialIsCued:
+            self.startCuePin = self.settingsDict.get('startCuePin')
+            self.startCueFreq = self.settingsDict.get('startCueFreq')
+            self.startCueDur = self.settingsDict.get('startCueDur')
+            self.trialTimeout = self.settingsDict.get('trialTimeout')
+            self.leverController = PTLeverThread(self.recordingTime, self.trialIsCued,
+                self.trialTimeout, self.leverIsReversed, self.goalCuePin, self.goalCueFreq,
+                self.motorEnable, self.motorDir, self.motorIsReversed)
+        else:
+            self.prePullTime = self.settingsDict.get('prePullTime')
+            self.leverController = PTLeverThread(self.recordingTime, self.trialIsCued,
+                self.prePullTime, self.leverIsReversed, self.goalCuePin, self.goalCueFreq,
+                self.motorEnable, self.motorDir, self.motorIsReversed)
+        self.leverController.setConstForce(self.constForce)
 
-        if not 'decoderReversed' in stimDict:
-            stimDict.update ({'decoderReversed' : False})
-        if not 'motorPresent' in stimDict:
-            stimDict.update ({'motorPresent' : True})
-        if not 'motorHasDirection' in stimDict:
-            stimDict.update ({'motorHasDirection' : True})
-        if not 'motorDirectionPin' in stimDict:
-            stimDict.update ({'motorDirectionPin' : 18})
-        if not 'startCuePin' in stimDict:
-            stimDict.update ({'startCuePin' : 17})
-        return super(AHF_Stimulator_Lever, AHF_Stimulator_Lever).dict_from_user (stimDict)
+    def run (self):
+        super().run()
+        self.leverController.applyConstForce()
+        self.leverController.setMotorEnable(1)
+        mouseDict = self.Subjects.get(self.task.tag).get("Stimulator")
+        self.leverController.setTimeToGoal(mouseDict.get("toGoalTime"))
+        goalWidth = mouseDict.get("goalWidth")
+        goalCenter = mouseDict.get("goalCenter")
+        goalBottom = goalCenter - goalWidth/2
+        goalTop = goalCenter + goalWidth/2
+        self.leverController.setHoldParams(goalBottom, goalTop, mouseDict.get("holdTime"))
+        endTime = time.time() + self.mouse.get("HeadFixer", {}).get('headFixTime')
+        while time.time() < endTime:
+            if random() > 1.0 - mouseDict.get("perturbPercent"):
+                self.leverController.setPerturbTransTime(mouseDict.get("perturbRampDur"))
+                self.leverController.setPerturbForce(mouseDict.get("perturbForceOffset") + (random() -0.5)*mouseDict.get("perturbForceRandom"))
+                self.leverController.setPerturbStartTime(mouseDict.get("perturbStartTime") + (random() -0.5)*mouseDict.get("perturbStartRandom"))
+            else:
+                self.leverController.setPerturbOff()
+            self.leverController.startTrial()
+            #Do something
+
+
+
+    #  @staticmethod
+    # def dict_from_user (stimDict):
+    #     if not 'dataSaveFolder' in stimDict:
+    #         stimDict.update ({'dataSaveFolder' : '/home/pi/Documents/'})
+    #
+    #     if not 'decoderReversed' in stimDict:
+    #         stimDict.update ({'decoderReversed' : False})
+    #     if not 'motorPresent' in stimDict:
+    #         stimDict.update ({'motorPresent' : True})
+    #     if not 'motorHasDirection' in stimDict:
+    #         stimDict.update ({'motorHasDirection' : True})
+    #     if not 'motorDirectionPin' in stimDict:
+    #         stimDict.update ({'motorDirectionPin' : 18})
+    #     if not 'startCuePin' in stimDict:
+    #         stimDict.update ({'startCuePin' : 17})
+    #     return super(AHF_Stimulator_Lever, AHF_Stimulator_Lever).dict_from_user (stimDict)
