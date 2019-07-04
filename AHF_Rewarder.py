@@ -5,7 +5,7 @@ from _thread import start_new_thread
 
 class AHF_Rewarder:
     """
-    A class to use a solenoid to deliver water rewards of various sizes and keep track of rewards delivered.
+    A class to use a solenoid to deliver water rewards of various sizes
 
     A dictionary is used to store different opening durations with user-defined names.
     The Rewarder class is inited with a default duration to be used if
