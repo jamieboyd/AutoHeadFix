@@ -12,6 +12,7 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
     hasLevels = False
     defaultPropHeadFix = 0.75
     defaultSkeddadleTime = 5
+    defaultHeadFixTime = 40
 
     @staticmethod
     @abstractmethod
@@ -25,6 +26,11 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
 
     @abstractmethod
     def config_user_subject_get(self,starterDict = {}):
+        headFixTime = starterDict.get ('headFixTime',AHF_HeadFixer.defaultHeadFixTime)
+        tempInput = input ('Set head fixing time,  currently {0}: '.format(headFixTime))
+        if tempInput != '':
+            headFixTime = float (tempInput)
+        starterDict.update ({'headFixTime' : headFixTime})
         propHeadFix = starterDict.get('propHeadFix', AHF_HeadFixer.defaultPropHeadFix)
         response = input(
             'Enter proportion (0 to 1) of trials that are head-fixed, currently {:.2f}: '.format(propHeadFix))
@@ -35,6 +41,8 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
 
     @abstractmethod
     def config_subject_get(self, starterDict={}):
+        headFixTime = starterDict.get ('headFixTime',AHF_HeadFixer.defaultHeadFixTime)
+        starterDict.update ({'headFixTime' : headFixTime})
         propHeadFix = starterDict.get('propHeadFix', AHF_HeadFixer.defaultPropHeadFix)
         starterDict.update({'propHeadFix': propHeadFix})
         return starterDict
