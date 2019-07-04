@@ -134,7 +134,7 @@ class AHF_Stimulator (metaclass = ABCMeta):
         Called before running each head fix trial, stimulator decides what to do and configures itself
 
         You may wish to different things for different mice, and to store data about stim presentations in the mouse object
-        returns: a short string representing stim configuration, used to generate movie file name
+        :returns: a short string representing stim configuration, used to generate movie file name
         :param mouse: the object representing the mouse that is currently head-fixed
         """
         return 'stim'
@@ -176,7 +176,7 @@ class AHF_Stimulator (metaclass = ABCMeta):
         """
         pass
 
-    def tester (self,expSettings):
+    def tester (self):
         """
             Tester function called from the hardwareTester. Includes Stimulator
             specific hardware tester.

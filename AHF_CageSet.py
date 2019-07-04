@@ -102,7 +102,10 @@ class AHF_CageSet (object):
             self.lickIRQ = int (input ('Enter the GPIO pin connected to lick detector IRQ, or 0 if no lick detetcor is installed:'))
             if self.lickIRQ != 0:
                 tempInput = input ('Enter a comma-separated list of lick channels to monitor:')
-                self.lickChans = tuple (tempInput.split(','))
+                tempList = []
+                for chanStr in tempInput.split(','):
+                    tempList.append (int(chanStr))
+                self.lickChans = tuple (tempList)
             else:
                 self.lickChans = ()
             self.dataPath = input ('Enter the path to the directory where the data will be saved:')

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<HTML>
+<head>
+<title>Auto Head Fix v1.1</title>
+<META NAME="AUTHOR" CONTENT="Jamie Boyd">
+</head><body>
+<H1>Auto Head Fix Version 1.1 </H1>
+<p>This Python program for the <a href = "https://raspberrypi.org">Raspberry Pi</a> provides flexible automated control of brain imaging and behavioural tasks of mice in a home cage environment. It was first described in<a href = "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4909937/">
+High-throughput automated home-cage mesoscopic functional imaging of mouse cortex. Murphy TH, Boyd JD, Bolaños F, Vanni MP, Silasi G, Haupt D, LeDue J. Nat Commun. 2016 Jun 13;7:11611</a>This version of the code provides more flexibility for adding different behavioral tasks, provides code for accessing more harware, and defines new Stimulator classes that take advantage of these added capabilities.</p>
+
+<h2>Harware Overview</h2>
+<p>The Raspberry Pi single board computer has a 40 pin header providing GPIO, UART, I<sup>2</sup>C, SPI and PWM protocols to interact with a wide range of hardware, and a custom connector for a <a href = "https://picamera.readthedocs.io/">picamera</a>, a cell phone quality camera for recording still images and movies. Those features, plus small size and low cost, make it ideal for the Auto Head Fix application. Each cage of 4-8  mice has a dedicated Raspberry Pi that controls an RFID reader for monitoring implanted ID Tags, a solenoid valve for giving water rewards, electrical contacts or IR beam breaker for checking animal appoach, solenoid-driven pistons or a servo motor for steadying head position, an LED for illumnating the brain for fluorescent imaging, and a picamera for collecting brain imaging data. Different behavioral tasks may define additional harware requirements, such as LEDs, piezo buzzers, or vibration motors for sensory stimulation, or a  lick detector based on a capacitive touch sensor attached to the water reward port.</p>
+
+</body>
+</html>

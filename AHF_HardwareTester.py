@@ -8,10 +8,11 @@ from time import sleep
 from RFIDTagReader import TagReader, globalTag
 from AHF_HeadFixer import AHF_HeadFixer
 from AHF_Rewarder import AHF_Rewarder
+from AHF_Stimulator import AHF_Stimulator
 from time import time
 
 
-def hardwareTester (cageSet, expSettings, tagReader, headFixer, rewarder, lickDetector, stimulator, stimDict):
+def hardwareTester (cageSet, expSettings, tagReader, headFixer, rewarder, lickDetector, stimulator):
     """
     Presents a menu asking user to choose a bit of hardware to test, and runs the tests
 
@@ -24,7 +25,6 @@ def hardwareTester (cageSet, expSettings, tagReader, headFixer, rewarder, lickDe
     f = head Fixer
     l = LED: Turns on the brain illumination LED for a 2 second duration, then off
     k = licK detector
-    s = stimulator tester
     h = sHow config settings: Prints out the current pinout in the AHF_CageSet object
     v = saVe modified config file: Saves the the AHF_CageSet object to the file ./AHF_config.jsn
     q = quit: quits the program
@@ -32,11 +32,12 @@ def hardwareTester (cageSet, expSettings, tagReader, headFixer, rewarder, lickDe
     queryStr = 't=tagReader, r=reward solenoid, c=contact check, f=head Fixer, l=LED, '
     if lickDetector is not None:
         queryStr +=  'k=licK detector, '
-    queryStr += 's=stimulator tester, h=sHow config settings, v=saVe modified config file, q=Quit program'
+    queryStr += 's=stimulator tester, h=sHow config settings, v=saVe modified config file, q=Quit Hardware Tester: '
     try:
         while (True):
             inputStr = input (queryStr)
-            if inputStr == 't': # t for tagreader
+            # ***************************** t for tag reader **********************************
+            if inputStr == 't':
                 GPIO.remove_event_detect (tagReader.tirPin)
                 GPIO.cleanup (tagReader.tirPin)
                 while tagReader is None:
@@ -72,7 +73,7 @@ def hardwareTester (cageSet, expSettings, tagReader, headFixer, rewarder, lickDe
                     inputStr= input ('Do you wish to change tag reader serial port, currently {:s}?'.format (cageSet.serialPort))
                     if inputStr[0] == 'y' or inputStr[0] == "Y":
                         cageSet.serialPort = input ('Enter tag reader for serial port, likely /dev/serial0 or dev/ttyUSB0:')
-                    break
+                    continue
                 # now check Tag-In-Range pin function
                 print ('checking Tag-In-Range pin function....')
                 lastTag = tagReader.readTag ()
@@ -100,17 +101,24 @@ def hardwareTester (cageSet, expSettings, tagReader, headFixer, rewarder, lickDe
                     cageSet.tirPin = int (input('Enter New tag-in-range Pin:'))
                     GPIO.remove_event_detect (tagReader.tirPin)
                     GPIO.cleanup (tagReader.tirPin)
-                    tagReader.installCallBack (cageSet.tirPin)                      
-            elif inputStr == 'r': # r for reward solenoid
+                    tagReader.installCallBack (cageSet.tirPin)
+            # ***************************** # k for licK detector **********************************
+            elif inputStr == 'k': 
+                lickDetector.test (cageSet)
+            # ***************************** # r for reward solenoid **********************************
+            elif inputStr == 'r': 
+                rewarder.addToDict('test', 1.0)
                 print ('Reward Solenoid opening for 1 sec')
-                GPIO.output(cageSet.rewardPin, 1)
+                rewarder.giveReward ('test')
                 sleep(1.0)
-                GPIO.output(cageSet.rewardPin, 0)
-                inputStr= input('Reward Solenoid closed.\nDo you want to change the Reward Solenoid Pin (currently ' + str (cageSet.rewardPin) + ')?')
+                inputStr= input('Do you want to change the Reward Solenoid Pin (currently {:d})?'.format(rewarder.rewardPin))
                 if inputStr[0] == 'y' or inputStr[0] == "Y":
+                    GPIO.cleanup (rewarder.rewardPin)
                     cageSet.rewardPin = int (input('Enter New Reward Solenoid Pin:' ))
+                    rewarder.rewardPin = cageSet.rewardPin
                     GPIO.setup (cageSet.rewardPin, GPIO.OUT, initial=GPIO.LOW)
-            elif inputStr == 'c': #c for contact on head fix
+            # ***************************** #c for contact for head fix **********************************
+            elif inputStr == 'c':
                 err = False
                 if GPIO.input (cageSet.contactPin)== expSettings.contactState:
                     print ('Contact pin already indicates contact.')
@@ -122,8 +130,8 @@ def hardwareTester (cageSet, expSettings, tagReader, headFixer, rewarder, lickDe
                         err = True
                     else:
                         print ('Contact Made.')
-                        GPIO.wait_for_edge (cageSet.contactPin, noContactEdge, timeout= 10000)
-                        if GPIO.input (cageSet.contactPin)== contactState:
+                        GPIO.wait_for_edge (cageSet.contactPin, expSettings.noContactEdge, timeout= 10000)
+                        if GPIO.input (cageSet.contactPin)== expSettings.contactState:
                             print ('Contact maintained for 10 seconds.')
                             err = True
                         else:
@@ -155,17 +163,23 @@ def hardwareTester (cageSet, expSettings, tagReader, headFixer, rewarder, lickDe
                             expSettings.noContactEdge = GPIO.RISING
                             expSettings.contactState = GPIO.LOW
                             expSettings.noContactState = GPIO.HIGH
-            elif inputStr == 'f': # head Fixer, run test from headFixer class
+            # ***************************** # f for head Fixer, run test from headFixer class **********************************
+            elif inputStr == 'f': 
                 headFixer.test(cageSet)
-            elif inputStr == 'l': # l for LED trigger
+             # ***************************** # l for LED trigger **********************************
+            elif inputStr == 'l': 
                 print ('LED turning ON for 2 seconds.')
                 GPIO.output(cageSet.ledPin, 1)
                 sleep (2)
                 GPIO.output(cageSet.ledPin, 0)
-                inputStr=input ('LED turned OFF\nDo you want to change the LED Pin (currently ' + str(cageSet.ledPin) + ')?')
+                inputStr=input ('LED turned OFF\nDo you want to change the LED Pin (currently {:d})?'.format(cageSet.ledPin))
                 if inputStr == 'y' or inputStr == "Y":
+                    GPIO.cleanup (cageSet.ledPin)
                     cageSet.ledPin = int (input('Enter New LED Pin:'))
                     GPIO.setup (cageSet.ledPin, GPIO.OUT, initial = GPIO.LOW)
+             # ***************************** # s for stimulator, run test from stimlator class **********************************
+            elif inputStr == 's':
+                stimulator.tester ()
             elif inputStr == 'h':
                 cageSet.show()
             elif inputStr=='v':
@@ -178,12 +192,16 @@ def hardwareTester (cageSet, expSettings, tagReader, headFixer, rewarder, lickDe
             
 if __name__ == '__main__':
     
-    class simpleExpSetings (AHF_Settings):
+    class simpleExpSetings (object):
         """
         Some info about contact edges is translated from the cageSet and saved in the experiment settings, so we spoof that
-        here to use the same test code for contact check when run form main as when run from the hardware tester optionin the main program
+        here to use the same test code for contact check when run form main as when run from the hardware tester option in the main program
+        we also add a stimulator - the only testable object in exp setings 
         """
         def __init__(self, cageSettings):
+            self.stimulator = 'Rewards'
+            self.stimDict = {'nRewards' : 5, 'rewardInterval' : 2}
+            self.settingsDict = {'stimulator' : self.stimulator, 'stimParams' : self.stimDict}
             if cageSettings.contactPolarity == 'RISING':
                 self.contactEdge = GPIO.RISING
                 self.noContactEdge = GPIO.FALLING
@@ -201,12 +219,11 @@ if __name__ == '__main__':
         without running full Auto Head Fixing program. Initialize hardware, then runs the regular hardware tester function
         """
         cageSet = AHF_CageSet() # loads cage settings from AHF_config.jsn
-        expSettings = simpleExpSetings (cageSet) # exp settings contains contact edge and state, simpleExpSetings does just that and no more
+        expSettings = simpleExpSetings (cageSet) # exp settings contains contact edge and state, plus stimulator
         GPIO.setmode (GPIO.BCM) # set up GPIO to use BCM mode for GPIO pin numbering
         GPIO.setwarnings(False) # supresses warnings for using previously configured pins
         GPIO.setup (cageSet.ledPin, GPIO.OUT) # LED for brain illumination, one simpe GPIO pin for output
         rewarder = AHF_Rewarder (30e-03, cageSet.rewardPin) # make rewarder and add a test reward
-        rewarder.addToDict('test', 1.0)
         GPIO.setup (cageSet.contactPin, GPIO.IN, pull_up_down=getattr (GPIO, "PUD_" + cageSet.contactPUD)) # contact check pin can have a pullup/down resistor
         headFixer=AHF_HeadFixer.get_class (cageSet.headFixer) (cageSet) # initialize headFixer
         try:
@@ -218,9 +235,10 @@ if __name__ == '__main__':
             lickDetector = None
         else:
             from AHF_LickDetector import AHF_LickDetector
-            lickDetector = AHF_LickDetector (cageSet.lickChans, cageSet.lickIRQ)
-       
-        hardwareTester (cageSet, expSettings, tagReader, headFixer, rewarder, lickDetector, stimulator, stimDict)
+            lickDetector = AHF_LickDetector (cageSet.lickChans, cageSet.lickIRQ, None)
+        stimulator = AHF_Stimulator.get_class (expSettings.stimulator) (cageSet, expSettings, rewarder, lickDetector)
+        stimDict = expSettings.stimDict
+        hardwareTester (cageSet, expSettings, tagReader, headFixer, rewarder, lickDetector, stimulator)
         GPIO.cleanup() # this ensures a clean exit
 
 

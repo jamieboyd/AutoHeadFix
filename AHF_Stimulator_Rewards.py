@@ -73,22 +73,9 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
             self.textfp.flush()
 
 
-    def tester(self,expSettings):
-        #Tester function called from the hardwareTester. Includes Stimulator
-        #specific hardware tester.
-        while(True):
-            inputStr = input ('a= camera/LED, q= quit: ')
-            if inputStr == 'a':
-                #Display preview and turn on LED
-                self.camera.start_preview(fullscreen = False, window = tuple(self.camera.AHFpreview))
-                GPIO.output(self.cageSettings.ledPin, GPIO.HIGH)
-                GPIO.output(self.cageSettings.led2Pin, GPIO.HIGH)
-                input ('adjust camera/LED: Press any key to quit ')
-                self.camera.stop_preview()
-                GPIO.output(self.cageSettings.ledPin, GPIO.LOW)
-                GPIO.output(self.cageSettings.led2Pin, GPIO.LOW)
-            elif inputStr == 'q':
-                break
+    def tester(self):
+        #Tester function called from the hardwareTester. Includes Stimulatorspecific hardware tester.
+       
 
 
 

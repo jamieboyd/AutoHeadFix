@@ -25,8 +25,8 @@ class AHF_LickDetector (object):
         print (printStr)
  
     
-    def __init__ (self, lickChans, lickIRQ, logFP):
-        self.touchDetector = TouchDetector (AHF_LickDetector.defaultAddress, AHF_LickDetector.defaultTouchThresh, AHF_LickDetector.defaultUnTouchThresh, lickChans, IRQpin, lickIRQ)
+    def __init__ (self, lickChans, lickIRQPin, logFP):
+        self.touchDetector = TouchDetector (AHF_LickDetector.defaultAddress, AHF_LickDetector.defaultTouchThresh, AHF_LickDetector.defaultUnTouchThresh, lickChans, lickIRQPin)
         global gLogFP
         gLogFP = logFP
         self.touchDetector.addCustomCallback(AHF_LickDetector.lickLoggerCallback)
@@ -51,6 +51,7 @@ class AHF_LickDetector (object):
 
 
     def test (self, cageSet):
+        from math import log2, floor
         wasLogging = self.touchDetector.callbackMode & TouchDetector.callbackCustomMode
         if wasLogging:
             self.stop_logging ()
@@ -66,7 +67,7 @@ class AHF_LickDetector (object):
             if inputStr[0] == 'y' or inputStr[0] == "Y":
                 self.touchDetector.reset ()
         else:
-            print ('Lick detector registered a touch on pin {:d}'.format(lick))
+            print ('Lick detector registered a touch on pin {:d}'.format(floor(log2(lick))))
         if wasLogging:
             self.start_logging ()
 
