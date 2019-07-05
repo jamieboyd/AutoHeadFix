@@ -134,12 +134,17 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
         if response != '':
             motorDir = int (response)
 
+        trainSize = starterDict.get ('trainSize', AHF_Stimulator_Lever.defaultTrainSize)
+        response = input('Enter the number of previous trials to examine when deciding promotion/demotion (currently {:.d}): '.format (trainSize))
+        if response != '':
+            trainSize = int (response)
+
         trialIsCued = StarterDict.get ('trialIsCued', AHF_Stimulator_Lever.defaultTrialIsCued)
         response = input ('Do the lever pull trials have a start cue? (yes or no, currently {:.str}): '.format ('Yes' if mybool else 'No'))
         if response != '':
             trialIsCued = True if response.lower()[0] == 'y' else False
         starterDict.update({'recordingTime': recordingTime, 'leverIsReversed': leverIsReversed, 'goalCuePin': goalCuePin, 'goalCueFreq': goalCueFreq})
-        starterDict.update({'constForce': constForce, 'trialIsCued': trialIsCued})
+        starterDict.update({'constForce': constForce, 'trialIsCued': trialIsCued, 'trainSize': trainSize})
         starterDict.update({'motorIsReversed': motorIsReversed, 'motorDir': motorDir, 'motorEnable': motorEnable})
         if trialIsCued:
             startCuePin = starterDict.get ('startCuePin', AHF_Stimulator_Lever.defaultStartCuePin)
@@ -231,11 +236,6 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
 
         print('=============== Training Settings ==================')
 
-        trainSize = starterDict.get ('trainSize', AHF_Stimulator_Lever.defaultTrainSize)
-        response = input('Enter the number of previous trials to examine when deciding promotion/demotion (currently {:.d}): '.format (trainSize))
-        if response != '':
-            trainSize = int (response)
-
         promoteRate = starterDict.get ('promoteRate', AHF_Stimulator_Lever.defaultPromoteRate)
         response = input('Enter the performance rate to exceed to be promoted (currently {:.d}): '.format (promoteRate))
         if response != '':
@@ -252,17 +252,17 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
         if response != '':
             goalTrainOn = int (response)
 
-        goalStartWidth = starterDict.get ('goalStartWidth', AHF_Stimulator_Lever.defautlGoalStartWidth)
+        goalStartWidth = starterDict.get ('goalStartWidth', AHF_Stimulator_Lever.defaultGoalStartWidth)
         response = input('Enter starting goal width (currently {:.d}): '.format (goalStartWidth))
         if response != '':
             goalStartWidth = int (response)
 
-        goalEndWidth = starterDict.get ('goalEndWidth', AHF_Stimulator_Lever.defautlGoalEndWidth)
+        goalEndWidth = starterDict.get ('goalEndWidth', AHF_Stimulator_Lever.defaultGoalEndWidth)
         response = input('Enter ending goal width (currently {:.d}): '.format (goalEndWidth))
         if response != '':
             goalEndWidth = int (response)
 
-        goalIncr = starterDict.get ('goalIncr', AHF_Stimulator_Lever.defautlGoalIncr)
+        goalIncr = starterDict.get ('goalIncr', AHF_Stimulator_Lever.defaultGoalIncr)
         response = input('Enter amount hold time increases by, by level (currently {:.d}): '.format (goalIncr))
         if response != '':
             goalIncr = int (response)
@@ -283,7 +283,7 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
         if response != '':
             holdEndTime = int (response)
 
-        holdIncr = starterDict.get ('holdIncr', AHF_Stimulator_Lever.defautlHoldIncr)
+        holdIncr = starterDict.get ('holdIncr', AHF_Stimulator_Lever.defaultHoldIncr)
         response = input('Enter amount goal width decreases by, by level (currently {:.d}): '.format (holdIncr))
         if response != '':
             holdIncr = int (response)
@@ -306,21 +306,20 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
         starterDict.update({'perturbPercent': perturbPercent, 'perturbRampDur': perturbRampDur, 'perturbStartTime': perturbStartTime, 'perturbStartRandom': perturbStartRandom})
         starterDict.update({'perturbForceOffset': perturbForceOffset, 'perturbForceRandom': perturbForceRandom})
 
-        trainSize = starterDict.get ('trainSize', AHF_Stimulator_Lever.defaultTrainSize)
         promoteRate = starterDict.get ('promoteRate', AHF_Stimulator_Lever.defaultPromoteRate)
         demoteRate = starterDict.get ('demoteRate', AHF_Stimulator_Lever.defaultDemoteRate)
-        starterDict.update({'trainSize': trainSize, 'promoteRate': promoteRate, 'demoteRate': demoteRate})
+        starterDict.update({'promoteRate': promoteRate, 'demoteRate': demoteRate})
 
         goalTrainOn = starterDict.get ('goalTrainOn', AHF_Stimulator_Lever.defaultGoalTrainOn)
-        goalStartWidth = starterDict.get ('goalStartWidth', AHF_Stimulator_Lever.defautlGoalStartWidth)
-        goalEndWidth = starterDict.get ('goalEndWidth', AHF_Stimulator_Lever.defautlGoalEndWidth)
-        goalIncr = starterDict.get ('goalIncr', AHF_Stimulator_Lever.defautlGoalIncr)
+        goalStartWidth = starterDict.get ('goalStartWidth', AHF_Stimulator_Lever.defaultGoalStartWidth)
+        goalEndWidth = starterDict.get ('goalEndWidth', AHF_Stimulator_Lever.defaultGoalEndWidth)
+        goalIncr = starterDict.get ('goalIncr', AHF_Stimulator_Lever.defaultGoalIncr)
         starterDict.update({'goalTrainOn': goalTrainOn, 'goalStartWidth': goalStartWidth, 'goalEndWidth': goalEndWidth, 'goalIncr': goalIncr})
 
         holdTrainOn = starterDict.get ('holdTrainOn', AHF_Stimulator_Lever.defaultHoldsTrainOn)
         holdStartTime = starterDict.get ('holdStartTime', AHF_Stimulator_Lever.defaultHoldStartTime)
         holdEndTime = starterDict.get ('holdEndTime', AHF_Stimulator_Lever.defaultHoldEndTime)
-        holdIncr = starterDict.get ('holdIncr', AHF_Stimulator_Lever.defautlHoldIncr)
+        holdIncr = starterDict.get ('holdIncr', AHF_Stimulator_Lever.defaultHoldIncr)
         starterDict.update({'holdTrainOn': holdTrainOn, 'holdStartTime': holdStartTime, 'holdEndTime': holdEndTime, 'holdIncr': holdIncr})
         return starterDict
 
@@ -333,6 +332,7 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
         self.motorEnable = self.settingsDict.get('motorEnable')
         self.motorIsReversed = self.settingsDict.get('motorIsReversed')
         self.motorDir = self.settingsDict.get('motorDir')
+        self.trainSize = self.settingsDict.get('trainSize')
         self.trialIsCued = self.settingsDict.get('trialIsCued')
         if self.trialIsCued:
             self.startCuePin = self.settingsDict.get('startCuePin')
@@ -348,20 +348,21 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
                 self.prePullTime, self.leverIsReversed, self.goalCuePin, self.goalCueFreq,
                 self.motorEnable, self.motorDir, self.motorIsReversed)
         self.leverController.setConstForce(self.constForce)
+        self.task.DataLogger.startTracking('lever_pull', 'outcome', 'buffer', self.trainSize)
 
     def run (self):
         super().run()
         self.leverController.applyConstForce()
         self.leverController.setMotorEnable(1)
-        mouseDict = self.Subjects.get(self.task.tag).get("Stimulator")
+        mouseDict = self.task.Subjects.get(self.task.tag).get("Stimulator")
         self.leverController.setTimeToGoal(mouseDict.get("toGoalTime"))
-        goalWidth = mouseDict.get("goalWidth")
-        goalCenter = mouseDict.get("goalCenter")
-        goalBottom = goalCenter - goalWidth/2
-        goalTop = goalCenter + goalWidth/2
-        self.leverController.setHoldParams(goalBottom, goalTop, mouseDict.get("holdTime"))
         endTime = time.time() + self.mouse.get("HeadFixer", {}).get('headFixTime')
         while time.time() < endTime:
+            goalWidth = mouseDict.get("goalWidth")
+            goalCenter = mouseDict.get("goalCenter")
+            goalBottom = goalCenter - goalWidth/2
+            goalTop = goalCenter + goalWidth/2
+            self.leverController.setHoldParams(goalBottom, goalTop, mouseDict.get("holdTime"))
             if random() > 1.0 - mouseDict.get("perturbPercent"):
                 self.leverController.setPerturbTransTime(mouseDict.get("perturbRampDur"))
                 self.leverController.setPerturbForce(mouseDict.get("perturbForceOffset") + (random() -0.5)*mouseDict.get("perturbForceRandom"))
@@ -369,6 +370,42 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
             else:
                 self.leverController.setPerturbOff()
             self.leverController.startTrial()
+            resultTuple = self.leverController.checkTrial()
+            outcome = 0
+            if resultTuple[1] >= 1:
+                outcome = 1
+                self.task.Rewarder.giveReward('task')
+            if self.trialIsCued:
+                self.task.DataLogger.writeToLogFile(self.task.tag, "lever_pull", {'outcome': outcome ,'positions': self.leverController.posBuffer})
+            else:
+                positions = self.leverController.posBuffer
+                circularEnd = self.prePullTime*self.leverController.LEVER_FREQ
+                goalPosition = resultTuple[2]
+                positions = positions[goalPosition:] + positions[:goalPosition]
+            history = self.task.DataLogger.getTrackedEvent(self.task.tag, 'lever_pull', 'outcome')
+            average = 0
+            for outcome in history:
+                average += outcome
+            average /= self.trainSize
+            if average > mouseDict.get('promoteRate'):
+                if mouseDict.get('goalTrainOn'):
+                    newWidth = mouseDict.get('goalWidth') - mouseDict.get('goalIncr')
+                    if newWidth >= mouseDict.get('goalEndWidth'):
+                        mouseDict.update({'goalWidth': newWidth})
+                if mouseDict.get('holdTrainOn'):
+                    newTime = mouseDict.get('holdTime') + mouseDict.get('holdIncr')
+                    if newTime <= mouseDict.get('holdEndTime'):
+                        mouseDict.update({'hold': newTime})
+            elif average < mouseDict.get('demoteRate'):
+                if mouseDict.get('goalTrainOn'):
+                    newWidth = mouseDict.get('goalWidth') + mouseDict.get('goalIncr')
+                    if newWidth <= mouseDict.get('goalStartWidth'):
+                        mouseDict.update({'goalWidth': newWidth})
+                if mouseDict.get('holdTrainOn'):
+                    newTime = mouseDict.get('holdTime') - mouseDict.get('holdIncr')
+                    if newTime >= mouseDict.get('holdStartTime'):
+                        mouseDict.update({'hold': newTime})
+
             #Do something
 
 
