@@ -1,8 +1,8 @@
 #! /usr/bin/python3
 #-*-coding: utf-8 -*-
+
 from abc import ABCMeta, abstractmethod
-import os
-import inspect
+import AHF_ClassAndDictUtils as CAD
 
 class AHF_HeadFixer(metaclass = ABCMeta):
     """
@@ -18,14 +18,9 @@ class AHF_HeadFixer(metaclass = ABCMeta):
 
         Assumes the class is named the same as the module.
         """
-        if fileName.endswith ('.py'):
-            fileName = fileName.rstrip('.py')
-        if not fileName.startswith ('AHF_HeadFixer_'):
-            fileName = 'AHF_HeadFixer_' + fileName
         try:
-            module = __import__(fileName)
-            return getattr(module, fileName)
-        except ImportError as e:
+            return CAD.Class_from_file('HeadFixer', fileName.rstrip('.py').lstrip('AHF_HeadFixer_'))
+        except (ImportError, NameError, FileNotFoundError) as e:
             print ('Could not import module {}: {}'.format(fileName, str(e)))
             return None
         
@@ -40,46 +35,8 @@ class AHF_HeadFixer(metaclass = ABCMeta):
         Raises: FileNotFoundError if no stimulator class files found
         Returns: name of the file the user chose, stripped of AHF_HeadFixer and .py
         """
-        iFile=0
-        fileList = []
-        startlen = 14
-        endlen =3
-        for f in os.listdir('.'):
-            if f.startswith ('AHF_HeadFixer_') and f.endswith ('.py'):
-                fname = f[startlen :-endlen]
-                try:
-                    moduleObj=__import__ (f.rstrip('.py'))
-                    #print ('module=' + str (moduleObj))
-                    classObj = getattr(moduleObj, moduleObj.__name__)
-                    #print (classObj)
-                    isAbstractClass = inspect.isabstract (classObj)
-                    if isAbstractClass == False:
-                        fileList.append (fname)
-                        iFile += 1
-                except (ImportError, NameError) as e:
-                    print ('Could not import module {}: {}'.format(f, str(e)))
-                    continue
-        if iFile == 0:
-            print ('Could not find an AHF_HeadFixer_ file in the current or enclosing directory')
-            raise FileNotFoundError
-        else:
-            if iFile == 1:
-                ClassFile =  fileList[0]
-                print ('One  Head Fixer file found: {}'.format (ClassFile))
-                return ClassFile
-            else:
-                inputStr = '\nEnter a number from 1 to {} to choose a Head Fixer file:\n'.format(iFile)
-
-                ii=0
-                for file in fileList:
-                    inputStr += str (ii + 1) + ': ' + file + '\n'
-                    ii +=1
-                inputStr += ':'
-                classNum = -2
-                while classNum < 1 or classNum > iFile:
-                    classNum =  int(input (inputStr))
-                return fileList[classNum -1]
-
+        return CAD.Subclass_from_user(CAD.Class_from_file('HeadFixer', ''))
+ 
     ##################################################################################
     #abstact methods each headfixer class must implement
     #part 1: three main methods of initing, fixing, and releasing

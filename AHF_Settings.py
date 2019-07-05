@@ -5,7 +5,7 @@
 AHF_Settings provides functions to read, edit, and save settings for the AutoheadFix program
 """
 
-from os import path, listdir, chown
+from os import path, chown, listdir
 import sys
 import json
 import pwd
@@ -217,21 +217,24 @@ class AHF_Settings (object):
             # Stimulator file name
             self.stimulator = AHF_Settings.stimulatorDef
             tempInput = input ('Stimulator = {:s}. Select different Stimulator? (Yes or No)'.format (self.stimulator))
-            if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.stimulator = AHF_Stimulator.get_Stimulator_from_user ()
+            if tempInput != '':
+                if tempInput [0] == 'y' or tempInput [0] == 'Y':
+                    self.stimulator = AHF_Stimulator.get_Stimulator_from_user ()
                 # static function to make a configration without needing a stimulator to configure it
-                self.stimDict = AHF_Stimulator.get_class(self.stimulator).dict_from_user({})
+                    self.stimDict = AHF_Stimulator.get_class(self.stimulator).dict_from_user({})
             else:
                 self.stimDict = AHF_Settings.stimDictDef
                 tempInput = input ('Stimulator dictionary = {}. Edit stimulator dictionary? (Yes or No)'.format (self.stimDict))
-                if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                    self.stimDict = AHF_Stimulator.get_class(self.stimulator).dict_from_user(self.stimDict)
+                if tempInput != '':
+                    if tempInput [0] == 'y' or tempInput [0] == 'Y':
+                        self.stimDict = AHF_Stimulator.get_class(self.stimulator).dict_from_user(self.stimDict)
             self.settingsDict.update ({'stimulator' : self.stimulator, 'stimDict' : self.stimDict})
             # Camera related settings, in a dictionary, static function, don't need a camera object to be created
             self.camParamsDict = AHF_Settings.camParamsDictDef
             tempInput = input ('Camera settiongs = {}. Edit camera settings? (Yes or No)'.format (self.camParamsDict))
-            if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                self.camParamsDict =AHF_Camera.dict_from_user (self.camParamsDict)
+            if tempInput != '':
+                if tempInput [0] == 'y' or tempInput [0] == 'Y':
+                    self.camParamsDict =AHF_Camera.dict_from_user (self.camParamsDict)
             self.settingsDict.update ({'camParamsDict' : self.camParamsDict})
             
 

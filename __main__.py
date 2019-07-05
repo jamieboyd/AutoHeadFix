@@ -13,7 +13,7 @@ from AHF_HardwareTester import hardwareTester
 from AHF_Mouse import Mouse, Mice
 
 #Standard Python modules
-from os import path, makedirs, chown
+from os import path, makedirs, listdir, chown
 from pwd import getpwnam
 from grp import getgrnam
 from time import time, sleep
@@ -226,7 +226,7 @@ def main():
         expSettings.statsFP.close()
         print ('AutoHeadFix Stopped')
 
-def runTrial (thisMouse, expSettings, cageSettings, camera, rewarder, headFixer, stimulator, UDPTrigger=None):
+def runTrial (thisMouse, expSettings, cageSettings, camera, rewarder, headFixer, stimulator, UDPTrigger):
     """
     Runs a single AutoHeadFix trial, from the mouse making initial contact with the plate
 
@@ -255,16 +255,12 @@ def runTrial (thisMouse, expSettings, cageSettings, camera, rewarder, headFixer,
             writeToLogFile (expSettings.logFP, thisMouse, 'check+')
         else:
             writeToLogFile (expSettings.logFP, thisMouse,'check No Fix Trial')
-        # Configure the stimulator and the path for the video
+        # Configure the stimulator to get the path for the video
         stimStr = stimulator.configStim (thisMouse)
         headFixTime = time()
-        
-        #TODO IMPROVE
+        # analysis code expects brain data, in rgb format, to have .raw extension
         if camera.AHFvideoFormat == 'rgb':
             extension = 'raw'
-        else:
-            extension = 'h264'
-
         video_name = str (thisMouse.tag) + "_" + stimStr + "_" + '%d' % headFixTime + '.' + extension
         video_name_path = expSettings.dayFolderPath + 'Videos/' + "M" + video_name
         writeToLogFile (expSettings.logFP, thisMouse, "video:" + video_name)

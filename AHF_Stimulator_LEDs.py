@@ -1,22 +1,14 @@
 #! /usr/bin/python3
 #-*-coding: utf-8 -*-
 
-from AHF_Stimulator_Rewards import AHF_Stimulator_Rewards
 from AHF_Rewarder import AHF_Rewarder
-from AHF_Mouse import Mouse, Mice
+from AHF_Mouse import Mouse
 import RPi.GPIO as GPIO
-from time import time, localtime,timezone, sleep
+from time import time, sleep
 from datetime import datetime
 from random import random
 
-class AHF_Stimulator_LEDs (AHF_Stimulator_Rewards):
-    def __init__(self, configDict, rewarder, textfp):
-        # init of superclass sets number of rewards  and reward interval
-        # this class will flash an LED in the center of each inter-reward interval
-        # reward, wait rewardInterval/2 - rewardDur, flash, wait rewardInterval/2- flash_time
-        super().__init__(configDict, rewarder, textfp)
-        self.setup()
-
+class AHF_Stimulator_LEDs (AHF_Stimulator):
 
     @staticmethod
     def dict_from_user (stimDict):

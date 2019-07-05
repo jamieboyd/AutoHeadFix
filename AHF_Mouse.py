@@ -3,14 +3,14 @@ import RPi.GPIO as GPIO
 import json
 from time import time, localtime
 from datetime import datetime,timedelta
-import os.path
+from os import path
 
 
 class Mouse:
     """
     Class to hold information about each mouse, each mouse gets its own object
     """
-    def __init__(self, tag, entries, entranceRewards, headFixes, headFixRewards, resultsDict = {}):
+    def __init__(self, tag, entries, entranceRewards, headFixes, resultsDict = {}):
         """
         Makes a new mouse object, initializing with RFID tag, entrance and reward info, and results dictionary
 
@@ -18,7 +18,6 @@ class Mouse:
         :param entries: number of entries mouse has made
         :param entranceRewards: number of entrance rewards mouse has been given
         :param headFixes: number of head fixes for this mouse
-        :param headFixRewards: number of head fix rewards mouse has earned
         :param resultsDict: dictionary of results from stimulator
 
         """
@@ -26,7 +25,6 @@ class Mouse:
         self.entries = entries
         self.entranceRewards = entranceRewards
         self.headFixes = headFixes
-        self.headFixRewards = headFixRewards
         self.stimResultsDict = resultsDict
 
     def clear (self):
@@ -37,21 +35,20 @@ class Mouse:
         self.entries = 0
         self.headFixes = 0
         self.entranceRewards = 0
-        self.headFixRewards = 0
 
     def show (self):
         """
-        Prints all the data for this mouse, including any stimResults info
+        Prints to the shell all the data for this mouse, including any stimResults info
         """
-        print ('MouseID:{:013d}\tEntries:{:05d}\tHeadFixes:{:05d}\tHFRewards:{:05d}'.format (self.tag, self.entries, self.headFixes, self.entranceRewards, self.headFixRewards))
+        print ('MouseID:{:013d}\tEntries:{:05d}\tHeadFixes:{:05d}\tEntry Rewards:{:05d}'.format (self.tag, self.entries, self.headFixes, self.entranceRewards))
         if self.stimResultsDict is not None:
-            stimResults = 'Stim Results:\t\t'
+            stimResults = 'Stim Results:'
             for key in self.stimResultsDict:
                 stimResults += '\t' + key + ":" + str (self.stimResultsDict.get (key))
             print (stimResults)
 
 
-    def updateStats (statsFile):
+    def updateStats (self, statsFile):
         """
         Updates the quick stats text file after every exit, mostly for the benefit of folks logged in remotely, but also to save state in case program is restarted
         :param statsFile: file pointer to the stats file
@@ -63,7 +60,7 @@ class Mouse:
         mouseFilePos = filePos
         for line in statsFile:
             filePos = statsFile.tell()
-            mouseID, entries, entRewards, hFixes, hfRewards, resultDict = str(line).split ('\t')
+            mouseID, entries, entRewards, hFixes, resultDict = str(line).split ('\t')
             if int (mouseID) == self.tag:
                 hasMouse = True
                 break
@@ -75,7 +72,7 @@ class Mouse:
                 lines.append [line]
             # write new stats for this mouse at saved position
             filePos = statsFile.seek (mouseFilePos)
-        statsFile.write ('{:013d}\{:05d}\t{:05d}\t{:05d}\t{:05d}\t{:s}\n'.format (self.tag, self.entries, self.headFixes, self.entranceRewards, self.headFixRewards, json.dumps (self.resultDict)))
+        statsFile.write ('{:013d}\{:05d}\t{:05d}\t{:05d}\t{:s}\n'.format (self.tag, self.entries, self.headFixes, self.entranceRewards, json.dumps (self.resultDict)))
         if hasMouse:
             # write saved data back to file
             for line in lines:
@@ -96,7 +93,7 @@ class Mice:
         dayFolderPath = cageSettings.dataPath + dateStr + '/' + cageSettings.cageID + '/'
         textFilePath = dayFolderPath + 'TextFiles/quickStats_' + cageSettings.cageID + '_' +  dateStr + '.txt'
         hasStats = False
-        if os.exists (textFilePath):
+        if path.exists (textFilePath):
             hasStats = True
         else:
             # nothing from today, try yesterday
@@ -104,7 +101,7 @@ class Mice:
             dateStr= str (yesterday.year) + (str (yesterday.month)).zfill(2) + (str (yesterday.day)).zfill(2)
             dayFolderPath = cageSettings.dataPath + dateStr + '/' + cageSettings.cageID + '/'
             textFilePath = dayFolderPath + 'TextFiles/quickStats_' + cageSettings.cageID + '_' +  dateStr + '.txt'
-            if os.exists (textFilePath): # stats for yesterday
+            if path.exists (textFilePath): # stats for yesterday
                 hasStats = True
             else:
                 haStats = False
@@ -113,8 +110,8 @@ class Mice:
             with open(textFilePath, 'r') as statsFile:
                 statsFile.seek (49) # skip header
                 for line in statsFile:
-                    mouseID, entries, entRewards, hFixes, hfRewards, resultDict = str(line).split ('\t')
-                    aMouse = Mouse (int (mouseID), int (entries), int (entRewards), int (hFixes), int (hfRewards), json.loads (resultDict))
+                    mouseID, entries, entRewards, hFixes, resultDict = str(line).split ('\t')
+                    aMouse = Mouse (int (mouseID), int (entries), int (entRewards), int (hFixes), json.loads (resultDict))
                     self.mouseArray.append(aMouse)
                 
 
@@ -136,13 +133,13 @@ class Mice:
         hasMouse = False
         statsFile.seek (49) # skip the header
         for line in statsFile:
-            mouseID, entries, entRewards, hFixes, hfRewards, resultDict = str(line).split ('\t')
+            mouseID, entries, entRewards, hFixes, resultDict = str(line).split ('\t')
             if mouseID == addMouse.tag:
                 hasMouse = True
                 print ('Mouse with tag {:d} is already in stats file'.format (addMouse.tag))
                 break
         if not hasMouse: # we are at end of the file, so append new mouse
-            outPutStr = '{:013}\t{:05}\t{:05}\t{:05}\t{:05}\t{:s}'.format(addMouse.tag, 0, 0, 0, 0,'{}')
+            outPutStr = '{:013}\t{:05}\t{:05}\t{:05}\t{:s}'.format(addMouse.tag, 0, 0, 0,'{}')
             statsFile.write (outPutStr)
 
     def show (self):

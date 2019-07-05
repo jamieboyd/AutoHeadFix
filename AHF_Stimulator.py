@@ -2,13 +2,12 @@
 #-*-coding: utf-8 -*
 
 from abc import ABCMeta, abstractmethod
-import inspect
-import os
+from inspect import isabstract
+from os import listdir
 from AHF_Rewarder import AHF_Rewarder
 from AHF_LickDetector import AHF_LickDetector
 from AHF_Mouse import Mouse
-import time
-import json
+from collections import OrderedDict
 
 from time import time, sleep
 from datetime import datetime
@@ -18,7 +17,7 @@ class AHF_Stimulator (metaclass = ABCMeta):
     """
     Abstract base class for Stimulator methods, as several exist and we may wish to choose between them at run time
 
-    Stimulator does all stimulation and reward during a head fix task
+    Stimulator does and reward during a head fix task
     All events and their timings in a head fix, including rewards, are controlled by a Stimulator.
     """
 
@@ -56,7 +55,7 @@ class AHF_Stimulator (metaclass = ABCMeta):
         fileList = []
         startlen = 15
         endlen =3
-        for f in os.listdir('.'):
+        for f in listdir('.'):
             if f.startswith ('AHF_Stimulator_') and f.endswith ('.py'):
                 fname = f[startlen :-endlen]
                 try:
@@ -64,7 +63,7 @@ class AHF_Stimulator (metaclass = ABCMeta):
                     #print ('module=' + str (moduleObj))
                     classObj = getattr(moduleObj, moduleObj.__name__)
                     #print (classObj)
-                    isAbstractClass = inspect.isabstract (classObj)
+                    isAbstractClass = isabstract (classObj)
                     if isAbstractClass == False:
                         fileList.append (fname)
                         iFile += 1
@@ -100,6 +99,93 @@ class AHF_Stimulator (metaclass = ABCMeta):
         subclassses must provide this
         """
         return stimDict
+
+
+    @staticmethod
+    def Show_ordered_dict (objectDict, longName):
+        """
+        Dumps standard dictionary settings into an ordered dictionary, prints settings to screen in a numbered fashion from the ordered dictionary,
+        making it easy to select a setting to change. Returns an  ordered dictionary of {number: (key:value),} used by edit_dict function
+        """
+        print ('\n*************** Current {:s} Settings *******************'.format (longName))
+        showDict = OrderedDict()
+        itemDict = {}
+        nP = 0
+        for key in sorted (objectDict) :
+            value = objectDict.get (key)
+            showDict.update ({nP:{key: value}})
+            nP += 1
+        for ii in range (0, nP):
+            itemDict.update (showDict [ii])
+            kvp = itemDict.popitem()
+            print ('{:d}) {:s} = {}'.format (ii + 1, kvp [0], kvp [1]))
+        print ('**********************************\n')
+        return showDict
+
+    @staticmethod
+    def Edit_dict (anyDict, longName):
+        """
+        Edits values in a passed in dict, in a generic way, not having to know ahead of time the name and type of each setting
+        Assumption is made that lists/tuples contain only strings, ints, or float types, and that all members of any list/tuple are same type
+        """
+        while True:
+            orderedDict = AHF_Stimulator.Show_ordered_dict (anyDict, longName)
+            updatDict = {}
+            inputStr = input ('Enter number of setting to edit, or 0 to exit:')
+            try:
+                inputNum = int (inputStr)
+            except ValueError as e:
+                print ('enter a NUMBER for setting, please: %s\n' % str(e))
+                continue
+            if inputNum == 0:
+                break
+            else:
+                itemDict = orderedDict.get (inputNum -1)
+                kvp = itemDict.popitem()
+                itemKey = kvp [0]
+                itemValue = kvp [1]
+                if type (itemValue) is str:
+                    inputStr = input ('Enter a new text value for %s, currently %s:' % (itemKey, str (itemValue)))
+                    updatDict = {itemKey: inputStr}
+                elif type (itemValue) is int:
+                    inputStr = input ('Enter a new integer value for %s, currently %s:' % (itemKey, str (itemValue)))
+                    updatDict = {itemKey: int (inputStr)}
+                elif type (itemValue) is float:
+                    inputStr = input ('Enter a new floating point value for %s, currently %s:' % (itemKey, str (itemValue)))
+                    updatDict = {itemKey: float (inputStr)}
+                elif type (itemValue) is tuple or itemValue is list:
+                    outputList = []
+                    if type (itemValue [0]) is str:
+                        inputStr = input ('Enter a new comma separated list of strings for %s, currently %s:' % (itemKey, str (itemValue)))
+                        outputList = list (inputStr.split(','))
+                    elif type (itemValue [0]) is int:
+                        inputStr = input ('Enter a new comma separated list of integer values for %s, currently %s:' % (itemKey, str (itemValue)))
+                        for string in inputStr.split(','):
+                            try:
+                                outputList.append (int (string))
+                            except ValueError:
+                                continue
+                    elif type (itemValue [0]) is float:
+                        inputStr = input ('Enter a new comma separated list of floating point values for %s, currently %s:' % (itemKey, str (itemValue)))
+                        for string in inputStr.split(','):
+                            try:
+                                outputList.append (float (string))
+                            except ValueError:
+                                continue
+                    if type (itemValue) is tuple:
+                        updatDict = {itemKey: tuple (outputList)}
+                    else:
+                        updatDict = {itemKey: outputList}
+                elif type (itemValue) is bool:
+                    inputStr = input ('%s, True for or False?, currently %s:' % (itemKey, str (itemValue)))
+                    if inputStr [0] == 'T' or inputStr [0] == 't':
+                        updatDict = {itemKey: True}
+                    else:
+                        updatDict = {itemKey: False}
+                elif type (itemValue) is dict:
+                    Edit_dict (itemValue, itemKey)
+                    anyDict[itemKey].update (itemValue)
+                anyDict.update (updatDict)
   
     
     def __init__ (self, cageSettings, expSettings, rewarder, lickDetector):
@@ -123,7 +209,7 @@ class AHF_Stimulator (metaclass = ABCMeta):
     @abstractmethod
     def setup (self):
         """
-        abstract method ubclasses must provide to init any hardware and other resources
+        abstract method subclasses must provide to init any hardware and other resources
         """
         pass
     
@@ -183,31 +269,10 @@ class AHF_Stimulator (metaclass = ABCMeta):
         """
         pass
 
-    def inspect_mice (self,mice,cageSettings,expSettings):
+    def inspect_mice (self):
         """
             Helper function to show stimulator specific mouse data.
         """
         pass
 
 
-
- 
-
-if __name__ == '__main__':
-    import RPi.GPIO as GPIO
-    GPIO.setmode(GPIO.BCM)
-    rewarder = AHF_Rewarder (30e-03, 24)
-    rewarder.addToDict ('task', 50e-03)
-    thisMouse = Mouse (2525, 0,0,0,0, '')
-    stimFile = AHF_Stimulator.get_stimulator_from_user ()
-    stimDict = AHF_Stimulator.get_class (stimFile).dict_from_user({})
-    stimulator = AHF_Stimulator.get_class (stimFile)(stimDict, rewarder, None)
-    print (stimulator.configStim (thisMouse))
-    stimulator.run ()
-    stimulator.logFile()
-    stimulator.config_from_user()
-    print (stimulator.configStim (thisMouse))
-    stimulator.run ()
-    stimulator.logFile()
-    thisMouse.show()
-    GPIO.cleanup ()

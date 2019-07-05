@@ -5,7 +5,7 @@ from AHF_Stimulator import AHF_Stimulator
 from AHF_Rewarder import AHF_Rewarder
 from AHF_Mouse import Mouse
 
-from time import time, localtime,timezone, sleep
+from time import time, localtime, sleep
 from datetime import datetime
 
 class AHF_Stimulator_Rewards (AHF_Stimulator):
@@ -17,22 +17,30 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
     
     @staticmethod
     def dict_from_user (stimDict = {}):
+        """
+        Querries user for number of rewards and interval between rewards and stores info in a dictionary
+
+        :param stimDict: a starter dictionary that may contain values already, or be empty
+        :returns stimDict dictionary, with edited or appended results from user
+        """
         nRewards = stimDict.get('nRewards', AHF_Stimulator_Rewards.nRewardsDefault)
         tempInput = input ('set number of rewards (currently {:d}) to:'.format (nRewards))
         if tempInput != '':
             nRewards = int (tempInput)
             stimDict.update({'nRewards' : nRewards})
         rewardInterval = stimDict.get('rewardInterval', AHF_Stimulator_Rewards.rewardIntervalDefault)
-        tempInput = input ('set reward Interval (currently {:.3f} seconds) to:'.format (rewardIntervalDefault))
+        tempInput = input ('set reward Interval (currently {:.2f} seconds) to:'.format (AHF_Stimulator_Rewards.rewardIntervalDefault))
         if tempInput != '':
             rewardInterval = float (tempInput)
         if not 'rewardInterval' in stimDict:
             stimDict.update ({'rewardInterval' : rewardInterval})
-
+        return stimDict
+    
     def setup (self):
         """
         No harware setup needed, just make local references of nRewards and interval, for ease of use
-        The init function will have copied a local reference to confifuration settings dictionary 
+        
+        The init function will have copied a local reference to configuration settings dictionary 
         """
         self.nRewards = self.configDict.get('nRewards')
         self.rewardInterval = self.configDict.get ('rewardInterval')
@@ -40,70 +48,52 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
 
 
     def configStim (self, mouse):
-        if 'HFrewards' in mouse.stimResultsDict:
-            mouse.stimResultsDict.update ({'HFrewards' : mouse.stimResultsDict.get('HFrewards') + self.nRewards})
-        else:
-            mouse.stimResultsDict.update({'HFrewards' : self.nRewards})
-
         self.mouse = mouse
         return 'stim'
 
     
     def run(self):
-        timeInterval = self.rewardInterval - self.rewarder.rewardDict.get ('task')
         self.rewardTimes = []
         for reward in range(self.nRewards):
             self.rewardTimes.append (time())
             self.rewarder.giveReward('task')
-            sleep(timeInterval)
-        self.mouse.headFixRewards += self.nRewards
+            sleep(self.rewardInterval)
+         # update tally of head fix rewards given in this mouses stimResultsDict
+        HFrewards = mouse.stimResultsDict.get('HFrewards', 0)
+        mouse.stimResultsDict.update ({'HFrewards' : HFrewards + self.nRewards})
+
 
 
     def logfile (self):
-        event = '\tHeadFixReward'
-        mStr = '{:013}\t'.format(self.mouse.tag)
+        """
+        prints to the log file and the shell the time of each reward given
+        """
         for rewardTime in self.rewardTimes:
-            
-            outPutStr = mStr + datetime.fromtimestamp (int (rewardTime)).isoformat (' ') + event
-            print (outPutStr)
+            # print mouse, time stamp, event, formatted time to the log file
+            if self.expSettings.textfp != None:
+                self.textfp.write('{:013}\t{:.2f}\tHeadFixReward\t{:s}\n'.format (self.mouse.tag, rewardTime, int (rewardTime)).isoformat (' '))
+            # print mouse, formatted time, event to the shell
+            print ('{:013}\t{:s}\tHeadFixReward'.format (self.mouse.tag, int (rewardTime)).isoformat (' '))
         if self.expSettings.textfp != None:
-            for rewardTime in self.rewardTimes:
-                outPutStr = mStr + datetime.fromtimestamp (int (rewardTime)).isoformat (' ') + "\t" + '{:.2f}'.format (rewardTime)  + event
-                self.textfp.write(outPutStr + '\n')
             self.textfp.flush()
 
 
     def tester(self):
-        #Tester function called from the hardwareTester. Includes Stimulatorspecific hardware tester.
-       
+        """
+        Tester function to be called from the hardwareTester
+        makes a sample mouse and calls the run function in a loop, giving option to change settings every time
+        """
+        self.configStim (Mouse (2525, 0,0,0,{}))
+        while True:
+            response = input ('change stimulus settings (yes or no)?')
+            if response [0] == 'Y' or response [0] == 'y':
+                self.stimDict = AHF_Stimulator.Edit_Dict (self.stimDict, 'Rewards Stimulator')
+                self.setup ()
+            response = input ('run stimulator as configured (yes or no)?')
+            if response [0] == 'Y' or response [0] == 'y':
+                self.run ()
+                self.logfile()
+                self.mouse.show()
 
-
-
-            
-
-if __name__ == '__main__':
-    import RPi.GPIO as GPIO
-    try:
-        GPIO.setmode(GPIO.BCM)
-        rewarder = AHF_Rewarder (30e-03, 24)
-        rewarder.addToDict ('task', 50e-03)
-        thisMouse = Mouse (2525, 0,0,0,0)
-        #stimFile = AHF_Stimulator.get_stimulator ()
-        #stimulator = AHF_Stimulator.get_class (stimFile)(stimdict, rewarder, None)
-        stimdict = {'nRewards' : 5, 'rewardInterval' : .25}
-        #stimdict = AHF_Stimulator.configure({})
-        #print ('stimdict:')
-        #for key in sorted (stimdict.keys()):
-        #   print (key + ' = ' + str (stimdict[key]))
-        stimulator = AHF_Stimulator_Rewards (stimdict, rewarder, None)
-        print (stimulator.configStim (thisMouse))
-        stimulator.run ()
-        stimulator.logfile()
-        thisMouse.show()
-    except FileNotFoundError:
-        print ('File not found')
-    finally:
-        GPIO.cleanup ()
-    
 
     
