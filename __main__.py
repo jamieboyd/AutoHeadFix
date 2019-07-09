@@ -7,7 +7,7 @@ from AHF_Settings import AHF_Settings
 from AHF_Rewarder import AHF_Rewarder
 from AHF_HeadFixer import AHF_HeadFixer
 from AHF_Camera import AHF_Camera
-from RFIDTagReader import TagReader
+import RFIDTagReader
 from AHF_Stimulator import AHF_Stimulator
 from AHF_HardwareTester import hardwareTester
 from AHF_Mouse import Mouse, Mice
@@ -73,7 +73,7 @@ def main():
         makeQuickStatsFile (expSettings, cageSettings, mice)
         # set up the GPIO pins for each for their respective functionalities.
         GPIO.setmode (GPIO.BCM)
-        GPIO.setwarnings(False)
+        GPIO.setwarnings (False)
         GPIO.setup (cageSettings.ledPin, GPIO.OUT, initial = GPIO.LOW) # turns on brain illumination LED
         GPIO.setup (cageSettings.tirPin, GPIO.IN)  # Tag-in-range output from RFID tatg reader
         GPIO.setup (cageSettings.contactPin, GPIO.IN, pull_up_down=getattr (GPIO, "PUD_" + cageSettings.contactPUD))
@@ -100,7 +100,7 @@ def main():
         else:
             notifier = None
         # make RFID reader and install callback
-        tagReader = TagReader(cageSettings.serialPort, True, timeOutSecs = kTIMEOUTSECS)
+        tagReader = RFIDTagReader.TagReader(cageSettings.serialPort, True, timeOutSecs = kTIMEOUTSECS)
         tagReader.installCallback (cageSettings.tirPin)
         # configure camera
         camera = AHF_Camera(expSettings.camParamsDict)
@@ -121,6 +121,7 @@ def main():
         stimulator = AHF_Stimulator.get_class (expSettings.stimulator)(cageSettings, expSettings, rewarder, lickDetector)
     except Exception as anError:
         print ('Unexpected error starting AutoHeadFix:{}'.format(anError))
+        raise anError
         exit(0)
     try:
         while True: # looping over entries, exits
@@ -153,7 +154,7 @@ def main():
                 entryTime = time()
                 thisMouse = mice.getMouseFromTag (tag)
                 if thisMouse is None:
-                    thisMouse=Mouse(tag,1,0,0,0, {})
+                    thisMouse=Mouse(tag,1,0,0, {})
                     mice.addMouse (thisMouse, expSettings.statsFP)
                 writeToLogFile(expSettings.logFP, thisMouse, 'entry')
                 thisMouse.entries += 1
@@ -188,7 +189,6 @@ def main():
             except KeyboardInterrupt:
                 GPIO.output(cageSettings.ledPin, GPIO.LOW)
                 headFixer.releaseMouse()
-                GPIO.output(cageSettings.rewardPin, GPIO.LOW)
                 if lickDetector is not None:
                     lickDetector.stop_logging ()
                 while True:
@@ -219,7 +219,6 @@ def main():
         stimulator.quitting()
         GPIO.output(cageSettings.ledPin, False)
         headFixer.releaseMouse()
-        GPIO.output(cageSettings.rewardPin, False)
         GPIO.cleanup()
         writeToLogFile(expSettings.logFP, None, 'SeshEnd')
         expSettings.logFP.close()
@@ -392,7 +391,7 @@ def makeQuickStatsFile (expSettings, cageSettings, mice):
             expSettings.statsFP = open(textFilePath, 'r+')
         else:
             expSettings.statsFP = open(textFilePath, 'w')
-            expSettings.statsFP.write('Mouse_ID\tentries\tent_rew\thfixes\thf_rew\tstim_dict\n')
+            expSettings.statsFP.write('Mouse_ID\tentries\tent_rew\thfixes\tstim_dict\n')
             expSettings.statsFP.close()
             expSettings.statsFP = open(textFilePath, 'r+')
             uid = getpwnam ('pi').pw_uid

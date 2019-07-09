@@ -1,7 +1,7 @@
 #! /usr/bin/python
-import RPi.GPIO as GPIO
+
 from time import sleep
-from _thread import start_new_thread
+from PTSimpleGPIO import CountermandPulse
 
 class AHF_Rewarder:
     """
@@ -14,36 +14,7 @@ class AHF_Rewarder:
     TODO:1)include a measure of flow rate and record/return values in litres delivered, not
     seconds open. 2) make doReward threaded, so main program does not have to stop for long rewards (done)
     """
-    countermandVal = 0 # class variabe used for countermanding rewards after a delay
-    
-    @staticmethod
-    def rewardThread (sleepTime, rewardPin):
-        """
-        funtion to run in a thread to give a water reward
-        :param sleepTime: duration in seconds to sleep while solenoid is open
-        :param rewardPin: number of GPIO pin connected to solenoid
-        """
-        GPIO.output(rewardPin, GPIO.HIGH)
-        sleep(sleepTime) # not very accurate timing, but good enough
-        GPIO.output(rewardPin, GPIO.LOW)
-        
-    @staticmethod
-    def rewardCMThread (delayTime, sleepTime, rewardPin):
-        """
-        funtion to run in a thread to give a water reward, with a delay before reweard is given
-        during delay period, reward can be countermanded
-        :param delayTime: period before reward is given, wherin reward can be countermanded 
-        :param sleepTime: duration in seconds to sleep while solenoid is open
-        :param rewardPin: number of GPIO pin connected to solenoid
-        """
-        AHF_Rewarder.countermandVal = 1 # indicate we are in delay period where reward can be countermanded
-        sleep(delayTime) # not very accurate timing, but good enough
-        if AHF_Rewarder.countermandVal == 1: # reward was not countermanded, so give reward
-            AHF_Rewarder.countermandVal = 2 # indicate that reward was given
-            GPIO.output(rewardPin, GPIO.HIGH)
-            sleep(sleepTime) # not very accurate timing, but good enough
-            GPIO.output(rewardPin, GPIO.LOW)            
-            
+     
     def __init__ (self, defaultTimeVal, rewardPin):
         """
         Makes a new Rewarder object with a GPIO pin and default opening time
@@ -54,7 +25,7 @@ class AHF_Rewarder:
         """
         self.rewardDict = {'default': defaultTimeVal}
         self.rewardPin = rewardPin
-        GPIO.setup (self.rewardPin, GPIO.OUT, initial= GPIO.LOW)
+        self.cmPulse = CountermandPulse (self.rewardPin, 0, 0, self.rewardDict.get('default'), 1)
 
 
     def addToDict(self, rewardName, rewardSize):
@@ -74,12 +45,15 @@ class AHF_Rewarder:
         If the requested reward type is not found, the default reward size is used
         param:rewardName: the type of the reward to be given, should already be in dictionary
         """
-        
+        self.cmPulse.set_delay(0)
         if rewardName in self.rewardDict:
             sleepTime = self.rewardDict.get(rewardName)
         else:
             sleepTime = self.rewardDict.get('default')
-        start_new_thread (AHF_Rewarder.rewardThread, (sleepTime, self.rewardPin))
+        self.cmPulse.set_duration(sleepTime)
+        self.cmPulse.do_pulse()
+        
+       
 
     def giveRewardCM(self, rewardName, delayTime):
         """
@@ -92,27 +66,25 @@ class AHF_Rewarder:
             sleepTime = self.rewardDict.get(rewardName)
         else:
             sleepTime = self.rewardDict.get('default')
-        start_new_thread (AHF_Rewarder.rewardCMThread, (delayTime, sleepTime, self.rewardPin))
-    
+        self.cmPulse.set_duration(sleepTime)
+        self.cmPulse.set_delay (delayTime)
+        self.cmPulse.do_pulse_countermandable()
     
     def countermandReward(self):
         """
         countermands reward by setting class variable to 0
         :returns: truth that the reward was countermanded, i.e. False if reward was already given
         """
-        if AHF_Rewarder.countermandVal == 2:
-            AHF_Rewarder.countermandVal = 0
-            return False
-        else:
-            AHF_Rewarder.countermandVal = 0
-            return True
+        return self.cmPulse.countermand_pulse()
+
+    def __del__(self):
+        del self.cmPulse
+        
     
     
 #for testing purposes
 if __name__ == '__main__':
     rewardPin = 13
-    GPIO.setmode (GPIO.BCM)
-    GPIO.setwarnings (False)
     rewarder = AHF_Rewarder (30e-03, rewardPin)
     rewarder.addToDict ("entry", 100e-03)
     rewarder.giveReward ("entry")
@@ -124,5 +96,4 @@ if __name__ == '__main__':
     sleep (0.5)
     print (rewarder.countermandReward ())
     sleep (1)
-    GPIO.cleanup()
-
+    del rewarder

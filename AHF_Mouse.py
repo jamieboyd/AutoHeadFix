@@ -1,10 +1,6 @@
-from AHF_Rewarder import AHF_Rewarder
-import RPi.GPIO as GPIO
 import json
 from time import time, localtime
 from datetime import datetime,timedelta
-from os import path
-
 
 class Mouse:
     """
@@ -59,7 +55,9 @@ class Mouse:
         filePos = statsFile.seek (49) # skip header
         mouseFilePos = filePos
         for line in statsFile:
-            filePos = statsFile.tell()
+            # process line
+            print (line)
+            filePos += len(line)
             mouseID, entries, entRewards, hFixes, resultDict = str(line).split ('\t')
             if int (mouseID) == self.tag:
                 hasMouse = True
@@ -69,14 +67,15 @@ class Mouse:
         if hasMouse:
             lines = []
             for line in statsFile:
-                lines.append [line]
+                lines.append (line)
             # write new stats for this mouse at saved position
             filePos = statsFile.seek (mouseFilePos)
-        statsFile.write ('{:013d}\{:05d}\t{:05d}\t{:05d}\t{:s}\n'.format (self.tag, self.entries, self.headFixes, self.entranceRewards, json.dumps (self.resultDict)))
+        statsFile.write ('{:013d}\t{:05d}\t{:05d}\t{:05d}\t{:s}\n'.format (self.tag, self.entries, self.headFixes, self.entranceRewards, json.dumps (self.stimResultsDict)))
         if hasMouse:
             # write saved data back to file
             for line in lines:
                  statsFile.write (line)
+        statsFile.flush()
 
 class Mice:
     """
@@ -107,9 +106,10 @@ class Mice:
                 haStats = False
         # open the file
         if hasStats:
-            with open(textFilePath, 'r') as statsFile:
+            with open(textFilePath, 'w+') as statsFile:
                 statsFile.seek (49) # skip header
                 for line in statsFile:
+                    print (line)
                     mouseID, entries, entRewards, hFixes, resultDict = str(line).split ('\t')
                     aMouse = Mouse (int (mouseID), int (entries), int (entRewards), int (hFixes), json.loads (resultDict))
                     self.mouseArray.append(aMouse)
@@ -133,14 +133,16 @@ class Mice:
         hasMouse = False
         statsFile.seek (49) # skip the header
         for line in statsFile:
+            print (line)
             mouseID, entries, entRewards, hFixes, resultDict = str(line).split ('\t')
             if mouseID == addMouse.tag:
                 hasMouse = True
                 print ('Mouse with tag {:d} is already in stats file'.format (addMouse.tag))
                 break
         if not hasMouse: # we are at end of the file, so append new mouse
-            outPutStr = '{:013}\t{:05}\t{:05}\t{:05}\t{:s}'.format(addMouse.tag, 0, 0, 0,'{}')
+            outPutStr = '{:013}\t{:05}\t{:05}\t{:05}\t{:s}\n'.format(addMouse.tag, 0, 0, 0,'{}')
             statsFile.write (outPutStr)
+        statsFile.flush()
 
     def show (self):
         """
@@ -180,34 +182,68 @@ class Mice:
 
 #for testing
 if __name__ == '__main__':
-    m1= Mouse (16, 0,0,0,0,)
-    m2 = Mouse (17, 0,0,0,0)
-    m1.show()
-    m2.show()
-    mArray = Mice()
-    mArray.addMouse (m1, None)
-    mArray.addMouse (m2, None)
-    mArray.addMouse (m1, None)
+    from AHF_CageSet import AHF_CageSet
+    from AHF_Settings import AHF_Settings
+    from pwd import getpwnam
+    from grp import getgrnam
+    from os import path, makedirs, listdir, chown
+    cageSettings = AHF_CageSet ()
+    expSettings = AHF_Settings()
+    try:
+        now = datetime.fromtimestamp (time())
+        expSettings.dateStr= str (now.year) + (str (now.month)).zfill(2) + (str (now.day)).zfill(2)
+        expSettings.dayFolderPath = cageSettings.dataPath + expSettings.dateStr + '/' + cageSettings.cageID + '/'
+        if not path.exists(expSettings.dayFolderPath):
+            makedirs(expSettings.dayFolderPath, mode=0o777, exist_ok=True)
+            makedirs(expSettings.dayFolderPath + 'TextFiles/', mode=0o777, exist_ok=True)
+            makedirs(expSettings.dayFolderPath + 'Videos/', mode=0o777, exist_ok=True)
+            uid = getpwnam ('pi').pw_uid
+            gid = getgrnam ('pi').gr_gid
+            chown (expSettings.dayFolderPath, uid, gid)
+            chown (expSettings.dayFolderPath + 'TextFiles/', uid, gid)
+            chown (expSettings.dayFolderPath + 'Videos/', uid, gid)
+    except Exception as e:
+            print ("Error making directories\n", str(e))
+    try:
+        textFilePath = expSettings.dayFolderPath + 'TextFiles/quickStats_' + cageSettings.cageID + '_' + expSettings.dateStr + '.txt'
+        if path.exists(textFilePath):
+            expSettings.statsFP = open(textFilePath, 'w+')
+        else:
+            expSettings.statsFP = open(textFilePath, 'w+')
+            expSettings.statsFP.write('Mouse_ID\tentries\tent_rew\thfixes\tstim_dict\n')
+            #expSettings.statsFP.close()
+            #expSettings.statsFP = open(textFilePath, 'r+')
+            uid = getpwnam ('pi').pw_uid
+            gid = getgrnam ('pi').gr_gid
+            chown (textFilePath, uid, gid)
+    except Exception as e:
+        print ('Error making quickStats file:{}', e)
+        raise e
+    
+    
+
+    m1= Mouse (16, 0,0,0,{})
+    m2 = Mouse (17, 0,0,0, {})
+    #m1.show()
+    #m2.show()
+    mArray = Mice(cageSettings)
+    mArray.addMouse (m1, expSettings.statsFP)
+    mArray.addMouse (m2, expSettings.statsFP)
+    m1.entries +=1
+    m1.headFixes +=1
+    m1.updateStats (expSettings.statsFP)
+    #m2.updateStats (expSettings.statsFP)
+    #mArray.show()
+    """
+    mArray.addMouse (m1, expSettings.statsFP)
+    
     mArray.show()
     mTemp = mArray.getMouseFromTag (17)
     mTemp.show()
-    rewardPin= 18
-    GPIO.setwarnings(False)
-    GPIO.setmode (GPIO.BCM)
-    rewarder = AHF_Rewarder (30e-03, rewardPin)
-    rewarder.addToDict('entrance', 20e-03)
-    rewarder.addToDict('task', 60e-03)
-    rewarder.addToDict('entrance', 20e-03)
-    mTemp.reward (rewarder, 'task')
     mTemp = mArray.getMouseFromTag (16)
     mTemp.entries +=1
     mTemp.headFixes +=1
-    if mTemp is not None:
-        mTemp.reward (rewarder, 'entrance')
-    mTemp = mArray.getMouseFromTag (27)
-    if mTemp is not None:
-        mTemp.show()
     mArray.show()
     mArray.removeMouseByTag (17)
     mArray.show()
-    GPIO.cleanup()
+    """

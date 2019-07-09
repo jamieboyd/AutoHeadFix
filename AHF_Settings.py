@@ -56,8 +56,9 @@ class AHF_Settings (object):
             if f.startswith ('AHF_Settings_') and f.endswith ('.jsn'):
                 fname = f[startlen :-endlen]
                 fileList.append (fname)
+                print (fname)
         if len (fileList) == 0:
-            print ('Could not find an AHF_Settings file in the current or enclosing directory.')
+            print ('Could not find an AHF_Settings file in the current directory.')
             return ''
         else:
             inputStr = '\nEnter a number from 1 to {} to choose a Settings file, or 0 to make new settings:\n'.format(len (fileList))
@@ -251,7 +252,7 @@ class AHF_Settings (object):
         else:
             newConfig = input ('Enter a name to save config as file:')
         if newConfig != self.fileName:
-            newConfig = 'AFH_Settings_' + ''.join([c for c in newConfig if c.isalpha() or c.isdigit() or c=='_']) + '.jsn'
+            newConfig = 'AHF_Settings_' + ''.join([c for c in newConfig if c.isalpha() or c.isdigit() or c=='_']) + '.jsn'
             self.fileName = newConfig
          # open the file name
         with open (newConfig, 'w') as fp:
