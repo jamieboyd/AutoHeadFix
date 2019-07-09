@@ -106,7 +106,7 @@ class Mice:
                 haStats = False
         # open the file
         if hasStats:
-            with open(textFilePath, 'w+') as statsFile:
+            with open(textFilePath, 'r') as statsFile:
                 statsFile.seek (49) # skip header
                 for line in statsFile:
                     print (line)
@@ -184,49 +184,20 @@ class Mice:
 if __name__ == '__main__':
     from AHF_CageSet import AHF_CageSet
     from AHF_Settings import AHF_Settings
-    from pwd import getpwnam
-    from grp import getgrnam
-    from os import path, makedirs, listdir, chown
+    import __main__
+    
     cageSettings = AHF_CageSet ()
     expSettings = AHF_Settings()
-    try:
-        now = datetime.fromtimestamp (time())
-        expSettings.dateStr= str (now.year) + (str (now.month)).zfill(2) + (str (now.day)).zfill(2)
-        expSettings.dayFolderPath = cageSettings.dataPath + expSettings.dateStr + '/' + cageSettings.cageID + '/'
-        if not path.exists(expSettings.dayFolderPath):
-            makedirs(expSettings.dayFolderPath, mode=0o777, exist_ok=True)
-            makedirs(expSettings.dayFolderPath + 'TextFiles/', mode=0o777, exist_ok=True)
-            makedirs(expSettings.dayFolderPath + 'Videos/', mode=0o777, exist_ok=True)
-            uid = getpwnam ('pi').pw_uid
-            gid = getgrnam ('pi').gr_gid
-            chown (expSettings.dayFolderPath, uid, gid)
-            chown (expSettings.dayFolderPath + 'TextFiles/', uid, gid)
-            chown (expSettings.dayFolderPath + 'Videos/', uid, gid)
-    except Exception as e:
-            print ("Error making directories\n", str(e))
-    try:
-        textFilePath = expSettings.dayFolderPath + 'TextFiles/quickStats_' + cageSettings.cageID + '_' + expSettings.dateStr + '.txt'
-        if path.exists(textFilePath):
-            expSettings.statsFP = open(textFilePath, 'w+')
-        else:
-            expSettings.statsFP = open(textFilePath, 'w+')
-            expSettings.statsFP.write('Mouse_ID\tentries\tent_rew\thfixes\tstim_dict\n')
-            #expSettings.statsFP.close()
-            #expSettings.statsFP = open(textFilePath, 'r+')
-            uid = getpwnam ('pi').pw_uid
-            gid = getgrnam ('pi').gr_gid
-            chown (textFilePath, uid, gid)
-    except Exception as e:
-        print ('Error making quickStats file:{}', e)
-        raise e
-    
-    
+
+    __main__.makeDayFolderPath (expSettings, cageSettings)
+    __main__.makeQuickStatsFile (expSettings, cageSettings, mice)
+    mArray = Mice(cageSettings)
 
     m1= Mouse (16, 0,0,0,{})
     m2 = Mouse (17, 0,0,0, {})
     #m1.show()
     #m2.show()
-    mArray = Mice(cageSettings)
+    
     mArray.addMouse (m1, expSettings.statsFP)
     mArray.addMouse (m2, expSettings.statsFP)
     m1.entries +=1

@@ -70,7 +70,7 @@ def main():
         mice = Mice(cageSettings)
         # make daily Log files and quick stats file, if a quickstats file exists, we get info on mice from it
         makeLogFile (expSettings, cageSettings)
-        makeQuickStatsFile (expSettings, cageSettings, mice)
+        makeQuickStatsFile (expSettings, cageSettings)
         # set up the GPIO pins for each for their respective functionalities.
         GPIO.setmode (GPIO.BCM)
         GPIO.setwarnings (False)
@@ -342,7 +342,7 @@ def makeLogFile (expSettings, cageSettings):
     """
     try:
         logFilePath = expSettings.dayFolderPath + 'TextFiles/headFix_' + cageSettings.cageID + '_' + expSettings.dateStr + '.txt'
-        expSettings.logFP = open(logFilePath, 'a')
+        expSettings.logFP = open(logFilePath, 'a+')
         uid = getpwnam ('pi').pw_uid
         gid = getgrnam ('pi').gr_gid
         chown (logFilePath, uid, gid)
@@ -375,7 +375,7 @@ def writeToLogFile(logFP, mouseObj, event):
     except Exception as e:
         print ("Error writing to log file\n", str (e))
 
-def makeQuickStatsFile (expSettings, cageSettings, mice):
+def makeQuickStatsFile (expSettings, cageSettings):
     """
     makes a new quickStats file for today, or opens an existing file to append.
     QuickStats file contains daily totals of rewards and headFixes for each mouse
@@ -388,12 +388,10 @@ def makeQuickStatsFile (expSettings, cageSettings, mice):
     try:
         textFilePath = expSettings.dayFolderPath + 'TextFiles/quickStats_' + cageSettings.cageID + '_' + expSettings.dateStr + '.txt'
         if path.exists(textFilePath):
-            expSettings.statsFP = open(textFilePath, 'r+')
+            expSettings.statsFP = open(textFilePath, 'a')
         else:
-            expSettings.statsFP = open(textFilePath, 'w')
+            expSettings.statsFP = open(textFilePath, 'w+')
             expSettings.statsFP.write('Mouse_ID\tentries\tent_rew\thfixes\tstim_dict\n')
-            expSettings.statsFP.close()
-            expSettings.statsFP = open(textFilePath, 'r+')
             uid = getpwnam ('pi').pw_uid
             gid = getgrnam ('pi').gr_gid
             chown (textFilePath, uid, gid)
