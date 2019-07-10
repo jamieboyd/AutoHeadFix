@@ -53,16 +53,15 @@ class Mouse:
         # make line to insert in file with data from this mouse
         outPutStr = '{:013}\t{:05}\t{:05}\t{:05}\t{:s}\n'.format(self.tag, self.entries, self.entranceRewards, self.headFixes, json.dumps(self.stimResultsDict))
          # find this mouse, then stop, while keeping track of file pos
-        filePos = statsFile.seek (42) # skip header
+        filePos = statsFile.seek (42) # skip header, including new line
         mouseFilePos = -1
         try:
             for line in statsFile:
-                if len(line) > 2:
-                    mouseID, entries, entRewards, hFixes, resultDict = line.rstrip('\n').split ('\t')
-                    if int (mouseID) == self.tag:
-                        mouseFilePos = filePos
-                        break
-                    filePos += len (line)
+                mouseID, entries, entRewards, hFixes, resultDict = line.rstrip('\n').split ('\t')
+                if int (mouseID) == self.tag:
+                    mouseFilePos = filePos
+                    break
+                filePos += len (line)
         except Exception as e:
             print ('error : {}'.format (e))
             
