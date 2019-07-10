@@ -389,7 +389,7 @@ class AHF_Settings (object):
             elif editNum == '9b':
                 self.cameraStartDelay = float (input ('Enter delay in seconds between sending UDP and toggling blue LED:'))
             elif editNum == '10':
-                self.stimulator = AHF_Stimulator.get_stimulator_from_user ()
+                self.stimulator = AHF_Stimulator.get_Stimulator_from_user ()
                 self.stimDict = AHF_Stimulator.get_class(self.stimulator).dict_from_user({})
                 self.settingsDict.update ({'stimulator' : self.stimulator, 'stimDict' : self.stimDict})
                 editVal = editVal | 2

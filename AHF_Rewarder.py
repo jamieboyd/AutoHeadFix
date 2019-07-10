@@ -77,6 +77,33 @@ class AHF_Rewarder:
         """
         return self.cmPulse.countermand_pulse()
 
+
+    def valveControl (self):
+        """
+        main loop asks user to open or close solenoid; Opens on 1, closes on 0, quits on q
+
+        param:cageSet: an instance of AHF_CageSet describing which pin is used for water reward solenoid
+        returns:nothing
+        """
+        try:
+            while (True):
+                s = input("1 to open, 0 to close, q to quit: ")
+                if s == '1':
+                    print ("valve is open")
+                    self.cmPulse.set_level (1, 0)
+                elif s == '0':
+                     print ("valve is closed")
+                     self.cmPulse.set_level (0, 0)
+                elif s == 'q':
+                    print ("valveControl quitting")
+                    break
+                else:
+                    print ("I understand 1 for open, 0 for close, q for quit.")
+        except KeyboardInterrupt:
+            print ("ctrl-c also quits")
+            return
+
+
     def __del__(self):
         del self.cmPulse
         

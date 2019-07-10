@@ -52,34 +52,29 @@ class Mouse:
         """
         # make line to insert in file with data from this mouse
         outPutStr = '{:013}\t{:05}\t{:05}\t{:05}\t{:s}\n'.format(self.tag, self.entries, self.entranceRewards, self.headFixes, json.dumps(self.stimResultsDict))
-         # find this mouse, then stop, while keeping track of file pos
-        filePos = statsFile.seek (42) # skip header, including new line
-        mouseFilePos = -1
-        try:
-            for line in statsFile:
-                mouseID, entries, entRewards, hFixes, resultDict = line.rstrip('\n').split ('\t')
-                if int (mouseID) == self.tag:
-                    mouseFilePos = filePos
-                    break
-                filePos += len (line)
-        except Exception as e:
-            print ('error : {}'.format (e))
-            
-        # if mouse not found, add it with current  data at end of file
-        if mouseFilePos == -1:
-            statsFile.write (outPutStr)
-        else:
-            # store rest of lines of file in temp list
-            lines = []
-            for line in statsFile:
-                lines.append (line)
-            # write new stats for this mouse at saved position
-            filePos = statsFile.seek (mouseFilePos)
-            statsFile.write (outPutStr)
-            # write saved lines back to file
-            for line in lines:
-                statsFile.write (line)
+        # find this mouse, then stop
+        mPos = statsFile.seek (42) # skip header, including new line
+        aLine = statsFile.readline()
+        while len (aLine) > 2:
+            mouseID, entries, entRewards, hFixes, resultDict = aLine.rstrip('\n').split ('\t')
+            if int (mouseID) == self.tag:
+                break
+            mPos = statsFile.tell()
+            aLine = statsFile.readline()
+        # store any remaining lines of file in temp list
+        tempLines = []
+        aLine = statsFile.readline()
+        while len (aLine) > 2:
+            tempLines.append(aLine)
+            aLine = statsFile.readline()
+        # write new stats for this mouse at saved position
+        statsFile.seek (mPos)
+        statsFile.write(outPutStr)
+        # write saved lines back to file, this will leave file pos at end of file
+        for aLine in tempLines:
+            statsFile.write (aLine)
         statsFile.flush()
+
 
 class Mice:
     """
@@ -115,23 +110,23 @@ class Mice:
                 break
         if not hasMouse:
             self.mouseArray.append(addMouse)
+            self.mouseArray.sort()
         # add mouse to the quik stats file
         hasMouse = False
-        #fPos = 42
-        statsFile.seek (41) # skip the header
-        try:
-            for line in statsFile:
-                if len (line) > 2:
-                    mouseID, entries, entRewards, hFixes, resultDict = line.rstrip('\n').split ('\t')
-                    if mouseID == addMouse.tag:
-                        hasMouse = True
-                        print ('Mouse with tag {:d} is already in stats file'.format (addMouse.tag))
-        except Exception as e:
-            print ('addMouse error: {}'.format (e))
-        if not hasMouse: # we are at end of the file, so append new mouse
+        mPos = statsFile.seek (42) # skip the header
+        aLine = statsFile.readline()
+        while len (aLine) > 2:
+            mouseID, entries, entRewards, hFixes, resultDict = aLine.rstrip('\n').split ('\t')
+            if mouseID == addMouse.tag:
+                hasMouse = True
+                break
+            aLine = statsFile.readline()
+        # put file pointer to end of file, good practive whether adding a mouse or not
+        statsFile.seek(0, 2)
+        if not hasMouse: # append new mouse
             outPutStr = '{:013d}\t{:05d}\t{:05d}\t{:05d}\t{:s}\n'.format(addMouse.tag, addMouse.entries, addMouse.entranceRewards, addMouse.headFixes, json.dumps(addMouse.stimResultsDict))
             statsFile.write (outPutStr)
-        statsFile.flush()
+            statsFile.flush()
 
     def show (self):
         """
@@ -178,41 +173,3 @@ class Mice:
         for mouse in self.mouseArray:
             yield mouse
             
-
-#for testing
-if __name__ == '__main__':
-    from AHF_CageSet import AHF_CageSet
-    from AHF_Settings import AHF_Settings
-    import __main1__
-    
-    cageSettings = AHF_CageSet ()
-    expSettings = AHF_Settings()
-
-    __main1__.makeDayFolderPath (expSettings, cageSettings)
-    __main1__.makeQuickStatsFile (expSettings, cageSettings)
-    mArray = Mice(expSettings, cageSettings)
-    mArray.addMouse (Mouse (16, 0,0,0,{}), expSettings.statsFP)
-    mArray.addMouse (Mouse (17, 0,0,0,{}), expSettings.statsFP)
-    mArray.addMouse (Mouse (17, 0,0,0,{}), expSettings.statsFP)
-    mArray.addMouse (Mouse (16, 0,0,0,{}), expSettings.statsFP)
-    """
-    
-    tm = mArray.getMouseFromTag(17)
-    tm.entries +=1
-    tm.headFixes +=1
-    tm.updateStats (expSettings.statsFP)
-    #m2.updateStats (expSettings.statsFP)
-    #mArray.show()
-
-    mArray.addMouse (m1, expSettings.statsFP)
-    
-    mArray.show()
-    mTemp = mArray.getMouseFromTag (17)
-    mTemp.show()
-    mTemp = mArray.getMouseFromTag (16)
-    mTemp.entries +=1
-    mTemp.headFixes +=1
-    mArray.show()
-    mArray.removeMouseByTag (17)
-    mArray.show()
-    """

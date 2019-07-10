@@ -10,6 +10,7 @@ from AHF_Camera import AHF_Camera
 import RFIDTagReader
 from AHF_Stimulator import AHF_Stimulator
 from AHF_HardwareTester import hardwareTester
+from AHF_ValveControl import valveControl
 from AHF_Mouse import Mouse, Mice
 
 #Standard Python modules
@@ -66,11 +67,11 @@ def main():
         nextDay = startTime + timedelta (hours=24)
         # Create folders where the files for today will be stored
         makeDayFolderPath(expSettings, cageSettings)
-        # initialize mice, either with zero mice or with mice from latest quickStats
-        mice = Mice(cageSettings)
-        # make daily Log files and quick stats file, if a quickstats file exists, we get info on mice from it
+        # make daily Log file and quickStats file - at this point mice not initialized
         makeLogFile (expSettings, cageSettings)
         makeQuickStatsFile (expSettings, cageSettings)
+        # initialize mice, with mice from today's quickStats, if it exists, else with zero mice and we add them as we see them
+        mice = Mice(expSettings, cageSettings)
         # set up the GPIO pins for each for their respective functionalities.
         GPIO.setmode (GPIO.BCM)
         GPIO.setwarnings (False)
@@ -141,7 +142,7 @@ def main():
                         makeDayFolderPath(expSettings, cageSettings)
                         makeLogFile (expSettings, cageSettings)
                         makeQuickStatsFile (expSettings, cageSettings, mice)
-                        stimulator.nextDay (expSettings.logFP, mice)
+                        stimulator.nextDay (expSettings.statsFP, mice)
                         mice.clear ()
                         if lickDetector is not None:
                             lickDetector.dataLogger.logFP = expSettings.logFP
@@ -161,14 +162,76 @@ def main():
                 # if we have entrance reward, give countermandable entry reward - early exit countermands reward
                 if thisMouse.entranceRewards < expSettings.maxEntryRewards:
                    rewarder.giveRewardCM ('entry', expSettings.entryRewardDelay)
-                # wait for contacts and run trials till mouse exits or time in chamber exceeded
-                expSettings.doHeadFix = expSettings.propHeadFix > random()
+                # loop through contacts/running trials till mouse exits or time in chamber exceeded
                 while RFIDTagReader.globalTag == thisMouse and time () < entryTime + expSettings.inChamberTimeLimit:
-                    if (GPIO.input (cageSettings.contactPin)== expSettings.noContactState):
-                        GPIO.wait_for_edge (cageSettings.contactPin, expSettings.contactEdge, timeout= kTIMEOUTmS)
-                    if (GPIO.input (cageSettings.contactPin)== expSettings.contactState):
-                        runTrial (thisMouse, expSettings, cageSettings, rewarder, headFixer, stimulator, UDPTrigger)
-                        expSettings.doHeadFix = expSettings.propHeadFix > random() # set doHeadFix for next contact
+                    if GPIO.input (cageSettings.contactPin) == expSettings.noContactState:
+                        if GPIO.wait_for_edge (cageSettings.contactPin, expSettings.contactEdge, timeout= kTIMEOUTmS) == None:
+                            sleep (kTIMEOUTmS)
+                    else:
+                        # ready to head fix
+                        expSettings.doHeadFix = expSettings.propHeadFix > random()
+                        if expSettings.doHeadFix == True:
+                            headFixer.fixMouse()
+                            sleep(0.4) # wait a bit for things to settle, then re-check contacts
+                            if GPIO.input(cageSettings.contactPin) == expSettings.noContactState:
+                                # release mouse if no contact... :(
+                                headFixer.releaseMouse()
+                                writeToLogFile (expSettings.logFP, thisMouse, 'check-')
+                                continue
+                        #  non-head fix trial or check was successful
+                        headFixTime = time()
+                        if expSettings.doHeadFix == True:
+                            thisMouse.headFixes += 1
+                            writeToLogFile (expSettings.logFP, thisMouse, 'check+')
+                        else:
+                            writeToLogFile (expSettings.logFP, thisMouse,'check No Fix Trial')
+                        # Configure the stimulator to get the path for the video
+                        stimStr = stimulator.configStim (thisMouse)
+                        # analysis code expects brain data, in rgb format, to have .raw extension. 
+                        if camera.AHFvideoFormat == 'rgb':
+                            extension = 'raw'
+                        video_name = str (thisMouse.tag) + "_" + stimStr + "_" + '%d' % headFixTime + '.' + extension
+                        video_name_path = expSettings.dayFolderPath + 'Videos/' + "M" + video_name
+                        writeToLogFile (expSettings.logFP, thisMouse, "video:" + video_name)
+                        # send socket message to start behavioural camera
+                        if expSettings.hasUDP == True:
+                            #MESSAGE = str (thisMouse.tag) + "_" + stimStr + "_" + '%d' % headFixTime
+                            MESSAGE = '{:d}_{:s}_{:d}'.format (thisMouse.tag, stimStr, headFixTime)
+                            UDPTrigger.doTrigger (MESSAGE)
+                            # start recording and Turn on the blue led
+                            camera.start_recording(video_name_path)
+                            sleep(expSettings.cameraStartDelay) # wait a bit so camera has time to start before light turns on, for synchrony accross cameras
+                            GPIO.output(cageSettings.ledPin, GPIO.HIGH)
+                            writeToLogFile (expSettings.logFP, thisMouse, "BrainLEDON")
+                        else: # turn on the blue light and start the movie right away
+                            GPIO.output(cageSettings.ledPin, GPIO.HIGH)
+                            camera.start_recording(video_name_path)
+                        stimulator.run () # run whatever stimulus is configured
+                        if expSettings.hasUDP == True:
+                            GPIO.output(cageSettings.ledPin, GPIO.LOW) # turn off the blue LED
+                            writeToLogFile (expSettings.logFP, thisMouse, "BrainLEDOFF")
+                            sleep(expSettings.cameraStartDelay) #wait again after turning off LED before stopping camera, for synchronization
+                            UDPTrigger.doTrigger ("Stop") # stop
+                            camera.stop_recording()
+                        else:
+                            camera.stop_recording()
+                            GPIO.output(cageSettings.ledPin, GPIO.LOW) # turn off the blue LED
+                        uid = getpwnam ('pi').pw_uid
+                        gid = getgrnam ('pi').gr_gid
+                        chown (video_name_path, uid, gid) # we run AutoheadFix as root if using pi PWM, so we expicitly set ownership to pi
+                        stimulator.logfile ()
+                        writeToLogFile (expSettings.logFP, thisMouse,'complete')
+                        if expSettings.doHeadFix == True:
+                            headFixer.releaseMouse()
+                            # skeddadleTime gives mouse a chance to disconnect before head fixing again
+                            skeddadleEnd = time() + expSettings.skeddadleTime
+                            #sleep (0.5) # need to be mindful that servo motors generate RF, so wait 
+                            if (GPIO.input (cageSettings.contactPin)== expSettings.contactState):
+                                while time () < skeddadleEnd:
+                                    if GPIO.wait_for_edge (cageSettings.contactPin, expSettings.noContactEdge, timeout= kTIMEOUTmS) == None:
+                                        sleep (kTIMEOUTmS)
+                                    else:
+                                        break
                 # either mouse left the chamber or has been in chamber too long
                 if time () > entryTime + expSettings.inChamberTimeLimit:
                     # explictly turn off pistons, though they should be off at end of trial
@@ -201,7 +264,7 @@ def main():
                     elif event == 'q' or event == 'Q':
                         exit(0)
                     elif event == 'v' or event== "V":
-                        valveControl (cageSettings)
+                        rewarder.valveControl()
                     elif event == 'h' or event == 'H':
                         hardwareTester(cageSettings, expSettings, tagReader, headFixer, lickDetector, stimulator)
                     elif event == 'c' or event == 'C':
@@ -316,12 +379,12 @@ def makeDayFolderPath (expSettings, cageSettings):
     Format: dayFolder = cageSettings.dataPath + cageSettings.cageID + YYYMMMDD
     within which will be /Videos and /TextFiles
     :param expSettings: experiment-specific settings, everything you need to know is stored in this object
-    :param cageSettings: settings that are expected to stay the same for each setup, including hardware pin-outs for GPIO
+    :param cageSettings: settings that are expected to stay the same for a setup, including cageID
 
     """
     now = datetime.fromtimestamp (time())
-    expSettings.dateStr= str (now.year) + (str (now.month)).zfill(2) + (str (now.day)).zfill(2)
-    expSettings.dayFolderPath = cageSettings.dataPath + expSettings.dateStr + '/' + cageSettings.cageID + '/'
+    expSettings.dateStr = '{:04d}{:02d}{:02d}'.format(now.year, now.month,now.day) 
+    expSettings.dayFolderPath ='{:s}{:s}/{:s}/'.format(cageSettings.dataPath, expSettings.dateStr, cageSettings.cageID)
     try:
         if not path.exists(expSettings.dayFolderPath):
             makedirs(expSettings.dayFolderPath, mode=0o777, exist_ok=True)
@@ -338,10 +401,10 @@ def makeDayFolderPath (expSettings, cageSettings):
 
 def makeLogFile (expSettings, cageSettings):
     """
-    open a new text log file for today, or open an exisiting text file with 'a' for append
+    open a new text log file for today, or opens an exisiting log file using 'a+' for append
     """
     try:
-        logFilePath = expSettings.dayFolderPath + 'TextFiles/headFix_' + cageSettings.cageID + '_' + expSettings.dateStr + '.txt'
+        logFilePath ='{:s}TextFiles/headFix_{:s}_{:s}.txt'.format(expSettings.dayFolderPath, cageSettings.cageID, expSettings.dateStr)
         expSettings.logFP = open(logFilePath, 'a+')
         uid = getpwnam ('pi').pw_uid
         gid = getgrnam ('pi').gr_gid
@@ -362,35 +425,38 @@ def writeToLogFile(logFP, mouseObj, event):
     returns: nothing
     """
     try:
+        # get unix time for time stamp, and get human readable format
+        now = time()
+        humanTime = datetime.fromtimestamp (int (now)).isoformat (' ')
         if event == 'SeshStart' or event == 'SeshEnd' or mouseObj is None:
-            outPutStr = ''.zfill(13)
+            mouseNum = 0
         else:
-            outPutStr = '{:013}'.format(mouseObj.tag)
-            
-        logOutPutStr = outPutStr + '\t' + '{:.2f}'.format (time ())  + '\t' + event +  '\t' + datetime.fromtimestamp (int (time())).isoformat (' ')
-        printOutPutStr = outPutStr + '\t' + datetime.fromtimestamp (int (time())).isoformat (' ') + '\t' + event
-        print (printOutPutStr)
-        logFP.write(logOutPutStr + '\n')
+            mouseNum= mouseObj.tag
+        # print  to file    mouse   unix_time   event   human_time
+        logFP.write('{:013d}\t{:.2f}\t{:s}\t{:s}\n'.format (mouseNum, now, event, humanTime))
+        # print to shell   mouse   human_time   event
+        print ('{:013d}\t{:s}\t{:s}'.format (mouseNum, humanTime, event))
         logFP.flush()
     except Exception as e:
         print ("Error writing to log file\n", str (e))
+        raise e
 
-def makeQuickStatsFile (expSettings, cageSettings):
+def makeQuickStatsFile (expSettings, cageSettings, mice = None):
     """
     makes a new quickStats file for today, or opens an existing file to append.
     QuickStats file contains daily totals of rewards and headFixes for each mouse
     :param expSettings: experiment-specific settings, everything you need to know is stored in this object
     :param cageSettings: settings that are expected to stay the same for each setup, including hardware pin-outs for GPIO
-    :param mice: the array of mice objects for this cage
+    :param mice: the array of mice objects for this cage, or None when program fist launches and no mice yet
 
     Stimulator can add results dictionary for each mouse
-"""
+    """
     try:
-        textFilePath = expSettings.dayFolderPath + 'TextFiles/quickStats_' + cageSettings.cageID + '_' + expSettings.dateStr + '.txt'
+        textFilePath ='{:s}TextFiles/quickStats_{:s}_{:s}.txt'.format(expSettings.dayFolderPath, cageSettings.cageID, expSettings.dateStr)
         if path.exists(textFilePath):
-            expSettings.statsFP = open(textFilePath, 'a')
+            expSettings.statsFP = open(textFilePath, 'r+') # if file exists, open for editing, not truncating or appending
         else:
-            expSettings.statsFP = open(textFilePath, 'w+')
+            expSettings.statsFP = open(textFilePath, 'w+') # if file does not exist, open, write header, and set permissions
             expSettings.statsFP.write('Mouse_ID\tentries\tent_rew\thfixes\tstim_dict\n')
             uid = getpwnam ('pi').pw_uid
             gid = getgrnam ('pi').gr_gid
@@ -398,6 +464,12 @@ def makeQuickStatsFile (expSettings, cageSettings):
     except Exception as e:
         print ('Error making quickStats file:{}', e)
         raise e
+    # if we have mice, write the mice data to the file
+    if mice is not None:
+        for mouse in mice.generator():
+            outPutStr = '{:013d}\t{:05d}\t{:05d}\t{:05d}\t{:s}\n'.format(mouse.tag, mouse.entries, mouse.entranceRewards, mouse.headFixes, json.dumps(mouse.stimResultsDict))
+            statsFile.write (outPutStr)
+        
 
 
 
