@@ -1,7 +1,7 @@
 import json
 from time import time, localtime
 from datetime import datetime,timedelta
-
+from os import path
 class Mouse:
     """
     Class to hold information about each mouse, each mouse gets its own object
@@ -40,7 +40,7 @@ class Mouse:
         if self.stimResultsDict is not None:
             stimResults = 'Stim Results:'
             for key in self.stimResultsDict:
-                stimResults += '\t' + key + ":" + str (self.stimResultsDict.get (key))
+                stimResults += '\t' + key + " = " + str (self.stimResultsDict.get (key))
             print (stimResults)
 
 
@@ -50,70 +50,57 @@ class Mouse:
         :param statsFile: file pointer to the stats file
         returns:nothing
         """
-         # find this mouse, when we break mouseFilePos is in place
-        hasMouse = False
-        filePos = statsFile.seek (49) # skip header
-        mouseFilePos = filePos
-        for line in statsFile:
-            # process line
-            print (line)
-            filePos += len(line)
-            mouseID, entries, entRewards, hFixes, resultDict = str(line).split ('\t')
-            if int (mouseID) == self.tag:
-                hasMouse = True
-                break
-            mouseFilePos = filePos
-        # store rest of file in temp list
-        if hasMouse:
+        # make line to insert in file with data from this mouse
+        outPutStr = '{:013}\t{:05}\t{:05}\t{:05}\t{:s}\n'.format(self.tag, self.entries, self.entranceRewards, self.headFixes, json.dumps(self.stimResultsDict))
+         # find this mouse, then stop, while keeping track of file pos
+        filePos = statsFile.seek (42) # skip header
+        mouseFilePos = -1
+        try:
+            for line in statsFile:
+                if len(line) > 2:
+                    mouseID, entries, entRewards, hFixes, resultDict = line.rstrip('\n').split ('\t')
+                    if int (mouseID) == self.tag:
+                        mouseFilePos = filePos
+                        break
+                    filePos += len (line)
+        except Exception as e:
+            print ('error : {}'.format (e))
+            
+        # if mouse not found, add it with current  data at end of file
+        if mouseFilePos == -1:
+            statsFile.write (outPutStr)
+        else:
+            # store rest of lines of file in temp list
             lines = []
             for line in statsFile:
                 lines.append (line)
             # write new stats for this mouse at saved position
             filePos = statsFile.seek (mouseFilePos)
-        statsFile.write ('{:013d}\t{:05d}\t{:05d}\t{:05d}\t{:s}\n'.format (self.tag, self.entries, self.headFixes, self.entranceRewards, json.dumps (self.stimResultsDict)))
-        if hasMouse:
-            # write saved data back to file
+            statsFile.write (outPutStr)
+            # write saved lines back to file
             for line in lines:
-                 statsFile.write (line)
+                statsFile.write (line)
         statsFile.flush()
 
 class Mice:
     """
     The mice class simply contains an array of mouse objects
     """
-    def __init__(self, cageSettings):
+    def __init__(self, expSettings, cageSettings):
         """
         Initializes the array of mice with mice from any existing quickStats file, or with empty arry of mice,if no quickStats file
         """
         self.mouseArray=[]
-        # now look for quickstats file from today or yesterday
-        now = datetime.fromtimestamp (time())
-        dateStr= str (now.year) + (str (now.month)).zfill(2) + (str (now.day)).zfill(2)
-        dayFolderPath = cageSettings.dataPath + dateStr + '/' + cageSettings.cageID + '/'
-        textFilePath = dayFolderPath + 'TextFiles/quickStats_' + cageSettings.cageID + '_' +  dateStr + '.txt'
-        hasStats = False
+        #  look for quickstats file from today
+        textFilePath ='{:s}TextFiles/quickStats_{:s}_{:s}.txt'.format(expSettings.dayFolderPath, cageSettings.cageID, expSettings.dateStr)
         if path.exists (textFilePath):
-            hasStats = True
-        else:
-            # nothing from today, try yesterday
-            yesterday = now - timedelta (hours=24)
-            dateStr= str (yesterday.year) + (str (yesterday.month)).zfill(2) + (str (yesterday.day)).zfill(2)
-            dayFolderPath = cageSettings.dataPath + dateStr + '/' + cageSettings.cageID + '/'
-            textFilePath = dayFolderPath + 'TextFiles/quickStats_' + cageSettings.cageID + '_' +  dateStr + '.txt'
-            if path.exists (textFilePath): # stats for yesterday
-                hasStats = True
-            else:
-                haStats = False
-        # open the file
-        if hasStats:
             with open(textFilePath, 'r') as statsFile:
-                statsFile.seek (49) # skip header
+                statsFile.seek (41) # skip header
                 for line in statsFile:
-                    print (line)
-                    mouseID, entries, entRewards, hFixes, resultDict = str(line).split ('\t')
-                    aMouse = Mouse (int (mouseID), int (entries), int (entRewards), int (hFixes), json.loads (resultDict))
-                    self.mouseArray.append(aMouse)
-                
+                    if len (line) > 2:
+                        mouseID, entries, entRewards, hFixes, resultDict = line.rstrip('\n').split ('\t')
+                        self.mouseArray.append(Mouse (int (mouseID), int (entries), int (entRewards), int (hFixes), json.loads (resultDict)))
+
 
     def addMouse (self, addMouse, statsFile):
         """
@@ -124,23 +111,26 @@ class Mice:
         hasMouse = False
         for mouse in self.mouseArray:
             if mouse.tag == addMouse.tag:
-                print ('Mouse with tag {:d} has already been added'.format (addMouse.tag))
+                print ('Mouse with tag {:d} has already been added to mice array'.format (addMouse.tag))
                 hasMouse = True
                 break
         if not hasMouse:
             self.mouseArray.append(addMouse)
-        # add a line to the quik stats file
+        # add mouse to the quik stats file
         hasMouse = False
-        statsFile.seek (49) # skip the header
-        for line in statsFile:
-            print (line)
-            mouseID, entries, entRewards, hFixes, resultDict = str(line).split ('\t')
-            if mouseID == addMouse.tag:
-                hasMouse = True
-                print ('Mouse with tag {:d} is already in stats file'.format (addMouse.tag))
-                break
+        #fPos = 42
+        statsFile.seek (41) # skip the header
+        try:
+            for line in statsFile:
+                if len (line) > 2:
+                    mouseID, entries, entRewards, hFixes, resultDict = line.rstrip('\n').split ('\t')
+                    if mouseID == addMouse.tag:
+                        hasMouse = True
+                        print ('Mouse with tag {:d} is already in stats file'.format (addMouse.tag))
+        except Exception as e:
+            print ('addMouse error: {}'.format (e))
         if not hasMouse: # we are at end of the file, so append new mouse
-            outPutStr = '{:013}\t{:05}\t{:05}\t{:05}\t{:s}\n'.format(addMouse.tag, 0, 0, 0,'{}')
+            outPutStr = '{:013d}\t{:05d}\t{:05d}\t{:05d}\t{:s}\n'.format(addMouse.tag, addMouse.entries, addMouse.entranceRewards, addMouse.headFixes, json.dumps(addMouse.stimResultsDict))
             statsFile.write (outPutStr)
         statsFile.flush()
 
@@ -180,32 +170,41 @@ class Mice:
         """
         return len (self.mouseArray)
 
+
+    def generator(self):
+        """
+        A Generator function that generates each of the mice in turn.
+        Sample function call: for mouse in myMice.generator():
+        """
+        for mouse in self.mouseArray:
+            yield mouse
+            
+
 #for testing
 if __name__ == '__main__':
     from AHF_CageSet import AHF_CageSet
     from AHF_Settings import AHF_Settings
-    import __main__
+    import __main1__
     
     cageSettings = AHF_CageSet ()
     expSettings = AHF_Settings()
 
-    __main__.makeDayFolderPath (expSettings, cageSettings)
-    __main__.makeQuickStatsFile (expSettings, cageSettings, mice)
-    mArray = Mice(cageSettings)
-
-    m1= Mouse (16, 0,0,0,{})
-    m2 = Mouse (17, 0,0,0, {})
-    #m1.show()
-    #m2.show()
+    __main1__.makeDayFolderPath (expSettings, cageSettings)
+    __main1__.makeQuickStatsFile (expSettings, cageSettings)
+    mArray = Mice(expSettings, cageSettings)
+    mArray.addMouse (Mouse (16, 0,0,0,{}), expSettings.statsFP)
+    mArray.addMouse (Mouse (17, 0,0,0,{}), expSettings.statsFP)
+    mArray.addMouse (Mouse (17, 0,0,0,{}), expSettings.statsFP)
+    mArray.addMouse (Mouse (16, 0,0,0,{}), expSettings.statsFP)
+    """
     
-    mArray.addMouse (m1, expSettings.statsFP)
-    mArray.addMouse (m2, expSettings.statsFP)
-    m1.entries +=1
-    m1.headFixes +=1
-    m1.updateStats (expSettings.statsFP)
+    tm = mArray.getMouseFromTag(17)
+    tm.entries +=1
+    tm.headFixes +=1
+    tm.updateStats (expSettings.statsFP)
     #m2.updateStats (expSettings.statsFP)
     #mArray.show()
-    """
+
     mArray.addMouse (m1, expSettings.statsFP)
     
     mArray.show()

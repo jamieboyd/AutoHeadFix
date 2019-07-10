@@ -78,6 +78,12 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
             self.textfp.flush()
 
 
+    def nextDay (self, newFP, mice):
+        for mouse in mice.generator():
+            mouse.stimResultsDict.update ({'HFrewards' : 0})
+            mouse.updateStats (newFP)
+
+
     def tester(self):
         """
         Tester function to be called from the hardwareTester
