@@ -7,9 +7,9 @@ from AHF_Settings import AHF_Settings
 from AHF_Rewarder import AHF_Rewarder
 from AHF_HeadFixer import AHF_HeadFixer
 from AHF_Camera import AHF_Camera
-import RFIDTagReader
+micimport RFIDTagReader
 from AHF_Stimulator import AHF_Stimulator
-from AHF_HardwareTester import hardwareTester
+from AHF_HardwareTester import hardwareTester  
 from AHF_ValveControl import valveControl
 from AHF_Mouse import Mouse, Mice
 
@@ -71,7 +71,7 @@ def main():
         makeLogFile (expSettings, cageSettings)
         makeQuickStatsFile (expSettings, cageSettings)
         # initialize mice, with mice from today's quickStats, if it exists, else with zero mice and we add them as we see them
-        mice = Mice(expSettings, cageSettings)
+        mice = Mice(expSettings.statsFP)
         # set up the GPIO pins for each for their respective functionalities.
         GPIO.setmode (GPIO.BCM)
         GPIO.setwarnings (False)
@@ -136,14 +136,14 @@ def main():
                         if lickDetector is not None:
                             lickDetector.stop_logging ()
                         mice.show()
+                        stimulator.nextDay (expSettings.statsFP, mice)
+                        mice.clear ()
                         writeToLogFile(expSettings.logFP, None, 'SeshEnd')
                         expSettings.logFP.close()
                         expSettings.statsFP.close()
                         makeDayFolderPath(expSettings, cageSettings)
                         makeLogFile (expSettings, cageSettings)
                         makeQuickStatsFile (expSettings, cageSettings, mice)
-                        stimulator.nextDay (expSettings.statsFP, mice)
-                        mice.clear ()
                         if lickDetector is not None:
                             lickDetector.dataLogger.logFP = expSettings.logFP
                             lickDetector.touched()
@@ -163,7 +163,7 @@ def main():
                 if thisMouse.entranceRewards < expSettings.maxEntryRewards:
                    rewarder.giveRewardCM ('entry', expSettings.entryRewardDelay)
                 # loop through contacts/running trials till mouse exits or time in chamber exceeded
-                while RFIDTagReader.globalTag == thisMouse and time () < entryTime + expSettings.inChamberTimeLimit:
+                while RFIDTagReader.globalTag == tag and time () < entryTime + expSettings.inChamberTimeLimit:
                     if GPIO.input (cageSettings.contactPin) == expSettings.noContactState:
                         if GPIO.wait_for_edge (cageSettings.contactPin, expSettings.contactEdge, timeout= kTIMEOUTmS) == None:
                             sleep (kTIMEOUTmS)
@@ -193,9 +193,8 @@ def main():
                         video_name = str (thisMouse.tag) + "_" + stimStr + "_" + '%d' % headFixTime + '.' + extension
                         video_name_path = expSettings.dayFolderPath + 'Videos/' + "M" + video_name
                         writeToLogFile (expSettings.logFP, thisMouse, "video:" + video_name)
-                        # send socket message to start behavioural camera
+                        # send socket message to start behavioural cameras
                         if expSettings.hasUDP == True:
-                            #MESSAGE = str (thisMouse.tag) + "_" + stimStr + "_" + '%d' % headFixTime
                             MESSAGE = '{:d}_{:s}_{:d}'.format (thisMouse.tag, stimStr, headFixTime)
                             UDPTrigger.doTrigger (MESSAGE)
                             # start recording and Turn on the blue led
@@ -234,12 +233,12 @@ def main():
                                         break
                 # either mouse left the chamber or has been in chamber too long
                 if time () > entryTime + expSettings.inChamberTimeLimit:
-                    # explictly turn off pistons, though they should be off at end of trial
+                    # explictly turn off headfixer, though it should be off at end of trial
                     headFixer.releaseMouse()
                     if expSettings.hasTextMsg == True:
                         notifier.notify (thisMouse.tag, (time() - entryTime),  True)
                     # wait for mouse to leave chamber
-                    while RFIDTagReader.globalTag == thisMouse:
+                    while RFIDTagReader.globalTag == tag:
                         sleep (kTIMEOUTmS)
                     if expSettings.hasTextMsg == True:
                         notifier.notify (thisMouse.tag, (time() - entryTime), False)
@@ -256,19 +255,19 @@ def main():
                     lickDetector.stop_logging ()
                 while True:
                     event = input ('Enter:\nr to return to head fix trials\nq to quit\nv to run valve control\nh for hardware tester\nc for camera configuration\ne for experiment configuration\n:')
-                    if event == 'r' or event == "R":
+                    if event == 'r' or event == "R": # return to running trials
                         if lickDetector is not None:
                             lickDetector.touched()
                             lickDetector.start_logging ()
                         break
-                    elif event == 'q' or event == 'Q':
+                    elif event == 'q' or event == 'Q': # exit program
                         exit(0)
-                    elif event == 'v' or event== "V":
+                    elif event == 'v' or event== "V": # open and close valve
                         rewarder.valveControl()
-                    elif event == 'h' or event == 'H':
+                    elif event == 'h' or event == 'H': # run hardware tester to test hardware and stimulator
                         hardwareTester(cageSettings, expSettings, tagReader, headFixer, lickDetector, stimulator)
                     elif event == 'c' or event == 'C':
-                        camParams = camera.adjust_config_from_user ()
+                        camParams = camera.adjust_config_from_user () # adjust camera settings
                     elif event == 'e' or event == 'E':
                         modCode = expSettings.edit_from_user ()
                         if modCode & 2:

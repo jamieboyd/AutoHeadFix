@@ -4,7 +4,8 @@ from datetime import datetime,timedelta
 from os import path
 class Mouse:
     """
-    Class to hold information about each mouse, each mouse gets its own object
+    Each mouse is a Mouse object with fields for tag, entries, entrance rewards, head fixes, and a dictionary for stimulator to use
+    
     """
     def __init__(self, tag, entries, entranceRewards, headFixes, resultsDict = {}):
         """
@@ -14,7 +15,7 @@ class Mouse:
         :param entries: number of entries mouse has made
         :param entranceRewards: number of entrance rewards mouse has been given
         :param headFixes: number of head fixes for this mouse
-        :param resultsDict: dictionary of results from stimulator
+        :param resultsDict: dictionary of results and or settings from stimulator, default is empty dictionary
 
         """
         self.tag = tag
@@ -78,23 +79,20 @@ class Mouse:
 
 class Mice:
     """
-    The mice class simply contains an array of mouse objects
+    The mice class simply contains an array of mouse objects 
     """
-    def __init__(self, expSettings, cageSettings):
+    def __init__(self, statsFile):
         """
         Initializes the array of mice with mice from any existing quickStats file, or with empty arry of mice,if no quickStats file
+        :param statsFile: stats file, which  may be frshly made and blank
         """
         self.mouseArray=[]
-        #  look for quickstats file from today
-        textFilePath ='{:s}TextFiles/quickStats_{:s}_{:s}.txt'.format(expSettings.dayFolderPath, cageSettings.cageID, expSettings.dateStr)
-        if path.exists (textFilePath):
-            with open(textFilePath, 'r') as statsFile:
-                statsFile.seek (41) # skip header
-                for line in statsFile:
-                    if len (line) > 2:
-                        mouseID, entries, entRewards, hFixes, resultDict = line.rstrip('\n').split ('\t')
-                        self.mouseArray.append(Mouse (int (mouseID), int (entries), int (entRewards), int (hFixes), json.loads (resultDict)))
-
+        statsFile.seek (42) # skip header
+        aLine = statsFile.readline()
+        while len (aLine) > 2:
+            mouseID, entries, entRewards, hFixes, resultDict = line.rstrip('\n').split ('\t')
+            self.mouseArray.append(Mouse (int (mouseID), int (entries), int (entRewards), int (hFixes), json.loads (resultDict)))
+            aLine = statsFile.readline()
 
     def addMouse (self, addMouse, statsFile):
         """

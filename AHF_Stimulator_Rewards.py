@@ -79,6 +79,7 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
 
 
     def nextDay (self, newFP, mice):
+        self.textfp = newFP
         for mouse in mice.generator():
             mouse.stimResultsDict.update ({'HFrewards' : 0})
             mouse.updateStats (newFP)

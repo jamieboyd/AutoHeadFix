@@ -6,13 +6,12 @@ AHF_Settings provides functions to read, edit, and save settings for the Autohea
 """
 
 from os import path, chown, listdir
-import sys
 import json
 import pwd
 import grp
 
+import AHF_ClassAndDictUtils as CAD
 from AHF_Stimulator import AHF_Stimulator
-from AHF_Stimulator_Rewards import AHF_Stimulator_Rewards
 from AHF_Camera import AHF_Camera
 
 class AHF_Settings (object):
@@ -20,7 +19,7 @@ class AHF_Settings (object):
     AHF_Settings is a class that loads, edits, and saves settings for the AutoheadFix program
     It keeps the information in a dictionary, as well as in instance variables
     """
-    # define some mostly useful defaults - hard to do for phone numbers and i.p addresses
+    # define some mostly useful defaults - hard to do for things phone numbers and i.p addresses
     entranceRewardTimeDef = 0.3
     taskRewardTimeDef = 0.6
     maxEntryRewardsDef = 100
@@ -35,9 +34,8 @@ class AHF_Settings (object):
     UDPListDef=('127.0.0.1','127.0.0.1')
     cameraStartDelayDef = 3
     stimulatorDef = 'Rewards'
-    stimDictDef = {'nRewards' : AHF_Stimulator_Rewards.nRewardsDefault, 'rewardInterval' : AHF_Stimulator_Rewards.rewardIntervalDefault}
+    stimDictDef = {'nRewards' : 7, 'rewardInterval' : 5}
     camParamsDictDef = {'format': 'rgb', 'framerate': 30.0, 'shutter_speed': 30000, 'previewWin': (0, 0, 256, 256), 'quality': 20, 'whiteBalance': False, 'resolution': (256, 256), 'iso': 400}
-
 
     @staticmethod
     def get_SettingsFile_from_user ():
@@ -301,11 +299,11 @@ class AHF_Settings (object):
             i+=1
 
 
-    def edit_from_user (self):
+    def edit_from_user (self, stimulatorObj):
         """
         Allows user to edit experiment settings, including stimulator settings, but not camera settings
 
-        user can either change the stimulator, or reconfigure it, but not both
+        user can either change the stimulator and/or reconfigure it
         :returns: code for mods - bit 0 = 1 is set if stimulator config is changed, bit 1 =2 is set if stimulator is changed
         """
         editVal=0
@@ -390,11 +388,10 @@ class AHF_Settings (object):
                 self.cameraStartDelay = float (input ('Enter delay in seconds between sending UDP and toggling blue LED:'))
             elif editNum == '10':
                 self.stimulator = AHF_Stimulator.get_Stimulator_from_user ()
-                self.stimDict = AHF_Stimulator.get_class(self.stimulator).dict_from_user({})
+                self.stimDict = AHF_Stimulator.get_class(self.stimulator).dict_from_user(self.stimDict})
                 self.settingsDict.update ({'stimulator' : self.stimulator, 'stimDict' : self.stimDict})
-                editVal = editVal | 2
+                stimulatorObj = AHF_Stimulator.get_class(self.stimulator)(self.stimDict)
             elif editNum.split('_')[0] == '10':
-                editVal = editVal | 1
                 selectedKey = ord (editNum.split ('_')[1]) -97
                 i=0
                 for key in sorted (self.stimDict.keys()):
@@ -404,7 +401,6 @@ class AHF_Settings (object):
                         self.settingsDict.update ({'stimDict' : self.stimDict})
                         break
                     i+=1
-        return editVal
 
 
 ## for testing purposes
