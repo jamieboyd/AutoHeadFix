@@ -109,6 +109,8 @@ class AHF_CageSet (object):
             else:
                 self.lickChans = ()
             self.dataPath = input ('Enter the path to the directory where the data will be saved:')
+            if not self.dataPath.endswith ('/'):
+                self.dataPath += '/'
             self.show()
             doSave = input ('Enter \'e\' to re-edit the new Cage settings, or any other character to save the new settings to a file.')
             if doSave == 'e' or doSave == 'E':

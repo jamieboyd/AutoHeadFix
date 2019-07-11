@@ -8,7 +8,7 @@
 "Lick Channels":[0
 1]
 "Lick IRQ":26
-"Path to Save Data":"/home/pi/Documents/data2019"
+"Path to Save Data":"/home/pi/Documents/data2019/"
 "Released Servo Position":400
 "Reward Pin":13
 "Serial Port":"/dev/serial0"

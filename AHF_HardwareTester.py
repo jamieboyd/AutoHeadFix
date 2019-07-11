@@ -38,8 +38,8 @@ def hardwareTester (cageSet, expSettings, tagReader, headFixer, rewarder, lickDe
             inputStr = input (queryStr)
             # ***************************** t for tag reader **********************************
             if inputStr == 't':
-                GPIO.remove_event_detect (tagReader.tirPin)
-                GPIO.cleanup (tagReader.tirPin)
+                GPIO.remove_event_detect (tagReader.TIRpin)
+                GPIO.cleanup (tagReader.TIRpin)
                 while tagReader is None:
                     inputStr= input ('No tag reader found at {:s}. Do you wish to try a different serial port?'.format (cageSet.serialPort))
                     if inputStr[0] == 'y' or inputStr[0] == "Y":
@@ -77,7 +77,7 @@ def hardwareTester (cageSet, expSettings, tagReader, headFixer, rewarder, lickDe
                 # now check Tag-In-Range pin function
                 print ('checking Tag-In-Range pin function....')
                 lastTag = tagReader.readTag ()
-                tagReader.installCallBack (cageSet.tirPin)
+                tagReader.installCallback (cageSet.tirPin)
                 startTime = time()
                 nEntry =0
                 nExit =0
@@ -99,9 +99,9 @@ def hardwareTester (cageSet, expSettings, tagReader, headFixer, rewarder, lickDe
                     inputStr = ('An exception occurred:{:}\n Do you want to change the tag-in-range Pin (currently {:d}?'.format (e, cageSet.tirPin))
                 if inputStr[0] == 'y' or inputStr[0] == "Y":
                     cageSet.tirPin = int (input('Enter New tag-in-range Pin:'))
-                    GPIO.remove_event_detect (tagReader.tirPin)
-                    GPIO.cleanup (tagReader.tirPin)
-                    tagReader.installCallBack (cageSet.tirPin)
+                    GPIO.remove_event_detect (tagReader.TIRpin)
+                    GPIO.cleanup (tagReader.TIRpin)
+                    tagReader.installCallback (cageSet.tirPin)
             # ***************************** # k for licK detector **********************************
             elif inputStr == 'k': 
                 lickDetector.test (cageSet)
