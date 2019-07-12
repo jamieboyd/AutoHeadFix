@@ -2,8 +2,8 @@
 #-*-coding: utf-8 -*-
 
 """
-This Stimulator class builds on the LickNoLick class that uses a buzzer and
-tries to train mice to not lick until they feel the buzzer.
+This Stimulator class uses a lick detector, a vibration motor buzzer and a piezo speaker
+to train mice to not lick until they feel the buzzer.
 This class adds a bit of sensory feedback, a piezo speaker that is activated
 when they should NOT be licking
 
@@ -33,7 +33,6 @@ speaker frequency default = 300
 speaker dutycyle default = 0.8
 """
 from PTSimpleGPIO import PTSimpleGPIO, Infinite_train, Train
-from AHF_Stimulator_LickNoLick import AHF_Stimulator_LickNoLick
 from AHF_Rewarder import AHF_Rewarder
 from AHF_LickDetector import AHF_LickDetector
 from AHF_Mouse import Mouse
@@ -44,7 +43,16 @@ from time import time, sleep
 from datetime import datetime
 from random import random
 
-class AHF_Stimulator_LickWitholdSpeaker (AHF_Stimulator_LickNoLick):
+class AHF_Stimulator_LickWitholdSpeaker (AHF_Stimulator):
+
+    headFixTime_def =30
+    lickWitholdTime_def = 1
+    buzz_pin_def = 27
+    buzz_num_def = 2
+    buzz_len_def=0.1
+    buzz_period_def =0.2
+    buzz_lead_def = 1
+
     speakerPin_def = 25
     speakerFreq_def = 300
     speakerDuty_def = 0.8

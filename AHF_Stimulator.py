@@ -8,7 +8,7 @@ from os import listdir
 import AHF_ClassAndDictUtils as CAD
 from AHF_Rewarder import AHF_Rewarder
 from AHF_LickDetector import AHF_LickDetector
-from AHF_Mouse import Mouse
+from AHF_Mouse import Mouse, Mice
 
 
 from time import time, sleep
@@ -109,7 +109,7 @@ class AHF_Stimulator (metaclass = ABCMeta):
 
 
     @abstractmethod
-    def tester (self):
+    def tester (self, mice):
         """
         Tester function called from the hardwareTester. Includes Stimulator
         specific hardware tester.

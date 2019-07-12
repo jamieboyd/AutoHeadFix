@@ -127,7 +127,7 @@ class AHF_Settings (object):
                         self.UDPList = self.settingsDict.get ('UDPList',AHF_Settings.UDPListDef)
                         self.cameraStartDelay = self.settingsDict.get('cameraStartDelay', AHF_Settings.cameraStartDelayDef)
                     self.camParamsDict = self.settingsDict.get('camParams', AHF_Settings.camParamsDictDef)
-                    self.stimDict = self.settingsDict.get('stimParams', AHF_Settings.stimDictDef)
+                    self.stimDict = self.settingsDict.get('stimDict', AHF_Settings.stimDictDef)
                     self.stimulator = self.settingsDict.get('stimulator', AHF_Settings.stimulatorDef)
                 except Exception as e:
                     print ('Could not read data from {:s}: {:s}'.format (file, str (e)))
@@ -385,10 +385,9 @@ class AHF_Settings (object):
                 self.cameraStartDelay = float (input ('Enter delay in seconds between sending UDP and toggling blue LED:'))
             elif editNum == '10':
                 stimClass = AHF_Stimulator.get_Stimulator_from_user ()
-                self.stimulator = stimClass.__name__
+                self.stimulator = stimClass.__name__.lstrip('AHF_Stimulator')
                 self.stimDict = stimClass.dict_from_user({})
                 self.settingsDict.update({'stimulator': self.stimulator, 'stimDict' : self.stimDict})
-                #AHF_Stimulator.get_class(self.stimulator).dict_from_user({})
                 editVal = 3
             elif editNum == '11':
                 CAD.Edit_dict(self.stimDict, self.stimulator)

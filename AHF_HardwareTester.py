@@ -38,67 +38,27 @@ def hardwareTester (cageSet, expSettings, tagReader, headFixer, rewarder, lickDe
             inputStr = input (queryStr)
             # ***************************** t for tag reader **********************************
             if inputStr == 't':
-                while tagReader is None:
-                    inputStr= input ('No tag reader found at {:s}. Do you wish to try a different serial port?'.format (cageSet.serialPort))
-                    if inputStr[0] == 'y' or inputStr[0] == "Y":
-                        cageSet.serialPort = input ('Enter tag reader for serial port, likely /dev/serial0 or dev/ttyUSB0:')
-                        try:
-                            tagReader = RFIDTagReader.TagReader(cageSet.serialPort, True, timeOutSecs = 0.05, kind = 'ID') # initialize tagReader
-                            print ('Serial port found at {:s}'.format(cageSet.serialPort))
-                        except (FileNotFoundError, IOError):
-                            tagReader = None
-                            continue
-                    else:
-                        break
-                print ('Trying to read a tag....')
-                startTime = time()
-                readError = False
-                try:
-                    while time () < startTime + 10:
-                        thisTag = tagReader.readTag ()
-                        if thisTag == 0:
-                            sleep (50e-03)
-                        else:
-                            print ('Tag was read: {:013d}'.format (thisTag))
-                            break
-                except Exception as e:
-                    readError = True
-                    print ('An exception occurred:{:}'.format(e))
-                if time () >= startTime + 10:
-                    readError = True
-                    print ('No tag read in 10 seconds.')
-                if readError:
-                    inputStr= input ('Do you wish to change tag reader serial port, currently {:s})?'.format (cageSet.serialPort))
-                    if inputStr[0] == 'y' or inputStr[0] == "Y":
-                        cageSet.serialPort = input ('Enter tag reader for serial port, likely /dev/serial0 or dev/ttyUSB0:')
-                    continue
-                # now check Tag-In-Range pin function
-                print ('checking Tag-In-Range pin function....')
-                tagReader.installCallback (cageSet.tirPin)
-                startTime = time()
+                print ('Monitoring tag reader for next 10 seconds')  
+                endTime = time() + 10
                 nEntry =0
                 nExit =0
-                inputStr== 'NO'
-                try:
-                    while time () < startTime + 10:
-                        if RFIDTagReader.globalTag != thisTag:
-                            if globalTag == 0:
-                                print ('Tag {:013d} just went away'.format (thisTag))
-                                nExit ==1
-                            else:
-                                print ('Tag {:013d} just entered'.format (RFIDTagReader.globalTag))
-                                nEntry += 1
-                            thisTag = globalTag
-                        sleep (50e-03)
-                    if nEntry < 2 or nExit < 2:
-                        inputStr = input ('Only {:d} entries and {:d} exits. Do you want to change the tag-in-range Pin (currently {:d}?'.format (nEntry, nExit, cageSet.tirPin))
-                except Exception as e:
-                    inputStr = ('An exception occurred:{:}\n Do you want to change the tag-in-range Pin (currently {:d}?'.format (e, cageSet.tirPin))
-                if inputStr[0] == 'y' or inputStr[0] == "Y":
-                    cageSet.tirPin = int (input('Enter New tag-in-range Pin:'))
-                    GPIO.remove_event_detect (tagReader.TIRpin)
-                    GPIO.cleanup (tagReader.TIRpin)
-                    tagReader.installCallback (cageSet.tirPin)
+                thisTag = RFIDTagReader.globalTag
+                while time () < endTime:
+                    if RFIDTagReader.globalTag != thisTag:
+                        if RFIDTagReader.globalTag == 0:
+                            print ('Tag {:013d} just went away'.format (thisTag))
+                            nExit +=1
+                        else:
+                            print ('Tag {:013d} just entered'.format (RFIDTagReader.globalTag))
+                            nEntry += 1
+                        thisTag = RFIDTagReader.globalTag
+                    #sleep (0.05)
+                if nEntry < 2 or nExit < 2:
+                    inputStr = input ('Only {:d} entries and {:d} exits. Do you want to change the tag-in-range Pin (currently {:d})?'.format (nEntry, nExit, cageSet.tirPin))
+                    if inputStr[0] == 'y' or inputStr[0] == "Y":
+                        tagReader.removeCallback ()
+                        cageSet.tirPin = int (input('Enter New tag-in-range Pin:'))
+                        tagReader.installCallback (cageSet.tirPin)
             # ***************************** # k for licK detector **********************************
             elif inputStr == 'k': 
                 lickDetector.test (cageSet)
@@ -226,12 +186,10 @@ if __name__ == '__main__':
         rewarder = AHF_Rewarder (30e-03, cageSet.rewardPin) # make rewarder and add a test reward
         GPIO.setup (cageSet.contactPin, GPIO.IN, pull_up_down=getattr (GPIO, "PUD_" + cageSet.contactPUD)) # contact check pin can have a pullup/down resistor
         headFixer=AHF_HeadFixer.get_class (cageSet.headFixer) (cageSet) # initialize headFixer
-        try:
-            tagReader = RFIDTagReader.TagReader(cageSet.serialPort, True, timeOutSecs = 0.05, kind = 'ID') # initialize tagReader
-            tagReader.installCallback (cageSet.tirPin)
-        except (FileNotFoundError, IOError):
-            tagReader = None
-        headFixer=AHF_HeadFixer.get_class (cageSet.headFixer) (cageSet) # initialize head fixer
+        
+        tagReader = RFIDTagReader.TagReader(cageSet.serialPort, True, timeOutSecs = 0.05, kind = 'ID') # initialize tagReader
+        tagReader.installCallback (cageSet.tirPin)
+        
         if cageSet.lickIRQ == 0:  # start lick detector, if one is installed
             lickDetector = None
         else:

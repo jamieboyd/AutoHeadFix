@@ -89,7 +89,7 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
             mouse.updateStats (self.expSettings.statsFP)
 
 
-    def tester(self):
+    def tester(self, mice):
         """
         Tester function to be called from the hardwareTester
         makes a sample mouse and calls the run function in a loop, giving option to change settings every time

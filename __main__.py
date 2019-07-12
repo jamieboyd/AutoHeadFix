@@ -253,7 +253,7 @@ def main():
                 if lickDetector is not None:
                     lickDetector.stop_logging ()
                 while True:
-                    event = input ('Enter:\nr to return to head fix trials\nq to quit\nv to run valve control\nh for hardware tester\nc for camera configuration\ne for experiment configuration\n:')
+                    event = input ('Enter:\nr to return to head fix trials\nq to quit\nv to run valve control\nh for hardware tester\nc for camera configuration\nm to show mice\ne for experiment configuration\n:')
                     if event == 'r' or event == "R": # return to running trials
                         if lickDetector is not None:
                             lickDetector.touched()
@@ -267,6 +267,10 @@ def main():
                         hardwareTester(cageSettings, expSettings, tagReader, headFixer, rewarder, lickDetector, stimulator)
                     elif event == 'c' or event == 'C':
                         camParams = camera.adjust_config_from_user () # adjust camera settings
+                    elif event == 'm' or event == 'M':
+                        print ('\n **************************** Mice Settings ****************************')
+                        mice.show()
+                        print ('\n')
                     elif event == 'e' or event == 'E':      # adjust experiment settings, including stimulator and dictionary
                         modCode = expSettings.edit_from_user ()
                         if modCode & 2: # we need to remake the stimulator
@@ -286,89 +290,6 @@ def main():
         expSettings.logFP.close()
         expSettings.statsFP.close()
         print ('AutoHeadFix Stopped')
-
-def runTrial (thisMouse, expSettings, cageSettings, camera, rewarder, headFixer, stimulator, UDPTrigger):
-    """
-    Runs a single AutoHeadFix trial, from the mouse making initial contact with the plate
-
-    Controls turning on and off the blue brain illumination LED, starting and stopping the movie, and running the stimulus
-    which includes giving rewards
-        :param thisMouse: the mouse object representing nouse that is being head-fixed
-        :param expSettings: experiment-specific settings, everything you need to know is stored in this object
-        :param cageSettings: settings that are expected to stay the same for each setup, including hardware pin-outs for GPIO
-        :param camera: The AHF_Camera object used to record video
-        :param rewarder :object of AHF_Rewarder class that runs solenoid to give water rewards
-        :param stimulator: object of a subclass of  AHF_Stimulator, which runs experiment, incuding giving rewards
-        :param UDPTrigger: used if sending UDP signals to other Pi for behavioural observation
-    """
-    try:
-        if expSettings.doHeadFix == True:
-            headFixer.fixMouse()
-            sleep(0.4) # wait a bit for things to settle, then re-check contacts
-            if GPIO.input(cageSettings.contactPin) == expSettings.noContactState:
-                # release mouse if no contact... :(
-                headFixer.releaseMouse()
-                writeToLogFile(expSettings.logFP, thisMouse, 'check-')
-                return False
-        #  non-head fix trial or check was successful
-        if expSettings.doHeadFix == True:
-            thisMouse.headFixes += 1
-            writeToLogFile (expSettings.logFP, thisMouse, 'check+')
-        else:
-            writeToLogFile (expSettings.logFP, thisMouse,'check No Fix Trial')
-        # Configure the stimulator to get the path for the video
-        stimStr = stimulator.configStim (thisMouse)
-        headFixTime = time()
-        # analysis code expects brain data, in rgb format, to have .raw extension
-        if camera.AHFvideoFormat == 'rgb':
-            extension = 'raw'
-        video_name = str (thisMouse.tag) + "_" + stimStr + "_" + '%d' % headFixTime + '.' + extension
-        video_name_path = expSettings.dayFolderPath + 'Videos/' + "M" + video_name
-        writeToLogFile (expSettings.logFP, thisMouse, "video:" + video_name)
-        # send socket message to start behavioural camera
-        if expSettings.hasUDP == True:
-            #MESSAGE = str (thisMouse.tag) + "_" + stimStr + "_" + '%d' % headFixTime
-            MESSAGE = str (thisMouse.tag) + "_" +  "_" + '%d' % headFixTime
-            UDPTrigger.doTrigger (MESSAGE)
-            # start recording and Turn on the blue led
-            camera.start_recording(video_name_path)
-            sleep(expSettings.cameraStartDelay) # wait a bit so camera has time to start before light turns on, for synchrony accross cameras
-            GPIO.output(cageSettings.ledPin, GPIO.HIGH)
-            writeToLogFile (expSettings.logFP, thisMouse, "BrainLEDON")
-        else: # turn on the blue light and start the movie
-            GPIO.output(cageSettings.ledPin, GPIO.HIGH)
-            camera.start_recording(video_name_path)
-        stimulator.run () # run whatever stimulus is configured
-        if expSettings.hasUDP == True:
-            GPIO.output(cageSettings.ledPin, GPIO.LOW) # turn off the blue LED
-            writeToLogFile (expSettings.logFP, thisMouse, "BrainLEDOFF")
-            sleep(expSettings.cameraStartDelay) #wait again after turning off LED before stopping camera, for synchronization
-            UDPTrigger.doTrigger ("Stop") # stop
-            camera.stop_recording()
-        else:
-            camera.stop_recording()
-            GPIO.output(cageSettings.ledPin, GPIO.LOW) # turn off the blue LED
-        uid = getpwnam ('pi').pw_uid
-        gid = getgrnam ('pi').gr_gid
-        chown (video_name_path, uid, gid) # we run AutoheadFix as root if using pi PWM, so we expicitly set ownership to pi
-        # skeddadleTime gives mouse a chance to disconnect before head fixing again
-        skeddadleEnd = time() + expSettings.skeddadleTime
-        if expSettings.doHeadFix == True:
-            headFixer.releaseMouse()
-            sleep (0.5) # need to be mindful that servo motors generate RF, so wait 
-        stimulator.logfile ()
-        writeToLogFile (expSettings.logFP, thisMouse,'complete')
-        if (GPIO.input (cageSettings.contactPin)== expSettings.contactState):
-            while time () < skeddadleEnd:
-                GPIO.wait_for_edge (cageSettings.contactPin, expSettings.noContactEdge, timeout= int(kTIMEOUTS * 1000))
-                if (GPIO.input (cageSettings.contactPin)== expSettings.noContactState):
-                    break
-        return True
-    except Exception as anError:
-        headFixer.releaseMouse()
-        camera.stop_recording()
-        print ('Error in running trial:' + str (anError))
-        raise anError
 
 
 def makeDayFolderPath (expSettings, cageSettings):
