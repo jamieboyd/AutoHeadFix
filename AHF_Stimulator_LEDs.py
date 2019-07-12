@@ -1,159 +1,177 @@
 #! /usr/bin/python3
 #-*-coding: utf-8 -*-
 
-from AHF_Rewarder import AHF_Rewarder
+from AHF_Stimulator import AHF_Stimulator
+from AHF_Stimulator_Rewards import AHF_Stimulator_Rewards
 from AHF_Mouse import Mouse
-import RPi.GPIO as GPIO
-from time import time, sleep
+import AHF_ClassAndDictUtils as CAD
+from time import time, localtime, sleep
 from datetime import datetime
-from random import random
+from PTSimpleGPIO import PTSimpleGPIO, Train
 
-class AHF_Stimulator_LEDs (AHF_Stimulator):
+class AHF_Stimulator_LEDs (AHF_Stimulator_Rewards):
+    """
+    Stimulator that flashes LEDs for visual stimulation, between giving rewards
+    """
+    left_led_pinDefault = 17
+    center_led_pinDefault = 18
+    right_led_pinDefault = 19
+    train_frequencyDefault = 10
+    train_dutyDefault = 0.5
+    train_durationDefault = 2
+    
+    @staticmethod
+    def about ():
+        return 'Uses PTSimpleGPIO to interleave flashing of LEDs for visual stimulation with giving of rewards'
 
     @staticmethod
-    def dict_from_user (stimDict):
-        if not 'left_led_pin' in stimDict:
-            stimDict.update ({'left_led_pin' : 18})
-        if not 'center_led_pin' in stimDict:
-            stimDict.update ({'center_led_pin' : 18})
-        if not 'right_led_pin' in stimDict:
-            stimDict.update ({'right_led_pin' : 18})
-        if not 'led_on_time' in stimDict:
-            stimDict.update ({'led_on_time' : 5e-03})
-        if not 'led_off_time' in stimDict:
-            stimDict.update ({'led_off_time' : 5e-03})
-        if not 'train_time' in stimDict:
-            stimDict.update ({'train_time' : 0.5})
+    def dict_from_user (stimDict = {}):
+
+        left_led_pin = stimDict.get('left_led_pin', AHF_Stimulator_LEDs.left_led_pinDefault)
+        tempInput = input ('set GPIO pin number for left LED (currently {:d}) to:'.format (left_led_pin))
+        if tempInput != '':
+            left_led_pin = int (tempInput)
+            stimDict.update({'left_led_pin' : left_led_pin})
+        center_led_pin = stimDict.get('center_led_pin', AHF_Stimulator_LEDs.center_led_pinDefault)
+        tempInput = input ('set GPIO pin number for centre LED (currently {:d}) to:'.format (center_led_pin))
+        if tempInput != '':
+            center_led_pin = int (tempInput)
+            stimDict.update({'center_led_pin' : center_led_pin})
+        right_led_pin = stimDict.get('right_led_pin', AHF_Stimulator_LEDs.right_led_pinDefault)
+        tempInput = input ('set GPIO pin number for right LED (currently {:d}) to:'.format (right_led_pin))
+        if tempInput != '':
+            right_led_pin = int (tempInput)
+            stimDict.update({'right_led_pin' : right_led_pin})
+        train_frequency = stimDict.get('train_frequency', AHF_Stimulator_LEDs.train_frequencyDefault)
+        tempInput = input ('set LED flash frequency (currently {:.2f} Hz) to:'.format (train_frequency))
+        if tempInput != '':
+            train_frequency = float (tempInput)
+            stimDict.update({'train_frequency' : train_frequency})
+        train_duty = stimDict.get('train_duty', AHF_Stimulator_LEDs.train_dutyDefault)
+        tempInput = input ('set LED duty cycle (currently {:.2f}; keep between 0 and 1) to:'.format (train_duty))
+        if tempInput != '':
+            train_duty = float (tempInput)
+            stimDict.update({'train_duty' : train_duty})
+        train_duration = stimDict.get('train_duration', AHF_Stimulator_LEDs.train_durationDefault)
+        tempInput = input ('set duration of each train of flashes (currently {:.2f} seconds) to:'.format (train_duration))
+        if tempInput != '':
+            train_duration = float (tempInput)
+            stimDict.update({'train_duration' : train_duration}) 
+        # get number of rewards and timing, and hence number of flashes,  from Rewards
         return super(AHF_Stimulator_LEDs, AHF_Stimulator_LEDs).dict_from_user (stimDict)
 
+        
     def setup (self):
+        # number of rewards and timing, and hence number of flashes, from Rewards
         super().setup()
+        # frequency, dutycycle, and duration of each train
+        self.train_frequency =  float (self.expSettings.stimDict.get ('train_frequency'))
+        self.train_duty = float (self.expSettings.stimDict.get ('train_duty'))
+        self.train_duration = float (self.expSettings.stimDict.get ('train_duration'))
         # 3 leds - left, right, center, controlled by 3 GPIO pins as indicated
-        self.left_led_pin = int(self.configDict.get ('left_led_pin', 18))
-        self.center_led_pin = int(self.configDict.get ('center_led_pin', 18))
-        self.right_led_pin =  int(self.configDict.get ('right_led_pin', 18))
-        # ON and OFF times for each pulse, and duration of each train
-        self.led_on_time =  float(self.configDict.get ('led_on_time', 5e-03))
-        self.led_off_time = float (self.configDict.get ('led_off_time', 5e-03))
-        self.train_time = float(self.configDict.get ('train_time', 0.2))
-        self.pulseTime = self.led_on_time + self.led_off_time
-        self.nFlashes = int(self.train_time/self.pulseTime)
-        # setup gpio for leds
-        GPIO.setup (self.left_led_pin, GPIO.OUT, initial = GPIO.LOW)
-        GPIO.setup (self.center_led_pin, GPIO.OUT, initial = GPIO.LOW)
-        GPIO.setup (self.right_led_pin, GPIO.OUT, initial = GPIO.LOW)
-        # calculate wait times
-        self.waitTime1 = float((self.rewardInterval/2) - self.rewarder.rewardDict.get ('task'))
-        self.waitTime2 = float((self.rewardInterval/2) - self.train_time)
-        # calculate stim times
-        self.flashOnArray = []
-        self.flashOffArray=[]
-        for iFlash in range (self.nFlashes):
-            self.flashOnArray.append (self.led_on_time + (iFlash * self.pulseTime))
-            self.flashOffArray.append ((iFlash + 1) * self.pulseTime)
-        # update  config dict
-        self.configDict.update ({'left_led_pin' : self.left_led_pin, 'center_led_pin' : self.center_led_pin, 'right_led_pin' : self.right_led_pin})
-        self.configDict.update ({'led_on_time' : self.led_on_time, 'led_off_time' : self.led_off_time , 'train_time' : self.train_time})
+        self.left_led_pin = self.expSettings.stimDict.get('left_led_pin')
+        self.center_led_pin = self.expSettings.stimDict.get ('center_led_pin')
+        self.right_led_pin =  self.expSettings.stimDict.get ('right_led_pin')
+        if self.left_led_pin != 0:
+            self.leftTrain = Train (PTSimpleGPIO.MODE_FREQ, self.left_led_pin, 0, self.train_frequency,self.train_duty,self.train_duration, PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
+        else:
+            self.leftTrain = None
+        if self.center_led_pin != 0:
+            self.centerTrain = Train (PTSimpleGPIO.MODE_FREQ, self.center_led_pin, 0, self.train_frequency,self.train_duty,self.train_duration, PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
+        else:
+            self.centerTrain = None
+        if self.right_led_pin != 0:
+            self.rightTrain = Train (PTSimpleGPIO.MODE_FREQ, self.right_led_pin, 0, self.train_frequency,self.train_duty,self.train_duration, PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
+        else:
+            self.rightTrain = None
+        self.rewardTimes = []
+        self.flashTimes = []
+        self.sleepTime = self.rewardInterval/2
+        self.runTrain = None
+        self.stimStr = ''
+
 
     def configStim (self, mouse):
-        self.stimStr = super().configStim (mouse)
-        if not 'LCR' in mouse.stimResultsDict:
-            mouse.stimResultsDict.update ({'LCR' : [0,0,0]})
-        stimArray = mouse.stimResultsDict.get('LCR')
+        self.mouse = mouse
+        stimArray = mouse.stimResultsDict.get('LCR', [0,0,0])
         ranVal = random ()
         if ranVal < 0.3333:
-            self.stimPin = self.left_led_pin
-            self.stimStr += ' L'
+            self.runTrain = self.leftTrain
+            self.stimStr = ' L'
             stimArray [0] += self.nRewards
         elif ranVal < 0.6666:
-            self.stimPin = self.center_led_pin
-            self.stimStr += ' C'
+            self.runTrain = self.centerTrain
+            self.stimStr = 'C'
             stimArray [1] += self.nRewards
         else:
-            self.stimPin = self.right_led_pin
-            self.stimStr += ' R'
+            self.runTrain = self.RightTrain
+            self.stimStr = 'R'
             stimArray [2] += self.nRewards
+        mouse.stimResultsDict.update ({'LCR' : stimArray})
         return self.stimStr
 
 
     def run(self):
         self.rewardTimes = []
-        self.stimTimes = []
-        fudge = 0.25e-03 # offset time added to array, so first pulse is same length as following pulses
-        sleepMin = 1e-03 # mimimum time to call a sleep before looping
+        self.flashTimes = []
         for reward in range(self.nRewards):
             self.rewardTimes.append (time())
             self.rewarder.giveReward('task')
-            sleep(self.waitTime1)
-            offset = time() + fudge
-            onArray = [x + offset for x in self.flashOnArray]
-            offArray = [x + offset for x in self.flashOffArray]
-            for iFlash in range (self.nFlashes):
-                GPIO.output(self.stimPin, GPIO.HIGH)
-                sleepTime = onArray[iFlash] - time() - sleepMin
-                if (sleepTime > 0):
-                    sleep (sleepTime)
-                while time() < onArray[iFlash]:
-                    pass
-                GPIO.output(self.stimPin, GPIO.LOW)
-                sleepTime = offArray[iFlash] - time() - sleepMin
-                if (sleepTime > 0):
-                    sleep (sleepTime)
-                while time() < offArray[iFlash]:
-                    pass
-            self.stimTimes.append (offset)
-            sleep(self.waitTime2)
-        self.mouse.headFixRewards += self.nRewards
+            sleep (sleepTime)
+            self.flashTimes.append (time())
+            self.runTrain.do_train ()
+            sleep (sleepTime)
+        HFrewards = self.mouse.stimResultsDict.get('HFrewards', 0)
+        self.mouse.stimResultsDict.update ({'HFrewards' : HFrewards + self.nRewards})
 
 
-    def logfile(self):
-        mStr = '{:013}'.format(self.mouse.tag) + '\t'
-        for rewardTime, stimTime in zip (self.rewardTimes,self.stimTimes):
-            event = 'reward'
-            outPutStr = mStr  + datetime.fromtimestamp (int (rewardTime)).isoformat (' ') + '\t' + event
-            print (outPutStr)
-            if self.textfp != None:
-                outPutStr = mStr +  '{:.2f}'.format (rewardTime) + '\t'  + event
-                self.textfp.write(outPutStr + '\n')
-                self.textfp.flush()
-            event = self.stimStr
-            outPutStr = mStr + datetime.fromtimestamp (int (rewardTime)).isoformat (' ') + '\t' + event
-            print (outPutStr)
-            if self.textfp != None:
-                outPutStr = mStr + '{:.2f}'.format (rewardTime) + '\t'  + event
-                self.textfp.write(outPutStr + '\n')
-                self.textfp.flush()
+    def logfile (self):
+        """
+        prints to the log file and the shell the time of each reward given
+        """
+        for rewardTime in self.rewardTimes:
+            isoForm = datetime.fromtimestamp(int (rewardTime)).isoformat (' ')
+            # print mouse, time stamp, event, formatted time to the log file
+            if self.expSettings.logFP != None:
+                self.expSettings.logFP.write('{:013}\t{:.2f}\tHeadFixReward\t{:s}\n'.format (self.mouse.tag, rewardTime,isoForm))
+            # print mouse, formatted time, event to the shell
+            print ('{:013}\t{:s}\tHeadFixReward'.format (self.mouse.tag, isoForm))
+        for flashTime in self.flashTimes:
+            isoForm = datetime.fromtimestamp(int (flashTime)).isoformat (' ')
+            # print mouse, time stamp, event, formatted time to the log file
+            if self.expSettings.logFP != None:
+                self.expSettings.logFP.write('{:013}\t{:.2f}\tFlash:{:s}\t{:s}\n'.format (self.mouse.tag, self.stimStr, rewardTime, isoForm))
+            # print mouse, formatted time, event to the shell
+            print ('{:013}\t{:s}\tFlash:{:s}'.format (self.mouse.tag, isoForm, self.stimStr))
+        if self.expSettings.logFP != None:
+            self.expSettings.logFP.flush()
 
 
-    def change_config (self, changesDict):
-        super().change_config (changesDict)
-        self.setup ()
+    def nextDay (self, mice):
+        for mouse in mice.generator():
+            mouse.stimResultsDict.update ({'HFrewards' : 0})
+            mouse.updateStats (self.expSettings.statsFP)
 
 
-    def config_from_user (self):
-        super().config_from_user ()
-        self.setup ()
+    def tester(self):
+        """
+        Tester function to be called from the hardwareTester
+        makes a sample mouse and calls the run function in a loop, giving option to change settings every time
+        """
+        self.configStim (Mouse (2525, 0,0,0,{}))
+        print ('Testing with dummy mouse:')
+        self.mouse.show()
+        CAD.Show_ordered_dict (self.expSettings.stimDict, 'Settings for LEDs Stimulator')
+        while True:
+            response = input ('change stimulus settings (yes or no)?')
+            if response [0] == 'Y' or response [0] == 'y':
+                CAD.Edit_dict (self.expSettings.stimDict, 'LEDs Stimulator')
+                self.setup ()
+            response = input ('run stimulator as configured (yes or no)?')
+            if response [0] == 'Y' or response [0] == 'y':
+                self.run ()
+                self.logfile()
+                self.mouse.show()
+            else:
+                break
 
-if __name__ == '__main__':
-    import RPi.GPIO as GPIO
-    try:
-        GPIO.setmode(GPIO.BCM)
-        rewarder = AHF_Rewarder (30e-03, 24)
-        rewarder.addToDict ('task', 50e-03)
-        thisMouse = Mouse (2525, 0,0,0,0)
-        #stimdict = AHF_Stimulator_LEDs.dict_from_user({})
-        stimdict = {'nRewards' : 5, 'rewardInterval' : 1.5, 'left_led_pin' : 18, 'center_led_pin' : 18, 'right_led_pin' : 18}
-        stimdict.update ({'led_on_time' : 0.5e-03, 'led_off_time' : 0.5e-03, 'train_time' : 0.5})
-        stimulator = AHF_Stimulator_LEDs (stimdict, rewarder, None)
-        stimulator.configStim (thisMouse)
-        stimulator.run ()
-        stimulator.logfile()
-        stimulator.config_from_user()
-        stimulator.configStim (thisMouse)
-        stimulator.run ()
-        stimulator.logfile()
-        thisMouse.show()
-    except Exception as er:
-        print ('Error:' + str (er))
-    finally:
-        GPIO.cleanup ()

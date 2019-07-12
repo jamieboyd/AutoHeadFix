@@ -270,41 +270,38 @@ class AHF_Settings (object):
            :returns: nothing
         """
         print ('\n****************Current Auto-Head-Fix Experiment Settings********************************')
-        print ('1:Entrance Reward Time = {:.2f} secs'.format(self.entranceRewardTime))
-        print ('2:Task Reward Time = {:.2f} secs'.format(self.taskRewardTime))
-        print ('3:Maximum Daily Entry Rewards ={:d}'.format (self.maxEntryRewards))
-        print ('4:Entry Reward Delay ={:.2f} secs'.format(self.entryRewardDelay))
-        print ('5:Proportion of Contacts to Head Fix (0-1) ={:.2f}'.format(self.propHeadFix))
-        print ('6:Time for Mouse to break contact after a head fix session = {:.2f} secs'.format(self.skeddadleTime))
-        print ('7:Duration in chamber before stopping trials = {:.2f} secs'.format(self.inChamberTimeLimit))
-        print ('8:Send text Message if duration exceeded ={}'.format(self.hasTextMsg))
+        print ('1) Entrance Reward Time = {:.2f} secs'.format(self.entranceRewardTime))
+        print ('2) Task Reward Time = {:.2f} secs'.format(self.taskRewardTime))
+        print ('3) Maximum Daily Entry Rewards ={:d}'.format (self.maxEntryRewards))
+        print ('4) Entry Reward Delay ={:.2f} secs'.format(self.entryRewardDelay))
+        print ('5) Proportion of Contacts to Head Fix (0-1) ={:.2f}'.format(self.propHeadFix))
+        print ('6) Time for Mouse to break contact after a head fix session = {:.2f} secs'.format(self.skeddadleTime))
+        print ('7) Duration in chamber before stopping trials = {:.2f} secs'.format(self.inChamberTimeLimit))
+        print ('8) Send text Message if duration exceeded ={}'.format(self.hasTextMsg))
         if self.hasTextMsg == True:
             tempList = ''
             for ph in self.phoneList:
                 tempList += ',' + ph if tempList != '' else ph
-            print ('\t8_a:List of Phone Numbers to text = {:s}'.format(tempList))
-            print ('\t8_b:Access key for textbelt.com = {:s}'.format (self.textBeltKey))
-        print ('9:Send UDP triggers = ' + str (self.hasUDP))
+            print ('\t8_a) List of Phone Numbers to text = {:s}'.format(tempList))
+            print ('\t8_b) Access key for textbelt.com = {:s}'.format (self.textBeltKey))
+        print ('9) Send UDP triggers = ' + str (self.hasUDP))
         if self.hasUDP == True:
             tempList = ''
             for ip in self.UDPList:
                 tempList += ',' + ip if tempList != '' else ip
-            print ('\t9_a:List of ip addresses for UDP = {:s}'.format (tempList))
-            print ('\t9_b:Camera start to LED ON delay = {:.2f} secs'.format (self.cameraStartDelay))
-        print ('10:Stimulator = {:s}'.format (self.stimulator))
-        i =0
-        for key in sorted (self.stimDict.keys()):
-            print ('\t10_{:s}_ : {:s} = {:}'.format (chr (97 + i), key, self.stimDict[key]))
-            #print ('\t10_' + chr (97 + i) + ": " + key + ' = ' + str (self.stimDict[key]))
-            i+=1
+            print ('\t9_a) List of ip addresses for UDP = {:s}'.format (tempList))
+            print ('\t9_b) Camera start to LED ON delay = {:.2f} secs'.format (self.cameraStartDelay))
+        print ('10) Stimulator = {:s}'.format (self.stimulator))
+        print ('11) Stim Dictionary = {}'.format (self.stimDict))
 
 
-    def edit_from_user (self, stimulatorObj):
+
+    def edit_from_user (self):
         """
         Allows user to edit experiment settings, including stimulator settings, but not camera settings
 
         user can either change the stimulator and/or reconfigure it
-        :returns: code for mods - bit 0 = 1 is set if stimulator config is changed, bit 1 =2 is set if stimulator is changed
+        :returns: code for mods - 1 if stimulator config is changed, 3 if stimulator is changed
         """
         editVal=0
         while True:
@@ -387,24 +384,20 @@ class AHF_Settings (object):
             elif editNum == '9b':
                 self.cameraStartDelay = float (input ('Enter delay in seconds between sending UDP and toggling blue LED:'))
             elif editNum == '10':
-                self.stimulator = AHF_Stimulator.get_Stimulator_from_user ()
-                self.stimDict = AHF_Stimulator.get_class(self.stimulator).dict_from_user(self.stimDict})
-                self.settingsDict.update ({'stimulator' : self.stimulator, 'stimDict' : self.stimDict})
-                stimulatorObj = AHF_Stimulator.get_class(self.stimulator)(self.stimDict)
-            elif editNum.split('_')[0] == '10':
-                selectedKey = ord (editNum.split ('_')[1]) -97
-                i=0
-                for key in sorted (self.stimDict.keys()):
-                    if i==selectedKey:
-                        newValue = input ('Set ' + key + ' (currently ' + str (self.stimDict.get(key)) + ') to:')
-                        self.stimDict.update ({key : newValue})
-                        self.settingsDict.update ({'stimDict' : self.stimDict})
-                        break
-                    i+=1
+                stimClass = AHF_Stimulator.get_Stimulator_from_user ()
+                self.stimulator = stimClass.__name__
+                self.stimDict = stimClass.dict_from_user({})
+                self.settingsDict.update({'stimulator': self.stimulator, 'stimDict' : self.stimDict})
+                #AHF_Stimulator.get_class(self.stimulator).dict_from_user({})
+                editVal = 3
+            elif editNum == '11':
+                CAD.Edit_dict(self.stimDict, self.stimulator)
+                self.settingsDict.update({'stimDict' : self.stimDict})
+                editVal |= 1
+        return editVal
 
 
 ## for testing purposes
 if __name__ == '__main__':
     settings = AHF_Settings ()
     settings.edit_from_user()
-    settings.show()

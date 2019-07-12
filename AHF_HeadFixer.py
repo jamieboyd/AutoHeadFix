@@ -18,12 +18,8 @@ class AHF_HeadFixer(metaclass = ABCMeta):
 
         Assumes the class is named the same as the module.
         """
-        try:
-            return CAD.Class_from_file('HeadFixer', fileName.rstrip('.py').lstrip('AHF_HeadFixer_'))
-        except (ImportError, NameError, FileNotFoundError) as e:
-            print ('Could not import module {}: {}'.format(fileName, str(e)))
-            return None
-        
+        return CAD.Class_from_file('HeadFixer', fileName.rstrip('.py').lstrip('AHF_HeadFixer_'))
+         
 
     @staticmethod
     def get_HeadFixer_from_user ():

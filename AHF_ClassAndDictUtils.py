@@ -29,8 +29,12 @@ def Class_from_file(nameTypeStr, nameStr):
         fileName = 'AHF_' + nameTypeStr
     else:
         fileName = 'AHF_' + nameTypeStr + '_' + nameStr
-    module = __import__(fileName)
-    return getattr(module, fileName)
+    try:
+        module = __import__(fileName)
+        return getattr(module, fileName)
+    except (ImportError, NameError, FileNotFoundError) as e:
+        print ('Could not import module {}: {}'.format(fileName, str(e)))
+        return None
 
 
 def Super_of_object (anObject):
@@ -74,7 +78,7 @@ def Subclass_from_user(aSuperClass):
                 classList.append (classObj)
                 iFile += 1
         except Exception as e: # exception will be thrown if imported module imports non-existant modules, for instance
-            print (e)
+            #print (e)
             continue
     print (classList)
     if iFile == 0:
@@ -164,7 +168,7 @@ def File_from_user (nameTypeStr, longName, typeSuffix, makeNew = False):
 ########################################################################################################################
 ## methods for user editing of a dictionary of settings containing strings, integers, floats, lists, tuples, booleans, and dictionaries of those types
 #########################################################################################################################
-def Show_ordered_dict (objectDict, longName):
+def Show_ordered_dict (objectDict, longName, offset = 1):
     """
     Dumps standard dictionary settings into an ordered dictionary, prints settings to screen in a numbered fashion from the ordered dictionary,
     making it easy to select a setting to change. Returns an  ordered dictionary of {number: (key:value),} used by edit_dict function
@@ -180,7 +184,8 @@ def Show_ordered_dict (objectDict, longName):
     for ii in range (0, nP):
         itemDict.update (showDict [ii])
         kvp = itemDict.popitem()
-        print(str (ii + 1) +') ', kvp [0], ' = ', kvp [1])
+        print ('{:d}) {} = {}'.format (ii + offset, kvp [0], kvp [1]))
+        #print(str (ii + offset) +') ', kvp [0], ' = ', kvp [1])
     print ('**********************************\n')
     return showDict
 

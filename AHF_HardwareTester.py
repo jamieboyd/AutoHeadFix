@@ -4,8 +4,8 @@
 from AHF_CageSet import AHF_CageSet
 import RPi.GPIO as GPIO
 from time import sleep
-
-from RFIDTagReader import TagReader, globalTag
+import RFIDTagReader
+#from RFIDTagReader import TagReader, globalTag
 from AHF_HeadFixer import AHF_HeadFixer
 from AHF_Rewarder import AHF_Rewarder
 from AHF_Stimulator import AHF_Stimulator
@@ -38,14 +38,12 @@ def hardwareTester (cageSet, expSettings, tagReader, headFixer, rewarder, lickDe
             inputStr = input (queryStr)
             # ***************************** t for tag reader **********************************
             if inputStr == 't':
-                GPIO.remove_event_detect (tagReader.TIRpin)
-                GPIO.cleanup (tagReader.TIRpin)
                 while tagReader is None:
                     inputStr= input ('No tag reader found at {:s}. Do you wish to try a different serial port?'.format (cageSet.serialPort))
                     if inputStr[0] == 'y' or inputStr[0] == "Y":
                         cageSet.serialPort = input ('Enter tag reader for serial port, likely /dev/serial0 or dev/ttyUSB0:')
                         try:
-                            tagReader = TagReader(cageSet.serialPort, True, timeOutSecs = 50e-03) # initialize tagReader
+                            tagReader = RFIDTagReader.TagReader(cageSet.serialPort, True, timeOutSecs = 0.05, kind = 'ID') # initialize tagReader
                             print ('Serial port found at {:s}'.format(cageSet.serialPort))
                         except (FileNotFoundError, IOError):
                             tagReader = None
@@ -70,13 +68,12 @@ def hardwareTester (cageSet, expSettings, tagReader, headFixer, rewarder, lickDe
                     readError = True
                     print ('No tag read in 10 seconds.')
                 if readError:
-                    inputStr= input ('Do you wish to change tag reader serial port, currently {:s}?'.format (cageSet.serialPort))
+                    inputStr= input ('Do you wish to change tag reader serial port, currently {:s})?'.format (cageSet.serialPort))
                     if inputStr[0] == 'y' or inputStr[0] == "Y":
                         cageSet.serialPort = input ('Enter tag reader for serial port, likely /dev/serial0 or dev/ttyUSB0:')
                     continue
                 # now check Tag-In-Range pin function
                 print ('checking Tag-In-Range pin function....')
-                lastTag = tagReader.readTag ()
                 tagReader.installCallback (cageSet.tirPin)
                 startTime = time()
                 nEntry =0
@@ -84,14 +81,14 @@ def hardwareTester (cageSet, expSettings, tagReader, headFixer, rewarder, lickDe
                 inputStr== 'NO'
                 try:
                     while time () < startTime + 10:
-                        if globalTag != lastTag:
+                        if RFIDTagReader.globalTag != thisTag:
                             if globalTag == 0:
-                                print ('Tag {:013d} just went away'.format (lastTag))
+                                print ('Tag {:013d} just went away'.format (thisTag))
                                 nExit ==1
                             else:
-                                print ('Tag {:013d} just entered'.format (globalTag))
+                                print ('Tag {:013d} just entered'.format (RFIDTagReader.globalTag))
                                 nEntry += 1
-                            lastTag = globalTag
+                            thisTag = globalTag
                         sleep (50e-03)
                     if nEntry < 2 or nExit < 2:
                         inputStr = input ('Only {:d} entries and {:d} exits. Do you want to change the tag-in-range Pin (currently {:d}?'.format (nEntry, nExit, cageSet.tirPin))
@@ -177,13 +174,16 @@ def hardwareTester (cageSet, expSettings, tagReader, headFixer, rewarder, lickDe
                     GPIO.cleanup (cageSet.ledPin)
                     cageSet.ledPin = int (input('Enter New LED Pin:'))
                     GPIO.setup (cageSet.ledPin, GPIO.OUT, initial = GPIO.LOW)
-             # ***************************** # s for stimulator, run test from stimlator class **********************************
+            # ***************************** # s for stimulator, run test from stimlator class **********************************
             elif inputStr == 's':
                 stimulator.tester ()
+            # ***************************** # h for sHow prints settings to the shell **********************************
             elif inputStr == 'h':
                 cageSet.show()
+            # ***************************** # v for saVe saves settings to congig jsn file **********************************
             elif inputStr=='v':
                 cageSet.save()
+            # ***************************** q for quit. quits hardware tester function/program ********************************
             elif inputStr == 'q':
                 break
     except KeyboardInterrupt:
@@ -227,7 +227,8 @@ if __name__ == '__main__':
         GPIO.setup (cageSet.contactPin, GPIO.IN, pull_up_down=getattr (GPIO, "PUD_" + cageSet.contactPUD)) # contact check pin can have a pullup/down resistor
         headFixer=AHF_HeadFixer.get_class (cageSet.headFixer) (cageSet) # initialize headFixer
         try:
-            tagReader = TagReader(cageSet.serialPort, True, timeOutSecs = 50e-03) # initialize tagReader
+            tagReader = RFIDTagReader.TagReader(cageSet.serialPort, True, timeOutSecs = 0.05, kind = 'ID') # initialize tagReader
+            tagReader.installCallback (cageSet.tirPin)
         except (FileNotFoundError, IOError):
             tagReader = None
         headFixer=AHF_HeadFixer.get_class (cageSet.headFixer) (cageSet) # initialize head fixer

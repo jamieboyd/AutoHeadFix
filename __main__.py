@@ -7,10 +7,9 @@ from AHF_Settings import AHF_Settings
 from AHF_Rewarder import AHF_Rewarder
 from AHF_HeadFixer import AHF_HeadFixer
 from AHF_Camera import AHF_Camera
-micimport RFIDTagReader
+import RFIDTagReader
 from AHF_Stimulator import AHF_Stimulator
 from AHF_HardwareTester import hardwareTester  
-from AHF_ValveControl import valveControl
 from AHF_Mouse import Mouse, Mice
 
 #Standard Python modules
@@ -55,7 +54,7 @@ def main():
         More than one of these files can exist, and the user needs to choose one or make one
         we will add some other variables to expSettings so we can pass them as a single argument to functions
         logFP, statsFP, dateStr, dayFolderPath, doHeadFix, 
-        configFile can be specified if launched from command line, eg, sudo python3 myconfig or sudo python3 AHF_Settings_myconfig.jsn
+        expSettings File can be specified if launched from command line, eg, sudo python3 myconfig or sudo python3 AHF_Settings_myconfig.jsn
         """
         if argv.__len__() > 1:
             expSettings = AHF_Settings (argv [1])
@@ -165,8 +164,8 @@ def main():
                 # loop through contacts/running trials till mouse exits or time in chamber exceeded
                 while RFIDTagReader.globalTag == tag and time () < entryTime + expSettings.inChamberTimeLimit:
                     if GPIO.input (cageSettings.contactPin) == expSettings.noContactState:
-                        if GPIO.wait_for_edge (cageSettings.contactPin, expSettings.contactEdge, timeout= kTIMEOUTmS) == None:
-                            sleep (kTIMEOUTmS)
+                        if GPIO.wait_for_edge (cageSettings.contactPin, expSettings.contactEdge, timeout= int (kTIMEOUTSECS * 1000)) == None:
+                            sleep (kTIMEOUTSECS)
                     else:
                         # ready to head fix
                         expSettings.doHeadFix = expSettings.propHeadFix > random()
@@ -195,7 +194,7 @@ def main():
                         writeToLogFile (expSettings.logFP, thisMouse, "video:" + video_name)
                         # send socket message to start behavioural cameras
                         if expSettings.hasUDP == True:
-                            MESSAGE = '{:d}_{:s}_{:d}'.format (thisMouse.tag, stimStr, headFixTime)
+                            MESSAGE = '{:d}_{:s}_{:d}'.format (thisMouse.tag, stimStr, int (headFixTime))
                             UDPTrigger.doTrigger (MESSAGE)
                             # start recording and Turn on the blue led
                             camera.start_recording(video_name_path)
@@ -227,8 +226,8 @@ def main():
                             #sleep (0.5) # need to be mindful that servo motors generate RF, so wait 
                             if (GPIO.input (cageSettings.contactPin)== expSettings.contactState):
                                 while time () < skeddadleEnd:
-                                    if GPIO.wait_for_edge (cageSettings.contactPin, expSettings.noContactEdge, timeout= kTIMEOUTmS) == None:
-                                        sleep (kTIMEOUTmS)
+                                    if GPIO.wait_for_edge (cageSettings.contactPin, expSettings.noContactEdge, timeout= int (kTIMEOUTSECS * 1000)) == None:
+                                        sleep (kTIMEOUTSECS)
                                     else:
                                         break
                 # either mouse left the chamber or has been in chamber too long
@@ -239,7 +238,7 @@ def main():
                         notifier.notify (thisMouse.tag, (time() - entryTime),  True)
                     # wait for mouse to leave chamber
                     while RFIDTagReader.globalTag == tag:
-                        sleep (kTIMEOUTmS)
+                        sleep (kTIMEOUTSECS)
                     if expSettings.hasTextMsg == True:
                         notifier.notify (thisMouse.tag, (time() - entryTime), False)
                 # after exit, look to countermand entrance reward and update stats
@@ -265,15 +264,16 @@ def main():
                     elif event == 'v' or event== "V": # open and close valve
                         rewarder.valveControl()
                     elif event == 'h' or event == 'H': # run hardware tester to test hardware and stimulator
-                        hardwareTester(cageSettings, expSettings, tagReader, headFixer, lickDetector, stimulator)
+                        hardwareTester(cageSettings, expSettings, tagReader, headFixer, rewarder, lickDetector, stimulator)
                     elif event == 'c' or event == 'C':
                         camParams = camera.adjust_config_from_user () # adjust camera settings
-                    elif event == 'e' or event == 'E':
+                    elif event == 'e' or event == 'E':      # adjust experiment settings, including stimulator and dictionary
                         modCode = expSettings.edit_from_user ()
-                        if modCode & 2:
-                            stimulator = AHF_Stimulator.get_class (expSettings.stimulator)(expSettings.stimDict, rewarder, lickDetector, expSettings.logFP)
-                        if modCode & 1:
-                            stimulator.change_config (expSettings.stimDict)
+                        if modCode & 2: # we need to remake the stimulator
+                            stimulator = AHF_Stimulator.get_class (expSettings.stimulator)(cageSettings, expSettings, rewarder, lickDetector)
+                        if modCode & 1: # we need to redo setup after changing dictionary
+                            stimulator.configDict = expSettings.stimDict
+                            stimulator.setup ()
     except Exception as anError:
         print ('AutoHeadFix error:' + str (anError))
         raise anError
@@ -360,7 +360,7 @@ def runTrial (thisMouse, expSettings, cageSettings, camera, rewarder, headFixer,
         writeToLogFile (expSettings.logFP, thisMouse,'complete')
         if (GPIO.input (cageSettings.contactPin)== expSettings.contactState):
             while time () < skeddadleEnd:
-                GPIO.wait_for_edge (cageSettings.contactPin, expSettings.noContactEdge, timeout= kTIMEOUTmS)
+                GPIO.wait_for_edge (cageSettings.contactPin, expSettings.noContactEdge, timeout= int(kTIMEOUTS * 1000))
                 if (GPIO.input (cageSettings.contactPin)== expSettings.noContactState):
                     break
         return True

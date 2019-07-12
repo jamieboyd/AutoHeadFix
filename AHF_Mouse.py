@@ -90,7 +90,7 @@ class Mice:
         statsFile.seek (42) # skip header
         aLine = statsFile.readline()
         while len (aLine) > 2:
-            mouseID, entries, entRewards, hFixes, resultDict = line.rstrip('\n').split ('\t')
+            mouseID, entries, entRewards, hFixes, resultDict = aLine.rstrip('\n').split ('\t')
             self.mouseArray.append(Mouse (int (mouseID), int (entries), int (entRewards), int (hFixes), json.loads (resultDict)))
             aLine = statsFile.readline()
 

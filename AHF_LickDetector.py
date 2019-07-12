@@ -2,7 +2,7 @@
 #-*-coding: utf-8 -*-
 
 from TouchDetectorMPR121 import TouchDetector
-from RFIDTagReader import globalTag
+import RFIDTagReader
 from time import time
 from datetime import datetime
 global gLogFP
@@ -18,10 +18,10 @@ class AHF_LickDetector (object):
 
         now = time ()
         nowISO=datetime.fromtimestamp (int (now)).isoformat (' ')
-        logStr = '{:013}\t{:.2f}\tlick:{:d}\t{:s}\n'.format(globalTag, now, touchedPin, nowISO)
+        logStr = '{:013}\t{:.2f}\tlick:{:d}\t{:s}\n'.format(RFIDTagReader.globalTag, now, touchedPin, nowISO)
         if gLogFP is not None:
             gLogFP.write(logStr)
-        printStr = '{:013}\tlick:{:d}\t{s}'.format(globalTag, touchedPin, nowISO)          
+        printStr = '{:013}\tlick:{:d}\t{:s}'.format(RFIDTagReader.globalTag, touchedPin, nowISO)          
         print (printStr)
  
     

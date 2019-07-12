@@ -12,7 +12,6 @@ time period between start of each buzz ( must be greater than time of each buzz)
 buzz length/buzz period  = duty cycle
 50/50 chance of pulses/single buzz of same length - only reward pulses, not single buzz
 """
-from AHF_Stimulator_Rewards import AHF_Stimulator_Rewards
 from AHF_LickDetector import AHF_LickDetector
 from AHF_Rewarder import AHF_Rewarder
 from AHF_Mouse import Mouse
@@ -22,7 +21,7 @@ from array import array
 from time import time, localtime,timezone, sleep
 from datetime import datetime
 
-class AHF_Stimulator_Buzzer (AHF_Stimulator_Rewards):
+class AHF_Stimulator_Buzzer (AHF_Stimulator):
     buzz_pin_def = 18
     buzz_lead_def = 0.5
     buzz_num_def = 2
