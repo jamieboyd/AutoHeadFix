@@ -24,7 +24,7 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
         Querries user for number of rewards and interval between rewards and stores info in a dictionary
 
         :param stimDict: a starter dictionary that may contain values already, or be empty
-        :returns stimDict dictionary, with edited or appended results from user
+        :returns: stimDict dictionary, with edited or appended results from user
         """
         nRewards = stimDict.get('nRewards', AHF_Stimulator_Rewards.nRewardsDefault)
         tempInput = input ('set number of rewards (currently {:d}) to:'.format (nRewards))
@@ -38,7 +38,8 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
         if not 'rewardInterval' in stimDict:
             stimDict.update ({'rewardInterval' : rewardInterval})
         return stimDict
-    
+
+
     def setup (self):
         """
         No harware setup needed, just make local references of nRewards and interval, for ease of use
@@ -51,11 +52,19 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
 
 
     def configStim (self, mouse):
+        """
+        Makes a local reference to the current mouse
+        :param mouse: a reference ot the mouse currently head fixed
+        :returns: a string for movie file naming
+        """
         self.mouse = mouse
-        return 'stim'
+        return 'reward'
 
-    
+
     def run(self):
+        """
+        gives nRewards, one every rewardInterval seconds, as set in stimDict
+        """
         self.rewardTimes = []
         for reward in range(self.nRewards):
             self.rewardTimes.append (time())
@@ -64,7 +73,6 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
          # update tally of head fix rewards given in this mouse's stimResultsDict
         HFrewards = self.mouse.stimResultsDict.get('HFrewards', 0)
         self.mouse.stimResultsDict.update ({'HFrewards' : HFrewards + self.nRewards})
-
 
 
     def logfile (self):
@@ -80,36 +88,14 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
             print ('{:013}\t{:s}\tHeadFixReward'.format (self.mouse.tag, isoForm))
         if self.expSettings.logFP != None:
             self.expSettings.logFP.flush()
-            
 
 
     def nextDay (self, mice):
+        """
+        zeros for each mouse the daily tallies of headFix rewards given
+        
+        :param mice: the mice
+        """
         for mouse in mice.generator():
             mouse.stimResultsDict.update ({'HFrewards' : 0})
             mouse.updateStats (self.expSettings.statsFP)
-
-
-    def tester(self, mice):
-        """
-        Tester function to be called from the hardwareTester
-        makes a sample mouse and calls the run function in a loop, giving option to change settings every time
-        """
-        self.configStim (Mouse (2525, 0,0,0,{}))
-        print ('Testing with dummy mouse:')
-        self.mouse.show()
-        CAD.Show_ordered_dict (self.expSettings.stimDict, 'Settings for Rewards Stimulator')
-        while True:
-            response = input ('change stimulus settings (yes or no)?')
-            if response [0] == 'Y' or response [0] == 'y':
-                CAD.Edit_dict (self.expSettings.stimDict, 'Rewards Stimulator')
-                self.setup ()
-            response = input ('run stimulator as configured (yes or no)?')
-            if response [0] == 'Y' or response [0] == 'y':
-                self.run ()
-                self.logfile()
-                self.mouse.show()
-            else:
-                break
-
-
-    

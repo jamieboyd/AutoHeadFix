@@ -62,7 +62,6 @@ class AHF_CageSet (object):
                 self.cageID = configDict.get('Cage ID', AHF_CageSet.cageIDdef)
                 self.headFixer = configDict.get('Head Fixer', AHF_CageSet.headFixerDef)
                 headFixerClass = AHF_HeadFixer.get_class (self.headFixer)
-                headFixerClass.configDict_read (self, configDict)
                 self.rewardPin = configDict.get('Reward Pin', AHF_CageSet.rewardPinDef)
                 self.tirPin = configDict.get('Tag In Range Pin', AHF_CageSet.tirPinDef)
                 self.contactPin = configDict.get ('Contact Pin', AHF_CageSet.contactPinDef)
@@ -225,3 +224,4 @@ if __name__ == '__main__':
     print ('Cage ID:', hardWare.cageID,'\tContact Pin:', hardWare.contactPin, '\tContact PUD:', hardWare.contactPUD, '\n')
     hardWare.edit()
     hardWare.save()
+    hardware.__class__.name

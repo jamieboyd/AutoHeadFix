@@ -12,7 +12,7 @@ from PTSimpleGPIO import PTSimpleGPIO, Train
 
 class AHF_Stimulator_LEDs (AHF_Stimulator_Rewards):
     """
-    Stimulator that flashes LEDs for visual stimulation, between giving rewards
+    Stimulator that flashes up to 3 LEDs for visual stimulation, between giving rewards
     """
     left_led_pinDefault = 17
     center_led_pinDefault = 18
@@ -23,12 +23,22 @@ class AHF_Stimulator_LEDs (AHF_Stimulator_Rewards):
     
     @staticmethod
     def about ():
+        """
+        returns:a brief description of the LED class
+        """
         return 'Uses PTSimpleGPIO to interleave flashing of LEDs for visual stimulation with giving of rewards'
+
 
     @staticmethod
     def dict_from_user (stimDict = {}):
-        # get number of rewards and timing, and hence number of flashes,  from Rewards
+        """
+        gets number and timing of reards, and number of GPIO pins for LED
+        :param stimDict: a dictionary of settings (may be empty) to edit and return
+        If an LED is not available, set pin number to 0
+        """
+        # get number of rewards and timing, and hence number of flashes, from Rewards superclass
         stimDict = super(AHF_Stimulator_LEDs, AHF_Stimulator_LEDs).dict_from_user (stimDict)
+        # get pins for 3 LEDs to flash, left, center, right, plus timing for flashes 
         left_led_pin = stimDict.get('left_led_pin', AHF_Stimulator_LEDs.left_led_pinDefault)
         tempInput = input ('set GPIO pin number for left LED (currently {:d}) to:'.format (left_led_pin))
         if tempInput != '':
@@ -59,11 +69,13 @@ class AHF_Stimulator_LEDs (AHF_Stimulator_Rewards):
         if tempInput != '':
             train_duration = float (tempInput)
         stimDict.update({'train_duration' : train_duration}) 
-        # get number of rewards and timing, and hence number of flashes,  from Rewards
         return stimDict
 
         
     def setup (self):
+        """
+        sets up trains of flashes using PTSimpleGPIO  module
+        """
         # number of rewards and timing, and hence number of flashes, from Rewards
         super().setup()
         # frequency, dutycycle, and duration of each train
@@ -97,6 +109,9 @@ class AHF_Stimulator_LEDs (AHF_Stimulator_Rewards):
 
 
     def configStim (self, mouse):
+        """
+        selects, randomly, which GPIO pin to use for stimulation
+        """
         self.mouse = mouse
         stimArray = mouse.stimResultsDict.get('LCR', [0,0,0])
         hasLED = False
@@ -125,6 +140,9 @@ class AHF_Stimulator_LEDs (AHF_Stimulator_Rewards):
 
 
     def run(self):
+        """
+        gives rewards t regular intervals and flashed LEDs midway between rewards
+        """
         self.rewardTimes = []
         self.flashTimes = []
         for reward in range(self.nRewards):
@@ -140,7 +158,7 @@ class AHF_Stimulator_LEDs (AHF_Stimulator_Rewards):
 
     def logfile (self):
         """
-        prints to the log file and the shell the time of each reward given
+        prints to the log file and the shell the time of each reward given and train of flashes presented
         """
         for rewardTime in self.rewardTimes:
             isoForm = datetime.fromtimestamp(int (rewardTime)).isoformat (' ')
@@ -161,30 +179,9 @@ class AHF_Stimulator_LEDs (AHF_Stimulator_Rewards):
 
 
     def nextDay (self, mice):
+        """
+        zeros daily totals of rewards given, but does not zero data on flashespresented
+        """
         for mouse in mice.generator():
             mouse.stimResultsDict.update ({'HFrewards' : 0})
             mouse.updateStats (self.expSettings.statsFP)
-
-
-    def tester(self, mice):
-        """
-        Tester function to be called from the hardwareTester
-        makes a sample mouse and calls the run function in a loop, giving option to change settings every time
-        """
-        self.configStim (Mouse (2525, 0,0,0,{}))
-        print ('Testing with dummy mouse:')
-        self.mouse.show()
-        CAD.Show_ordered_dict (self.expSettings.stimDict, 'Settings for LEDs Stimulator')
-        while True:
-            response = input ('change stimulus settings (yes or no)?')
-            if response [0] == 'Y' or response [0] == 'y':
-                CAD.Edit_dict (self.expSettings.stimDict, 'LEDs Stimulator')
-                self.setup ()
-            response = input ('run stimulator as configured (yes or no)?')
-            if response [0] == 'Y' or response [0] == 'y':
-                self.run ()
-                self.logfile()
-                self.mouse.show()
-            else:
-                break
-

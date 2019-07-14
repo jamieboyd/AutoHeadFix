@@ -8,6 +8,7 @@ from datetime import datetime
 global gLogFP
 
 class AHF_LickDetector (object):
+    
     defaultAddress = 0x5a
     defaultTouchThresh = 12
     defaultUnTouchThresh = 8

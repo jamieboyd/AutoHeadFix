@@ -21,7 +21,7 @@ from PTSimpleGPIO import PTSimpleGPIO, Train
 from AHF_Stimulator import AHF_Stimulator
 from AHF_Rewarder import AHF_Rewarder
 from AHF_LickDetector import AHF_LickDetector
-from AHF_Mouse import Mouse
+from AHF_Mouse import Mouse, Mice
 import time
 import json
 import os
