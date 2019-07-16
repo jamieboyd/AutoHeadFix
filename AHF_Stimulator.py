@@ -113,7 +113,6 @@ class AHF_Stimulator (metaclass = ABCMeta):
         pass
 
 
-    @abstractmethod
     def tester (self, mice):
         """
         Generic tester function to called from the hardwareTester. Subclasses may override
