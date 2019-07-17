@@ -6,7 +6,7 @@ from os import chown
 import pwd
 import grp
 from AHF_HeadFixer import AHF_HeadFixer
-
+import AHF_ClassAndDictUtils as CAD
 
 class AHF_CageSet (object):
 
@@ -33,9 +33,8 @@ class AHF_CageSet (object):
     """
     cageIDdef= 'cage1'
     headFixerDef = 'PWM_PCA9685'
-    headFixerDictDef = '{servoFixedPosition : 475, servoReleasedPosition : 675}'
+    headFixerDictDef = {'servoAddress': 0x40, 'servoFixedPosition' : 475, 'servoReleasedPosition' : 675}
     rewardPinDef =13
-    tirPinDef = 21
     contactPinDef = 12
     contactPolarityDef = 'FALLING'
     contactPUDdef = 'UP'
@@ -43,6 +42,7 @@ class AHF_CageSet (object):
     lickIRQdef = 17
     lickChansDef = (0,1)
     serialPortDef = '/dev/serial0'
+    tirPinDef = 21
     dataPathDef = '/home/pi/Documents/'
     
     def __init__(self):
@@ -62,8 +62,7 @@ class AHF_CageSet (object):
                 fp.close()
                 self.cageID = configDict.get('Cage ID', AHF_CageSet.cageIDdef)
                 self.headFixer = configDict.get('Head Fixer', AHF_CageSet.headFixerDef)
-                headFixerClass = AHF_HeadFixer.get_class (self.headFixer)
-                
+                self.headFixerDict = configDict.get('Head Fixer Dict', AHF_CageSet.headFixerDictDef)
                 self.rewardPin = configDict.get('Reward Pin', AHF_CageSet.rewardPinDef)
                 self.tirPin = configDict.get('Tag In Range Pin', AHF_CageSet.tirPinDef)
                 self.contactPin = configDict.get ('Contact Pin', AHF_CageSet.contactPinDef)
@@ -82,8 +81,7 @@ class AHF_CageSet (object):
             print ('Unable to open base configuration file, AHF_config.jsn, let\'s make a new one.\n')
             self.cageID = input('Enter the cage ID:')
             self.headFixer = AHF_HeadFixer.get_HeadFixer_from_user()
-            AHF_HeadFixer.get_class (self.headFixer).config_user_get (self)
-            
+            self.headFixerDict = AHF_HeadFixer.get_class (self.headFixer).config_user_get ()
             self.rewardPin = int (input ('Enter the GPIO pin connected to the water delivery solenoid:'))
             self.tirPin = int (input ('Enter the GPIO pin connected to the Tag-in-Range pin on the Tag reader:'))
             self.contactPin = int (input ('Enter the GPIO pin connected to the headbar contacts or IR beam-breaker:'))
@@ -132,7 +130,7 @@ class AHF_CageSet (object):
            :returns: nothing
         """
         jsonDict={'Cage ID':self.cageID,'Head Fixer':self.headFixer}
-        AHF_HeadFixer.get_class (self.headFixer).configDict_set (self, jsonDict)
+        jsonDict.update ({'Head Fixer Dict' : self.headFixerDict})
         jsonDict.update ({'Reward Pin':self.rewardPin, 'Tag In Range Pin':self.tirPin, 'Contact Pin':self.contactPin})
         jsonDict.update ({'Contact Polarity':self.contactPolarity, 'Contact Pull Up Down':self.contactPUD})
         jsonDict.update ({'LED Pin' : self.ledPin, 'Lick IRQ' : self.lickIRQ, 'Lick Channels' : self.lickChans})
@@ -152,18 +150,18 @@ class AHF_CageSet (object):
            :returns: nothing
         """
         print ('\n**************** Current Auto-Head-Fix Cage Settings ********************************')
-        print ('1:Cage ID = {:s}'.format(self.cageID))
-        print ('2:Head Fix method = {:s}'.format (self.headFixer))
-        print ('3:Head Fix Settings = {:s}'.format (AHF_HeadFixer.get_class (self.headFixer).config_show(self)))
-        print ('4:Reward Solenoid Pin = {:d}'.format(self.rewardPin))
-        print ('5:Tag-In-Range Pin = {:d}'.format (self.tirPin))
-        print ('6:Contact Pin = {:d}'.format(self.contactPin))
-        print ('7:Contact Polarity = {:s} and contact Pull Up Down = {:s}'.format(self.contactPolarity ,self.contactPUD))
-        print ('8:Brain LED Illumination Pin = {:d}'.format(self.ledPin))
-        print ('9:Lick Detector IRQ Pin = {:d}'.format(self.lickIRQ))
-        print ('10:Lick Detector channels = {}'.format (self.lickChans))
-        print ('11:Tag Reader serialPort= {:s}'.format (self.serialPort))
-        print ('12:dataPath = {:s}'.format(self.dataPath))
+        print ('1) Cage ID = {:s}'.format(self.cageID))
+        print ('2) Reward Solenoid Pin = {:d}'.format(self.rewardPin))
+        print ('3) Tag Reader serialPort= {:s}'.format (self.serialPort))
+        print ('4) Tag-In-Range Pin = {:d}'.format (self.tirPin))
+        print ('5) Contact Pin = {:d}'.format(self.contactPin))
+        print ('6) Contact Polarity = {:s} and contact Pull Up Down = {:s}'.format(self.contactPolarity ,self.contactPUD))
+        print ('7) Brain LED Illumination Pin = {:d}'.format(self.ledPin))
+        print ('8) Lick Detector IRQ Pin = {:d}'.format(self.lickIRQ))
+        print ('9) Lick Detector channels = {}'.format (self.lickChans))
+        print ('10) dataPath = {:s}'.format(self.dataPath))
+        print ('11) HeadFixer = {:s}'.format (self.headFixer))
+        print ('12) HeadFixer Settings = {}'.format (self.headFixerDict))
         print ('**************************************************************************************')
 
 
@@ -177,19 +175,16 @@ class AHF_CageSet (object):
             if editNum == 0:
                 break
             elif editNum == 1:
-                self.cageID = input('Enter the cage ID:')
+               self.cageID = input('Enter the cage ID (currently {:s}):'.format (self.cageID))
             elif editNum == 2:
-                self.headFixer = AHF_HeadFixer.get_HeadFixer_from_user()
-                AHF_HeadFixer.get_class (self.headFixer).config_user_get (self)
+                 self.rewardPin = int (input ('Enter the GPIO pin connected to the water delivery solenoid (currently {:d}):'.format (self.rewardPin)))
             elif editNum == 3:
-                AHF_HeadFixer.get_class (self.headFixer).config_user_get (self)
+                self.serialPort = input ('Enter serial port for tag reader (likely /dev/serial0 or /dev/ttyUSB0, (currently {:s}):'.format (self.serialPort))
             elif editNum == 4:
-               self.rewardPin = int (input ('Enter the GPIO pin connected to the water delivery solenoid:'))
+                self.tirPin= int (input ('Enter the GPIO pin connected to the Tag-in-Range pin on the Tag reader, (currently {:d}):'.format(self.tirPin)))
             elif editNum == 5:
-                self.tirPin= int (input ('Enter the GPIO pin connected to the Tag-in-Range pin on the Tag reader:'))
+                self.contactPin= int (input ('Enter the GPIO pin connected to headbar contacts or IR beam-breaker (currently {:d}):'.format (self.contactPin)))
             elif editNum == 6:
-                self.contactPin= int (input ('Enter the GPIO pin connected to the headbar contacts or IR beam-breaker:'))
-            elif editNum == 7:
                 contactInt = int (input ('Enter the contact polarity, 0=FALLING for IR beam-breaker or falling polarity electrical contacts, 1=RISING for rising polarity elctrical contacts:'))
                 if contactInt == 0:
                     self.contactPolarity = 'FALLING'
@@ -202,24 +197,24 @@ class AHF_CageSet (object):
                     self.contactPUD = 'DOWN'
                 else:
                     self.contactPUD='UP'
+            elif editNum == 7:
+                self.ledPin = int (input ('Enter the GPIO pin connected to the blue LED for brain illumination(currently {:d}):'.format (self.ledPin)))
             elif editNum == 8:
-                self.ledPin = int (input ('Enter the GPIO pin connected to the blue LED for camera illumination:'))
+                self.lickIRQ = int (input ('Enter the GPIO pin connected to lick detector IRQ, or 0 for no lick detector (currently {:d}):'.format (self.lickIRQ)))
             elif editNum == 9:
-                self.lickIRQ = int (input ('Enter the GPIO pin connected to the lick detector, or 0 if no lick detector is installed:'))
-            elif editNum == 10:
-                tempInput = input ('Enter a comma-separated list of lick channels to monitor:')
+                tempInput = input ('Enter a comma-separated list of lick channels to monitor (currently {}):'.format (self.lickChans))
                 self.lickChans = tuple (tempInput.split(','))
+            elif editNum == 10:
+                self.dataPath = input ('Enter the path to the directory where the data will be saved (currently {:s}):'.format (self.dataPath))
             elif editNum == 11:
-                self.serialPort = input ('Enter serial port for tag reader(likely either /dev/ttyAMA0 or /dev/ttyUSB0):')
+                self.headFixer = AHF_HeadFixer.get_HeadFixer_from_user()
+                self.headFixerDict = AHF_HeadFixer.get_class (self.headFixer).config_user_get ()
             elif editNum == 12:
-                self.dataPath = input ('Enter the path to the directory where the data will be saved:')
+                self.headFixerDict = AHF_HeadFixer.get_class (self.headFixer).config_user_get (self.headFixerDict)
             else:
                 print ('I don\'t recognize that number ' + str (editNum))
-        self.show()
         self.save()
         return
-
-
 
 ## for testing purposes
 if __name__ == '__main__':

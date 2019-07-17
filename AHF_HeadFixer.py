@@ -12,10 +12,10 @@ class AHF_HeadFixer(metaclass = ABCMeta):
     
     @staticmethod
     def get_class(fileName):
-        
         """
         static method that imports a module from a fileName (stripped of the .py) and returns the class, or None if module could not be loaded
-
+        :param fileName: name of a AHF_HeadFixer_ file
+        :returns: a reference to the loaded AHF_HeadFixer class
         Assumes the class is named the same as the module.
         """
         return CAD.Class_from_file('HeadFixer', fileName.rstrip('.py').lstrip('AHF_HeadFixer_'))
@@ -32,16 +32,32 @@ class AHF_HeadFixer(metaclass = ABCMeta):
         Returns: name of the file the user chose, stripped of AHF_HeadFixer and .py
         """
         return CAD.Subclass_from_user(CAD.Class_from_file('HeadFixer', ''))
- 
-    ##################################################################################
-    #abstact methods each headfixer class must implement
-    #part 1: three main methods of initing, fixing, and releasing
+
+
+    @staticmethod
     @abstractmethod
+    def config_user_get (configDict = {}}):
+        """
+        query user to get configuration settings and update the dictionary
+        """
+        return configDict
+
     def __init__(self, cageSet):
         """
-        hardware initialization of a headFixer, reading data from a cageSet object
+        make a local reference to headFixerDict from cageSet object
+        """
+        self.configDict = cageSet.headFixerDict
+        self.setup()
+        
+
+
+    @abstractmethod
+    def setup (self):
+        """
+        make local references from config dict and set up any hardware
         """
         pass
+
 
     @abstractmethod
     def fixMouse(self):
@@ -49,7 +65,8 @@ class AHF_HeadFixer(metaclass = ABCMeta):
         performs head fixation by energizing a piston, moving a servomotor, etc
         """
         pass
-    
+
+
     @abstractmethod
     def releaseMouse(self):
         """
@@ -57,50 +74,23 @@ class AHF_HeadFixer(metaclass = ABCMeta):
         """
         pass
 
-    ##################################################################################
-    #abstact methods each headfixer class must implement
-    #part 2: static functions for reading, editing, and saving ConfigDict from/to cageSet
 
-    @staticmethod
-    @abstractmethod
-    def configDict_read (cageSet,configDict):
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def config_user_get (cageSet,configDict):
-        """
-        reads data for headFixer configuration from the json configDict, copies it to the cageSet
-        """
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def configDict_set (cageSet,configDict):
-        """
-        gets data from the cageSet object, and updates the json configDict
-        """
-        pass 
-
-    @staticmethod
-    @abstractmethod
-    def config_show (cageSet):
-        """
-        returns a string containing config data for this headFixer currently loaded into the cageSet object
-        """
-        pass
-    
-
-    ##################################################################################
-    #abstract methods each headfixer class must implement
-    #part 3: hadware tester function
-    @abstractmethod
     def test(self, cageSet):
-        pass
         """
-        Called by hardwaretester, runs a harware test for headFixer, verifying that it works and gives user a chance to save settings
+        Called by hardwaretester, runs a test for a generic headFixer, verifying that it works and gives user a chance to save settings
         """
- 
+        inputStr = 'Yes'
+        while inputStr[0] == 'y' or inputStr[0] == "Y":
+            print ('{:s} head-fixing for 2 seconds'.format (self.__class__.__name__))
+            self.fixMouse()
+            sleep (2)
+            print ('{:s} released'.format (self.__class__.__name__))
+            self.releaseMouse()
+            inputStr= input('Do you want to edit head fixer settings (yes or no)?')
+            if inputStr[0] == 'y' or inputStr[0] == "Y":
+               CAD.Edit_dict (cageSet.headFixerDict, self.__class__.__name__)
+
+
     ###################################################################################
     # methods a headFixer will implement if it hasLevels
     # we pass the current level of a particular mouse and level up before head fixing
@@ -117,10 +107,9 @@ class AHF_HeadFixer(metaclass = ABCMeta):
 
     def level_set_level (self, level):
         pass
-        
-    
+
+
 if __name__ == "__main__":
-    from time import sleep
     from AHF_CageSet import AHF_CageSet
     from AHF_HeadFixer import AHF_HeadFixer
     cageSettings = AHF_CageSet ()
