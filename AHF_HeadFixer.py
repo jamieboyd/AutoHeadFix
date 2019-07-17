@@ -89,6 +89,8 @@ class AHF_HeadFixer(metaclass = ABCMeta):
             inputStr= input('Do you want to edit head fixer settings (yes or no)?')
             if inputStr[0] == 'y' or inputStr[0] == "Y":
                CAD.Edit_dict (cageSet.headFixerDict, self.__class__.__name__)
+               self.configDict = cageSet.headFixerDict
+               self.setup()
 
 
     ###################################################################################

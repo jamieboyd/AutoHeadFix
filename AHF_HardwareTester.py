@@ -22,9 +22,10 @@ def hardwareTester (cageSet, expSettings, tagReader, headFixer, rewarder, lickDe
     t= tagReader: trys to read a tag and, if successful, monitors Tag in Range Pin until tag goes away
     r = reward solenoid:  Opens the reward solenoid for a 1 second duration, then closes it
     c = contact check:  Monitors the head contact pin until contact, and then while contact is maintained
-    f = head Fixer
+    f = head Fixer: runs tester function from head fixer class
     l = LED: Turns on the brain illumination LED for a 2 second duration, then off
     k = licK detector
+    s = stimulator : runs tester function from stimulator class
     h = sHow config settings: Prints out the current pinout in the AHF_CageSet object
     v = saVe modified config file: Saves the the AHF_CageSet object to the file ./AHF_config.jsn
     q = quit: quits the program
