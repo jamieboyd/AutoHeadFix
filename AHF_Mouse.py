@@ -81,18 +81,19 @@ class Mice:
     """
     The mice class simply contains an array of mouse objects 
     """
-    def __init__(self, statsFile):
+    def __init__(self, statsFile = None):
         """
         Initializes the array of mice with mice from any existing quickStats file, or with empty arry of mice,if no quickStats file
         :param statsFile: stats file, which  may be frshly made and blank
         """
         self.mouseArray=[]
-        statsFile.seek (42) # skip header
-        aLine = statsFile.readline()
-        while len (aLine) > 2:
-            mouseID, entries, entRewards, hFixes, resultDict = aLine.rstrip('\n').split ('\t')
-            self.mouseArray.append(Mouse (int (mouseID), int (entries), int (entRewards), int (hFixes), json.loads (resultDict)))
+        if statsFile is not None:
+            statsFile.seek (42) # skip header
             aLine = statsFile.readline()
+            while len (aLine) > 2:
+                mouseID, entries, entRewards, hFixes, resultDict = aLine.rstrip('\n').split ('\t')
+                self.mouseArray.append(Mouse (int (mouseID), int (entries), int (entRewards), int (hFixes), json.loads (resultDict)))
+                aLine = statsFile.readline()
 
     def addMouse (self, addMouse, statsFile):
         """

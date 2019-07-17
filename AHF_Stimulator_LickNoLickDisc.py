@@ -46,7 +46,7 @@ from time import time, sleep
 from datetime import datetime
 from random import random
 
-class AHF_Stimulator_LickNoLickDisc (AHF_Stimulator_LickNoLick):
+class AHF_Stimulator_LickNoLickDisc (AHF_Stimulator_LickWitholdSpeaker):
     lickWrongTimeout_def = 2
     buzz_pulseProb_def = 0.5
     

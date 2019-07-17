@@ -33,6 +33,7 @@ class AHF_CageSet (object):
     """
     cageIDdef= 'cage1'
     headFixerDef = 'PWM_PCA9685'
+    headFixerDictDef = '{servoFixedPosition : 475, servoReleasedPosition : 675}'
     rewardPinDef =13
     tirPinDef = 21
     contactPinDef = 12
@@ -53,15 +54,16 @@ class AHF_CageSet (object):
 
         """
         try:
-            with open ('AHF_config.jsn', 'r') as fp:
+            with open ('./AHF_config.jsn', 'r') as fp:
                 data = fp.read()
                 data= data.replace('\n', ",")
-                #print (data)
+                print (data)
                 configDict = json.loads(data)
                 fp.close()
                 self.cageID = configDict.get('Cage ID', AHF_CageSet.cageIDdef)
                 self.headFixer = configDict.get('Head Fixer', AHF_CageSet.headFixerDef)
                 headFixerClass = AHF_HeadFixer.get_class (self.headFixer)
+                
                 self.rewardPin = configDict.get('Reward Pin', AHF_CageSet.rewardPinDef)
                 self.tirPin = configDict.get('Tag In Range Pin', AHF_CageSet.tirPinDef)
                 self.contactPin = configDict.get ('Contact Pin', AHF_CageSet.contactPinDef)
@@ -81,6 +83,7 @@ class AHF_CageSet (object):
             self.cageID = input('Enter the cage ID:')
             self.headFixer = AHF_HeadFixer.get_HeadFixer_from_user()
             AHF_HeadFixer.get_class (self.headFixer).config_user_get (self)
+            
             self.rewardPin = int (input ('Enter the GPIO pin connected to the water delivery solenoid:'))
             self.tirPin = int (input ('Enter the GPIO pin connected to the Tag-in-Range pin on the Tag reader:'))
             self.contactPin = int (input ('Enter the GPIO pin connected to the headbar contacts or IR beam-breaker:'))

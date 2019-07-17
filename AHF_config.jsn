@@ -2,14 +2,14 @@
 "Contact Pin":12
 "Contact Polarity":"FALLING"
 "Contact Pull Up Down":"UP"
-"Fixed Servo Position":500
+"Fixed Servo Position":475
 "Head Fixer":"PWM_PCA9685"
-"LED Pin":23
+"LED Pin":22
 "Lick Channels":[0
 1]
 "Lick IRQ":26
 "Path to Save Data":"/home/pi/Documents/data2019/"
-"Released Servo Position":650
+"Released Servo Position":675
 "Reward Pin":13
 "Serial Port":"/dev/serial0"
 "Servo Address":64

@@ -5,14 +5,14 @@ from AHF_CageSet import AHF_CageSet
 import RPi.GPIO as GPIO
 from time import sleep
 import RFIDTagReader
-#from RFIDTagReader import TagReader, globalTag
 from AHF_HeadFixer import AHF_HeadFixer
 from AHF_Rewarder import AHF_Rewarder
 from AHF_Stimulator import AHF_Stimulator
+from AHF_Mouse import Mouse, Mice
 from time import time
 
 
-def hardwareTester (cageSet, expSettings, tagReader, headFixer, rewarder, lickDetector, stimulator):
+def hardwareTester (cageSet, expSettings, tagReader, headFixer, rewarder, lickDetector, stimulator, mice):
     """
     Presents a menu asking user to choose a bit of hardware to test, and runs the tests
 
@@ -29,7 +29,7 @@ def hardwareTester (cageSet, expSettings, tagReader, headFixer, rewarder, lickDe
     v = saVe modified config file: Saves the the AHF_CageSet object to the file ./AHF_config.jsn
     q = quit: quits the program
     """
-    queryStr = 't=tagReader, r=reward solenoid, c=contact check, f=head Fixer, l=LED, '
+    queryStr = '\nt=tagReader, r=reward solenoid, c=contact check, f=head Fixer, l=LED, '
     if lickDetector is not None:
         queryStr +=  'k=licK detector, '
     queryStr += 's=stimulator tester, h=sHow config settings, v=saVe modified config file, q=Quit Hardware Tester: '
@@ -136,7 +136,7 @@ def hardwareTester (cageSet, expSettings, tagReader, headFixer, rewarder, lickDe
                     GPIO.setup (cageSet.ledPin, GPIO.OUT, initial = GPIO.LOW)
             # ***************************** # s for stimulator, run test from stimlator class **********************************
             elif inputStr == 's':
-                stimulator.tester ()
+                stimulator.tester (mice)
             # ***************************** # h for sHow prints settings to the shell **********************************
             elif inputStr == 'h':
                 cageSet.show()
@@ -162,6 +162,7 @@ if __name__ == '__main__':
             self.stimulator = 'Rewards'
             self.stimDict = {'nRewards' : 5, 'rewardInterval' : 2}
             self.settingsDict = {'stimulator' : self.stimulator, 'stimParams' : self.stimDict}
+            self.logFP = None
             if cageSettings.contactPolarity == 'RISING':
                 self.contactEdge = GPIO.RISING
                 self.noContactEdge = GPIO.FALLING
@@ -197,7 +198,7 @@ if __name__ == '__main__':
             lickDetector = AHF_LickDetector (cageSet.lickChans, cageSet.lickIRQ, None)
         stimulator = AHF_Stimulator.get_class (expSettings.stimulator) (cageSet, expSettings, rewarder, lickDetector)
         stimDict = expSettings.stimDict
-        hardwareTester (cageSet, expSettings, tagReader, headFixer, rewarder, lickDetector, stimulator)
+        hardwareTester (cageSet, expSettings, tagReader, headFixer, rewarder, lickDetector, stimulator, Mice())
         GPIO.cleanup() # this ensures a clean exit
 
 

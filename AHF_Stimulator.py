@@ -2,17 +2,11 @@
 #-*-coding: utf-8 -*
 
 from abc import ABCMeta, abstractmethod
-from inspect import isabstract
-from os import listdir
-
 import AHF_ClassAndDictUtils as CAD
 from AHF_Rewarder import AHF_Rewarder
 from AHF_LickDetector import AHF_LickDetector
 from AHF_Mouse import Mouse, Mice
 
-
-from time import time, sleep
-from datetime import datetime
 
 class AHF_Stimulator (metaclass = ABCMeta):
     """
