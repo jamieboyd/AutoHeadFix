@@ -76,8 +76,9 @@ class AHF_Subjects_mice (AHF_Subjects):
                 if self.check_miceDict(self.miceDict) == False:
                     raise Exception('Could not confirm dictionary')
             except Exception as e:
-                print('Unable to open and fully load task configuration, we will create a fillable json for you.\n'
-                      'Edit the contents to your liking, then COPY the file to your filename. DO NOT rename.')
+                print('Unable to open and fully load subjects configuration, we will create a fillable json for you.\n'
+                      'This file will be named according to the task configuration file. After entering the mice,\n'
+                      'edit the contents to your liking, then COPY the file to your filename. DO NOT rename.')
                 self.create_fillable_json()
             while self.check_miceDict(self.miceDict) == False:
                 input('could not load json, please edit and try again. Press enter when done')
@@ -86,15 +87,16 @@ class AHF_Subjects_mice (AHF_Subjects):
                 for source in self.miceDict.get(tag):
                     self.task.DataLogger.storeConfig(tag, self.miceDict.get(tag).get(source), source)
     def create_fillable_json(self):
-        tempInput = input('A for adding a mouse with the tag number \n'
-                          'T for using the RFID Tag reader ')
+        tempInput = input('Add the mice for your task.\n'
+                          'Type A for adding a mouse with the tag number \n'
+                          'Type T for using the RFID Tag reader ')
         moreMice =True
         while moreMice:
             self.add(tempInput[0])
             stillmore = input('add another mouse? Y or N')
             if stillmore[0] == "n" or stillmore[0] == "N":
                 moreMice = False
-        print(self.miceDict)            
+        print(self.miceDict)
         CAD.Dict_to_file (self.miceDict, "mice_fillable", self.jsonName, ".jsn")
         input('Please edit the values now. Press enter when done')
         self.miceDict = CAD.File_to_dict('mice', self.jsonName, '.jsn')
@@ -157,6 +159,7 @@ class AHF_Subjects_mice (AHF_Subjects):
         returns True if subject was added, false if subjet with IDnum already exists in subject pool
         """
         if IDnum == 't' or IDnum == 'T':
+            print("Place the mouse under the reader now.")
             tag = 0
             while tag == 0:
                 tag = self.task.Reader.readTag()
@@ -177,6 +180,7 @@ class AHF_Subjects_mice (AHF_Subjects):
             self.miceDict.update ({tag: dataDict})
             note = ''
             self.task.DataLogger.saveNewMouse(tag,note, self.miceDict.get(tag))
+            print("Successfully added mouse with tag ", tag)
 
 
     def remove (self, IDnum):
