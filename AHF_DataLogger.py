@@ -48,6 +48,7 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
         """
         Returns the current value for the specified mouse, event, and key.
         """
+        print(self.trackingDict)
         try:
             return self.trackingDict.get(eventKind).get(dictKey).get("values").get(tag)
         except Exception as e:
