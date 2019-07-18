@@ -307,6 +307,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         if (toShellOrFile & self.TO_FILE) > 0:
             if eventKind == "lever_pull":
                 lever_positions = eventDict.get("positions")
+                lever_positions = list(map(lambda x: str(x), lever_positions))
                 lever_positions = ",".join(lever_positions)
                 del eventDict["positions"]
                 self.events.append([tag, eventKind, str(eventDict), timeStamp, self.cageID, lever_positions])

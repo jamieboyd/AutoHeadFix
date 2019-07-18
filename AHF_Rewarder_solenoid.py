@@ -112,7 +112,10 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
         if rewardName is 'entry' and resultsDict.get ('entry', 0) > settingsDict.get ('maxEntryRewards', self.maxEntryRewards):
             return 0
         else:
-            sleepTime =settingsDict.get(rewardName, self.task.Subjects.get(self.task.tag).get("Rewarder").get(rewardName + "Size"))
+            if self.task.Subjects.get(self.task.tag) is None:
+                sleepTime = 0.4
+            else:
+                sleepTime =settingsDict.get(rewardName, self.task.Subjects.get(self.task.tag).get("Rewarder").get(rewardName + "Size"))
             if sleepTime ==0:
                 return 0
             else:

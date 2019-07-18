@@ -365,6 +365,8 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
         endTime = time.time() + self.task.Subjects.get(self.task.tag).get("HeadFixer", {}).get('headFixTime')
         while time.time() < endTime:
             print("trial")
+            if not self.running:
+                break
             goalWidth = mouseDict.get("goalWidth")
             goalCenter = mouseDict.get("goalCenter")
             goalBottom = int(goalCenter - goalWidth/2)
