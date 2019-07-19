@@ -12,13 +12,20 @@ class AHF_HeadFixer_PWM_Pi (AHF_HeadFixer_PWM):
     pwmChanDef = 1
 
     @staticmethod
+    def about ():
+        """
+        :returns: a string describing function of this headFixer
+        """
+        return 'Controls a servo motor using Pi\'s own PWM peripheral' 
+
+    @staticmethod
     def config_user_get (configDict = {}):
         configDict = super(AHF_HeadFixer_PWM_Pi, AHF_HeadFixer_PWM_Pi).config_user_get (configDict)
         pwmChan = configDict.get ('pwmChan', AHF_HeadFixer_PWM_Pi.pwmChanDef)
         tempInput = input('Enter channel used for PWM, 1 on GPIO 18, or 2 on GPIO 19 (currently {:d})'.format (pwmChan))
         if tempInput != '':
             pwmChan = int (tempInput)
-        configDict.update({}'pwmChan' : 'pwmChan'})
+        configDict.update({'pwmChan' : pwmChan})
         return configDict
 
 

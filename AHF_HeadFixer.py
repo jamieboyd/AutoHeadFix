@@ -36,7 +36,7 @@ class AHF_HeadFixer(metaclass = ABCMeta):
 
     @staticmethod
     @abstractmethod
-    def config_user_get (configDict = {}}):
+    def config_user_get (configDict = {}):
         """
         query user to get configuration settings and update the dictionary
         """

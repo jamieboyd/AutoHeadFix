@@ -42,8 +42,7 @@ def Super_of_object (anObject):
 
 
 def Super_of_class (aClass):
-    inheritList = aClass.mro()
-    return inheritList [len(inheritList)-2]
+    return aClass.mro() [-2] # NOTE: for version 2, this is adjusted to -3 to skip AHF_Base
 
 
 def File_exists (nameTypeStr, nameStr, typeSuffix):
@@ -65,7 +64,6 @@ def Subclass_from_user(aSuperClass):
     fileList = []
     classList = []
     superclassName = aSuperClass.__name__
-
     for f in os.listdir(os.curdir):
         try:
             moduleObj=__import__ (f.rstrip('.py'))
@@ -80,7 +78,6 @@ def Subclass_from_user(aSuperClass):
         except Exception as e: # exception will be thrown if imported module imports non-existant modules, for instance
             #print (e)
             continue
-    print (classList)
     if iFile == 0:
         print ('Could not find any %s files in the current directory' % superclassName)
         raise FileNotFoundError

@@ -59,7 +59,7 @@ class AHF_Settings (object):
             print ('Could not find an AHF_Settings file in the current directory.')
             return ''
         else:
-            inputStr = '\nEnter a number from 1 to {} to choose a Settings file, or 0 to make new settings:\n'.format(len (fileList))
+            inputStr = '\nEnter a number from 1 to {} to choose an Experiment Settings file, or 0 to make new settings:\n'.format(len (fileList))
             ii=0
             for file in fileList:
                 inputStr += '{:d} : {:s}\n'.format((ii + 1), file)
@@ -128,7 +128,7 @@ class AHF_Settings (object):
                         self.cameraStartDelay = self.settingsDict.get('cameraStartDelay', AHF_Settings.cameraStartDelayDef)
                     self.camParamsDict = self.settingsDict.get('camParams', AHF_Settings.camParamsDictDef)
                     self.stimDict = self.settingsDict.get('stimDict', AHF_Settings.stimDictDef)
-                    self.stimulator = self.settingsDict.get('stimulator', AHF_Settings.stimulatorDef)
+                    self.stimulatorName = self.settingsDict.get('stimulator', AHF_Settings.stimulatorDef)
                 except Exception as e:
                     print ('Could not read data from {:s}: {:s}'.format (file, str (e)))
                     hasFile = False
@@ -214,20 +214,24 @@ class AHF_Settings (object):
                     self.cameraStartDelay = float (tempInput)
                 self.settingsDict.update ({'cameraStartDelay' : self.cameraStartDelay})
             # Stimulator file name
-            self.stimulator = AHF_Settings.stimulatorDef
-            tempInput = input ('Stimulator = {:s}. Select different Stimulator? (Yes or No)'.format (self.stimulator))
+            self.stimulatorName = AHF_Settings.stimulatorDef
+            stimChanged = False
+            tempInput = input ('Stimulator = {:s}. Select different Stimulator? (Yes or No)'.format (self.stimulatorName))
             if tempInput != '':
                 if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                    self.stimulator = AHF_Stimulator.get_Stimulator_from_user ()
-                # static function to make a configration without needing a stimulator to configure it
-                    self.stimDict = AHF_Stimulator.get_class(self.stimulator).dict_from_user({})
+                    self.stimulatorName = AHF_Stimulator.get_Stimulator_from_user ().__class.__name
+                    stimChanged = True
+                    # static function to make a configration without needing a stimulator to configure it
+            # stimulator dicionary
+            if stimChanged:
+                self.stimDict = AHF_Stimulator.get_class(self.stimulatorName).dict_from_user({})
             else:
                 self.stimDict = AHF_Settings.stimDictDef
                 tempInput = input ('Stimulator dictionary = {}. Edit stimulator dictionary? (Yes or No)'.format (self.stimDict))
                 if tempInput != '':
                     if tempInput [0] == 'y' or tempInput [0] == 'Y':
-                        self.stimDict = AHF_Stimulator.get_class(self.stimulator).dict_from_user(self.stimDict)
-            self.settingsDict.update ({'stimulator' : self.stimulator, 'stimDict' : self.stimDict})
+                        self.stimDict = AHF_Stimulator.get_class(self.stimulatorName).dict_from_user(self.stimDict)
+            self.settingsDict.update ({'stimulator' : self.stimulatorName, 'stimDict' : self.stimDict})
             # Camera related settings, in a dictionary, static function, don't need a camera object to be created
             self.camParamsDict = AHF_Settings.camParamsDictDef
             tempInput = input ('Camera settiongs = {}. Edit camera settings? (Yes or No)'.format (self.camParamsDict))
@@ -235,7 +239,9 @@ class AHF_Settings (object):
                 if tempInput [0] == 'y' or tempInput [0] == 'Y':
                     self.camParamsDict =AHF_Camera.dict_from_user (self.camParamsDict)
             self.settingsDict.update ({'camParamsDict' : self.camParamsDict})
-            
+            doSave = input ('Save edited Experiment Settings in a file (Yes or No)?')
+            if doSave [0].lower() == 'y':
+                self.save()
 
     def save (self):
         """
@@ -243,23 +249,24 @@ class AHF_Settings (object):
 
         """
         # get name for new config file and massage it a bit
-        if self.fileName != '':
-            newConfig = input ('Enter a name to save config, or enter to use current name, \'' + self.fileName + '\':')
+        if self.fileName == '':
+            newConfig = input ('Enter a name to save config as file:')
+        else:
+            newConfig = input ('Enter a name to save config, or enter to use current name, \'{:s}\':'.format (self.fileName))
             if newConfig == '':
                 newConfig = self.fileName
-        else:
-            newConfig = input ('Enter a name to save config as file:')
-        if newConfig != self.fileName:
-            newConfig = 'AHF_Settings_' + ''.join([c for c in newConfig if c.isalpha() or c.isdigit() or c=='_']) + '.jsn'
-            self.fileName = newConfig
-         # open the file name
-        with open (newConfig, 'w') as fp:
+        if newConfig.endswith ('.jsn'):
+            newConfig = newConfig.rstrip('.jsn')
+        if newConfig.endswith ('AHF_Settings_'):
+            newConfig = newConfig.lstrip('AHF_Settings_')
+        self.fileName = ''.join([c for c in newConfig if c.isalpha() or c.isdigit() or c=='_'])
+        # open file and write settings
+        with open ('AHF_Settings_' + self.fileName + '.jsn', 'w') as fp:
             fp.write (json.dumps (self.settingsDict, separators = ('\n', ':'), sort_keys = True))
             fp.close ()
             uid = pwd.getpwnam ('pi').pw_uid
             gid = grp.getgrnam ('pi').gr_gid
-            chown (newConfig, uid, gid) # we run AutoHeadFix as root for GPIO, so expicitly set ownership for easy editing
-
+            chown ('AHF_Settings_' + self.fileName + '.jsn', uid, gid) # we run AutoHeadFix as root for GPIO, so expicitly set ownership for easy editing
 
 
     def show (self):
@@ -291,7 +298,7 @@ class AHF_Settings (object):
                 tempList += ',' + ip if tempList != '' else ip
             print ('\t9_a) List of ip addresses for UDP = {:s}'.format (tempList))
             print ('\t9_b) Camera start to LED ON delay = {:.2f} secs'.format (self.cameraStartDelay))
-        print ('10) Stimulator = {:s}'.format (self.stimulator))
+        print ('10) Stimulator = {:s}'.format (self.stimulatorName))
         print ('11) Stim Dictionary = {}'.format (self.stimDict))
 
 
@@ -385,18 +392,18 @@ class AHF_Settings (object):
                 self.cameraStartDelay = float (input ('Enter delay in seconds between sending UDP and toggling blue LED:'))
             elif editNum == '10':
                 stimClass = AHF_Stimulator.get_Stimulator_from_user ()
-                self.stimulator = stimClass.__name__.lstrip('AHF_Stimulator')
+                self.stimulatorName = stimClass.__name__.lstrip('AHF_Stimulator')
                 self.stimDict = stimClass.dict_from_user({})
-                self.settingsDict.update({'stimulator': self.stimulator, 'stimDict' : self.stimDict})
+                self.settingsDict.update({'stimulator': self.stimulatorName, 'stimDict' : self.stimDict})
                 editVal = 3
             elif editNum == '11':
-                CAD.Edit_dict(self.stimDict, self.stimulator)
+                CAD.Edit_dict(self.stimDict, self.stimulatorName)
                 self.settingsDict.update({'stimDict' : self.stimDict})
                 editVal |= 1
         return editVal
 
 
-## for testing purposes
+## for testing purposes, or making experiment settings files without initializing hardware
 if __name__ == '__main__':
     settings = AHF_Settings ()
     settings.edit_from_user()

@@ -57,7 +57,6 @@ class AHF_CageSet (object):
             with open ('./AHF_config.jsn', 'r') as fp:
                 data = fp.read()
                 data= data.replace('\n', ",")
-                print (data)
                 configDict = json.loads(data)
                 fp.close()
                 self.cageID = configDict.get('Cage ID', AHF_CageSet.cageIDdef)
@@ -76,6 +75,7 @@ class AHF_CageSet (object):
                     self.lickChans = ()
                 self.serialPort = configDict.get ('Serial Port', AHF_CageSet.serialPortDef)
                 self.dataPath =configDict.get ('Path to Save Data', AHF_CageSet.dataPathDef)
+                self.edit()
         except (TypeError, IOError) as e:
             #we will make a file if we didn't find it, or if it was incomplete or it could not be loaded
             print ('Unable to open base configuration file, AHF_config.jsn, let\'s make a new one.\n')
@@ -207,7 +207,7 @@ class AHF_CageSet (object):
             elif editNum == 10:
                 self.dataPath = input ('Enter the path to the directory where the data will be saved (currently {:s}):'.format (self.dataPath))
             elif editNum == 11:
-                self.headFixer = AHF_HeadFixer.get_HeadFixer_from_user()
+                self.headFixer = AHF_HeadFixer.get_HeadFixer_from_user().__name__
                 self.headFixerDict = AHF_HeadFixer.get_class (self.headFixer).config_user_get ()
             elif editNum == 12:
                 self.headFixerDict = AHF_HeadFixer.get_class (self.headFixer).config_user_get (self.headFixerDict)
@@ -216,10 +216,6 @@ class AHF_CageSet (object):
         self.save()
         return
 
-## for testing purposes
+## for testing purposes, or making cage settings files without initializing hardware
 if __name__ == '__main__':
     hardWare = AHF_CageSet ()
-    print ('Cage ID:', hardWare.cageID,'\tContact Pin:', hardWare.contactPin, '\tContact PUD:', hardWare.contactPUD, '\n')
-    hardWare.edit()
-    hardWare.save()
-    hardware.__class__.name

@@ -16,6 +16,11 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
 
     @staticmethod
     def config_user_get (configDict = {}):
+        """
+        querries user to geta  dictionary of settings for PWM
+        :param configDict: starter dictionary to fillout with setings
+        :returns: the same dictionary, filled in or edited
+        """
         servoReleasedPosition = configDict.get ('servoReleasedPosition', AHF_HeadFixer_PWM.servoReleasedPositionDef)
         tempInput = input('Servo Released Position (0-4095, currently {:d}):'.format (servoReleasedPosition))
         if tempInput != '':
