@@ -341,7 +341,8 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
             self.trialTimeout = self.settingsDict.get('trialTimeout')
             self.leverController = PTLeverThread(self.recordingTime, self.trialIsCued,
                 self.trialTimeout, self.leverIsReversed, self.goalCuePin, self.goalCueFreq,
-                self.motorEnable, self.motorDir, self.motorIsReversed)
+                self.motorEnable, self.motorDir, self.motorIsReversed, self.startCuePin, self.startCueDur, self.startCueFreq, self.trialTimeout)
+            self.leverController.setCued(True)
         else:
             self.prePullTime = self.settingsDict.get('prePullTime')
             self.leverController = PTLeverThread(self.recordingTime, self.trialIsCued,
@@ -394,6 +395,7 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
                 self.task.DataLogger.writeToLogFile(self.task.tag, "lever_pull", {'outcome': outcome ,'positions': self.leverController.posBuffer}, time.time())
             history = self.task.DataLogger.getTrackedEvent(self.task.tag, 'lever_pull', 'outcome')
             average = 0
+#            self.leverController.zeroLever(1, False)
             for outcome in history:
                 average += outcome
             average /= self.trainSize

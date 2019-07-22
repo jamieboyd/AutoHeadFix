@@ -54,7 +54,7 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
         if response != '':
             tempList = []
             for chan in response.split (','):
-                tempList.append (chan)
+                tempList.append (int(chan))
             touchChans = tuple(tempList)
         starterDict.update ({'mprAddress' : mprAddress, 'IRQpin' : pin, 'touchThresh' : touchThresh})
         starterDict.update ({'unTouchThresh' : unTouchThresh, 'touchChans' : touchChans})
