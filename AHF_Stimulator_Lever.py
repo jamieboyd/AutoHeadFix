@@ -360,8 +360,9 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
         self.leverController.setMotorEnable(0)
         time.sleep(0.2)
         self.leverController.setMotorEnable(1)
+        if self.task.tag <= 0:
+            return
         mouseDict = self.task.Subjects.get(self.task.tag).get("Stimulator")
-        print(mouseDict)
         self.leverController.setTimeToGoal(mouseDict.get("toGoalTime"))
         endTime = time.time() + self.task.Subjects.get(self.task.tag).get("HeadFixer", {}).get('headFixTime')
         while time.time() < endTime:
@@ -396,10 +397,14 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
             history = self.task.DataLogger.getTrackedEvent(self.task.tag, 'lever_pull', 'outcome')
             average = 0
 #            self.leverController.zeroLever(1, False)
+            if history is None:
+                history = []
             for outcome in history:
                 average += outcome
             average /= self.trainSize
             if average > mouseDict.get('promoteRate'):
+                print("Promotion")
+                self.task.DataLogger.clearTrackedValues(self.task.tag, 'lever_pull', 'outcome')
                 if mouseDict.get('goalTrainOn'):
                     newWidth = mouseDict.get('goalWidth') - mouseDict.get('goalIncr')
                     if newWidth >= mouseDict.get('goalEndWidth'):
@@ -408,7 +413,9 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
                     newTime = mouseDict.get('holdTime') + mouseDict.get('holdIncr')
                     if newTime <= mouseDict.get('holdEndTime'):
                         mouseDict.update({'hold': newTime})
-            elif average < mouseDict.get('demoteRate'):
+            elif len(history) == self.trainSize and  average < mouseDict.get('demoteRate'):
+                print("demotion")
+                self.task.DataLogger.clearTrackedValues(self.task.tag, 'lever_pull', 'outcome')
                 if mouseDict.get('goalTrainOn'):
                     newWidth = mouseDict.get('goalWidth') + mouseDict.get('goalIncr')
                     if newWidth <= mouseDict.get('goalStartWidth'):

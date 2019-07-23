@@ -76,6 +76,7 @@ class AHF_Subjects_mice (AHF_Subjects):
                 if self.check_miceDict(self.miceDict) == False:
                     raise Exception('Could not confirm dictionary')
             except Exception as e:
+                print(str(e))
                 print('Unable to open and fully load subjects configuration, we will create a fillable json for you.\n'
                       'This file will be named according to the task configuration file. After entering the mice,\n'
                       'edit the contents to your liking, then COPY the file to your filename. DO NOT rename.')

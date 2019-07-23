@@ -362,6 +362,7 @@ def File_to_dict (nameTypeStr, nameStr, typeSuffix, dir = ''):
         errFlag = False
         with open (dir + filename, 'r') as fp:
             data = fp.read()
+            data = data.rstrip("\n")
             data=data.replace('\n', ',')
             data=data.replace('=', ':')
             configDict = json.loads(data)
@@ -418,6 +419,7 @@ def File_to_obj_fields (nameTypeStr, nameStr, typeSuffix, anObject, dir = ''):
     errFlag = False
     with open (dir + filename, 'r') as fp:
         data = fp.read()
+        data = data.rstrip("\n")
         data=data.replace('\n', ',')
         data=data.replace('=', ':')
         configDict = json.loads(data)
