@@ -4,6 +4,7 @@
 from time import time, localtime,timezone, sleep
 from datetime import datetime, timedelta
 from sys import argv
+import faulthandler
 import RPi.GPIO as GPIO
 # Task configures and controls sub-tasks for hardware and stimulators
 from AHF_Task import Task
@@ -30,6 +31,7 @@ def main():
     It initializes or loads settings and configurations, then endlessly loops running entries and head fix trials
     Ctrl-C is used to enter a menu-driven mode where settings can be altered.
     """
+    faulthandler.enable()
     try:
         configFile = ''
         if argv.__len__() > 1:

@@ -362,6 +362,8 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
         self.leverController.setMotorEnable(1)
         if self.task.tag <= 0:
             return
+        if hasattr(self.task, 'Camera'):
+            super().startVideo()
         mouseDict = self.task.Subjects.get(self.task.tag).get("Stimulator")
         self.leverController.setTimeToGoal(mouseDict.get("toGoalTime"))
         endTime = time.time() + self.task.Subjects.get(self.task.tag).get("HeadFixer", {}).get('headFixTime')
@@ -375,6 +377,7 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
             goalTop = int(goalCenter + goalWidth/2)
             self.leverController.setHoldParams(goalBottom, goalTop, mouseDict.get("holdTime"))
             if random() > 1.0 - mouseDict.get("perturbPercent"):
+                print("do pertubations")
                 self.leverController.setPerturbTransTime(mouseDict.get("perturbRampDur"))
                 self.leverController.setPerturbForce(mouseDict.get("perturbForceOffset") + (random() -0.5)*mouseDict.get("perturbForceRandom"))
                 self.leverController.setPerturbStartTime(mouseDict.get("perturbStartTime") + (random() -0.5)*mouseDict.get("perturbStartRandom"))
@@ -424,6 +427,9 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
                     newTime = mouseDict.get('holdTime') - mouseDict.get('holdIncr')
                     if newTime >= mouseDict.get('holdStartTime'):
                         mouseDict.update({'hold': newTime})
+        if hasattr(self.task, 'Camera'):
+            print("should stop")
+            super().stopVideo()
 
             #Do something
     def quitting (self):
@@ -432,6 +438,8 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
 
             A stimulator may, e.g., open files and wish to close them before exiting, or use hardware that needs to be cleaned up
         """
+        if hasattr(self.task, 'Camera'):
+            self.task.Camera.stop_recording()
         pass                
 
     def setdown (self):
