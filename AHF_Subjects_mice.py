@@ -161,8 +161,8 @@ class AHF_Subjects_mice (AHF_Subjects):
         """
         if IDnum == 't' or IDnum == 'T':
             print("Place the mouse under the reader now.")
-            tag = 0
-            while tag == 0:
+            tag = '0'
+            while tag == '0':
                 tag = str(self.task.Reader.readTag())
                 sleep(0.1)
 
