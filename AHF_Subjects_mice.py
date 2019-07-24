@@ -163,13 +163,13 @@ class AHF_Subjects_mice (AHF_Subjects):
             print("Place the mouse under the reader now.")
             tag = 0
             while tag == 0:
-                tag = self.task.Reader.readTag()
+                tag = str(self.task.Reader.readTag())
                 sleep(0.1)
 
         elif IDnum == 'a' or IDnum == 'A':
-            tag = int(input('Enter the RFID tag for new mouse: '))
+            tag = str(input('Enter the RFID tag for new mouse: '))
         elif isinstance(IDnum, int):
-            tag = IDnum
+            tag = str(IDnum)
         for source in self.settingsTuple:
             reference = getattr(self.task,source)
             if default:
