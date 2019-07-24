@@ -213,14 +213,13 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         """
         # get the mice first, therefore we need them in the `mice` table, at least their tag number and their cage
         # we will call the mice by their cage which is a class variable
-        query_sources = """SELECT DISTINCT `Dictionary_source` FROM `configs` WHERE `Cage` = %s"""
-        sources_list = [i[0] for i in list(self.getFromDatabase(query_sources, [str(self.cageID)], False))]
+        query_sources = """SELECT DISTINCT `Dictionary_source` FROM `configs` WHERE `Cage` = %s AND `Tag` = %s"""
+        sources_list = [i[0] for i in list(self.getFromDatabase(query_sources, [str(self.cageID), str(settings)], False))]
         query_config = """SELECT `Tag`,`Dictionary_source`,`Config` FROM `configs` WHERE `Tag` = %s
                                             AND `Dictionary_source` = %s ORDER BY `Timestamp` DESC LIMIT 1"""
-        if settings == "current_subjects":
+        if settings == "changed_subjects":
             mice_list = self.getMice()
             for mice in mice_list:
-                s = {}
                 for sources in sources_list:
                     try:
                         mouse, source, dictio = self.getFromDatabase(query_config, [str(mice), str(sources)], False)[0]
@@ -237,13 +236,20 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
                 yield (data)
         if settings == "default_hardware":
             for sources in sources_list:
+                print(sources)
                 mouse, source, dictio = self.getFromDatabase(query_config, ["default_hardware", str(sources)], False)[0]
-                data = {str(source): literal_eval("{}".format(dictio))}
+                if "Class" in str(source):
+                    data = {str(source): str(dictio)}
+                else:
+                    data = {str(source): literal_eval("{}".format(dictio))}
                 yield (data)
         if settings == "changed_hardware":
             for sources in sources_list:
                 mouse, source, dictio = self.getFromDatabase(query_config, ["changed_hardware", str(sources)], False)[0]
-                data = {str(source): literal_eval("{}".format(dictio))}
+                if "Class" in str(source):
+                    data = {str(source): str(dictio)}
+                else:
+                    data = {str(source): literal_eval("{}".format(dictio))}
                 yield (data)
 
     def getMice(self):
