@@ -56,7 +56,10 @@ class AHF_Stimulator_Rewards (AHF_Stimulator):
                 break
             self.rewardTimes.append (time())
             self.rewarder.giveReward('task')
-            sleep(self.task.Subjects.get(self.task.tag).get("Stimulator").get("rewardInterval"))
+            if self.task.tag > 0:
+                sleep(self.task.Subjects.get(self.task.tag).get("Stimulator").get("rewardInterval"))
+            else:
+                sleep(AHF_Stimulator_Rewards.defaultInterval)
         if hasattr(self.task, 'Camera'):
             super().stopVideo()
 
