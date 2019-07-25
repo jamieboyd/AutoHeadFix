@@ -13,7 +13,7 @@ class AHF_HeadFixer_NoFix (AHF_HeadFixer):
     """
     hasLevels = False
     defaultSkeddadleTime = 0.5
-
+    isChecking = False
     @staticmethod
     def about():
         return 'Head Fixer that only checks for contact, does not implement a head-fixing mechanism'
@@ -38,9 +38,11 @@ class AHF_HeadFixer_NoFix (AHF_HeadFixer):
 
     @staticmethod
     def isFixedCheck ():
+        AHF_HeadFixer_NoFix.isChecking = True
         while AHF_Task.gTask.contact:
             sleep(0.05)
         AHF_Task.gTask.Stimulator.stop()
+        AHF_HeadFixer_NoFix.isChecking = False
         pass
 
     def setup(self):
@@ -54,7 +56,8 @@ class AHF_HeadFixer_NoFix (AHF_HeadFixer):
         """
         Just does contact check with super(), does not fix
         """
-        if self.task.contact and not self.isChecking:
+        if self.task.contact and not AHF_HeadFixer_NoFix.isChecking:
+            
             start_new_thread(self.isFixedCheck, ())
             return True
         return False        
