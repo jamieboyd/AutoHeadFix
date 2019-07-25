@@ -23,10 +23,16 @@ class AHF_ContactCheck_Elec (AHF_ContactCheck):
         contact = gContactChecker.checkContact ()
         duration = time() - AHF_Task.gTask.contactTime
         if contact:
+            print("Contact!")
             AHF_Task.gTask.contact = True
             AHF_Task.gTask.contactTime = time()
         if contact == False and (duration > AHF_ContactCheck_Elec.debounceTime):
             AHF_Task.gTask.contact = False
+        elif contact == False:
+            sleep(AHF_ContactCheck_Elec.debounceTime)
+            contact = gContactChecker.checkContact ()
+            if contact == False:
+                AHF_Task.gTask.contact = False
 
     @staticmethod
     def about ():

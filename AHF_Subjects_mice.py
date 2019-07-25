@@ -72,10 +72,15 @@ class AHF_Subjects_mice (AHF_Subjects):
                 self.miceDict.update(configTuple)
         elif self.loadConfigs == "provide_json":  #check file, if not existing or not correct provide a fillable json, then update miceDict when user is ready
             try:
-                self.miceDict = CAD.File_to_dict('mice', self.jsonName, '.jsn')
+                direc = ''
+                print(os.getcwd())
+                if os.getcwd() == "/root":
+                    direc = "/home/pi/Desktop/AHF_setup/AutoHeadFixSetup/AutoHeadFix/"
+                self.miceDict = CAD.File_to_dict('mice', self.jsonName, '.jsn', direc)
                 if self.check_miceDict(self.miceDict) == False:
                     raise Exception('Could not confirm dictionary')
             except Exception as e:
+                print(str(e))
                 print('Unable to open and fully load subjects configuration, we will create a fillable json for you.\n'
                       'This file will be named according to the task configuration file. After entering the mice,\n'
                       'edit the contents to your liking, then COPY the file to your filename. DO NOT rename.')
@@ -160,15 +165,15 @@ class AHF_Subjects_mice (AHF_Subjects):
         """
         if IDnum == 't' or IDnum == 'T':
             print("Place the mouse under the reader now.")
-            tag = 0
-            while tag == 0:
-                tag = self.task.Reader.readTag()
+            tag = '0'
+            while tag == '0':
+                tag = str(self.task.Reader.readTag())
                 sleep(0.1)
 
         elif IDnum == 'a' or IDnum == 'A':
-            tag = int(input('Enter the RFID tag for new mouse: '))
+            tag = str(input('Enter the RFID tag for new mouse: '))
         elif isinstance(IDnum, int):
-            tag = IDnum
+            tag = str(IDnum)
         for source in self.settingsTuple:
             reference = getattr(self.task,source)
             if default:

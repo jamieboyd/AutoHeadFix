@@ -4,6 +4,9 @@
 from time import time, localtime,timezone, sleep
 from datetime import datetime, timedelta
 from sys import argv
+import faulthandler
+import pymysql
+from ast import literal_eval
 import RPi.GPIO as GPIO
 # Task configures and controls sub-tasks for hardware and stimulators
 from AHF_Task import Task
@@ -30,10 +33,31 @@ def main():
     It initializes or loads settings and configurations, then endlessly loops running entries and head fix trials
     Ctrl-C is used to enter a menu-driven mode where settings can be altered.
     """
+    faulthandler.enable()
     try:
         configFile = ''
         if argv.__len__() > 1:
-            task = Task (argv [1])
+            jsonDict = {}
+            db = pymysql.connect(host="localhost", user="pi", db="raw_data", password="AutoHead2015")
+            query_sources = """SELECT DISTINCT `Dictionary_source` FROM `configs` WHERE `Cage` = %s AND `Tag` = %s"""
+            cur  = db.cursor()
+            cur.execute(query_sources, ["cage1", "changed_hardware"])
+
+            sources_list =  [i[0] for i in cur.fetchall()]
+            query_config = """SELECT `Tag`,`Dictionary_source`,`Config` FROM `configs` WHERE `Tag` = %s
+                                            AND `Dictionary_source` = %s ORDER BY `Timestamp` DESC LIMIT 1"""
+            cur.execute(query_config, ["cage1", "changed_hardware"])
+            for sources in sources_list:
+                cur.execute(query_config, ["changed_hardware", str(sources)])
+                mouse, source, dictio = cur.fetchall()[0]
+                if "Class" in str(source):
+                    data = {str(source): str(dictio)}
+                else:
+                    data = {str(source): literal_eval("{}".format(dictio))}
+                jsonDict.update(data)
+            jsonDict.update({"filename": "temp"})
+            task = Task (object = jsonDict)
+            db.close()
         else:
             task = Task ('')
             task.editSettings ()

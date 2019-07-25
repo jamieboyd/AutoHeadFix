@@ -101,12 +101,13 @@ def File_from_user (nameTypeStr, longName, typeSuffix, makeNew = False):
     with 'AHF_' + nameTypeStr' + '_' and ending with '.typeSuffix'
     Raises: FileNotFoundError if no nameStr class files found
     """
+    
     iFile=0
     fileList = []
     startStr = 'AHF_' + nameTypeStr + '_'
     startlen = len (startStr)
     endLn = len (typeSuffix)
-    #print (os.listdir(os.curdir))
+   # print (os.listdir(os.curdir))
     for f in os.listdir(os.curdir):
         if f.startswith (startStr) and f.endswith (typeSuffix):
             fname = f[startlen :-endLn]
@@ -224,7 +225,7 @@ def Edit_Obj_fields (anObject, longName):
             itemKey = kvp [0]
             itemValue = kvp [1]
             if itemKey.endswith ('Class') and (itemValue is None or isinstance(itemValue,  ABCMeta)):
-                baseName = itemKey.rstrip ('Class')
+                baseName = itemKey[:-5]
                 #newClassName = File_from_user (baseName, baseName, '.py')
                 newClass = Class_from_file (baseName, File_from_user (baseName, baseName, '.py'))
                 setattr (anObject, itemKey, newClass)
@@ -361,6 +362,7 @@ def File_to_dict (nameTypeStr, nameStr, typeSuffix, dir = ''):
         errFlag = False
         with open (dir + filename, 'r') as fp:
             data = fp.read()
+            data = data.rstrip("\n")
             data=data.replace('\n', ',')
             data=data.replace('=', ':')
             configDict = json.loads(data)
@@ -417,6 +419,7 @@ def File_to_obj_fields (nameTypeStr, nameStr, typeSuffix, anObject, dir = ''):
     errFlag = False
     with open (dir + filename, 'r') as fp:
         data = fp.read()
+        data = data.rstrip("\n")
         data=data.replace('\n', ',')
         data=data.replace('=', ':')
         configDict = json.loads(data)

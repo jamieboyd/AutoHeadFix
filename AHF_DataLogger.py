@@ -44,6 +44,18 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
         """
         self.trackingDict.update({eventKind: {dictKey: {"type": trackingType, "values": {}, "size": size}}})
 
+    def clearTrackedValues(self, tag, eventKind, dictKey):
+        keyTracking = self.trackingDict.get(eventKind, {}).get(dictKey)
+        if keyTracking is None:
+            return
+
+        if keyTracking["type"] is "buffer":
+            if tag in keyTracking["values"].keys():
+                keyTracking["values"][tag] = deque(maxlen = keyTracking["size"])
+        elif keyTracking["type"] is "totals":
+            if tag in keyTracking["values"].keys():
+                keyTracking["values"][tag] = 0
+
     def getTrackedEvent(self, tag, eventKind, dictKey):
         """
         Returns the current value for the specified mouse, event, and key.

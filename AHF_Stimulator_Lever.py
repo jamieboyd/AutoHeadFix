@@ -341,7 +341,8 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
             self.trialTimeout = self.settingsDict.get('trialTimeout')
             self.leverController = PTLeverThread(self.recordingTime, self.trialIsCued,
                 self.trialTimeout, self.leverIsReversed, self.goalCuePin, self.goalCueFreq,
-                self.motorEnable, self.motorDir, self.motorIsReversed)
+                self.motorEnable, self.motorDir, self.motorIsReversed, self.startCuePin, self.startCueDur, self.startCueFreq, self.trialTimeout)
+            self.leverController.setCued(True)
         else:
             self.prePullTime = self.settingsDict.get('prePullTime')
             self.leverController = PTLeverThread(self.recordingTime, self.trialIsCued,
@@ -359,18 +360,24 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
         self.leverController.setMotorEnable(0)
         time.sleep(0.2)
         self.leverController.setMotorEnable(1)
+        if self.task.tag <= 0:
+            return
+        if hasattr(self.task, 'Camera'):
+            super().startVideo()
         mouseDict = self.task.Subjects.get(self.task.tag).get("Stimulator")
-        print(mouseDict)
         self.leverController.setTimeToGoal(mouseDict.get("toGoalTime"))
         endTime = time.time() + self.task.Subjects.get(self.task.tag).get("HeadFixer", {}).get('headFixTime')
         while time.time() < endTime:
             print("trial")
+            if not self.running:
+                break
             goalWidth = mouseDict.get("goalWidth")
             goalCenter = mouseDict.get("goalCenter")
             goalBottom = int(goalCenter - goalWidth/2)
             goalTop = int(goalCenter + goalWidth/2)
             self.leverController.setHoldParams(goalBottom, goalTop, mouseDict.get("holdTime"))
             if random() > 1.0 - mouseDict.get("perturbPercent"):
+                print("do pertubations")
                 self.leverController.setPerturbTransTime(mouseDict.get("perturbRampDur"))
                 self.leverController.setPerturbForce(mouseDict.get("perturbForceOffset") + (random() -0.5)*mouseDict.get("perturbForceRandom"))
                 self.leverController.setPerturbStartTime(mouseDict.get("perturbStartTime") + (random() -0.5)*mouseDict.get("perturbStartRandom"))
@@ -392,10 +399,15 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
                 self.task.DataLogger.writeToLogFile(self.task.tag, "lever_pull", {'outcome': outcome ,'positions': self.leverController.posBuffer}, time.time())
             history = self.task.DataLogger.getTrackedEvent(self.task.tag, 'lever_pull', 'outcome')
             average = 0
+#            self.leverController.zeroLever(1, False)
+            if history is None:
+                history = []
             for outcome in history:
                 average += outcome
             average /= self.trainSize
             if average > mouseDict.get('promoteRate'):
+                print("Promotion")
+                self.task.DataLogger.clearTrackedValues(self.task.tag, 'lever_pull', 'outcome')
                 if mouseDict.get('goalTrainOn'):
                     newWidth = mouseDict.get('goalWidth') - mouseDict.get('goalIncr')
                     if newWidth >= mouseDict.get('goalEndWidth'):
@@ -404,7 +416,9 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
                     newTime = mouseDict.get('holdTime') + mouseDict.get('holdIncr')
                     if newTime <= mouseDict.get('holdEndTime'):
                         mouseDict.update({'hold': newTime})
-            elif average < mouseDict.get('demoteRate'):
+            elif len(history) == self.trainSize and  average < mouseDict.get('demoteRate'):
+                print("demotion")
+                self.task.DataLogger.clearTrackedValues(self.task.tag, 'lever_pull', 'outcome')
                 if mouseDict.get('goalTrainOn'):
                     newWidth = mouseDict.get('goalWidth') + mouseDict.get('goalIncr')
                     if newWidth <= mouseDict.get('goalStartWidth'):
@@ -413,6 +427,9 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
                     newTime = mouseDict.get('holdTime') - mouseDict.get('holdIncr')
                     if newTime >= mouseDict.get('holdStartTime'):
                         mouseDict.update({'hold': newTime})
+        if hasattr(self.task, 'Camera'):
+            print("should stop")
+            super().stopVideo()
 
             #Do something
     def quitting (self):
@@ -421,6 +438,8 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
 
             A stimulator may, e.g., open files and wish to close them before exiting, or use hardware that needs to be cleaned up
         """
+        if hasattr(self.task, 'Camera'):
+            self.task.Camera.stop_recording()
         pass                
 
     def setdown (self):

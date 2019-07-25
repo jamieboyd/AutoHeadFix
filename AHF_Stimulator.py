@@ -37,6 +37,7 @@ class AHF_Stimulator (AHF_Base, metaclass = ABCMeta):
 
         try:
             thisTag = self.task.tag
+            self.videoTag = thisTag
             camera = self.task.Camera
             #TODO IMPROVE
             if camera.AHFvideoFormat == 'rgb':
@@ -67,7 +68,10 @@ class AHF_Stimulator (AHF_Base, metaclass = ABCMeta):
             raise anError
 
     def stopVideo(self):
-        thisTag = self.task.tag
+        if hasattr(self, 'videoTag'):
+            thisTag = self.videoTag
+        else:
+            thisTag = self.task.tag
         camera = self.task.Camera
         #TODO IMPROVE
         if camera.AHFvideoFormat == 'rgb':
