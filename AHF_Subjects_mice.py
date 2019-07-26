@@ -281,6 +281,7 @@ class AHF_Subjects_mice (AHF_Subjects):
             elif event.lower() == 'a' or event.lower() == 't': # other two choices are for adding a mouse by RFID Tag, either reading from Tag Reader, or typing it
                 self.task.Reader.stopLogging()
                 self.add(event)
+                CAD.Dict_to_file (self.miceDict, "mice", self.jsonName, ".jsn")
                 self.task.Reader.startLogging()
             else:
                 break

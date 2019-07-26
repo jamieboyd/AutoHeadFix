@@ -91,6 +91,11 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
         return AHF_Stimulator_Rewards.config_user_get(starterDict)
 
     def config_user_subject_get(self,starterDict = {}):
+        mouseLevel = starterDict.get('mouseLevel', 0)
+        tempInput = input ('Set default level for mouse (currently {0}): '.format(mouseLevel))
+        if tempInput != '':
+            defaultLevel = int (tempInput)
+        starterDict.update ({'mouseLevel' : defaultLevel})
         lickWithholdTime = starterDict.get ('lickWithholdTime', AHF_Stimulator_LickWithhold.lickWithholdTime_def)
         tempInput = input ('Set lick withhold time (currently {0}): '.format(lickWithholdTime))
         if tempInput != '':
@@ -246,8 +251,9 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
     def run(self, level = -1, resultsDict = {}, settingsDict = {}):
         super().run()
         self.tag = self.task.tag
+        self.mouse = self.task.Subjects.get(self.tag)
         if level < 0:
-            level = self.defaultLevel
+            level = self.mouse.get("Stimulator", {}).get("mouseLevel", 0)
         self.mouse = self.task.Subjects.get(self.tag)
         self.lickWithholdTimes = []
         self.rewardTimes = []
