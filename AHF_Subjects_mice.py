@@ -278,7 +278,9 @@ class AHF_Subjects_mice (AHF_Subjects):
                         os.chown(configFile, uid, gid)  # we may run as root for pi PWM, so we need to explicitly set ownership
                     # TODO check this
             else: # other two choices are for adding a mouse by RFID Tag, either reading from Tag Reader, or typing it
+                self.task.Reader.setdown()
                 self.add(event)
+                self.task.Reader.setup()
         response = input('Save changes in settings to a json file, too? (recommended). Make sure you ')
         if response[0] == 'Y' or response[0] == 'y':
             CAD.Dict_to_file(self.miceDict, "mice", self.jsonName, ".jsn")
@@ -286,9 +288,8 @@ class AHF_Subjects_mice (AHF_Subjects):
         from time import sleep
         while True:
             inputStr = '\n change the following variables. \nEnter:\n'
-            inputStr += '0 leave settings'
-            inputStr += '1 inChamberTimeLimit'
-            inputStr += '2 store Dictionary in Database'
+            inputStr += '0: Leave Unchanged\n'
+            inputStr += '1: inChamberTimeLimit\n'
             event = input(inputStr)
             if event == 0:
                 break
@@ -296,9 +297,6 @@ class AHF_Subjects_mice (AHF_Subjects):
                 result = input('Enter in-Chamber duration limit, in minutes, before stopping head-fix trials, currently {:.2f}: '.format(self.inChamberTimeLimit / 60))
                 if result != '':
                     self.settingsDict.update({'inChamberTimeLimit': int(result * 60)})
-            if event == '2':
-                result = input()
-                #TODO
         self.setup()
 from AHF_Task import Task
 
