@@ -30,21 +30,22 @@ class AHF_Reader_ID (AHF_Reader):
         if GPIO.input (channel) == GPIO.HIGH: # tag just entered
             print("hello")
             try:
-                AHF_Task.gTask.tag = RFIDTagReader.globalReader.readTag ()
-                AHF_Task.gTask.DataLogger.writeToLogFile(AHF_Task.gTask.tag, 'entry', None, time())
-                if AHF_Task.gTask.Subjects.get(AHF_Task.gTask.tag) is not None:
+                tag = RFIDTagReader.globalReader.readTag ()
+                if AHF_Task.gTask.Subjects.get(tag) is not None:
+                    AHF_Task.gTask.tag = tag
+                    AHF_Task.gTask.DataLogger.writeToLogFile(AHF_Task.gTask.tag, 'entry', None, time())
+                    AHF_Task.gTask.entryTime = time()
+                    AHF_Reader_ID.stillThere = True
+                    start_new_thread (AHF_Reader_ID.timeInChamberThread,(time () + AHF_Reader_ID.gInChamberTimeLimit,))
                     # newVal = AHF_Task.gTask.Subjects.get(AHF_Task.gTask.tag).get('resultsDict').get('TagReader').get('entries')
                     # newVal = newVal + 1
                     # AHF_Task.gTask.Subjects.get(AHF_Task.gTask.tag).get('resultsDict').get('TagReader').update ({'entries' : newVal})
                     pass
                 else:
-                    raise Exception('There are no fresh mice allowed, and this is a fresh mouse')
-                AHF_Task.gTask.entryTime = time()
-                AHF_Reader_ID.stillThere = True
-                start_new_thread (AHF_Reader_ID.timeInChamberThread,(time () + AHF_Reader_ID.gInChamberTimeLimit,))
+                    if tag != 0:
+                        raise Exception('There are no fresh mice allowed, and this is a fresh mouse')
             except Exception as e:
                 print(str(e))
-                AHF_Task.gTask.tag =0
         else: # tag just left
             AHF_Task.gTask.DataLogger.writeToLogFile(AHF_Task.gTask.tag, 'exit', None, time())
             AHF_Task.gTask.tag = 0
@@ -136,15 +137,19 @@ class AHF_Reader_ID (AHF_Reader):
         print ('Monitoring RFID Reader for next 10 seconds....')
         lastTag = -1
         startTime = time()
+        GPIO.setup (self.TIRpin, GPIO.IN)
+        printed = False
         while time () < startTime + 10:
             try:
                 thisTag = self.readTag ()
-                if thisTag != lastTag:
-                    if thisTag == 0:
-                        print ('No Tag in Range.')
-                    else:
+                if GPIO.input (self.TIRpin) == GPIO.HIGH:
+                    printed = False
+                    if thisTag != 0:
                         print ('Tag value is now %d.' % thisTag)
-                    lastTag = thisTag
+                else:
+                    if not printed:
+                        print('No Tag in Range')
+                        printed = True
             except Exception as e:
                 print (str(e))
             sleep (AHF_Reader_ID.TIME_OUT_SECS)
