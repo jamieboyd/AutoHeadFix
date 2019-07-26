@@ -239,8 +239,9 @@ class AHF_Subjects_mice (AHF_Subjects):
             inputStr += 'A to add a mouse, by its RFID Tag\n'
             inputStr += 'T to read a tag from the Tag Reader and add that mouse\n'
             inputStr += 'P to print current daily stats for all mice\n'
-            inputStr += 'R to remove a mouse from the list, by RFID Tag\n: '
+            inputStr += 'R to remove a mouse from the list, by RFID Tag\n'
             inputStr += 'J to create a Json file for subject settings from Database\n'
+            inputStr += 'E to exit :'
             event = input (inputStr)
             tag = 0
             if event == 'p' or event == 'P': # print mice stats
@@ -277,11 +278,13 @@ class AHF_Subjects_mice (AHF_Subjects):
                         gid = grp.getgrnam('pi').gr_gid
                         os.chown(configFile, uid, gid)  # we may run as root for pi PWM, so we need to explicitly set ownership
                     # TODO check this
-            else: # other two choices are for adding a mouse by RFID Tag, either reading from Tag Reader, or typing it
+            elif event.lower() == 'a' or event.lower() == 't': # other two choices are for adding a mouse by RFID Tag, either reading from Tag Reader, or typing it
                 self.task.Reader.stopLogging()
                 self.add(event)
                 self.task.Reader.startLogging()
-        response = input('Save changes in settings to a json file, too? (recommended). Make sure you ')
+            else:
+                break
+        response = input('Save changes in settings to a json file, too? (recommended)')
         if response[0] == 'Y' or response[0] == 'y':
             CAD.Dict_to_file(self.miceDict, "mice", self.jsonName, ".jsn")
     def hardwareTest(self):
