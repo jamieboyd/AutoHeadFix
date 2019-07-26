@@ -280,6 +280,7 @@ class AHF_Subjects_mice (AHF_Subjects):
             else: # other two choices are for adding a mouse by RFID Tag, either reading from Tag Reader, or typing it
                 self.task.Reader.stopLogging()
                 self.add(event)
+                CAD.Dict_to_file (self.miceDict, "mice", self.jsonName, ".jsn")
                 self.task.Reader.startLogging()
         response = input('Save changes in settings to a json file, too? (recommended). Make sure you ')
         if response[0] == 'Y' or response[0] == 'y':
