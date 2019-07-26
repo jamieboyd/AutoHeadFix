@@ -391,6 +391,7 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
                 self.task.Rewarder.giveReward('task')
             if self.trialIsCued:
                 self.task.DataLogger.writeToLogFile(self.task.tag, "lever_pull", {'outcome': outcome ,'positions': self.leverController.posBuffer}, time.time())
+                print(self.leverController.posBuffer)
             else:
                 positions = self.leverController.posBuffer
                 circularEnd = self.prePullTime*self.leverController.LEVER_FREQ
@@ -399,7 +400,7 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
                 self.task.DataLogger.writeToLogFile(self.task.tag, "lever_pull", {'outcome': outcome ,'positions': self.leverController.posBuffer}, time.time())
             history = self.task.DataLogger.getTrackedEvent(self.task.tag, 'lever_pull', 'outcome')
             average = 0
-#            self.leverController.zeroLever(1, False)
+            self.leverController.zeroLever(1, False)
             if history is None:
                 history = []
             for outcome in history:
