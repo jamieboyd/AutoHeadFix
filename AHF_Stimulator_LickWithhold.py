@@ -16,7 +16,6 @@ from random import random
 import RPi.GPIO as GPIO
 
 #Laser-stimulator modules
-from pynput import keyboard
 import numpy as np
 import sys
 import matplotlib.pyplot as plt
@@ -29,7 +28,6 @@ from time import sleep, time
 from random import random
 from datetime import datetime
 from itertools import combinations,product
-import imreg_dft as ird
 import warnings
 
 
@@ -116,7 +114,7 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
         if str(tempInput).lower() != 'y':
             rewardNoGo = False
         starterDict.update ({'rewardNoGo' : rewardNoGo})
-        return starterDict
+        return AHF_Stimulator_Rewards.config_user_subject_get(self, starterDict)
 
     def config_subject_get(self, starterDict={}):
         lickWithholdTime = starterDict.get ('lickWithholdTime', AHF_Stimulator_LickWithhold.lickWithholdTime_def)
@@ -127,7 +125,7 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
         starterDict.update ({'responseTime' : responseTime})
         rewardNoGo = starterDict.get ('rewardNoGo',AHF_Stimulator_LickWithhold.rewardNoGo_def)
         starterDict.update ({'rewardNoGo' : rewardNoGo})
-        return starterDict
+        return AHF_Stimulator_Rewards.config_subject_get(self, starterDict)
 
 
     def setup (self):
@@ -254,16 +252,15 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
         self.mouse = self.task.Subjects.get(self.tag)
         if level < 0:
             level = self.mouse.get("Stimulator", {}).get("mouseLevel", 0)
-        self.mouse = self.task.Subjects.get(self.tag)
         self.lickWithholdTimes = []
         self.rewardTimes = []
         self.laserTimes = []
-        n = self.nRewards
+        n = self.mouse.get('Stimulator', {}).get('nRewards', 5)
         if self.task.isFixTrial:
             if not self.task.Stimulus.trialPrep():
                 self.task.Stimulus.trialEnd()
                 return
-
+            
             #every time lickWithholdtime passes with no licks, make a buzz then give a reward after buzz_lead time.
             self.lickWithholdTimes = []
             self.rewardTimes = []
@@ -271,7 +268,6 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
             endTime = time() + self.mouse.get("HeadFixer", {}).get('headFixTime')
             speakerIsOn = False
             self.OffForRewardEnd = 0.0
-            self.camera.start_preview()
             while time() < endTime:
                 if not self.running:
                     break
@@ -292,7 +288,7 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
                 }
                 levels[level]()
                 if level ==0:
-                    sleep(self.rewardInterval)
+                    sleep(self.mouse.get("Stimulator").get("rewardInterval"))
                     n = n -1
                     if n == 0:
                         newRewards = resultsDict.get('rewards', 0) + len (self.rewardTimes)
@@ -309,7 +305,7 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
             self.task.Stimulus.trialEnd()
             #self.camera.stop_preview()
         else:
-            timeInterval = self.rewardInterval #- self.rewarder.rewardDict.get ('task')
+            timeInterval = self.mouse.get("Stimulator").get("rewardInterval") #- self.rewarder.rewardDict.get ('task')
             self.rewardTimes = []
             self.camera.start_preview()
             for reward in range(self.nRewards):

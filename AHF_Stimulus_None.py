@@ -15,7 +15,7 @@ class AHF_Stimulus_None (AHF_Stimulus):
         """
         Prepares stimulus for trial: e.g. aligns laser, preps vib. motor, etc
         """
-        pass
+        return True
 
     def stimulate (self):
         pass
