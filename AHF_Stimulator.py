@@ -45,7 +45,7 @@ class AHF_Stimulator (AHF_Base, metaclass = ABCMeta):
             else:
                 extension = 'h264'
 
-            video_name = str (thisTag)  + "_" + '%d' % self.task.lastFixedTime + '.' + extension
+            video_name = str (thisTag)  + "_" + '%d' % time() + '.' + extension
             video_name_path = '/home/pi/Documents/' + "M" + video_name
             #writeToLogFile (expSettings.logFP, thisMouse, "video:" + video_name)
             # send socket message to start behavioural camera
