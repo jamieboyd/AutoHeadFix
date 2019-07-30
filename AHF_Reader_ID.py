@@ -17,6 +17,7 @@ class AHF_Reader_ID (AHF_Reader):
     defaultPort = '/dev/ttyUSB0'
     defaultPin = 7
     defaultChamberTimeLimit = 600
+    graceTime = 5
 
     gStillThere = False
     gInChamberTimeLimit = 0.0
@@ -76,7 +77,8 @@ class AHF_Reader_ID (AHF_Reader):
                 finally:
                     self.tagReader.clearBuffer()
             else:
-                if self.task.tag != 0:
+                #sleep(AHF_Reader_ID.graceTime)
+                if self.task.tag != 0 and not self.task.ContactCheck.contact:
                     AHF_Task.gTask.DataLogger.writeToLogFile(AHF_Task.gTask.tag, 'exit', None, time())
                     AHF_Task.gTask.tag = 0
                     self.tagReader.clearBuffer()

@@ -44,8 +44,8 @@ class AHF_Stimulator (AHF_Base, metaclass = ABCMeta):
                 extension = 'raw'
             else:
                 extension = 'h264'
-
-            video_name = str (thisTag)  + "_" + '%d' % time() + '.' + extension
+            self.lastTime =  time()
+            video_name = str (thisTag)  + "_" + '%d' % self.lastTime + '.' + extension
             video_name_path = '/home/pi/Documents/' + "M" + video_name
             #writeToLogFile (expSettings.logFP, thisMouse, "video:" + video_name)
             # send socket message to start behavioural camera
@@ -79,7 +79,7 @@ class AHF_Stimulator (AHF_Base, metaclass = ABCMeta):
         else:
             extension = 'h264'
 
-        video_name = str (thisTag)  + "_" + '%d' % self.task.lastFixedTime + '.' + extension
+        video_name = str (thisTag)  + "_" + '%d' % self.lastTime + '.' + extension
         video_name_path = '/home/pi/Documents/' + "M" + video_name
         if hasattr(self.task, 'Trigger'):
             self.task.BrainLight.offForStim() # turn off the blue LED
