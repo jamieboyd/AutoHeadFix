@@ -53,3 +53,5 @@ ehthumbs.db
 #build folder
 build/
 _build/
+
+QuickStats/
