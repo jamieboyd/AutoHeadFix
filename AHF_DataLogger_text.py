@@ -133,14 +133,14 @@ class AHF_DataLogger_text (AHF_DataLogger):
         """
         returns saved dictionary for given tag
         """
-        return CAD.File_to_dict ('mouse', '{:013}'.format(tag), '.jsn', dir = self.configPath)
+        return CAD.File_to_dict ('mouse', '{:013}'.format(int(tag)), '.jsn', dir = self.configPath)
 
 
     def storeConfig (self, tag, configDict, source = ""):
         """
         saves data to corresponding json text file, overwriting old file
         """
-        CAD.Dict_to_file (configDict, 'mouse', '{:013}'.format(tag), '.jsn', dir = self.configPath)
+        CAD.Dict_to_file (configDict, 'mouse', '{:013}'.format(int(tag)), '.jsn', dir = self.configPath)
 
     def saveNewMouse (self, tag, note, dictionary = {}):
         self.storeConfig(tag, dictionary)
@@ -153,7 +153,7 @@ class AHF_DataLogger_text (AHF_DataLogger):
         return mice
 
     def retireMouse (self, tag, reason):
-        CAD.Remove_file('mouse', '{:013}'.format(tag), '.jsn', dir = self.configPath)
+        CAD.Remove_file('mouse', '{:013}'.format(int(tag)), '.jsn', dir = self.configPath)
         self.writeToLogFile(tag, "Retirement", {'reason': reason}, time())
 
     def newDay (self, mice):
