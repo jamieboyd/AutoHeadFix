@@ -87,6 +87,8 @@ def main():
                     else:
                         if datetime.fromtimestamp (int (time())) > nextDay:
                             task.DataLogger.newDay ()
+                            now = datetime.fromtimestamp (int (time()))
+                            nextDay = datetime (now.year, now.month, now.day, kDAYSTARTHOUR,0,0) + timedelta (hours=24)
                             resultsDict = {"HeadFixer": {}, "Rewarder": {}, "Stimulator": {}}
                         else:
                             sleep (kTIMEOUTSECS)
