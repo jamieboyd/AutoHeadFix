@@ -7,7 +7,9 @@ from AHF_Mouse import Mouse, Mice
 from collections import deque
 from AHF_DataLogger_text import AHF_DataLogger_text
 from AHF_DataLogger_mysql import AHF_DataLogger_mysql
-class AHF_DataLogger_textMySql (AHF_Base, metaclass = ABCMeta):
+from AHF_DataLogger import AHF_DataLogger
+class AHF_DataLogger_textMySql (AHF_DataLogger):
+
     """
     Combination of the text data logger and mySQL data logger. Simply does both.
 
@@ -24,13 +26,9 @@ class AHF_DataLogger_textMySql (AHF_Base, metaclass = ABCMeta):
         return AHF_DataLogger_mysql.config_user_get(starterDict)
 
     def setup(self):
-        self.textLogger = AHF_DataLogger_text()
-        self.textLogger.settingsDict = self.settingsDict
-        self.textLogger.task = self.task
+        self.textLogger = AHF_DataLogger_text(self.task, self.settingsDict)
         self.textLogger.setup()
-        self.sqlLogger = AHF_DataLogger_mysql()
-        self.sqlLogger.settingsDict = self.settingsDict
-        self.sqlLogger.task = self.task
+        self.sqlLogger = AHF_DataLogger_mysql(self.task, self.settingsDict)
         self.sqlLogger.setup()
         pass
 
@@ -67,6 +65,17 @@ class AHF_DataLogger_textMySql (AHF_Base, metaclass = ABCMeta):
         self.textLogger.writeToLogFile(tag, eventKind, eventDict, timeStamp, toShellOrFile)
         self.sqlLogger.writeToLogFile(tag, eventKind, eventDict, timeStamp, toShellOrFile)
 
+    @staticmethod
+    def about ():
+        return "Combination of text and mysql"
+
+    def setdown(self):
+        self.textLogger.setdown()
+        self.sqlLogger.setdown()
+
+    def hardwareTest(self):
+        self.textLogger.hardwareTest()
+        self.sqlLogger.hardwareTest()
 
     def newDay (self, mice):
         """

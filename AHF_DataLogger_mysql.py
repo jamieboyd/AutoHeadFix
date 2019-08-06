@@ -320,6 +320,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
             else:
                 self.events.append([tag, eventKind, str(eventDict), timeStamp, self.cageID, None])
         if eventKind == "exit" and toShellOrFile & self.TO_FILE:
+            print("Exited")
             self.saveToDatabase(self.raw_save_query, self.events, False)
             self.saveToDatabase(self.raw_save_query, self.events, True)
             self.events = []
