@@ -91,7 +91,7 @@ class AHF_Subjects_mice (AHF_Subjects):
 
             for tag in self.miceDict.keys():
                 for source in self.miceDict.get(tag):
-                    self.task.DataLogger.storeConfig(tag, self.miceDict.get(tag).get(source), source)
+                    self.task.DataLogger.storeConfig(int(tag), self.miceDict.get(tag).get(source), source)
     def create_fillable_json(self):
         tempInput = input('Add the mice for your task.\n'
                           'Type A for adding a mouse with the tag number \n'
