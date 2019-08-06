@@ -76,6 +76,7 @@ class AHF_Subjects_mice (AHF_Subjects):
                 print(os.getcwd())
                 if os.getcwd() == "/root":
                     direc = "/home/pi/Desktop/AHF_setup/AutoHeadFixSetup/AutoHeadFix/"
+                print(self.jsonName)
                 self.miceDict = CAD.File_to_dict('mice', self.jsonName, '.jsn', direc)
                 if self.check_miceDict(self.miceDict) == False:
                     raise Exception('Could not confirm dictionary')
@@ -84,13 +85,14 @@ class AHF_Subjects_mice (AHF_Subjects):
                 print('Unable to open and fully load subjects configuration, we will create a fillable json for you.\n'
                       'This file will be named according to the task configuration file. After entering the mice,\n'
                       'edit the contents to your liking, then COPY the file to your filename. DO NOT rename.')
+                self.miceDict = {}
                 self.create_fillable_json()
             while self.check_miceDict(self.miceDict) == False:
                 input('could not load json, please edit and try again. Press enter when done')
 
             for tag in self.miceDict.keys():
                 for source in self.miceDict.get(tag):
-                    self.task.DataLogger.storeConfig(tag, self.miceDict.get(tag).get(source), source)
+                    self.task.DataLogger.storeConfig(int(tag), self.miceDict.get(tag).get(source), source)
     def create_fillable_json(self):
         tempInput = input('Add the mice for your task.\n'
                           'Type A for adding a mouse with the tag number \n'
@@ -184,6 +186,7 @@ class AHF_Subjects_mice (AHF_Subjects):
         if not tag in self.miceDict.keys():
             self.miceDict.update ({tag: dataDict})
             note = ''
+            print("Saving")
             self.task.DataLogger.saveNewMouse(tag,note, self.miceDict.get(tag))
             print("Successfully added mouse with tag ", tag)
 
@@ -239,8 +242,9 @@ class AHF_Subjects_mice (AHF_Subjects):
             inputStr += 'A to add a mouse, by its RFID Tag\n'
             inputStr += 'T to read a tag from the Tag Reader and add that mouse\n'
             inputStr += 'P to print current daily stats for all mice\n'
-            inputStr += 'R to remove a mouse from the list, by RFID Tag\n: '
+            inputStr += 'R to remove a mouse from the list, by RFID Tag\n'
             inputStr += 'J to create a Json file for subject settings from Database\n'
+            inputStr += 'E to exit :'
             event = input (inputStr)
             tag = 0
             if event == 'p' or event == 'P': # print mice stats
@@ -277,12 +281,14 @@ class AHF_Subjects_mice (AHF_Subjects):
                         gid = grp.getgrnam('pi').gr_gid
                         os.chown(configFile, uid, gid)  # we may run as root for pi PWM, so we need to explicitly set ownership
                     # TODO check this
-            else: # other two choices are for adding a mouse by RFID Tag, either reading from Tag Reader, or typing it
+            elif event.lower() == 'a' or event.lower() == 't': # other two choices are for adding a mouse by RFID Tag, either reading from Tag Reader, or typing it
                 self.task.Reader.stopLogging()
                 self.add(event)
                 CAD.Dict_to_file (self.miceDict, "mice", self.jsonName, ".jsn")
                 self.task.Reader.startLogging()
-        response = input('Save changes in settings to a json file, too? (recommended). Make sure you ')
+            else:
+                break
+        response = input('Save changes in settings to a json file, too? (recommended)')
         if response[0] == 'Y' or response[0] == 'y':
             CAD.Dict_to_file(self.miceDict, "mice", self.jsonName, ".jsn")
     def hardwareTest(self):

@@ -2,6 +2,7 @@
 #-*-coding: utf-8 -*-
 from time import time, sleep
 from _thread import start_new_thread, interrupt_main
+import threading
 import RPi.GPIO as GPIO
 
 import RFIDTagReader
@@ -16,9 +17,11 @@ class AHF_Reader_ID (AHF_Reader):
     defaultPort = '/dev/ttyUSB0'
     defaultPin = 7
     defaultChamberTimeLimit = 600
+    graceTime = 5
 
     gStillThere = False
     gInChamberTimeLimit = 0.0
+    isChecking = True
 
     @staticmethod
     def customCallback(channel):
@@ -31,6 +34,7 @@ class AHF_Reader_ID (AHF_Reader):
             print("hello")
             try:
                 tag = RFIDTagReader.globalReader.readTag ()
+                print(tag)
                 if AHF_Task.gTask.Subjects.get(tag) is not None:
                     AHF_Task.gTask.tag = tag
                     AHF_Task.gTask.DataLogger.writeToLogFile(AHF_Task.gTask.tag, 'entry', None, time())
@@ -46,12 +50,39 @@ class AHF_Reader_ID (AHF_Reader):
                         raise Exception('There are no fresh mice allowed, and this is a fresh mouse')
             except Exception as e:
                 print(str(e))
+            finally:
+                RFIDTagReader.globalReader.clearBuffer()
         else: # tag just left
             AHF_Task.gTask.DataLogger.writeToLogFile(AHF_Task.gTask.tag, 'exit', None, time())
             AHF_Task.gTask.tag = 0
             RFIDTagReader.globalReader.clearBuffer()
             AHF_Reader_ID.stillThere = False
 
+    def constantCheck (self, channel):
+        while AHF_Reader_ID.isChecking:
+            if GPIO.input(channel) == GPIO.HIGH:
+                try:
+                    tag = self.readTag()
+                    if AHF_Task.gTask.Subjects.get(tag) is not None:
+                        AHF_Task.gTask.tag = tag
+                        AHF_Task.gTask.DataLogger.writeToLogFile(AHF_Task.gTask.tag, 'entry', None, time())
+                        AHF_Task.gTask.entryTime = time()
+                        AHF_Reader_ID.stillThere = True
+                        start_new_thread (AHF_Reader_ID.timeInChamberThread,(time () + AHF_Reader_ID.gInChamberTimeLimit,))
+                    else:
+                        if tag != 0:
+                            raise Exception('There are no fresh mice allowed, and this is a fresh mouse')
+                except Exception as e:
+                    print(str(e))
+                finally:
+                    self.tagReader.clearBuffer()
+            else:
+                #sleep(AHF_Reader_ID.graceTime)
+                if self.task.tag != 0 and not self.task.contact:
+                    AHF_Task.gTask.DataLogger.writeToLogFile(AHF_Task.gTask.tag, 'exit', None, time())
+                    AHF_Task.gTask.tag = 0
+                    self.tagReader.clearBuffer()
+                    AHF_Reader_ID.stillThere = False
 
     @staticmethod
     def timeInChamberThread (sleepEndTime):
@@ -121,14 +152,18 @@ class AHF_Reader_ID (AHF_Reader):
             return 0
     def startLogging (self):
         if not self.isLogging:
-            self.tagReader.installCallback (self.TIRpin, AHF_Reader_ID.customCallback)
+#            self.tagReader.installCallback (self.TIRpin)
+            GPIO.setup (self.TIRpin, GPIO.IN)
+            AHF_Reader_ID.isChecking = True
+            self.checkThread = threading.Thread(target=self.constantCheck, args=(self.TIRpin,), daemon = True).start()
             self.isLogging = True
 
     def stopLogging (self):
         if self.isLogging:
-            self.tagReader.removeCallback()
-            GPIO.remove_event_detect (self.TIRpin)
-            self.isLogging = False
+#            self.tagReader.removeCallback()
+ #           GPIO.remove_event_detect (self.TIRpin)
+            AHF_Reader_ID.isChecking = False
+            self.isLogging = True
 
     def hardwareTest (self):
         wasLogging = self.isLogging

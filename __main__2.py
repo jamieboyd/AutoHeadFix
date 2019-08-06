@@ -75,6 +75,7 @@ def main():
         task.LickDetector.startLogging ()
      # Top level infinite Loop running mouse entries
     try:
+        resultsDict = {"HeadFixer": {}, "Rewarder": {}, "Stimulator": {}}
         while True:
             try:
                 print ('Waiting for a mouse....')
@@ -86,13 +87,15 @@ def main():
                     else:
                         if datetime.fromtimestamp (int (time())) > nextDay:
                             task.DataLogger.newDay ()
+                            now = datetime.fromtimestamp (int (time()))
+                            nextDay = datetime (now.year, now.month, now.day, kDAYSTARTHOUR,0,0) + timedelta (hours=24)
+                            resultsDict = {"HeadFixer": {}, "Rewarder": {}, "Stimulator": {}}
                         else:
                             sleep (kTIMEOUTSECS)
                 # a Tag has been read, get a reference to the dictionaries for this subject
                 thisTag = task.tag
                 settingsDict = task.Subjects.miceDict.get(str(thisTag))
                 #temp
-                resultsDict = {"HeadFixer": {}, "Rewarder": {}, "Stimulator": {}}
                 # queue up an entrance reward, that can be countermanded if a) mouse leaves early, or b) fixes right away
                 task.Rewarder.giveRewardCM('entry', resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
                 doCountermand = True
