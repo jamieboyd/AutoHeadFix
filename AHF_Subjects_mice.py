@@ -76,6 +76,7 @@ class AHF_Subjects_mice (AHF_Subjects):
                 print(os.getcwd())
                 if os.getcwd() == "/root":
                     direc = "/home/pi/Desktop/AHF_setup/AutoHeadFixSetup/AutoHeadFix/"
+                print(self.jsonName)
                 self.miceDict = CAD.File_to_dict('mice', self.jsonName, '.jsn', direc)
                 if self.check_miceDict(self.miceDict) == False:
                     raise Exception('Could not confirm dictionary')
@@ -91,7 +92,7 @@ class AHF_Subjects_mice (AHF_Subjects):
 
             for tag in self.miceDict.keys():
                 for source in self.miceDict.get(tag):
-                    self.task.DataLogger.storeConfig(tag, self.miceDict.get(tag).get(source), source)
+                    self.task.DataLogger.storeConfig(int(tag), self.miceDict.get(tag).get(source), source)
     def create_fillable_json(self):
         tempInput = input('Add the mice for your task.\n'
                           'Type A for adding a mouse with the tag number \n'
@@ -185,6 +186,7 @@ class AHF_Subjects_mice (AHF_Subjects):
         if not tag in self.miceDict.keys():
             self.miceDict.update ({tag: dataDict})
             note = ''
+            print("Saving")
             self.task.DataLogger.saveNewMouse(tag,note, self.miceDict.get(tag))
             print("Successfully added mouse with tag ", tag)
 
