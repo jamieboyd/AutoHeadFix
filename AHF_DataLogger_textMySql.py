@@ -1,7 +1,7 @@
  #! /usr/bin/python
 #-*-coding: utf-8 -*-
 
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 from AHF_Base import AHF_Base
 from AHF_Mouse import Mouse, Mice
 from collections import deque
@@ -34,7 +34,7 @@ class AHF_DataLogger_textMySql (AHF_Base, metaclass = ABCMeta):
         self.sqlLogger.setup()
         pass
 
-    @abstractmethod
+
     def makeLogFile (self):
         """
         Makes or opens a text log file, or a datbase, or whatever else needs doing. Called once before
@@ -44,7 +44,7 @@ class AHF_DataLogger_textMySql (AHF_Base, metaclass = ABCMeta):
         self.sqlLogger.makeLogFile()
         pass
 
-    @abstractmethod
+
     def readFromLogFile(self, index):
         """
         Reads the log statement *index* lines prior to the current line.
@@ -54,7 +54,7 @@ class AHF_DataLogger_textMySql (AHF_Base, metaclass = ABCMeta):
         self.sqlLogger.readFromLogFile(index)
         pass
 
-    @abstractmethod
+
     def writeToLogFile(self, tag, eventKind, eventDict, timeStamp, toShellOrFile = 3):
         """
         The original standard text file method was 4 tab-separated columns, mouse tag, or 0
@@ -67,7 +67,7 @@ class AHF_DataLogger_textMySql (AHF_Base, metaclass = ABCMeta):
         self.textLogger.writeToLogFile(tag, eventKind, eventDict, timeStamp, toShellOrFile)
         self.sqlLogger.writeToLogFile(tag, eventKind, eventDict, timeStamp, toShellOrFile)
 
-    @abstractmethod
+
     def newDay (self, mice):
         """
         At the start of a new day, it was customary for the text-based data logging to start new text files,
@@ -80,7 +80,7 @@ class AHF_DataLogger_textMySql (AHF_Base, metaclass = ABCMeta):
         self.sqlLogger.newDay()
         pass
 
-    @abstractmethod
+
     def getMice(self):
         """
         returns a list of mice that are in the dictionary/database
@@ -89,7 +89,7 @@ class AHF_DataLogger_textMySql (AHF_Base, metaclass = ABCMeta):
         self.sqlLogger.getMice()
         pass
 
-    @abstractmethod
+
     def configGenerator (self):
         """
         generates configuration data for each subject as (IDtag, dictionary) tuples from some kind of permanent storage
@@ -100,7 +100,7 @@ class AHF_DataLogger_textMySql (AHF_Base, metaclass = ABCMeta):
         self.sqlLogger.configGenerator()
         pass
 
-    @abstractmethod
+
     def getConfigData (self, tag):
         """
         returns a dictionary of data that was saved for this reference tag, in some permanent storage such as a JSON file
@@ -110,7 +110,7 @@ class AHF_DataLogger_textMySql (AHF_Base, metaclass = ABCMeta):
         self.sqlLogger.getConfigData(tag)
         pass
 
-    @abstractmethod
+
     def saveNewMouse(self, tag, note, dictionary):
         """
         store a new mouse entry in a referenced file
@@ -119,7 +119,7 @@ class AHF_DataLogger_textMySql (AHF_Base, metaclass = ABCMeta):
         self.sqlLogger.saveNewMouse(tag, note, dictionary)
         pass
 
-    @abstractmethod
+
     def retireMouse(self, tag,reason):
         """
         store information about a mouse retirement in a referenced file
@@ -128,7 +128,7 @@ class AHF_DataLogger_textMySql (AHF_Base, metaclass = ABCMeta):
         self.sqlLogger.retireMouse(tag, reason)
         pass
 
-    @abstractmethod
+
     def storeConfig (self, tag, dictionary, source = ""):
         """
         Stores configuration data, given as an IDtag, and dictionary for that tag, in some more permanent storage
