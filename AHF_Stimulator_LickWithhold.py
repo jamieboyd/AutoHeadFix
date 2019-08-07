@@ -304,6 +304,7 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
                         newRewards = resultsDict.get('rewards', 0) + len (self.rewardTimes)
                         resultsDict.update({'rewards': newRewards})
                         self.task.Stimulus.trialEnd()
+                        super().stopVideo()
                         return
                 #print ('{:013}\t{:s}\treward'.format(self.mouse.tag, datetime.fromtimestamp (int (time())).isoformat (' ')))
                 self.OffForRewardEnd = time() + self.speakerOffForReward
