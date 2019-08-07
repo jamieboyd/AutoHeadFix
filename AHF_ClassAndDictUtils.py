@@ -222,6 +222,7 @@ def Edit_Obj_fields (anObject, longName):
             itemDict = {}
             itemDict.update (showDict [inputNum -1]) #itemDict = OrderedDict.get (inputNum -1)
             kvp = itemDict.popitem()
+            print(kvp)
             itemKey = kvp [0]
             itemValue = kvp [1]
             if itemKey.endswith ('Class') and (itemValue is None or isinstance(itemValue,  ABCMeta)):
@@ -232,7 +233,7 @@ def Edit_Obj_fields (anObject, longName):
                 # new class needs  new dict
                 dictName = baseName + 'Dict'
                 #newDict = newClass.config_user_get ()
-                setattr (anObject, baseName + 'Dict', newClass.config_user_get ())
+                setattr (anObject, baseName + 'Dict', newClass.config_user_get())
             elif itemKey.endswith ('Dict') and (itemValue is None or type (itemValue) is dict):
                 baseName = itemKey.rstrip ('Dict')
                 theClass = getattr (anObject, baseName + 'Class')
@@ -240,7 +241,7 @@ def Edit_Obj_fields (anObject, longName):
                     #newClassName = File_from_user (baseName, baseName, '.py')
                     theClass = Class_from_file (baseName, File_from_user (baseName, baseName, '.py'))
                     setattr (anObject, baseName + 'Class', theClass)
-                setattr (anObject, itemKey, theClass.config_user_get ())
+                setattr (anObject, itemKey, theClass.config_user_get(itemValue))
             elif type (itemValue) is str:
                 inputStr = input ('Enter a new text value for %s, currently %s:' % (itemKey, str (itemValue)))
                 setattr (anObject, itemKey, inputStr)# updatDict = {itemKey: inputStr}
@@ -280,6 +281,7 @@ def Edit_Obj_fields (anObject, longName):
                 else:
                     setattr (anObject, itemKey, False) #updatDict = {itemKey: False}
             elif type (itemValue) is dict:
+                print("made it") 
                 Edit_dict (itemValue, itemKey)
                 setattr (anObject, itemKey, itemValue)
     return changes
