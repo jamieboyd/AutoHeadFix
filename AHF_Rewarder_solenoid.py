@@ -14,6 +14,7 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
     testAmount = 1.0
     defaultPin = 13
     defaultEntry = 0.2
+    defaultWait = 15*60
     defaultTask = 0.4
 
 
@@ -53,6 +54,13 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
         if response != '':
             entrySize = float(response)
         starterDict.update({'entrySize': entrySize})
+        entryDelay = starterDict.get('entryDelay', AHF_Rewarder_solenoid.defaultWait)
+        response = input(
+            'Enter the delay between successive entry rewards, in seconds. Currently {:.2f}: '.format(entryDelay))
+        if response != '':
+            entryDelay = float(response)
+        starterDict.update({'entryDelay': entryDelay})
+        starterDict.update({'lastEntryTime': 0})
         taskSize = starterDict.get('taskSize', AHF_Rewarder_solenoid.defaultTask)
         response = input(
             'Enter the valve opening duration, in seconds, for task rewards. Currently {:.2f}: '.format(taskSize))
@@ -64,6 +72,8 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
     def config_subject_get(self, starterDict={}):
         entrySize = starterDict.get('entrySize', AHF_Rewarder_solenoid.defaultEntry)
         starterDict.update({'entrySize': entrySize})
+        entryDelay = starterDict.get('entryDelay', AHF_Rewarder_solenoid.defaultWait)
+        starterDict.update({'entryDelay': entryDelay})
         taskSize = starterDict.get('taskSize', AHF_Rewarder_solenoid.defaultTask)
         starterDict.update({'taskSize': taskSize})
         return starterDict
@@ -109,20 +119,26 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
         if rewardName is 'test':
             self.threadReward(1)
             return 1
-        if rewardName is 'entry' and resultsDict.get ('entry', 0) > settingsDict.get ('maxEntryRewards', self.maxEntryRewards):
+        if rewardName is 'entry':
+            if resultsDict.get ('entry', 0) > settingsDict.get ('maxEntryRewards', self.maxEntryRewards):
+                return 0
+            mouseDict = self.task.Subjects.get(self.task.tag)
+            if mouseDict is not None:
+                lastTime = mouseDict.get("Rewarder").get("lastEntryTime")
+                if time() - lastTime > mouseDict.get("Rewarder").get('entryDelay'):
+                    return 0
+                mouseDict.get("Rewarder").update({"lastEntryTime": time()})
+        if self.task.Subjects.get(self.task.tag) is None:
+            sleepTime = 0.4
+        else:
+            sleepTime =settingsDict.get(rewardName, self.task.Subjects.get(self.task.tag).get("Rewarder").get(rewardName + "Size"))
+        if sleepTime ==0:
             return 0
         else:
-            if self.task.Subjects.get(self.task.tag) is None:
-                sleepTime = 0.4
-            else:
-                sleepTime =settingsDict.get(rewardName, self.task.Subjects.get(self.task.tag).get("Rewarder").get(rewardName + "Size"))
-            if sleepTime ==0:
-                return 0
-            else:
-                resultsDict.update ({rewardName: resultsDict.get (rewardName, 0) + 1})
-                self.task.DataLogger.writeToLogFile(self.task.tag, 'Reward', {'kind' : rewardName, 'size' : sleepTime, 'consumed': False}, time())
-                print("Rewards so far: ", self.task.DataLogger.getTrackedEvent(self.task.tag, "Reward", "consumed"))
-                self.threadReward (sleepTime)
+            resultsDict.update ({rewardName: resultsDict.get (rewardName, 0) + 1})
+            self.task.DataLogger.writeToLogFile(self.task.tag, 'Reward', {'kind' : rewardName, 'size' : sleepTime, 'consumed': False}, time())
+            print("Rewards so far: ", self.task.DataLogger.getTrackedEvent(self.task.tag, "Reward", "consumed"))
+            self.threadReward (sleepTime)
                 return sleepTime
 
 
