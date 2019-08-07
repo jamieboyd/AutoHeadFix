@@ -60,29 +60,32 @@ class AHF_Reader_ID (AHF_Reader):
 
     def constantCheck (self, channel):
         while AHF_Reader_ID.isChecking:
-            if GPIO.input(channel) == GPIO.HIGH:
-                try:
-                    tag = self.readTag()
-                    if AHF_Task.gTask.Subjects.get(tag) is not None:
-                        AHF_Task.gTask.tag = tag
-                        AHF_Task.gTask.DataLogger.writeToLogFile(AHF_Task.gTask.tag, 'entry', None, time())
-                        AHF_Task.gTask.entryTime = time()
-                        AHF_Reader_ID.stillThere = True
-                        start_new_thread (AHF_Reader_ID.timeInChamberThread,(time () + AHF_Reader_ID.gInChamberTimeLimit,))
-                    else:
-                        if tag != 0:
-                            raise Exception('There are no fresh mice allowed, and this is a fresh mouse')
-                except Exception as e:
-                    print(str(e))
-                finally:
-                    self.tagReader.clearBuffer()
-            else:
-                #sleep(AHF_Reader_ID.graceTime)
-                if self.task.tag != 0 and not self.task.contact:
-                    AHF_Task.gTask.DataLogger.writeToLogFile(AHF_Task.gTask.tag, 'exit', None, time())
-                    AHF_Task.gTask.tag = 0
-                    self.tagReader.clearBuffer()
-                    AHF_Reader_ID.stillThere = False
+            try:
+                if GPIO.input(channel) == GPIO.HIGH:
+                    try:
+                        tag = self.readTag()
+                        if AHF_Task.gTask.Subjects.get(tag) is not None:
+                            AHF_Task.gTask.tag = tag
+                            AHF_Task.gTask.DataLogger.writeToLogFile(AHF_Task.gTask.tag, 'entry', None, time())
+                            AHF_Task.gTask.entryTime = time()
+                            AHF_Reader_ID.stillThere = True
+                            start_new_thread (AHF_Reader_ID.timeInChamberThread,(time () + AHF_Reader_ID.gInChamberTimeLimit,))
+                        else:
+                            if tag != 0:
+                                raise Exception('There are no fresh mice allowed, and this is a fresh mouse')
+                    except Exception as e:
+                        print(str(e))
+                    finally:
+                        self.tagReader.clearBuffer()
+                else:
+                    #sleep(AHF_Reader_ID.graceTime)
+                    if self.task.tag != 0 and not self.task.contact:
+                        AHF_Task.gTask.DataLogger.writeToLogFile(AHF_Task.gTask.tag, 'exit', None, time())
+                        AHF_Task.gTask.tag = 0
+                        self.tagReader.clearBuffer()
+                        AHF_Reader_ID.stillThere = False
+            except Exception as e:
+                break
 
     @staticmethod
     def timeInChamberThread (sleepEndTime):

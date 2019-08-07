@@ -243,17 +243,28 @@ class AHF_Subjects_mice (AHF_Subjects):
             inputStr = '\n************** Mouse Configuration ********************\nEnter:\n'
             inputStr += 'A to add a mouse, by its RFID Tag\n'
             inputStr += 'T to read a tag from the Tag Reader and add that mouse\n'
-            inputStr += 'P to print current daily stats for all mice\n'
+            inputStr += 'M to modify mouse information for a specific mouse'
             inputStr += 'R to remove a mouse from the list, by RFID Tag\n'
             inputStr += 'J to create a Json file for subject settings from Database\n'
             inputStr += 'E to exit :'
             event = input (inputStr)
             tag = 0
-            if event == 'p' or event == 'P': # print mice stats
-                continue
-                #self.showMice ()
-                # TODO make queries and think of strategy
-            elif event == 'r' or event == 'R': # remove a mouse
+            if event[0].lower() == 'm':
+                mouse = input("Enter a tag, or leave blank for all mice: ")
+                if len(mouse) > 0:
+                    mouse = self.get(mouse)
+                    if mouse is not None:
+                        for source in self.settingsTuple:
+                            reference = getattr(self.task,source)
+                            sourceDict = reference.config_user_subject_get(mouse.get(source,{}))
+                            mouse.update({source:sourceDict})
+                else:
+                    for dict in self.get_all().values():
+                        for source in self.settingsTuple:
+                            reference = getattr(self.task,source)
+                            sourceDict = reference.config_user_subject_get(dict.get(source,{}))
+                            dict.update({source:sourceDict})
+            elif event[0].lower() == 'r': # remove a mouse
                 mice = self.task.DataLogger.getMice()
                 tag = input ('Mice currently known to be in the cage : {}.\n'
                              'Enter the RFID tag of the mouse to be removed: '.format(str(mice)))
@@ -264,7 +275,7 @@ class AHF_Subjects_mice (AHF_Subjects):
                     print('mice now in cage: {}'.format(str(mice)))
                 else:
                     print("wrong tag")
-            elif event == 'j' or event == 'J':
+            elif event[0].lower() == 'j':
                 default = input ('Use CURRENT settings for each mouse for Json? (otherwise DEFAULT settings are used')
                 if default[0] == 'y' or default[0] == 'Y':
                     settings = "current_subjects"
@@ -283,7 +294,7 @@ class AHF_Subjects_mice (AHF_Subjects):
                         gid = grp.getgrnam('pi').gr_gid
                         os.chown(configFile, uid, gid)  # we may run as root for pi PWM, so we need to explicitly set ownership
                     # TODO check this
-            elif event.lower() == 'a' or event.lower() == 't': # other two choices are for adding a mouse by RFID Tag, either reading from Tag Reader, or typing it
+            elif event[0].lower() == 'a' or event[0].lower() == 't': # other two choices are for adding a mouse by RFID Tag, either reading from Tag Reader, or typing it
                 self.task.Reader.stopLogging()
                 self.add(event)
                 CAD.Dict_to_file (self.miceDict, "mice", self.jsonName, ".jsn")
