@@ -74,7 +74,8 @@ class AHF_LickDetector_MPR (AHF_LickDetector):
         self.touchDetector.addCustomCallback (self.logTouchCallback)
 
     def setdown (self):
-        del self.touchDetector
+        if hasattr(self, 'touchDetector'):
+            del self.touchDetector
 
 
     def newResultsDict (self, starterDict = {}):

@@ -126,6 +126,8 @@ class AHF_Subjects_mice (AHF_Subjects):
                         reference = getattr(self.task,source)
                         sourceDict = reference.config_subject_get()
                         if set(sourceDict.keys()) != set(starterDict.get(mouse).get(source).keys()):
+                            print(starterDict.get(mouse).get(source))
+                            print(sourceDict)
                             check = False
                 else:
                     print("mid")
