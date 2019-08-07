@@ -27,11 +27,6 @@ AHF_BrainLight
 .. automodule:: AHF_BrainLight
     :members:
 
-AHF_Camera2
------------
-.. automodule:: AHF_Camera2
-    :members:
-
 AHF_ContactCheck_Elec
 ----------------------
 .. automodule:: AHF_ContactCheck_Elec
