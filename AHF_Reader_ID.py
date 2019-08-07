@@ -85,6 +85,10 @@ class AHF_Reader_ID (AHF_Reader):
                         self.tagReader.clearBuffer()
                         AHF_Reader_ID.stillThere = False
             except Exception as e:
+                self.isLogging = False
+                sleep(5) #Wait to check if this was stopped on purpose or should restart
+                if AHF_Reader_ID.isChecking:
+                    self.startLogging()
                 break
 
     @staticmethod
