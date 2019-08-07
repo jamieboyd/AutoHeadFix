@@ -150,6 +150,8 @@ def main():
                             if hasattr(task, "Camera"):
                                 task.Camera.setdown()
                                 task.BrainLight.setdown()
+                            if hasattr (task, 'LickDetector'):
+                                task.LickDetector.setdown()
                             task.editSettings()
                             response = input ('Save edited settings to file?')
                             if response [0] == 'Y' or response [0] == 'y':
