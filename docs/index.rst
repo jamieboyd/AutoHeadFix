@@ -12,7 +12,7 @@ To download the main repository `click here  <https://github.com/jamieboyd/AutoH
 
 For instructions on building/setting up `click here <https://github.com/zenenhornstein/AHF_setup>`_
 
-
+For notes from the developer click here: * :ref:`genindex`
 
 .. automodule:: AHF_Base
     :members:
@@ -39,7 +39,7 @@ AHF_ContactCheck_Elec
 
 AHF_HeadFixer_NoFix
 -------------------
-.. automodule:: AHF_HeadFixer_Nofix
+.. automodule:: AHF_HeadFixer_NoFix
     :members:
 
 
@@ -59,9 +59,9 @@ AHF_ClassAndDictUtils
 .. automodule:: AHF_ClassAndDictUtils
     :members:
 
-AHF_ContactCheck\_BeamBreak
+AHF_ContactCheck_BeamBreak
 ---------------------------
-.. automodule:: AHF_Task
+.. automodule:: AHF_ContactCheck_BeamBreak
     :members:
 
 AHF_Datalogger
@@ -69,6 +69,10 @@ AHF_Datalogger
 .. automodule:: AHF_DataLogger
     :members:
 
+AHF_DataLogger_mysql
+---------------------
+.. automodule:: AHF_DataLogger_mysql
+    :members:
 
 AHF_HardwareTester
 ------------------
@@ -127,12 +131,7 @@ AHF_Trigger
 
 AHF_ValveControl
 ----------------
-.. automodule:: AHF_Task
-    :members:
-
-AHF_DataLogger_mysql
----------------------
-.. automodule:: AHF_DataLogger_mysql
+.. automodule:: AHF_ValveControl
     :members:
 
 .. toctree::
