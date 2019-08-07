@@ -7,6 +7,8 @@ from sys import argv
 import faulthandler
 import pymysql
 from ast import literal_eval
+import inspect
+from abc import ABCMeta
 import RPi.GPIO as GPIO
 # Task configures and controls sub-tasks for hardware and stimulators
 from AHF_Task import Task
@@ -167,11 +169,9 @@ def main():
     finally:
         task.Stimulator.quitting()
         task.HeadFixer.releaseMouse(task.tag)
-        fields = sorted(inspect.getmembers (self.task))
-        for item in fields:
-            if isinstance(item [1],  ABCMeta):
-                item[1].setdown()
-
+        for name, object in task.__dict__.items():
+            if name[-5:] != "Class" and name[-4:] != "Dict" and hasattr(object, 'setdown'):
+                object.setdown()
         #GPIO.output(task.ledPin, GPIO.LOW)
         #GPIO.output(task.rewardPin, GPIO.LOW)
         GPIO.cleanup()

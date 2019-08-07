@@ -243,7 +243,7 @@ class AHF_Subjects_mice (AHF_Subjects):
             inputStr = '\n************** Mouse Configuration ********************\nEnter:\n'
             inputStr += 'A to add a mouse, by its RFID Tag\n'
             inputStr += 'T to read a tag from the Tag Reader and add that mouse\n'
-            inputStr += 'M to modify mouse information for a specific mouse'
+            inputStr += 'M to modify mouse information for a specific mouse\n'
             inputStr += 'R to remove a mouse from the list, by RFID Tag\n'
             inputStr += 'J to create a Json file for subject settings from Database\n'
             inputStr += 'E to exit :'
@@ -259,7 +259,8 @@ class AHF_Subjects_mice (AHF_Subjects):
                             sourceDict = reference.config_user_subject_get(mouse.get(source,{}))
                             mouse.update({source:sourceDict})
                 else:
-                    for dict in self.get_all().values():
+                    for tag, dict in self.get_all().items():
+                        print("Tag:", tag)
                         for source in self.settingsTuple:
                             reference = getattr(self.task,source)
                             sourceDict = reference.config_user_subject_get(dict.get(source,{}))
@@ -310,6 +311,7 @@ class AHF_Subjects_mice (AHF_Subjects):
             inputStr = '\n change the following variables. \nEnter:\n'
             inputStr += '0: Leave Unchanged\n'
             inputStr += '1: inChamberTimeLimit\n'
+            inputStr += '2: Mouse Settings'
             event = input(inputStr)
             if event == 0:
                 break
@@ -317,6 +319,8 @@ class AHF_Subjects_mice (AHF_Subjects):
                 result = input('Enter in-Chamber duration limit, in minutes, before stopping head-fix trials, currently {:.2f}: '.format(self.inChamberTimeLimit / 60))
                 if result != '':
                     self.settingsDict.update({'inChamberTimeLimit': int(result * 60)})
+            elif event == '2':
+                self.subjectSettings()
         self.setup()
 from AHF_Task import Task
 
