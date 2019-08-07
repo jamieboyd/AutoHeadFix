@@ -74,6 +74,7 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
         starterDict.update({'entrySize': entrySize})
         entryDelay = starterDict.get('entryDelay', AHF_Rewarder_solenoid.defaultWait)
         starterDict.update({'entryDelay': entryDelay})
+        starterDict.update({'lastEntryTime': 0})
         taskSize = starterDict.get('taskSize', AHF_Rewarder_solenoid.defaultTask)
         starterDict.update({'taskSize': taskSize})
         return starterDict
@@ -125,9 +126,9 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
             mouseDict = self.task.Subjects.get(self.task.tag)
             if mouseDict is not None:
                 lastTime = mouseDict.get("Rewarder").get("lastEntryTime")
-                if time() - lastTime > mouseDict.get("Rewarder").get('entryDelay'):
+                if time() - lastTime < mouseDict.get("Rewarder").get('entryDelay'):
                     return 0
-                mouseDict.get("Rewarder").update({"lastEntryTime": time()})
+                self.task.Subjects.get(self.task.tag).get("Rewarder").update({"lastEntryTime": time()})
         if self.task.Subjects.get(self.task.tag) is None:
             sleepTime = 0.4
         else:
@@ -139,24 +140,35 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
             self.task.DataLogger.writeToLogFile(self.task.tag, 'Reward', {'kind' : rewardName, 'size' : sleepTime, 'consumed': False}, time())
             print("Rewards so far: ", self.task.DataLogger.getTrackedEvent(self.task.tag, "Reward", "consumed"))
             self.threadReward (sleepTime)
-                return sleepTime
+            return sleepTime
 
 
     def giveRewardCM(self, rewardName, resultsDict={}, settingsDict = {}):
         """
         Gives a reward that can be countermanded, i.e. cancelled if occurring before a timeour
         """
-        if rewardName is 'entry' and resultsDict.get ('entry', 0) > settingsDict.get ('maxEntryRewards', self.maxEntryRewards):
-            return 0
+        if rewardName is 'entry':
+            if resultsDict.get ('entry', 0) > settingsDict.get ('maxEntryRewards', self.maxEntryRewards):
+                return 0
+            mouseDict = self.task.Subjects.get(self.task.tag)
+            if mouseDict is not None:
+                lastTime = mouseDict.get("Rewarder").get("lastEntryTime")
+                if time() - lastTime < mouseDict.get("Rewarder").get('entryDelay'):
+                    return 0
+                self.task.Subjects.get(self.task.tag).get("Rewarder").update({"lastEntryTime": time()})
+
+        if self.task.Subjects.get(self.task.tag) is None:
+            sleepTime = 0.4
         else:
             sleepTime =settingsDict.get(rewardName, self.task.Subjects.get(self.task.tag).get("Rewarder").get(rewardName + "Size"))
-            if sleepTime ==0:
-                return 0
-            else:
-                resultsDict.update ({rewardName: resultsDict.get (rewardName, 0) + 1})
-                self.countermanded = rewardName
-                self.threadCMReward (sleepTime)
-                return sleepTime
+        if sleepTime ==0:
+            return 0
+        else:
+            resultsDict.update ({rewardName: resultsDict.get (rewardName, 0) + 1})
+            self.task.DataLogger.writeToLogFile(self.task.tag, 'Reward', {'kind' : rewardName, 'size' : sleepTime, 'consumed': False}, time())
+            self.countermanded = rewardName
+            self.threadCMReward (sleepTime)
+            return sleepTime
 
     def countermandReward(self,resultsDict={}, settingsDict = {}):
         """

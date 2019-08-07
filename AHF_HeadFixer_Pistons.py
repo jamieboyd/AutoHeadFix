@@ -30,10 +30,10 @@ class AHF_HeadFixer_Pistons(AHF_HeadFixer):
         return starterDict
 
     def config_subject_get (self, starterDict = {}):
-        return super().config_subject_get(self, starterDict)
+        return super().config_subject_get(starterDict)
 
     def config_user_subject_get  (self, starterDict = {}):
-        return super().config_user_subject_get(self, starterDict)
+        return super().config_user_subject_get(starterDict)
 
     def setup (self):
         hasFixer = True

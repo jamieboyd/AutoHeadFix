@@ -385,7 +385,7 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
                 self.leverController.setPerturbOff()
             self.leverController.startTrial()
             resultTuple = self.leverController.checkTrial()
-            outcome = 0
+            outcome = resultTuple[1]
             if resultTuple[1] >= 1:
                 outcome = 1
                 self.task.Rewarder.giveReward('task')
