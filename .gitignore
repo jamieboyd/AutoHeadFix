@@ -50,9 +50,5 @@
 .trashes
 ehthumbs.db
 
-#build folder
-build/
-_build/
-docs/_build/
-
-QuickStats/
+#Stats Folder
+QuickStats
