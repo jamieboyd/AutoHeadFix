@@ -1,5 +1,4 @@
-#! /usr/bin/python
-#-*-coding: utf-8 -*-
+#! /usr/bin/python -*-coding: utf-8 -*-
 from os import path, makedirs, chown, listdir
 from pwd import getpwnam
 from grp import getgrnam
@@ -140,7 +139,8 @@ class AHF_DataLogger_text (AHF_DataLogger):
         """
         saves data to corresponding json text file, overwriting old file
         """
-        CAD.Dict_to_file (configDict, 'mouse', '{:013}'.format(int(tag)), '.jsn', dir = self.configPath)
+        if tag is int:
+            CAD.Dict_to_file (configDict, 'mouse', '{:013}'.format(int(tag)), '.jsn', dir = self.configPath)
 
     def saveNewMouse (self, tag, note, dictionary = {}):
         self.storeConfig(tag, dictionary)
@@ -193,14 +193,14 @@ class AHF_DataLogger_text (AHF_DataLogger):
         if eventKind == 'SeshStart' or eventKind == 'SeshEnd':
             tag = 0
             eventDict = None
-        LogOutputStr = '{:013}\t{:s}\t{:s}\t{:s}\n'.format (tag, eventKind, str(eventDict), datetime.fromtimestamp (int (timeStamp)).isoformat (' '))
+        LogOutputStr = '{:013}\t{:s}\t{:s}\t{:s}\n'.format (int(tag), eventKind, str(eventDict), datetime.fromtimestamp (int (timeStamp)).isoformat (' '))
         while AHF_DataLogger_text.PSEUDO_MUTEX ==1:
             sleep (0.01)
         AHF_DataLogger_text.PSEUDO_MUTEX = 1
         print (LogOutputStr)
         AHF_DataLogger_text.PSEUDO_MUTEX = 0
         if getattr(self, 'logFP', None) is not None and self.task.logToFile: # logMouse is set to False for test mice, or unknown mice
-            FileOutputStr = '{:013}\t{:s}\t{:s}\t{:.2f}\n'.format(tag, eventKind, str(eventDict), timeStamp)
+            FileOutputStr = '{:013}\t{:s}\t{:s}\t{:.2f}\n'.format(int(tag), eventKind, str(eventDict), timeStamp)
             self.logFP.write(FileOutputStr)
             self.logFP.flush()
 

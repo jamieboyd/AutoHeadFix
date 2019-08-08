@@ -1,0 +1,157 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Base Classes &#8212; AutoHeadFix 2.0.0 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">AutoHeadFix 2.0.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-AHF_Base">
+<span id="base-classes"></span><h1>Base Classes<a class="headerlink" href="#module-AHF_Base" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="ahf-base-py">
+<h2>AHF_Base.py<a class="headerlink" href="#ahf-base-py" title="Permalink to this headline">¶</a></h2>
+<p>The base upon which everything else is built</p>
+<dl class="class">
+<dt id="AHF_Base.AHF_Base">
+<em class="property">class </em><code class="sig-name descname">AHF_Base</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Base.AHF_Base" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines conventions for classes used for accesing hardware and doing subtasks in AutoHeadFix code
+Each class has a static method, config_user_get, to create or edit a settings dictionary, and will be inititialized
+with a settings dictionary. The setup function does hardware initialization, or other inititialization.</p>
+<dl class="method">
+<dt id="AHF_Base.AHF_Base.about">
+<em class="property">abstract static </em><code class="sig-name descname">about</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Base.AHF_Base.about" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a brief message describing your sub-class, used when asking user to pick a sub-class of this class</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Base.AHF_Base.config_user_get">
+<em class="property">abstract static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Base.AHF_Base.config_user_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>static method that querries user for settings, with default responses from starterDict,
+and returns starterDict with settings as edited by the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Base.AHF_Base.hardwareTest">
+<em class="property">abstract </em><code class="sig-name descname">hardwareTest</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Base.AHF_Base.hardwareTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests functionality, gives user a chance to change settings.
+:Returns: bool – True if any settings have changed</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Base.AHF_Base.setdown">
+<em class="property">abstract </em><code class="sig-name descname">setdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Base.AHF_Base.setdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>oppposite of setup. Releases any hardware resouces. can be run before editing settings so GPIO
+pins can be reused, for example. This strategy should be used in hardwareTest method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Base.AHF_Base.setup">
+<em class="property">abstract </em><code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Base.AHF_Base.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+Run by __init__, or can be run  separately after editing the settingsDict</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>bool – the truth that setup completed without errors</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Base.AHF_Base.subject_user_get">
+<em class="property">static </em><code class="sig-name descname">subject_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Base.AHF_Base.subject_user_get" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>dict – an updated dictionary after asking the user for subject related and maybe individualized parameters</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<span class="target" id="module-AHF_Task"></span><p>We copy all variables from cage settings and exp settings, plus references to all created objects,
+into a single object called Task</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Base Classes</a><ul>
+<li><a class="reference internal" href="#ahf-base-py">AHF_Base.py</a></li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/baseclasses.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">AutoHeadFix 2.0.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Jamie Boyd, Braeden Jury, David Bierbrauer.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+    </div>
+  </body>
+</html>

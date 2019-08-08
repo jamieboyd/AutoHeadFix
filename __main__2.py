@@ -7,6 +7,8 @@ from sys import argv
 import faulthandler
 import pymysql
 from ast import literal_eval
+import inspect
+from abc import ABCMeta
 import RPi.GPIO as GPIO
 # Task configures and controls sub-tasks for hardware and stimulators
 from AHF_Task import Task
@@ -132,6 +134,7 @@ def main():
                     while True:
                         event = input (inputStr)
                         if event == 'r' or event == "R":
+                            GPIO.setmode(GPIO.BCM)
                             if hasattr (task, 'LickDetector'):
                                 task.LickDetector.startLogging ()
                             break
@@ -150,6 +153,8 @@ def main():
                             if hasattr(task, "Camera"):
                                 task.Camera.setdown()
                                 task.BrainLight.setdown()
+                            if hasattr (task, 'LickDetector'):
+                                task.LickDetector.setdown()
                             task.editSettings()
                             response = input ('Save edited settings to file?')
                             if response [0] == 'Y' or response [0] == 'y':
@@ -163,39 +168,14 @@ def main():
         raise anError
     finally:
         task.Stimulator.quitting()
-        #task.DataLogger.setdown()
-        #GPIO.output(task.ledPin, GPIO.LOW)
         task.HeadFixer.releaseMouse(task.tag)
+        for name, object in task.__dict__.items():
+            if name[-5:] != "Class" and name[-4:] != "Dict" and hasattr(object, 'setdown'):
+                object.setdown()
+        #GPIO.output(task.ledPin, GPIO.LOW)
         #GPIO.output(task.rewardPin, GPIO.LOW)
         GPIO.cleanup()
-        # task.DataLogger.writeToLogFile(task.logFP, None, 'SeshEnd')
-        # task.logFP.close()
-        # task.statsFP.close()
         print ('AutoHeadFix Stopped')
 
-
-"""
-
-    try:
-        # load general settings for this cage, mostly hardware pinouts
-        # things not expected to change often - there is only one AHFconfig.jsn file, in the enclosing folder
-        cageSettings = AHF_CageSet()
-        # get settings that may vary by experiment, including rewarder, camera parameters, and stimulator
-        # More than one of these files can exist, and the user needs to choose one or make one
-        # we will add some other  variables to expSettings so we can pass them as a single argument to functions
-        # logFP, statsFP, dateStr, dayFolderPath, doHeadFix,
-        # configFile can be specified if launched from command line, eg, sudo python3 myconfig or sudo python3 AHFexp_myconfig.jsn
-        configFile = None
-        if argv.__len__() > 1:
-            configFile = argv [1]
-        expSettings = AHF_Settings (configFile)
-        # nextDay starts tomorrow at KDAYSTARTHOUR
-        now = datetime.fromtimestamp (int (time()))
-        startTime = datetime (now.year, now.month,now.day, KDAYSTARTHOUR,0,0)
-        nextDay = startTime + timedelta (hours=24)
-         # initialize mice from mice config path, if possible
-        mice = Mice(cageSettings, expSettings)
-        makeLogFile (expSettings, cageSettings)
-"""
 if __name__ == '__main__':
     main()
