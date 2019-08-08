@@ -180,6 +180,109 @@ and returns starterDict with settings as edited by the user.</p>
 </dd></dl>
 
 </div>
+<div class="section" id="ahf-camera2">
+<h2>AHF_Camera2<a class="headerlink" href="#ahf-camera2" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-AHF_Camera_PiCam">
+<span id="ahf-camera-picam"></span><h2>AHF_Camera_PiCam<a class="headerlink" href="#module-AHF_Camera_PiCam" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="AHF_Camera_PiCam.AHF_Camera_PiCam">
+<em class="property">class </em><code class="sig-name descname">AHF_Camera_PiCam</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Camera_PiCam.AHF_Camera_PiCam" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="AHF_Camera_PiCam.AHF_Camera_PiCam.about">
+<em class="property">static </em><code class="sig-name descname">about</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Camera_PiCam.AHF_Camera_PiCam.about" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a brief message describing your sub-class, used when asking user to pick a sub-class of this class</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Camera_PiCam.AHF_Camera_PiCam.config_user_get">
+<em class="property">static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Camera_PiCam.AHF_Camera_PiCam.config_user_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>static method that querries user for settings, with default responses from starterDict,
+and returns starterDict with settings as edited by the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Camera_PiCam.AHF_Camera_PiCam.hardwareTest">
+<code class="sig-name descname">hardwareTest</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Camera_PiCam.AHF_Camera_PiCam.hardwareTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests functionality, gives user a chance to change settings</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Camera_PiCam.AHF_Camera_PiCam.resolution">
+<code class="sig-name descname">resolution</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Camera_PiCam.AHF_Camera_PiCam.resolution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the resolution of the camera. Used for certain stimulators.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Camera_PiCam.AHF_Camera_PiCam.set_gain">
+<code class="sig-name descname">set_gain</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Camera_PiCam.AHF_Camera_PiCam.set_gain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the gain and white balance of the camera based on a 2 second preview - so set illumination as you like before calling</p>
+<p>If ISO for the camera is set to non-zero value, gain is not settable. If pWhiteBalance was set to False, white balancing is not done,
+and gains for red and green are set to 1.
+:raises PiCameraError: error raised by superclass PiCamera from preview</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Camera_PiCam.AHF_Camera_PiCam.setdown">
+<code class="sig-name descname">setdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Camera_PiCam.AHF_Camera_PiCam.setdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes session end and closes log file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Camera_PiCam.AHF_Camera_PiCam.setup">
+<code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Camera_PiCam.AHF_Camera_PiCam.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+Run by __init__, or can be run  separately after editing the settingsDict</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>bool – the truth that setup completed without errors</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Camera_PiCam.AHF_Camera_PiCam.start_preview">
+<code class="sig-name descname">start_preview</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Camera_PiCam.AHF_Camera_PiCam.start_preview" title="Permalink to this definition">¶</a></dt>
+<dd><p>Starts a preview of the camera’s current vision.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Camera_PiCam.AHF_Camera_PiCam.start_recording">
+<code class="sig-name descname">start_recording</code><span class="sig-paren">(</span><em class="sig-param">video_name_path</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Camera_PiCam.AHF_Camera_PiCam.start_recording" title="Permalink to this definition">¶</a></dt>
+<dd><p>Starts a video recording using the saved settings for format, quality, gain, etc.</p>
+<p>A preview of the recording is always shown</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>video_name_path</strong> – a full path to the file where the video will be stored. Always save to a file, not a PIL, for, example</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Camera_PiCam.AHF_Camera_PiCam.stop_preview">
+<code class="sig-name descname">stop_preview</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Camera_PiCam.AHF_Camera_PiCam.stop_preview" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ends a preview of the camera’s current vision.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Camera_PiCam.AHF_Camera_PiCam.stop_recording">
+<code class="sig-name descname">stop_recording</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Camera_PiCam.AHF_Camera_PiCam.stop_recording" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stops a video recording previously started with start_recording.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Camera_PiCam.AHF_Camera_PiCam.timed_recording">
+<code class="sig-name descname">timed_recording</code><span class="sig-paren">(</span><em class="sig-param">video_name_path</em>, <em class="sig-param">recTime</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Camera_PiCam.AHF_Camera_PiCam.timed_recording" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does a timed video recording using the PiCamera wait_recording function.</p>
+<p>A preview of the recording is always shown</p>
+<p>Control does not pass back to the calling function until the recording is finished
+:param  video_name_path: a full path to the file where the video will be stored.
+:param recTime: duration of the recorded video, in seconds</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
 <div class="section" id="module-AHF_Camera">
 <span id="ahf-camera"></span><h2>AHF_Camera<a class="headerlink" href="#module-AHF_Camera" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
@@ -217,293 +320,6 @@ and returns starterDict with settings as edited by the user.</p>
 </dd></dl>
 
 </dd></dl>
-
-</div>
-<div class="section" id="module-AHF_ContactCheck_Elec">
-<span id="ahf-contactcheck-elec"></span><h2>AHF_ContactCheck_Elec<a class="headerlink" href="#module-AHF_ContactCheck_Elec" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="AHF_ContactCheck_Elec.AHF_ContactCheck_Elec">
-<em class="property">class </em><code class="sig-name descname">AHF_ContactCheck_Elec</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_ContactCheck_Elec.AHF_ContactCheck_Elec" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.about">
-<em class="property">static </em><code class="sig-name descname">about</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.about" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a brief message describing your sub-class, used when asking user to pick a sub-class of this class</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.config_user_get">
-<em class="property">static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.config_user_get" title="Permalink to this definition">¶</a></dt>
-<dd><p>static method that querries user for settings, with default responses from starterDict,
-and returns starterDict with settings as edited by the user.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.contactCheckCallback">
-<em class="property">static </em><code class="sig-name descname">contactCheckCallback</code><span class="sig-paren">(</span><em class="sig-param">channel</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.contactCheckCallback" title="Permalink to this definition">¶</a></dt>
-<dd><p>Contacts are immediate, but un-contacts are delayed</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.setdown">
-<code class="sig-name descname">setdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.setdown" title="Permalink to this definition">¶</a></dt>
-<dd><p>oppposite of setup. Releases any hardware resouces. can be run before editing settings so GPIO
-pins can be reused, for example. This strategy should be used in hardwareTest method.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.setup">
-<code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
-Run by __init__, or can be run  separately after editing the settingsDict</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>bool – the truth that setup completed without errors</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.startLogging">
-<code class="sig-name descname">startLogging</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.startLogging" title="Permalink to this definition">¶</a></dt>
-<dd><p>starts contactChecker running background task updated gTask.contact
-do not use waitForContact or waitForNoContact when logging</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.stopLogging">
-<code class="sig-name descname">stopLogging</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.stopLogging" title="Permalink to this definition">¶</a></dt>
-<dd><p>stops contactChecker running background task</p>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-<div class="section" id="module-AHF_HeadFixer_NoFix">
-<span id="ahf-headfixer-nofix"></span><h2>AHF_HeadFixer_NoFix<a class="headerlink" href="#module-AHF_HeadFixer_NoFix" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix">
-<em class="property">class </em><code class="sig-name descname">AHF_HeadFixer_NoFix</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix" title="Permalink to this definition">¶</a></dt>
-<dd><p>Head Fixer that only checks for contact, does not implement a
-head-fixing mechanism</p>
-<dl class="method">
-<dt id="AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.about">
-<em class="property">static </em><code class="sig-name descname">about</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.about" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a brief message describing your sub-class, used when asking user to pick a sub-class of this class</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.config_user_get">
-<em class="property">static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.config_user_get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Querries user returns dictionary</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.fixMouse">
-<code class="sig-name descname">fixMouse</code><span class="sig-paren">(</span><em class="sig-param">tag</em>, <em class="sig-param">resultsDict={}</em>, <em class="sig-param">settingsDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.fixMouse" title="Permalink to this definition">¶</a></dt>
-<dd><p>Just does contact check with super(), does not fix</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.hardwareTest">
-<code class="sig-name descname">hardwareTest</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.hardwareTest" title="Permalink to this definition">¶</a></dt>
-<dd><p>Tests functionality, gives user a chance to change settings.
-:Returns: bool – True if any settings have changed</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.releaseMouse">
-<code class="sig-name descname">releaseMouse</code><span class="sig-paren">(</span><em class="sig-param">tag</em>, <em class="sig-param">resultsDict={}</em>, <em class="sig-param">settingsDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.releaseMouse" title="Permalink to this definition">¶</a></dt>
-<dd><p>releases mouse from head fixation by relaxing a piston, moving a servomotor, etc</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.setdown">
-<code class="sig-name descname">setdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.setdown" title="Permalink to this definition">¶</a></dt>
-<dd><p>oppposite of setup. Releases any hardware resouces. can be run before editing settings so GPIO
-pins can be reused, for example. This strategy should be used in hardwareTest method.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.setup">
-<code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>gets settings from dict, not &#64;abstract because this may be all you nees, as for HeadFixer_NoFix</p>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-<div class="section" id="module-AHF_HeadFixer_PWM">
-<span id="ahf-headfixer-pwm"></span><h2>AHF_HeadFixer_PWM<a class="headerlink" href="#module-AHF_HeadFixer_PWM" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="AHF_HeadFixer_PWM.AHF_HeadFixer_PWM">
-<em class="property">class </em><code class="sig-name descname">AHF_HeadFixer_PWM</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_PWM.AHF_HeadFixer_PWM" title="Permalink to this definition">¶</a></dt>
-<dd><p>Abstract class for PWM-based head fixers for servo motors. As long as your subclass maps your PWM range onto
-the appropriate pulse width for the servo, you should be good to go.</p>
-<dl class="method">
-<dt id="AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.config_user_get">
-<em class="property">abstract static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.config_user_get" title="Permalink to this definition">¶</a></dt>
-<dd><p>static method that querries user for settings, with default responses from starterDict,
-and returns starterDict with settings as edited by the user.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.fixMouse">
-<code class="sig-name descname">fixMouse</code><span class="sig-paren">(</span><em class="sig-param">thisTag</em>, <em class="sig-param">resultsDict={}</em>, <em class="sig-param">individualDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.fixMouse" title="Permalink to this definition">¶</a></dt>
-<dd><p>performs head fixation by energizing a piston, moving a servomotor, etc
-returns True if successful, else false.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.hardwareTest">
-<code class="sig-name descname">hardwareTest</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.hardwareTest" title="Permalink to this definition">¶</a></dt>
-<dd><p>Tests functionality, gives user a chance to change settings.
-:Returns: bool – True if any settings have changed</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.individualSettings">
-<code class="sig-name descname">individualSettings</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.individualSettings" title="Permalink to this definition">¶</a></dt>
-<dd><p>copies servo fixed position to dictionary - there is no reason to have different released positions per subject
-TO DO: add multiple headfixing levels, maybe progression based on resdults</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.releaseMouse">
-<code class="sig-name descname">releaseMouse</code><span class="sig-paren">(</span><em class="sig-param">thisTag</em>, <em class="sig-param">resultsDict={}</em>, <em class="sig-param">settingsDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.releaseMouse" title="Permalink to this definition">¶</a></dt>
-<dd><p>releases mouse from head fixation by relaxing a piston, moving a servomotor, etc</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.setup">
-<em class="property">abstract </em><code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>gets settings from dict, not &#64;abstract because this may be all you nees, as for HeadFixer_NoFix</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="AHF_HeadFixer_PWM.random">
-<code class="sig-name descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; x in the interval [0, 1).<a class="headerlink" href="#AHF_HeadFixer_PWM.random" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</div>
-<div class="section" id="module-AHF_Stimulator_Lever">
-<span id="ahf-stimulator-lever"></span><h2>AHF_Stimulator_Lever<a class="headerlink" href="#module-AHF_Stimulator_Lever" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever">
-<em class="property">class </em><code class="sig-name descname">AHF_Stimulator_Lever</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever" title="Permalink to this definition">¶</a></dt>
-<dd><p>AHF_Stimulator_Lever runs a lever task by calling ptLeverThread C-module code that records lever position and puts torque on the lever</p>
-<dl class="attribute">
-<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.MAX_FORCE_ARRAY_SIZE">
-<code class="sig-name descname">MAX_FORCE_ARRAY_SIZE</code><em class="property"> = 125</em><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.MAX_FORCE_ARRAY_SIZE" title="Permalink to this definition">¶</a></dt>
-<dd><p>######################################### Global settings for the task########################################################
-Things that do not vary on a per mouse basis, these inlcude hardware settings, some trial timing</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.about">
-<em class="property">static </em><code class="sig-name descname">about</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.about" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a brief message describing your sub-class, used when asking user to pick a sub-class of this class</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.config_user_get">
-<em class="property">static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.config_user_get" title="Permalink to this definition">¶</a></dt>
-<dd><p>static method that querries user for settings, with default responses from starterDict,
-and returns starterDict with settings as edited by the user.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultDemoteRate">
-<code class="sig-name descname">defaultDemoteRate</code><em class="property"> = 0.25</em><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultDemoteRate" title="Permalink to this definition">¶</a></dt>
-<dd><p>training for goal position</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultGoalIncr">
-<code class="sig-name descname">defaultGoalIncr</code><em class="property"> = 5</em><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultGoalIncr" title="Permalink to this definition">¶</a></dt>
-<dd><p>training for holdTime</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultGoalWidth">
-<code class="sig-name descname">defaultGoalWidth</code><em class="property"> = 100</em><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultGoalWidth" title="Permalink to this definition">¶</a></dt>
-<dd><p>Perturbation settings for starting a mouse. Force on lever is adjusted up or down relative to const force, and then left at new value, and lever must be kept in goal area</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultMotorDir">
-<code class="sig-name descname">defaultMotorDir</code><em class="property"> = 0</em><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultMotorDir" title="Permalink to this definition">¶</a></dt>
-<dd><p>If MOTOR_DIR_PIN = 0, 16 bit force output (0 - 4095) goes from full counterclockwise force to full clockwise force
-with midpoint (2048) being no force on lever. If MOTOR_DIR_PIN is non-zero, 0-4095 maps from  no force to full force, and
-MOTOR_DIR_PIN is the GPIO pin that controls the direction of the force, clockwise or counter-clockwise.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultPerturbForceRandom">
-<code class="sig-name descname">defaultPerturbForceRandom</code><em class="property"> = 400</em><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultPerturbForceRandom" title="Permalink to this definition">¶</a></dt>
-<dd><p>Training settings</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultPrePullTime">
-<code class="sig-name descname">defaultPrePullTime</code><em class="property"> = 0.25</em><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultPrePullTime" title="Permalink to this definition">¶</a></dt>
-<dd><p>############################################# Mouse Specific Settings follow #####################################################
-default pull difficulty settings for starting a mouse
-toGoalTime plus holdTime must be &lt; recordingTime for cued trials. PrePullTime plus holdTime must be &lt; recordingTime for un-cued trials</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultTrialTimeout">
-<code class="sig-name descname">defaultTrialTimeout</code><em class="property"> = 0.5</em><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultTrialTimeout" title="Permalink to this definition">¶</a></dt>
-<dd><p>Settings for uncued trials</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.hardwareTest">
-<code class="sig-name descname">hardwareTest</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.hardwareTest" title="Permalink to this definition">¶</a></dt>
-<dd><p>Tests functionality, gives user a chance to change settings.
-:Returns: bool – True if any settings have changed</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.quitting">
-<code class="sig-name descname">quitting</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.quitting" title="Permalink to this definition">¶</a></dt>
-<dd><p>Called before AutoHEadFix exits. Gives stimulator chance to do any needed cleanup</p>
-<p>A stimulator may, e.g., open files and wish to close them before exiting, or use hardware that needs to be cleaned up</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">level=-1</em>, <em class="sig-param">settingsDict={}</em>, <em class="sig-param">resultsDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Called at start of each head fix. Does whatever</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.setdown">
-<code class="sig-name descname">setdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.setdown" title="Permalink to this definition">¶</a></dt>
-<dd><p>oppposite of setup. Releases any hardware resouces. can be run before editing settings so GPIO
-pins can be reused, for example. This strategy should be used in hardwareTest method.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.setup">
-<code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
-Run by __init__, or can be run  separately after editing the settingsDict</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>bool – the truth that setup completed without errors</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="AHF_Stimulator_Lever.random">
-<code class="sig-name descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; x in the interval [0, 1).<a class="headerlink" href="#AHF_Stimulator_Lever.random" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 </div>
 <div class="section" id="module-AHF_ClassAndDictUtils">
@@ -596,117 +412,88 @@ and returns starterDict with settings as edited by the user.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-AHF_DataLogger">
-<span id="ahf-datalogger"></span><h2>AHF_Datalogger<a class="headerlink" href="#module-AHF_DataLogger" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-AHF_ContactCheck_Elec">
+<span id="ahf-contactcheck-elec"></span><h2>AHF_ContactCheck_Elec<a class="headerlink" href="#module-AHF_ContactCheck_Elec" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="AHF_DataLogger.AHF_DataLogger">
-<em class="property">class </em><code class="sig-name descname">AHF_DataLogger</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger" title="Permalink to this definition">¶</a></dt>
-<dd><p>A Data Logger provides an interface to save task data, and to save
-and load mouse configuration data. This can be either to text files, or to
-a database, or hd5 files, or some combination thereof. The data logger
-should also print status updates to the shell, but these don’t need to contain
-as much information. The brain imaging data is saved
-separately, but references to movie files should be saved by data logger.
-Similarly, other binary data (lever positons, anyone?) can be saved separately,
-by the Stimulator class, but binary file/posiiton can be saved as an event.</p>
-<dl class="method">
-<dt id="AHF_DataLogger.AHF_DataLogger.configGenerator">
-<em class="property">abstract </em><code class="sig-name descname">configGenerator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.configGenerator" title="Permalink to this definition">¶</a></dt>
-<dd><p>generates configuration data for each subject as (IDtag, dictionary) tuples from some kind of permanent storage
-such as a JSON file, or a database. Will be called when program is started, or restarted and settings
-need to be reloaded.</p>
+<dt id="AHF_ContactCheck_Elec.AHF_ContactCheck_Elec">
+<em class="property">class </em><code class="sig-name descname">AHF_ContactCheck_Elec</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_ContactCheck_Elec.AHF_ContactCheck_Elec" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.about">
+<em class="property">static </em><code class="sig-name descname">about</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.about" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a brief message describing your sub-class, used when asking user to pick a sub-class of this class</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="AHF_DataLogger.AHF_DataLogger.getConfigData">
-<em class="property">abstract </em><code class="sig-name descname">getConfigData</code><span class="sig-paren">(</span><em class="sig-param">tag</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.getConfigData" title="Permalink to this definition">¶</a></dt>
-<dd><p>returns a dictionary of data that was saved for this reference tag, in some permanent storage such as a JSON file
-Will be called when program is started, or restarted and settings need to be reloaded</p>
+<dt id="AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.config_user_get">
+<em class="property">static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.config_user_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>static method that querries user for settings, with default responses from starterDict,
+and returns starterDict with settings as edited by the user.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="AHF_DataLogger.AHF_DataLogger.getMice">
-<em class="property">abstract </em><code class="sig-name descname">getMice</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.getMice" title="Permalink to this definition">¶</a></dt>
-<dd><p>returns a list of mice that are in the dictionary/database</p>
+<dt id="AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.contactCheckCallback">
+<em class="property">static </em><code class="sig-name descname">contactCheckCallback</code><span class="sig-paren">(</span><em class="sig-param">channel</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.contactCheckCallback" title="Permalink to this definition">¶</a></dt>
+<dd><p>Contacts are immediate, but un-contacts are delayed</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="AHF_DataLogger.AHF_DataLogger.getTrackedEvent">
-<code class="sig-name descname">getTrackedEvent</code><span class="sig-paren">(</span><em class="sig-param">tag</em>, <em class="sig-param">eventKind</em>, <em class="sig-param">dictKey</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.getTrackedEvent" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the current value for the specified mouse, event, and key.</p>
+<dt id="AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.setdown">
+<code class="sig-name descname">setdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.setdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>oppposite of setup. Releases any hardware resouces. can be run before editing settings so GPIO
+pins can be reused, for example. This strategy should be used in hardwareTest method.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="AHF_DataLogger.AHF_DataLogger.makeLogFile">
-<em class="property">abstract </em><code class="sig-name descname">makeLogFile</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.makeLogFile" title="Permalink to this definition">¶</a></dt>
-<dd><p>Makes or opens a text log file, or a datbase, or whatever else needs doing. Called once before
-entering main loop of program. DataLogger may make a new file every day in NewDay function, if desired</p>
+<dt id="AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.setup">
+<code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+Run by __init__, or can be run  separately after editing the settingsDict</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>bool – the truth that setup completed without errors</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
-<dt id="AHF_DataLogger.AHF_DataLogger.newDay">
-<em class="property">abstract </em><code class="sig-name descname">newDay</code><span class="sig-paren">(</span><em class="sig-param">mice</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.newDay" title="Permalink to this definition">¶</a></dt>
-<dd><p>At the start of a new day, it was customary for the text-based data logging to start new text files,
-and to make a precis of the day’s results into a a separate text file for easy human reading.
-This “quickStats” file should contain info for each mouse with rewards, head fixes,
-or tasks, and other Stimulator specific data, which Stimulator object will provide for each mouse
-just call the Stimulator class functions for each mouse to get a dictionary of results</p>
+<dt id="AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.startLogging">
+<code class="sig-name descname">startLogging</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.startLogging" title="Permalink to this definition">¶</a></dt>
+<dd><p>starts contactChecker running background task updated gTask.contact
+do not use waitForContact or waitForNoContact when logging</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="AHF_DataLogger.AHF_DataLogger.readFromLogFile">
-<em class="property">abstract </em><code class="sig-name descname">readFromLogFile</code><span class="sig-paren">(</span><em class="sig-param">index</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.readFromLogFile" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reads the log statement <em>index</em> lines prior to the current line.
-Returns the event and associated dictionary in a tuple.</p>
+<dt id="AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.stopLogging">
+<code class="sig-name descname">stopLogging</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.stopLogging" title="Permalink to this definition">¶</a></dt>
+<dd><p>stops contactChecker running background task</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-AHF_ContactCheck">
+<span id="ahf-contactcheck"></span><h2>AHF_ContactCheck<a class="headerlink" href="#module-AHF_ContactCheck" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="AHF_ContactCheck.AHF_ContactCheck">
+<em class="property">class </em><code class="sig-name descname">AHF_ContactCheck</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_ContactCheck.AHF_ContactCheck" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="AHF_ContactCheck.AHF_ContactCheck.hardwareTest">
+<code class="sig-name descname">hardwareTest</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_ContactCheck.AHF_ContactCheck.hardwareTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests functionality, gives user a chance to change settings.
+:Returns: bool – True if any settings have changed</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="AHF_DataLogger.AHF_DataLogger.resumeTracking">
-<code class="sig-name descname">resumeTracking</code><span class="sig-paren">(</span><em class="sig-param">eventKind</em>, <em class="sig-param">dictKey</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.resumeTracking" title="Permalink to this definition">¶</a></dt>
-<dd><p>Resumes previously started tracking.</p>
+<dt id="AHF_ContactCheck.AHF_ContactCheck.startLogging">
+<em class="property">abstract </em><code class="sig-name descname">startLogging</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_ContactCheck.AHF_ContactCheck.startLogging" title="Permalink to this definition">¶</a></dt>
+<dd><p>starts contactChecker running background task updated gTask.contact
+do not use waitForContact or waitForNoContact when logging</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="AHF_DataLogger.AHF_DataLogger.retireMouse">
-<em class="property">abstract </em><code class="sig-name descname">retireMouse</code><span class="sig-paren">(</span><em class="sig-param">tag</em>, <em class="sig-param">reason</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.retireMouse" title="Permalink to this definition">¶</a></dt>
-<dd><p>store information about a mouse retirement in a referenced file</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_DataLogger.AHF_DataLogger.saveNewMouse">
-<em class="property">abstract </em><code class="sig-name descname">saveNewMouse</code><span class="sig-paren">(</span><em class="sig-param">tag</em>, <em class="sig-param">note</em>, <em class="sig-param">dictionary</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.saveNewMouse" title="Permalink to this definition">¶</a></dt>
-<dd><p>store a new mouse entry in a referenced file</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_DataLogger.AHF_DataLogger.startTracking">
-<code class="sig-name descname">startTracking</code><span class="sig-paren">(</span><em class="sig-param">eventKind</em>, <em class="sig-param">dictKey</em>, <em class="sig-param">trackingType</em>, <em class="sig-param">size=0</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.startTracking" title="Permalink to this definition">¶</a></dt>
-<dd><p>Begins tracking of the specified key for the specified event.
-Tracks as a circular buffer or daily totals.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_DataLogger.AHF_DataLogger.stopTracking">
-<code class="sig-name descname">stopTracking</code><span class="sig-paren">(</span><em class="sig-param">eventKind</em>, <em class="sig-param">dictKey</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.stopTracking" title="Permalink to this definition">¶</a></dt>
-<dd><p>Halts previously started tracking.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_DataLogger.AHF_DataLogger.storeConfig">
-<em class="property">abstract </em><code class="sig-name descname">storeConfig</code><span class="sig-paren">(</span><em class="sig-param">tag</em>, <em class="sig-param">dictionary</em>, <em class="sig-param">source=''</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.storeConfig" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stores configuration data, given as an IDtag, and dictionary for that tag, in some more permanent storage
-as a JSON text file, or a database or hd5 file, so it can be later retrieved by IDtag</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_DataLogger.AHF_DataLogger.writeToLogFile">
-<em class="property">abstract </em><code class="sig-name descname">writeToLogFile</code><span class="sig-paren">(</span><em class="sig-param">tag</em>, <em class="sig-param">eventKind</em>, <em class="sig-param">eventDict</em>, <em class="sig-param">timeStamp</em>, <em class="sig-param">toShellOrFile=3</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.writeToLogFile" title="Permalink to this definition">¶</a></dt>
-<dd><p>The original standard text file method was 4 tab-separated columns, mouse tag, or 0
-if no single tag was applicaple, unix time stamp, ISO formatted time, and event. Event
-could be anything. Now, every event has a kind, and every kind of event defines a
-dictionary. Main program calls writeToLogFile, as well as the Stimulator object
-For text based methods, event should be a dictionary for more complicated stimulator
-results, so an event can be more easily parsed during data analysis.</p>
+<dt id="AHF_ContactCheck.AHF_ContactCheck.stopLogging">
+<em class="property">abstract </em><code class="sig-name descname">stopLogging</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_ContactCheck.AHF_ContactCheck.stopLogging" title="Permalink to this definition">¶</a></dt>
+<dd><p>stops contactChecker running background task</p>
 </dd></dl>
 
 </dd></dl>
@@ -853,6 +640,128 @@ results, so an event can be more easily parsed during data analysis.</p>
 </dd></dl>
 
 </div>
+<div class="section" id="module-AHF_DataLogger">
+<span id="ahf-datalogger"></span><h2>AHF_DataLogger<a class="headerlink" href="#module-AHF_DataLogger" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="AHF_DataLogger.AHF_DataLogger">
+<em class="property">class </em><code class="sig-name descname">AHF_DataLogger</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Data Logger provides an interface to save task data, and to save
+and load mouse configuration data. This can be either to text files, or to
+a database, or hd5 files, or some combination thereof. The data logger
+should also print status updates to the shell, but these don’t need to contain
+as much information. The brain imaging data is saved
+separately, but references to movie files should be saved by data logger.
+Similarly, other binary data (lever positons, anyone?) can be saved separately,
+by the Stimulator class, but binary file/posiiton can be saved as an event.</p>
+<dl class="method">
+<dt id="AHF_DataLogger.AHF_DataLogger.configGenerator">
+<em class="property">abstract </em><code class="sig-name descname">configGenerator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.configGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p>generates configuration data for each subject as (IDtag, dictionary) tuples from some kind of permanent storage
+such as a JSON file, or a database. Will be called when program is started, or restarted and settings
+need to be reloaded.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger.AHF_DataLogger.getConfigData">
+<em class="property">abstract </em><code class="sig-name descname">getConfigData</code><span class="sig-paren">(</span><em class="sig-param">tag</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.getConfigData" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns a dictionary of data that was saved for this reference tag, in some permanent storage such as a JSON file
+Will be called when program is started, or restarted and settings need to be reloaded</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger.AHF_DataLogger.getMice">
+<em class="property">abstract </em><code class="sig-name descname">getMice</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.getMice" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns a list of mice that are in the dictionary/database</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger.AHF_DataLogger.getTrackedEvent">
+<code class="sig-name descname">getTrackedEvent</code><span class="sig-paren">(</span><em class="sig-param">tag</em>, <em class="sig-param">eventKind</em>, <em class="sig-param">dictKey</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.getTrackedEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the current value for the specified mouse, event, and key.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger.AHF_DataLogger.makeLogFile">
+<em class="property">abstract </em><code class="sig-name descname">makeLogFile</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.makeLogFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes or opens a text log file, or a datbase, or whatever else needs doing. Called once before
+entering main loop of program. DataLogger may make a new file every day in NewDay function, if desired</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger.AHF_DataLogger.newDay">
+<em class="property">abstract </em><code class="sig-name descname">newDay</code><span class="sig-paren">(</span><em class="sig-param">mice</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.newDay" title="Permalink to this definition">¶</a></dt>
+<dd><p>At the start of a new day, it was customary for the text-based data logging to start new text files,
+and to make a precis of the day’s results into a a separate text file for easy human reading.
+This “quickStats” file should contain info for each mouse with rewards, head fixes,
+or tasks, and other Stimulator specific data, which Stimulator object will provide for each mouse
+just call the Stimulator class functions for each mouse to get a dictionary of results</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger.AHF_DataLogger.readFromLogFile">
+<em class="property">abstract </em><code class="sig-name descname">readFromLogFile</code><span class="sig-paren">(</span><em class="sig-param">index</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.readFromLogFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads the log statement <em>index</em> lines prior to the current line.
+Returns the event and associated dictionary in a tuple.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger.AHF_DataLogger.resumeTracking">
+<code class="sig-name descname">resumeTracking</code><span class="sig-paren">(</span><em class="sig-param">eventKind</em>, <em class="sig-param">dictKey</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.resumeTracking" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resumes previously started tracking.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger.AHF_DataLogger.retireMouse">
+<em class="property">abstract </em><code class="sig-name descname">retireMouse</code><span class="sig-paren">(</span><em class="sig-param">tag</em>, <em class="sig-param">reason</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.retireMouse" title="Permalink to this definition">¶</a></dt>
+<dd><p>store information about a mouse retirement in a referenced file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger.AHF_DataLogger.saveNewMouse">
+<em class="property">abstract </em><code class="sig-name descname">saveNewMouse</code><span class="sig-paren">(</span><em class="sig-param">tag</em>, <em class="sig-param">note</em>, <em class="sig-param">dictionary</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.saveNewMouse" title="Permalink to this definition">¶</a></dt>
+<dd><p>store a new mouse entry in a referenced file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger.AHF_DataLogger.startTracking">
+<code class="sig-name descname">startTracking</code><span class="sig-paren">(</span><em class="sig-param">eventKind</em>, <em class="sig-param">dictKey</em>, <em class="sig-param">trackingType</em>, <em class="sig-param">size=0</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.startTracking" title="Permalink to this definition">¶</a></dt>
+<dd><p>Begins tracking of the specified key for the specified event.
+Tracks as a circular buffer or daily totals.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger.AHF_DataLogger.stopTracking">
+<code class="sig-name descname">stopTracking</code><span class="sig-paren">(</span><em class="sig-param">eventKind</em>, <em class="sig-param">dictKey</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.stopTracking" title="Permalink to this definition">¶</a></dt>
+<dd><p>Halts previously started tracking.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger.AHF_DataLogger.storeConfig">
+<em class="property">abstract </em><code class="sig-name descname">storeConfig</code><span class="sig-paren">(</span><em class="sig-param">tag</em>, <em class="sig-param">dictionary</em>, <em class="sig-param">source=''</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.storeConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores configuration data, given as an IDtag, and dictionary for that tag, in some more permanent storage
+as a JSON text file, or a database or hd5 file, so it can be later retrieved by IDtag</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger.AHF_DataLogger.writeToLogFile">
+<em class="property">abstract </em><code class="sig-name descname">writeToLogFile</code><span class="sig-paren">(</span><em class="sig-param">tag</em>, <em class="sig-param">eventKind</em>, <em class="sig-param">eventDict</em>, <em class="sig-param">timeStamp</em>, <em class="sig-param">toShellOrFile=3</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.writeToLogFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>The original standard text file method was 4 tab-separated columns, mouse tag, or 0
+if no single tag was applicaple, unix time stamp, ISO formatted time, and event. Event
+could be anything. Now, every event has a kind, and every kind of event defines a
+dictionary. Main program calls writeToLogFile, as well as the Stimulator object
+For text based methods, event should be a dictionary for more complicated stimulator
+results, so an event can be more easily parsed during data analysis.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="ahf-datalogger-textmysql">
+<h2>AHF_DataLogger_textMysql<a class="headerlink" href="#ahf-datalogger-textmysql" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="ahf-datalogger-text">
+<h2>AHF_DataLogger_text<a class="headerlink" href="#ahf-datalogger-text" title="Permalink to this headline">¶</a></h2>
+</div>
 <div class="section" id="module-AHF_HardwareTester">
 <span id="ahf-hardwaretester"></span><h2>AHF_HardwareTester<a class="headerlink" href="#module-AHF_HardwareTester" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
@@ -860,6 +769,168 @@ results, so an event can be more easily parsed during data analysis.</p>
 <code class="sig-name descname">hardwareTester</code><span class="sig-paren">(</span><em class="sig-param">task</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HardwareTester.hardwareTester" title="Permalink to this definition">¶</a></dt>
 <dd><p>Hardware Tester for Auto Head Fixing, allows you to verify the various hardware bits are working</p>
 </dd></dl>
+
+</div>
+<div class="section" id="module-AHF_HeadFixer_NoFix">
+<span id="ahf-headfixer-nofix"></span><h2>AHF_HeadFixer_NoFix<a class="headerlink" href="#module-AHF_HeadFixer_NoFix" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix">
+<em class="property">class </em><code class="sig-name descname">AHF_HeadFixer_NoFix</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Head Fixer that only checks for contact, does not implement a
+head-fixing mechanism</p>
+<dl class="method">
+<dt id="AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.about">
+<em class="property">static </em><code class="sig-name descname">about</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.about" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a brief message describing your sub-class, used when asking user to pick a sub-class of this class</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.config_user_get">
+<em class="property">static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.config_user_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Querries user returns dictionary</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.fixMouse">
+<code class="sig-name descname">fixMouse</code><span class="sig-paren">(</span><em class="sig-param">tag</em>, <em class="sig-param">resultsDict={}</em>, <em class="sig-param">settingsDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.fixMouse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Just does contact check with super(), does not fix</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.hardwareTest">
+<code class="sig-name descname">hardwareTest</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.hardwareTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests functionality, gives user a chance to change settings.
+:Returns: bool – True if any settings have changed</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.releaseMouse">
+<code class="sig-name descname">releaseMouse</code><span class="sig-paren">(</span><em class="sig-param">tag</em>, <em class="sig-param">resultsDict={}</em>, <em class="sig-param">settingsDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.releaseMouse" title="Permalink to this definition">¶</a></dt>
+<dd><p>releases mouse from head fixation by relaxing a piston, moving a servomotor, etc</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.setdown">
+<code class="sig-name descname">setdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.setdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>oppposite of setup. Releases any hardware resouces. can be run before editing settings so GPIO
+pins can be reused, for example. This strategy should be used in hardwareTest method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.setup">
+<code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets settings from dict, not &#64;abstract because this may be all you nees, as for HeadFixer_NoFix</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-AHF_HeadFixer_Pistons">
+<span id="ahf-headfixer-pistons"></span><h2>AHF_HeadFixer_Pistons<a class="headerlink" href="#module-AHF_HeadFixer_Pistons" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="AHF_HeadFixer_Pistons.AHF_HeadFixer_Pistons">
+<em class="property">class </em><code class="sig-name descname">AHF_HeadFixer_Pistons</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_Pistons.AHF_HeadFixer_Pistons" title="Permalink to this definition">¶</a></dt>
+<dd><p>Head fixer using solenoid-driven pistons to push head bar against front plate
+a single GPIO output triggers a driver of some kind to energize solenoids</p>
+<dl class="method">
+<dt id="AHF_HeadFixer_Pistons.AHF_HeadFixer_Pistons.about">
+<em class="property">static </em><code class="sig-name descname">about</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_Pistons.AHF_HeadFixer_Pistons.about" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a brief message describing your sub-class, used when asking user to pick a sub-class of this class</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_HeadFixer_Pistons.AHF_HeadFixer_Pistons.config_user_get">
+<em class="property">static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_Pistons.AHF_HeadFixer_Pistons.config_user_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Querries user for pin number for piston, returns dictionary</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_HeadFixer_Pistons.AHF_HeadFixer_Pistons.fixMouse">
+<code class="sig-name descname">fixMouse</code><span class="sig-paren">(</span><em class="sig-param">thisTag</em>, <em class="sig-param">resultsDict={}</em>, <em class="sig-param">settingsDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_Pistons.AHF_HeadFixer_Pistons.fixMouse" title="Permalink to this definition">¶</a></dt>
+<dd><p>sets GPIO pin high to trigger pistons</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_HeadFixer_Pistons.AHF_HeadFixer_Pistons.releaseMouse">
+<code class="sig-name descname">releaseMouse</code><span class="sig-paren">(</span><em class="sig-param">resultsDict={}</em>, <em class="sig-param">individualDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_Pistons.AHF_HeadFixer_Pistons.releaseMouse" title="Permalink to this definition">¶</a></dt>
+<dd><p>sets GPIO pin low to retract pistons</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_HeadFixer_Pistons.AHF_HeadFixer_Pistons.setdown">
+<code class="sig-name descname">setdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_Pistons.AHF_HeadFixer_Pistons.setdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>oppposite of setup. Releases any hardware resouces. can be run before editing settings so GPIO
+pins can be reused, for example. This strategy should be used in hardwareTest method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_HeadFixer_Pistons.AHF_HeadFixer_Pistons.setup">
+<code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_Pistons.AHF_HeadFixer_Pistons.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets settings from dict, not &#64;abstract because this may be all you nees, as for HeadFixer_NoFix</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="ahf-headfixer-pwm-pca9685">
+<h2>AHF_HeadFixer_PWM_PCA9685<a class="headerlink" href="#ahf-headfixer-pwm-pca9685" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="ahf-headfixer-pwm-pi">
+<h2>AHF_HeadFixer_PWM_Pi<a class="headerlink" href="#ahf-headfixer-pwm-pi" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-AHF_HeadFixer_PWM">
+<span id="ahf-headfixer-pwm"></span><h2>AHF_HeadFixer_PWM<a class="headerlink" href="#module-AHF_HeadFixer_PWM" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="AHF_HeadFixer_PWM.AHF_HeadFixer_PWM">
+<em class="property">class </em><code class="sig-name descname">AHF_HeadFixer_PWM</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_PWM.AHF_HeadFixer_PWM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract class for PWM-based head fixers for servo motors. As long as your subclass maps your PWM range onto
+the appropriate pulse width for the servo, you should be good to go.</p>
+<dl class="method">
+<dt id="AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.config_user_get">
+<em class="property">abstract static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.config_user_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>static method that querries user for settings, with default responses from starterDict,
+and returns starterDict with settings as edited by the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.fixMouse">
+<code class="sig-name descname">fixMouse</code><span class="sig-paren">(</span><em class="sig-param">thisTag</em>, <em class="sig-param">resultsDict={}</em>, <em class="sig-param">individualDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.fixMouse" title="Permalink to this definition">¶</a></dt>
+<dd><p>performs head fixation by energizing a piston, moving a servomotor, etc
+returns True if successful, else false.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.hardwareTest">
+<code class="sig-name descname">hardwareTest</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.hardwareTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests functionality, gives user a chance to change settings.
+:Returns: bool – True if any settings have changed</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.individualSettings">
+<code class="sig-name descname">individualSettings</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.individualSettings" title="Permalink to this definition">¶</a></dt>
+<dd><p>copies servo fixed position to dictionary - there is no reason to have different released positions per subject
+TO DO: add multiple headfixing levels, maybe progression based on resdults</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.releaseMouse">
+<code class="sig-name descname">releaseMouse</code><span class="sig-paren">(</span><em class="sig-param">thisTag</em>, <em class="sig-param">resultsDict={}</em>, <em class="sig-param">settingsDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.releaseMouse" title="Permalink to this definition">¶</a></dt>
+<dd><p>releases mouse from head fixation by relaxing a piston, moving a servomotor, etc</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.setup">
+<em class="property">abstract </em><code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets settings from dict, not &#64;abstract because this may be all you nees, as for HeadFixer_NoFix</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="AHF_HeadFixer_PWM.random">
+<code class="sig-name descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; x in the interval [0, 1).<a class="headerlink" href="#AHF_HeadFixer_PWM.random" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </div>
 <div class="section" id="module-AHF_HeadFixer">
@@ -929,6 +1000,9 @@ Waits for a mouse to either make contact or leave the chamber</p>
 <code class="sig-name descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; x in the interval [0, 1).<a class="headerlink" href="#AHF_HeadFixer.random" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+</div>
+<div class="section" id="ahf-lickdetector-mpr">
+<h2>AHF_LickDetector_MPR<a class="headerlink" href="#ahf-lickdetector-mpr" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="module-AHF_LickDetector">
 <span id="ahf-lickdetector"></span><h2>AHF_LickDetector<a class="headerlink" href="#module-AHF_LickDetector" title="Permalink to this headline">¶</a></h2>
@@ -1027,6 +1101,138 @@ No timing is done by the AHF_Notifier class, the durations are only for building
 </dd></dl>
 
 </div>
+<div class="section" id="module-AHF_Notifier_Requests">
+<span id="ahf-notifier-requests"></span><h2>AHF_Notifier_Requests<a class="headerlink" href="#module-AHF_Notifier_Requests" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="AHF_Notifier_Requests.AHF_Notifier_Requests">
+<em class="property">class </em><code class="sig-name descname">AHF_Notifier_Requests</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Notifier_Requests.AHF_Notifier_Requests" title="Permalink to this definition">¶</a></dt>
+<dd><p>sends text messages to a tuple of phone numbers using a web service, textbelt.com
+You need to get an account and pay for some messages to get an account key
+As it uses http requests to send the message to the web service, your Pi needs to be online</p>
+<p>AHF_Notifier_Requests needs requests module, which is not installed by default.
+The best way to install python modules is with pip. Assuming you are using Python 3:
+sudo apt-get install python3-pip
+sudo pip-3 install requests</p>
+<dl class="method">
+<dt id="AHF_Notifier_Requests.AHF_Notifier_Requests.about">
+<em class="property">static </em><code class="sig-name descname">about</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Notifier_Requests.AHF_Notifier_Requests.about" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a brief message describing your sub-class, used when asking user to pick a sub-class of this class</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Notifier_Requests.AHF_Notifier_Requests.config_user_get">
+<em class="property">static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Notifier_Requests.AHF_Notifier_Requests.config_user_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>static method that querries user for settings, with default responses from starterDict,
+and returns starterDict with settings as edited by the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Notifier_Requests.AHF_Notifier_Requests.notify">
+<code class="sig-name descname">notify</code><span class="sig-paren">(</span><em class="sig-param">msgStr</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Notifier_Requests.AHF_Notifier_Requests.notify" title="Permalink to this definition">¶</a></dt>
+<dd><p>a more general method to send text information</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Notifier_Requests.AHF_Notifier_Requests.notifyStuck">
+<code class="sig-name descname">notifyStuck</code><span class="sig-paren">(</span><em class="sig-param">tag</em>, <em class="sig-param">cageID</em>, <em class="sig-param">duration</em>, <em class="sig-param">isStuck</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Notifier_Requests.AHF_Notifier_Requests.notifyStuck" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends a text message with the given information.</p>
+<p>Two types of message can be sent, depending if isStuck is True or False
+No timing is done by the AHF_Notifier class, the durations are only for building the text mssg
+:param tag: RFID tag of the mouse
+:param durationSecs: how long the mouse has been inside the chamber
+:param isStuck: boolean signifying if the mouse has been inside the chamber for too long, or has just left the chamber
+:return: nothing</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Notifier_Requests.AHF_Notifier_Requests.setdown">
+<code class="sig-name descname">setdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Notifier_Requests.AHF_Notifier_Requests.setdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>oppposite of setup. Releases any hardware resouces. can be run before editing settings so GPIO
+pins can be reused, for example. This strategy should be used in hardwareTest method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Notifier_Requests.AHF_Notifier_Requests.setup">
+<code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Notifier_Requests.AHF_Notifier_Requests.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+Run by __init__, or can be run  separately after editing the settingsDict</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>bool – the truth that setup completed without errors</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-AHF_Reader_ID">
+<span id="ahf-reader-id"></span><h2>AHF_Reader_ID<a class="headerlink" href="#module-AHF_Reader_ID" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="AHF_Reader_ID.AHF_Reader_ID">
+<em class="property">class </em><code class="sig-name descname">AHF_Reader_ID</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Reader_ID.AHF_Reader_ID" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="AHF_Reader_ID.AHF_Reader_ID.about">
+<em class="property">static </em><code class="sig-name descname">about</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Reader_ID.AHF_Reader_ID.about" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a brief message describing your sub-class, used when asking user to pick a sub-class of this class</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Reader_ID.AHF_Reader_ID.config_user_get">
+<em class="property">static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Reader_ID.AHF_Reader_ID.config_user_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>static method that querries user for settings, with default responses from starterDict,
+and returns starterDict with settings as edited by the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Reader_ID.AHF_Reader_ID.customCallback">
+<em class="property">static </em><code class="sig-name descname">customCallback</code><span class="sig-paren">(</span><em class="sig-param">channel</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Reader_ID.AHF_Reader_ID.customCallback" title="Permalink to this definition">¶</a></dt>
+<dd><p>callback sets tag value in global reference to task object.
+DO NOT START CALLBACK BEFORE TASK IS INITED
+also logs entries in TagReader results dict for the mouse the tag corresponds to</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Reader_ID.AHF_Reader_ID.hardwareTest">
+<code class="sig-name descname">hardwareTest</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Reader_ID.AHF_Reader_ID.hardwareTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests functionality, gives user a chance to change settings.
+:Returns: bool – True if any settings have changed</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Reader_ID.AHF_Reader_ID.setdown">
+<code class="sig-name descname">setdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Reader_ID.AHF_Reader_ID.setdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>oppposite of setup. Releases any hardware resouces. can be run before editing settings so GPIO
+pins can be reused, for example. This strategy should be used in hardwareTest method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Reader_ID.AHF_Reader_ID.setup">
+<code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Reader_ID.AHF_Reader_ID.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+Run by __init__, or can be run  separately after editing the settingsDict</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>bool – the truth that setup completed without errors</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Reader_ID.AHF_Reader_ID.startLogging">
+<code class="sig-name descname">startLogging</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Reader_ID.AHF_Reader_ID.startLogging" title="Permalink to this definition">¶</a></dt>
+<dd><p>starts using data logger to start logging entries/exits</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Reader_ID.AHF_Reader_ID.stopLogging">
+<code class="sig-name descname">stopLogging</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Reader_ID.AHF_Reader_ID.stopLogging" title="Permalink to this definition">¶</a></dt>
+<dd><p>stops  data logger from logging entries/exits</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
 <div class="section" id="module-AHF_Reader">
 <span id="ahf-reader"></span><h2>AHF_Reader<a class="headerlink" href="#module-AHF_Reader" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
@@ -1064,6 +1270,132 @@ No timing is done by the AHF_Notifier class, the durations are only for building
 <dt id="AHF_Rewarder.AHF_Rewarder.rewardControl">
 <code class="sig-name descname">rewardControl</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Rewarder.AHF_Rewarder.rewardControl" title="Permalink to this definition">¶</a></dt>
 <dd><p>Opens and closes valve, as for testing, or draining the lines</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-AHF_Rewarder_solenoid_pt">
+<span id="ahf-rewarder-solenoid-pt"></span><h2>AHF_Rewarder_solenoid_pt<a class="headerlink" href="#module-AHF_Rewarder_solenoid_pt" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="AHF_Rewarder_solenoid_pt.AHF_Rewarder_solenoid_pt">
+<em class="property">class </em><code class="sig-name descname">AHF_Rewarder_solenoid_pt</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Rewarder_solenoid_pt.AHF_Rewarder_solenoid_pt" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class to use a solenoid to deliver water rewards using 1 GPIO pin, using pulsed thread/PTSimpleGPIO for timing</p>
+<dl class="method">
+<dt id="AHF_Rewarder_solenoid_pt.AHF_Rewarder_solenoid_pt.about">
+<em class="property">static </em><code class="sig-name descname">about</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Rewarder_solenoid_pt.AHF_Rewarder_solenoid_pt.about" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a brief message describing your sub-class, used when asking user to pick a sub-class of this class</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Rewarder_solenoid_pt.AHF_Rewarder_solenoid_pt.setdown">
+<code class="sig-name descname">setdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Rewarder_solenoid_pt.AHF_Rewarder_solenoid_pt.setdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>oppposite of setup. Releases any hardware resouces. can be run before editing settings so GPIO
+pins can be reused, for example. This strategy should be used in hardwareTest method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Rewarder_solenoid_pt.AHF_Rewarder_solenoid_pt.setup">
+<code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Rewarder_solenoid_pt.AHF_Rewarder_solenoid_pt.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+Run by __init__, or can be run  separately after editing the settingsDict</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>bool – the truth that setup completed without errors</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-AHF_Rewarder_solenoid">
+<span id="ahf-rewarder-solenoid"></span><h2>AHF_Rewarder_solenoid<a class="headerlink" href="#module-AHF_Rewarder_solenoid" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="AHF_Rewarder_solenoid.AHF_Rewarder_solenoid">
+<em class="property">class </em><code class="sig-name descname">AHF_Rewarder_solenoid</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Rewarder_solenoid.AHF_Rewarder_solenoid" title="Permalink to this definition">¶</a></dt>
+<dd><p>An abstract base class to use a solenoid to deliver water rewards using 1 GPIO pin, subclasses use different timing methods</p>
+<dl class="method">
+<dt id="AHF_Rewarder_solenoid.AHF_Rewarder_solenoid.clearResultsDict">
+<code class="sig-name descname">clearResultsDict</code><span class="sig-paren">(</span><em class="sig-param">resultsDict</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Rewarder_solenoid.AHF_Rewarder_solenoid.clearResultsDict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears results for daily totals of reward types</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Rewarder_solenoid.AHF_Rewarder_solenoid.config_user_get">
+<em class="property">static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Rewarder_solenoid.AHF_Rewarder_solenoid.config_user_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>static method that querries user for settings, with default responses from starterDict,
+and returns starterDict with settings as edited by the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Rewarder_solenoid.AHF_Rewarder_solenoid.countermandReward">
+<code class="sig-name descname">countermandReward</code><span class="sig-paren">(</span><em class="sig-param">resultsDict={}</em>, <em class="sig-param">settingsDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Rewarder_solenoid.AHF_Rewarder_solenoid.countermandReward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Countermands the previously given reward</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Rewarder_solenoid.AHF_Rewarder_solenoid.giveReward">
+<code class="sig-name descname">giveReward</code><span class="sig-paren">(</span><em class="sig-param">rewardName</em>, <em class="sig-param">resultsDict={}</em>, <em class="sig-param">settingsDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Rewarder_solenoid.AHF_Rewarder_solenoid.giveReward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives reward, if reward name is in dictionary. If an entry reward, must be less than number of max entry rewards per day</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Rewarder_solenoid.AHF_Rewarder_solenoid.giveRewardCM">
+<code class="sig-name descname">giveRewardCM</code><span class="sig-paren">(</span><em class="sig-param">rewardName</em>, <em class="sig-param">resultsDict={}</em>, <em class="sig-param">settingsDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Rewarder_solenoid.AHF_Rewarder_solenoid.giveRewardCM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives a reward that can be countermanded, i.e. cancelled if occurring before a timeour</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Rewarder_solenoid.AHF_Rewarder_solenoid.newResultsDict">
+<code class="sig-name descname">newResultsDict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Rewarder_solenoid.AHF_Rewarder_solenoid.newResultsDict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a dictionary of keys = rewardNames, values = number of rewards given, each mouse will get one of these for reward monitoring each day</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Rewarder_solenoid.AHF_Rewarder_solenoid.setup">
+<em class="property">abstract </em><code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Rewarder_solenoid.AHF_Rewarder_solenoid.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+Run by __init__, or can be run  separately after editing the settingsDict</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>bool – the truth that setup completed without errors</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-AHF_Rewarder_solenoid_rpi">
+<span id="ahf-rewarder-solenoid-rpi"></span><h2>AHF_Rewarder_solenoid_rpi<a class="headerlink" href="#module-AHF_Rewarder_solenoid_rpi" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="AHF_Rewarder_solenoid_rpi.AHF_Rewarder_solenoid_rpi">
+<em class="property">class </em><code class="sig-name descname">AHF_Rewarder_solenoid_rpi</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Rewarder_solenoid_rpi.AHF_Rewarder_solenoid_rpi" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class to use a solenoid to deliver water rewards using 1 GPIO pin controlled by RPi.GPIO , using sleep for timing</p>
+<dl class="method">
+<dt id="AHF_Rewarder_solenoid_rpi.AHF_Rewarder_solenoid_rpi.about">
+<em class="property">static </em><code class="sig-name descname">about</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Rewarder_solenoid_rpi.AHF_Rewarder_solenoid_rpi.about" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a brief message describing your sub-class, used when asking user to pick a sub-class of this class</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Rewarder_solenoid_rpi.AHF_Rewarder_solenoid_rpi.setdown">
+<code class="sig-name descname">setdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Rewarder_solenoid_rpi.AHF_Rewarder_solenoid_rpi.setdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>oppposite of setup. Releases any hardware resouces. can be run before editing settings so GPIO
+pins can be reused, for example. This strategy should be used in hardwareTest method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Rewarder_solenoid_rpi.AHF_Rewarder_solenoid_rpi.setup">
+<code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Rewarder_solenoid_rpi.AHF_Rewarder_solenoid_rpi.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+Run by __init__, or can be run  separately after editing the settingsDict</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>bool – the truth that setup completed without errors</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -1110,6 +1442,189 @@ No timing is done by the AHF_Notifier class, the durations are only for building
 </dd></dl>
 
 </div>
+<div class="section" id="module-AHF_Stimulator_LEDs">
+<span id="ahf-stimulator-leds"></span><h2>AHF_Stimulator_LEDs<a class="headerlink" href="#module-AHF_Stimulator_LEDs" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="AHF_Stimulator_LEDs.AHF_Stimulator_LEDs">
+<em class="property">class </em><code class="sig-name descname">AHF_Stimulator_LEDs</code><span class="sig-paren">(</span><em class="sig-param">taskP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_LEDs.AHF_Stimulator_LEDs" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="AHF_Stimulator_LEDs.AHF_Stimulator_LEDs.about">
+<em class="property">static </em><code class="sig-name descname">about</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_LEDs.AHF_Stimulator_LEDs.about" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a brief message describing your sub-class, used when asking user to pick a sub-class of this class</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_LEDs.AHF_Stimulator_LEDs.config_user_get">
+<em class="property">static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_LEDs.AHF_Stimulator_LEDs.config_user_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>static method that querries user for settings, with default responses from starterDict,
+and returns starterDict with settings as edited by the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_LEDs.AHF_Stimulator_LEDs.hardwareTest">
+<code class="sig-name descname">hardwareTest</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_LEDs.AHF_Stimulator_LEDs.hardwareTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests functionality, gives user a chance to change settings.
+:Returns: bool – True if any settings have changed</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_LEDs.AHF_Stimulator_LEDs.logFile">
+<code class="sig-name descname">logFile</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_LEDs.AHF_Stimulator_LEDs.logFile" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Called after each head fix, prints more detailed text to the log file, perhaps a line for each event</p>
+</div></blockquote>
+<p>You may wish to use the same format as writeToLogFile function in __main__.py</p>
+<p>Or you may wish to override with pass and log from the run method</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_LEDs.AHF_Stimulator_LEDs.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">resultsDict={}</em>, <em class="sig-param">settingsDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_LEDs.AHF_Stimulator_LEDs.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called at start of each head fix. Does whatever</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_LEDs.AHF_Stimulator_LEDs.setup">
+<code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_LEDs.AHF_Stimulator_LEDs.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+Run by __init__, or can be run  separately after editing the settingsDict</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>bool – the truth that setup completed without errors</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="AHF_Stimulator_LEDs.random">
+<code class="sig-name descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; x in the interval [0, 1).<a class="headerlink" href="#AHF_Stimulator_LEDs.random" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-AHF_Stimulator_Lever">
+<span id="ahf-stimulator-lever"></span><h2>AHF_Stimulator_Lever<a class="headerlink" href="#module-AHF_Stimulator_Lever" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever">
+<em class="property">class </em><code class="sig-name descname">AHF_Stimulator_Lever</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever" title="Permalink to this definition">¶</a></dt>
+<dd><p>AHF_Stimulator_Lever runs a lever task by calling ptLeverThread C-module code that records lever position and puts torque on the lever</p>
+<dl class="attribute">
+<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.MAX_FORCE_ARRAY_SIZE">
+<code class="sig-name descname">MAX_FORCE_ARRAY_SIZE</code><em class="property"> = 125</em><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.MAX_FORCE_ARRAY_SIZE" title="Permalink to this definition">¶</a></dt>
+<dd><p>######################################### Global settings for the task########################################################
+Things that do not vary on a per mouse basis, these inlcude hardware settings, some trial timing</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.about">
+<em class="property">static </em><code class="sig-name descname">about</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.about" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a brief message describing your sub-class, used when asking user to pick a sub-class of this class</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.config_user_get">
+<em class="property">static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.config_user_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>static method that querries user for settings, with default responses from starterDict,
+and returns starterDict with settings as edited by the user.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultDemoteRate">
+<code class="sig-name descname">defaultDemoteRate</code><em class="property"> = 0.25</em><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultDemoteRate" title="Permalink to this definition">¶</a></dt>
+<dd><p>training for goal position</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultGoalIncr">
+<code class="sig-name descname">defaultGoalIncr</code><em class="property"> = 5</em><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultGoalIncr" title="Permalink to this definition">¶</a></dt>
+<dd><p>training for holdTime</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultGoalWidth">
+<code class="sig-name descname">defaultGoalWidth</code><em class="property"> = 100</em><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultGoalWidth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perturbation settings for starting a mouse. Force on lever is adjusted up or down relative to const force, and then left at new value, and lever must be kept in goal area</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultMotorDir">
+<code class="sig-name descname">defaultMotorDir</code><em class="property"> = 0</em><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultMotorDir" title="Permalink to this definition">¶</a></dt>
+<dd><p>If MOTOR_DIR_PIN = 0, 16 bit force output (0 - 4095) goes from full counterclockwise force to full clockwise force
+with midpoint (2048) being no force on lever. If MOTOR_DIR_PIN is non-zero, 0-4095 maps from  no force to full force, and
+MOTOR_DIR_PIN is the GPIO pin that controls the direction of the force, clockwise or counter-clockwise.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultPerturbForceRandom">
+<code class="sig-name descname">defaultPerturbForceRandom</code><em class="property"> = 400</em><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultPerturbForceRandom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Training settings</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultPrePullTime">
+<code class="sig-name descname">defaultPrePullTime</code><em class="property"> = 0.25</em><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultPrePullTime" title="Permalink to this definition">¶</a></dt>
+<dd><p>############################################# Mouse Specific Settings follow #####################################################
+default pull difficulty settings for starting a mouse
+toGoalTime plus holdTime must be &lt; recordingTime for cued trials. PrePullTime plus holdTime must be &lt; recordingTime for un-cued trials</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultTrialTimeout">
+<code class="sig-name descname">defaultTrialTimeout</code><em class="property"> = 0.5</em><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultTrialTimeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Settings for uncued trials</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.hardwareTest">
+<code class="sig-name descname">hardwareTest</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.hardwareTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests functionality, gives user a chance to change settings.
+:Returns: bool – True if any settings have changed</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.quitting">
+<code class="sig-name descname">quitting</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.quitting" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called before AutoHEadFix exits. Gives stimulator chance to do any needed cleanup</p>
+<p>A stimulator may, e.g., open files and wish to close them before exiting, or use hardware that needs to be cleaned up</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">level=-1</em>, <em class="sig-param">settingsDict={}</em>, <em class="sig-param">resultsDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called at start of each head fix. Does whatever</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.setdown">
+<code class="sig-name descname">setdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.setdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>oppposite of setup. Releases any hardware resouces. can be run before editing settings so GPIO
+pins can be reused, for example. This strategy should be used in hardwareTest method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.setup">
+<code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+Run by __init__, or can be run  separately after editing the settingsDict</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>bool – the truth that setup completed without errors</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="AHF_Stimulator_Lever.random">
+<code class="sig-name descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; x in the interval [0, 1).<a class="headerlink" href="#AHF_Stimulator_Lever.random" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="ahf-stimulator-lickwithhold">
+<h2>AHF_Stimulator_LickWithhold<a class="headerlink" href="#ahf-stimulator-lickwithhold" title="Permalink to this headline">¶</a></h2>
+</div>
 <div class="section" id="module-AHF_Stimulator">
 <span id="ahf-stimulator"></span><h2>AHF_Stimulator<a class="headerlink" href="#module-AHF_Stimulator" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
@@ -1121,6 +1636,73 @@ All events and their timings in a head fix, including rewards, are controlled by
 <dt id="AHF_Stimulator.AHF_Stimulator.run">
 <em class="property">abstract </em><code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">level=0</em>, <em class="sig-param">resultsDict={}</em>, <em class="sig-param">settingsDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator.AHF_Stimulator.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called at start of each head fix. Does whatever</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-AHF_Stimulator_Rewards">
+<span id="ahf-stimulator-rewards"></span><h2>AHF_Stimulator_Rewards<a class="headerlink" href="#module-AHF_Stimulator_Rewards" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="AHF_Stimulator_Rewards.AHF_Stimulator_Rewards">
+<em class="property">class </em><code class="sig-name descname">AHF_Stimulator_Rewards</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Rewards.AHF_Stimulator_Rewards" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="AHF_Stimulator_Rewards.AHF_Stimulator_Rewards.about">
+<em class="property">static </em><code class="sig-name descname">about</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Rewards.AHF_Stimulator_Rewards.about" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a brief message describing your sub-class, used when asking user to pick a sub-class of this class</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_Rewards.AHF_Stimulator_Rewards.config_user_get">
+<em class="property">static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Rewards.AHF_Stimulator_Rewards.config_user_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>static method that querries user for settings, with default responses from starterDict,
+and returns starterDict with settings as edited by the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_Rewards.AHF_Stimulator_Rewards.hardwareTest">
+<code class="sig-name descname">hardwareTest</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Rewards.AHF_Stimulator_Rewards.hardwareTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests functionality, gives user a chance to change settings.
+:Returns: bool – True if any settings have changed</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_Rewards.AHF_Stimulator_Rewards.nextDay">
+<code class="sig-name descname">nextDay</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Rewards.AHF_Stimulator_Rewards.nextDay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when the next day starts. The stimulator is given the new log file pointer. Can do other things as needed
+:param newFP: the file pointer for the new day’s log file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_Rewards.AHF_Stimulator_Rewards.quitting">
+<code class="sig-name descname">quitting</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Rewards.AHF_Stimulator_Rewards.quitting" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called before AutoHEadFix exits. Gives stimulator chance to do any needed cleanup</p>
+<p>A stimulator may, e.g., open files and wish to close them before exiting, or use hardware that needs to be cleaned up</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_Rewards.AHF_Stimulator_Rewards.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">level=0</em>, <em class="sig-param">resultsDict={}</em>, <em class="sig-param">settingsDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Rewards.AHF_Stimulator_Rewards.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called at start of each head fix. Does whatever</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_Rewards.AHF_Stimulator_Rewards.setdown">
+<code class="sig-name descname">setdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Rewards.AHF_Stimulator_Rewards.setdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>oppposite of setup. Releases any hardware resouces. can be run before editing settings so GPIO
+pins can be reused, for example. This strategy should be used in hardwareTest method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_Rewards.AHF_Stimulator_Rewards.setup">
+<code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Rewards.AHF_Stimulator_Rewards.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+Run by __init__, or can be run  separately after editing the settingsDict</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>bool – the truth that setup completed without errors</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -1140,6 +1722,127 @@ All events and their timings in a head fix, including rewards, are controlled by
 <dl class="method">
 <dt id="AHF_Stimulus.AHF_Stimulus.trialPrep">
 <em class="property">abstract </em><code class="sig-name descname">trialPrep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus.AHF_Stimulus.trialPrep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepares stimulus for trial: e.g. aligns laser, preps vib. motor, etc</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="ahf-stimulus-laser">
+<h2>AHF_Stimulus_Laser<a class="headerlink" href="#ahf-stimulus-laser" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-AHF_Stimulus_None">
+<span id="ahf-stimulus-none"></span><h2>AHF_Stimulus_None<a class="headerlink" href="#module-AHF_Stimulus_None" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="AHF_Stimulus_None.AHF_Stimulus_None">
+<em class="property">class </em><code class="sig-name descname">AHF_Stimulus_None</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_None.AHF_Stimulus_None" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="AHF_Stimulus_None.AHF_Stimulus_None.about">
+<em class="property">static </em><code class="sig-name descname">about</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_None.AHF_Stimulus_None.about" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a brief message describing your sub-class, used when asking user to pick a sub-class of this class</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulus_None.AHF_Stimulus_None.config_user_get">
+<em class="property">static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_None.AHF_Stimulus_None.config_user_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>static method that querries user for settings, with default responses from starterDict,
+and returns starterDict with settings as edited by the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulus_None.AHF_Stimulus_None.hardwareTest">
+<code class="sig-name descname">hardwareTest</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_None.AHF_Stimulus_None.hardwareTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests functionality, gives user a chance to change settings.
+:Returns: bool – True if any settings have changed</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulus_None.AHF_Stimulus_None.setdown">
+<code class="sig-name descname">setdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_None.AHF_Stimulus_None.setdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>oppposite of setup. Releases any hardware resouces. can be run before editing settings so GPIO
+pins can be reused, for example. This strategy should be used in hardwareTest method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulus_None.AHF_Stimulus_None.setup">
+<code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_None.AHF_Stimulus_None.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+Run by __init__, or can be run  separately after editing the settingsDict</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>bool – the truth that setup completed without errors</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulus_None.AHF_Stimulus_None.trialEnd">
+<code class="sig-name descname">trialEnd</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_None.AHF_Stimulus_None.trialEnd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Code to be run at end of trial. E.g. moving laser to zero position</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulus_None.AHF_Stimulus_None.trialPrep">
+<code class="sig-name descname">trialPrep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_None.AHF_Stimulus_None.trialPrep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepares stimulus for trial: e.g. aligns laser, preps vib. motor, etc</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-AHF_Stimulus_VibMotor">
+<span id="ahf-stimulus-vibmotor"></span><h2>AHF_Stimulus_VibMotor<a class="headerlink" href="#module-AHF_Stimulus_VibMotor" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="AHF_Stimulus_VibMotor.AHF_Stimulus_VibMotor">
+<em class="property">class </em><code class="sig-name descname">AHF_Stimulus_VibMotor</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_VibMotor.AHF_Stimulus_VibMotor" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="AHF_Stimulus_VibMotor.AHF_Stimulus_VibMotor.about">
+<em class="property">static </em><code class="sig-name descname">about</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_VibMotor.AHF_Stimulus_VibMotor.about" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a brief message describing your sub-class, used when asking user to pick a sub-class of this class</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulus_VibMotor.AHF_Stimulus_VibMotor.config_user_get">
+<em class="property">static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_VibMotor.AHF_Stimulus_VibMotor.config_user_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>static method that querries user for settings, with default responses from starterDict,
+and returns starterDict with settings as edited by the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulus_VibMotor.AHF_Stimulus_VibMotor.hardwareTest">
+<code class="sig-name descname">hardwareTest</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_VibMotor.AHF_Stimulus_VibMotor.hardwareTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests functionality, gives user a chance to change settings.
+:Returns: bool – True if any settings have changed</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulus_VibMotor.AHF_Stimulus_VibMotor.setdown">
+<code class="sig-name descname">setdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_VibMotor.AHF_Stimulus_VibMotor.setdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>oppposite of setup. Releases any hardware resouces. can be run before editing settings so GPIO
+pins can be reused, for example. This strategy should be used in hardwareTest method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulus_VibMotor.AHF_Stimulus_VibMotor.setup">
+<code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_VibMotor.AHF_Stimulus_VibMotor.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+Run by __init__, or can be run  separately after editing the settingsDict</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>bool – the truth that setup completed without errors</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulus_VibMotor.AHF_Stimulus_VibMotor.trialEnd">
+<code class="sig-name descname">trialEnd</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_VibMotor.AHF_Stimulus_VibMotor.trialEnd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Code to be run at end of trial. E.g. moving laser to zero position</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulus_VibMotor.AHF_Stimulus_VibMotor.trialPrep">
+<code class="sig-name descname">trialPrep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_VibMotor.AHF_Stimulus_VibMotor.trialPrep" title="Permalink to this definition">¶</a></dt>
 <dd><p>Prepares stimulus for trial: e.g. aligns laser, preps vib. motor, etc</p>
 </dd></dl>
 
@@ -1257,24 +1960,44 @@ task settings</p>
 <li><a class="reference internal" href="#ahf-base-py">AHF_Base.py</a></li>
 <li><a class="reference internal" href="#module-AHF_Task">AHF_Task</a></li>
 <li><a class="reference internal" href="#module-AHF_BrainLight">AHF_BrainLight</a></li>
+<li><a class="reference internal" href="#ahf-camera2">AHF_Camera2</a></li>
+<li><a class="reference internal" href="#module-AHF_Camera_PiCam">AHF_Camera_PiCam</a></li>
 <li><a class="reference internal" href="#module-AHF_Camera">AHF_Camera</a></li>
-<li><a class="reference internal" href="#module-AHF_ContactCheck_Elec">AHF_ContactCheck_Elec</a></li>
-<li><a class="reference internal" href="#module-AHF_HeadFixer_NoFix">AHF_HeadFixer_NoFix</a></li>
-<li><a class="reference internal" href="#module-AHF_HeadFixer_PWM">AHF_HeadFixer_PWM</a></li>
-<li><a class="reference internal" href="#module-AHF_Stimulator_Lever">AHF_Stimulator_Lever</a></li>
 <li><a class="reference internal" href="#module-AHF_ClassAndDictUtils">AHF_ClassAndDictUtils</a></li>
 <li><a class="reference internal" href="#module-AHF_ContactCheck_BeamBreak">AHF_ContactCheck_BeamBreak</a></li>
-<li><a class="reference internal" href="#module-AHF_DataLogger">AHF_Datalogger</a></li>
+<li><a class="reference internal" href="#module-AHF_ContactCheck_Elec">AHF_ContactCheck_Elec</a></li>
+<li><a class="reference internal" href="#module-AHF_ContactCheck">AHF_ContactCheck</a></li>
 <li><a class="reference internal" href="#module-AHF_DataLogger_mysql">AHF_DataLogger_mysql</a></li>
+<li><a class="reference internal" href="#module-AHF_DataLogger">AHF_DataLogger</a></li>
+<li><a class="reference internal" href="#ahf-datalogger-textmysql">AHF_DataLogger_textMysql</a></li>
+<li><a class="reference internal" href="#ahf-datalogger-text">AHF_DataLogger_text</a></li>
 <li><a class="reference internal" href="#module-AHF_HardwareTester">AHF_HardwareTester</a></li>
+<li><a class="reference internal" href="#module-AHF_HeadFixer_NoFix">AHF_HeadFixer_NoFix</a></li>
+<li><a class="reference internal" href="#module-AHF_HeadFixer_Pistons">AHF_HeadFixer_Pistons</a></li>
+<li><a class="reference internal" href="#ahf-headfixer-pwm-pca9685">AHF_HeadFixer_PWM_PCA9685</a></li>
+<li><a class="reference internal" href="#ahf-headfixer-pwm-pi">AHF_HeadFixer_PWM_Pi</a></li>
+<li><a class="reference internal" href="#module-AHF_HeadFixer_PWM">AHF_HeadFixer_PWM</a></li>
 <li><a class="reference internal" href="#module-AHF_HeadFixer">AHF_HeadFixer</a></li>
+<li><a class="reference internal" href="#ahf-lickdetector-mpr">AHF_LickDetector_MPR</a></li>
 <li><a class="reference internal" href="#module-AHF_LickDetector">AHF_LickDetector</a></li>
 <li><a class="reference internal" href="#module-AHF_Notifier">AHF_Notifier</a></li>
+<li><a class="reference internal" href="#module-AHF_Notifier_Requests">AHF_Notifier_Requests</a></li>
+<li><a class="reference internal" href="#module-AHF_Reader_ID">AHF_Reader_ID</a></li>
 <li><a class="reference internal" href="#module-AHF_Reader">AHF_Reader</a></li>
 <li><a class="reference internal" href="#module-AHF_Rewarder">AHF_Rewarder</a></li>
+<li><a class="reference internal" href="#module-AHF_Rewarder_solenoid_pt">AHF_Rewarder_solenoid_pt</a></li>
+<li><a class="reference internal" href="#module-AHF_Rewarder_solenoid">AHF_Rewarder_solenoid</a></li>
+<li><a class="reference internal" href="#module-AHF_Rewarder_solenoid_rpi">AHF_Rewarder_solenoid_rpi</a></li>
 <li><a class="reference internal" href="#module-AHF_Settings">AHF_Settings</a></li>
+<li><a class="reference internal" href="#module-AHF_Stimulator_LEDs">AHF_Stimulator_LEDs</a></li>
+<li><a class="reference internal" href="#module-AHF_Stimulator_Lever">AHF_Stimulator_Lever</a></li>
+<li><a class="reference internal" href="#ahf-stimulator-lickwithhold">AHF_Stimulator_LickWithhold</a></li>
 <li><a class="reference internal" href="#module-AHF_Stimulator">AHF_Stimulator</a></li>
+<li><a class="reference internal" href="#module-AHF_Stimulator_Rewards">AHF_Stimulator_Rewards</a></li>
 <li><a class="reference internal" href="#module-AHF_Stimulus">AHF_Stimulus</a></li>
+<li><a class="reference internal" href="#ahf-stimulus-laser">AHF_Stimulus_Laser</a></li>
+<li><a class="reference internal" href="#module-AHF_Stimulus_None">AHF_Stimulus_None</a></li>
+<li><a class="reference internal" href="#module-AHF_Stimulus_VibMotor">AHF_Stimulus_VibMotor</a></li>
 <li><a class="reference internal" href="#module-AHF_Subjects">AHF_Subjects</a></li>
 <li><a class="reference internal" href="#module-AHF_Trigger">AHF_Trigger</a></li>
 <li><a class="reference internal" href="#ahf-valvecontrol">AHF_ValveControl</a></li>
