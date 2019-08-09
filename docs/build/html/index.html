@@ -37,7 +37,7 @@
             
   <div class="section" id="welcome-to-autoheadfix-s-documentation">
 <h1>Welcome to AutoHeadFix’s documentation!<a class="headerlink" href="#welcome-to-autoheadfix-s-documentation" title="Permalink to this headline">¶</a></h1>
-<p><strong>Installation/Setup</strong></p>
+<p><strong>Installation/SetuAHF_p</strong></p>
 <p>To download the main repository <a class="reference external" href="https://github.com/jamieboyd/AutoHeadFix/tree/lever_config/">click here</a></p>
 <p>For instructions on building/setting up <a class="reference external" href="https://github.com/zenenhornstein/AHF_setup">click here</a></p>
 <p>For notes from the developer click here: * <a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p>
@@ -353,7 +353,7 @@ Assumption is made that lists/tuples contain only strings, ints, or float types,
 <dl class="function">
 <dt id="AHF_ClassAndDictUtils.File_exists">
 <code class="sig-name descname">File_exists</code><span class="sig-paren">(</span><em class="sig-param">nameTypeStr</em>, <em class="sig-param">nameStr</em>, <em class="sig-param">typeSuffix</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_ClassAndDictUtils.File_exists" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns true if a file with name ‘<a href="#id2"><span class="problematic" id="id3">AHF_</span></a>’ + nameTypeStr + ‘_’ + nameStr + typeSuffix exists in current directory</p>
+<dd><p>Returns true if a file with name ‘<a href="#id4"><span class="problematic" id="id5">AHF_</span></a>’ + nameTypeStr + ‘_’ + nameStr + typeSuffix exists in current directory</p>
 </dd></dl>
 
 <dl class="function">
@@ -361,7 +361,7 @@ Assumption is made that lists/tuples contain only strings, ints, or float types,
 <code class="sig-name descname">File_from_user</code><span class="sig-paren">(</span><em class="sig-param">nameTypeStr</em>, <em class="sig-param">longName</em>, <em class="sig-param">typeSuffix</em>, <em class="sig-param">makeNew=False</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_ClassAndDictUtils.File_from_user" title="Permalink to this definition">¶</a></dt>
 <dd><p>Static method that trawls through current folder looking for python files matching nameTypeStr</p>
 <p>Allows user to choose from the list of files found. Files are recognized by names starting
-with ‘<a href="#id4"><span class="problematic" id="id5">AHF_</span></a>’ + nameTypeStr’ + ‘_’ and ending with ‘.typeSuffix’
+with ‘<a href="#id6"><span class="problematic" id="id7">AHF_</span></a>’ + nameTypeStr’ + ‘_’ and ending with ‘.typeSuffix’
 Raises: FileNotFoundError if no nameStr class files found</p>
 </dd></dl>
 
@@ -756,11 +756,288 @@ results, so an event can be more easily parsed during data analysis.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="ahf-datalogger-textmysql">
-<h2>AHF_DataLogger_textMysql<a class="headerlink" href="#ahf-datalogger-textmysql" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-AHF_DataLogger_textMySql">
+<span id="ahf-datalogger-textmysql"></span><h2>AHF_DataLogger_textMySql<a class="headerlink" href="#module-AHF_DataLogger_textMySql" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="AHF_DataLogger_textMySql.AHF_DataLogger_textMySql">
+<em class="property">class </em><code class="sig-name descname">AHF_DataLogger_textMySql</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_textMySql.AHF_DataLogger_textMySql" title="Permalink to this definition">¶</a></dt>
+<dd><p>Combination of the text data logger and mySQL data logger. Simply does both.</p>
+<p>For Tim.</p>
+<dl class="method">
+<dt id="AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.about">
+<em class="property">static </em><code class="sig-name descname">about</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.about" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a brief message describing your sub-class, used when asking user to pick a sub-class of this class</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.configGenerator">
+<code class="sig-name descname">configGenerator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.configGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p>generates configuration data for each subject as (IDtag, dictionary) tuples from some kind of permanent storage
+such as a JSON file, or a database. Will be called when program is started, or restarted and settings
+need to be reloaded.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.config_user_get">
+<em class="property">static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.config_user_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>static method that querries user for settings, with default responses from starterDict,
+and returns starterDict with settings as edited by the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.getConfigData">
+<code class="sig-name descname">getConfigData</code><span class="sig-paren">(</span><em class="sig-param">tag</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.getConfigData" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns a dictionary of data that was saved for this reference tag, in some permanent storage such as a JSON file
+Will be called when program is started, or restarted and settings need to be reloaded</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.getMice">
+<code class="sig-name descname">getMice</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.getMice" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns a list of mice that are in the dictionary/database</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.hardwareTest">
+<code class="sig-name descname">hardwareTest</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.hardwareTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests functionality, gives user a chance to change settings.
+:Returns: bool – True if any settings have changed</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.makeLogFile">
+<code class="sig-name descname">makeLogFile</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.makeLogFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes or opens a text log file, or a datbase, or whatever else needs doing. Called once before
+entering main loop of program. DataLogger may make a new file every day in NewDay function, if desired</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.newDay">
+<code class="sig-name descname">newDay</code><span class="sig-paren">(</span><em class="sig-param">mice</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.newDay" title="Permalink to this definition">¶</a></dt>
+<dd><p>At the start of a new day, it was customary for the text-based data logging to start new text files,
+and to make a precis of the day’s results into a a separate text file for easy human reading.
+This “quickStats” file should contain info for each mouse with rewards, head fixes,
+or tasks, and other Stimulator specific data, which Stimulator object will provide for each mouse
+just call the Stimulator class functions for each mouse to get a dictionary of results</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.readFromLogFile">
+<code class="sig-name descname">readFromLogFile</code><span class="sig-paren">(</span><em class="sig-param">index</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.readFromLogFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads the log statement <em>index</em> lines prior to the current line.
+Returns the event and associated dictionary in a tuple.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.retireMouse">
+<code class="sig-name descname">retireMouse</code><span class="sig-paren">(</span><em class="sig-param">tag</em>, <em class="sig-param">reason</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.retireMouse" title="Permalink to this definition">¶</a></dt>
+<dd><p>store information about a mouse retirement in a referenced file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.saveNewMouse">
+<code class="sig-name descname">saveNewMouse</code><span class="sig-paren">(</span><em class="sig-param">tag</em>, <em class="sig-param">note</em>, <em class="sig-param">dictionary</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.saveNewMouse" title="Permalink to this definition">¶</a></dt>
+<dd><p>store a new mouse entry in a referenced file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.setdown">
+<code class="sig-name descname">setdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.setdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>oppposite of setup. Releases any hardware resouces. can be run before editing settings so GPIO
+pins can be reused, for example. This strategy should be used in hardwareTest method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.setup">
+<code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+Run by __init__, or can be run  separately after editing the settingsDict</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>bool – the truth that setup completed without errors</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.storeConfig">
+<code class="sig-name descname">storeConfig</code><span class="sig-paren">(</span><em class="sig-param">tag</em>, <em class="sig-param">dictionary</em>, <em class="sig-param">source=''</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.storeConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores configuration data, given as an IDtag, and dictionary for that tag, in some more permanent storage
+as a JSON text file, or a database or hd5 file, so it can be later retrieved by IDtag</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.writeToLogFile">
+<code class="sig-name descname">writeToLogFile</code><span class="sig-paren">(</span><em class="sig-param">tag</em>, <em class="sig-param">eventKind</em>, <em class="sig-param">eventDict</em>, <em class="sig-param">timeStamp</em>, <em class="sig-param">toShellOrFile=3</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.writeToLogFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>The original standard text file method was 4 tab-separated columns, mouse tag, or 0
+if no single tag was applicaple, unix time stamp, ISO formatted time, and event. Event
+could be anything. Now, every event has a kind, and every kind of event defines a
+dictionary. Main program calls writeToLogFile, as well as the Stimulator object
+For text based methods, event should be a dictionary for more complicated stimulator
+results, so an event can be more easily parsed during data analysis.</p>
+</dd></dl>
+
+</dd></dl>
+
 </div>
-<div class="section" id="ahf-datalogger-text">
-<h2>AHF_DataLogger_text<a class="headerlink" href="#ahf-datalogger-text" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-AHF_DataLogger_text">
+<span id="ahf-datalogger-text"></span><h2>AHF_DataLogger_text<a class="headerlink" href="#module-AHF_DataLogger_text" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="AHF_DataLogger_text.AHF_DataLogger_text">
+<em class="property">class </em><code class="sig-name descname">AHF_DataLogger_text</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_text.AHF_DataLogger_text" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simple text-based data logger modified from the original Auto Head Fix code
+makes a new text logfile for each day, saved in default data path.</p>
+<p>Mouse data is stored in a specified folder, also as text files, one text file per mouse
+containing JSON formatted configuration and performance data. These files will opened and
+updated after each exit from the experimental tube, in case the program needs to be restarted
+The file name for each mouse contains RFID tag 0-padded to 13 spaces: AHF_mouse_1234567890123.jsn</p>
+<dl class="attribute">
+<dt id="AHF_DataLogger_text.AHF_DataLogger_text.PSEUDO_MUTEX">
+<code class="sig-name descname">PSEUDO_MUTEX</code><em class="property"> = 0</em><a class="headerlink" href="#AHF_DataLogger_text.AHF_DataLogger_text.PSEUDO_MUTEX" title="Permalink to this definition">¶</a></dt>
+<dd><p>The class field PSEUDO_MUTEX helps prevent print statements from different places in the code (main vs
+callbacks) from executing at the same time, which leads to garbled output. Unlike a real mutex, execution
+of the thread is not halted while waiting on the PSEUDO_MUTEX, hence the loops with calls to sleep to
+allow the other threads of execution to continue while waiting for the mutex to be free. Also, read/write
+to the PSEUDO_MUTEX is not atomic; one thread may read PSEUDO_MUTEX as 0, and set it to 1, but in the
+interval between reading and writing to PSEUDO_MUTEX,another thread may have read PSEUDO_MUTEX as 0 and
+both threads think they have the mutex</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_text.AHF_DataLogger_text.about">
+<em class="property">static </em><code class="sig-name descname">about</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_text.AHF_DataLogger_text.about" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a brief message describing your sub-class, used when asking user to pick a sub-class of this class</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_text.AHF_DataLogger_text.configGenerator">
+<code class="sig-name descname">configGenerator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_text.AHF_DataLogger_text.configGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Each configuration file has config data for a single subject. This function loads data
+from all of them in turn, and returning each as a a tuple of (tagID, dictionary)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_text.AHF_DataLogger_text.config_user_get">
+<em class="property">static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_text.AHF_DataLogger_text.config_user_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>static method that querries user for settings, with default responses from starterDict,
+and returns starterDict with settings as edited by the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_text.AHF_DataLogger_text.getConfigData">
+<code class="sig-name descname">getConfigData</code><span class="sig-paren">(</span><em class="sig-param">tag</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_text.AHF_DataLogger_text.getConfigData" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns saved dictionary for given tag</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_text.AHF_DataLogger_text.getMice">
+<code class="sig-name descname">getMice</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_text.AHF_DataLogger_text.getMice" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns a list of mice that are in the dictionary/database</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_text.AHF_DataLogger_text.hardwareTest">
+<code class="sig-name descname">hardwareTest</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_text.AHF_DataLogger_text.hardwareTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests functionality, gives user a chance to change settings</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_text.AHF_DataLogger_text.makeLogFile">
+<code class="sig-name descname">makeLogFile</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_text.AHF_DataLogger_text.makeLogFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>open a new text log file for today, or open an exisiting text file with ‘a’ for append</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_text.AHF_DataLogger_text.makeQuickStatsFile">
+<code class="sig-name descname">makeQuickStatsFile</code><span class="sig-paren">(</span><em class="sig-param">mice</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_text.AHF_DataLogger_text.makeQuickStatsFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>makes a quickStats file for today’s results.</p>
+<p>QuickStats file contains daily totals of rewards and headFixes for each mouse</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_text.AHF_DataLogger_text.newDay">
+<code class="sig-name descname">newDay</code><span class="sig-paren">(</span><em class="sig-param">mice</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_text.AHF_DataLogger_text.newDay" title="Permalink to this definition">¶</a></dt>
+<dd><p>At the start of a new day, it was customary for the text-based data logging to start new text files,
+and to make a precis of the day’s results into a a separate text file for easy human reading.
+This “quickStats” file should contain info for each mouse with rewards, head fixes,
+or tasks, and other Stimulator specific data, which Stimulator object will provide for each mouse
+just call the Stimulator class functions for each mouse to get a dictionary of results</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_text.AHF_DataLogger_text.readFromLogFile">
+<code class="sig-name descname">readFromLogFile</code><span class="sig-paren">(</span><em class="sig-param">tag</em>, <em class="sig-param">index</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_text.AHF_DataLogger_text.readFromLogFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads the log statement <em>index</em> lines prior to the current line.
+Returns the event and associated dictionary in a tuple.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_text.AHF_DataLogger_text.retireMouse">
+<code class="sig-name descname">retireMouse</code><span class="sig-paren">(</span><em class="sig-param">tag</em>, <em class="sig-param">reason</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_text.AHF_DataLogger_text.retireMouse" title="Permalink to this definition">¶</a></dt>
+<dd><p>store information about a mouse retirement in a referenced file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_text.AHF_DataLogger_text.saveNewMouse">
+<code class="sig-name descname">saveNewMouse</code><span class="sig-paren">(</span><em class="sig-param">tag</em>, <em class="sig-param">note</em>, <em class="sig-param">dictionary={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_text.AHF_DataLogger_text.saveNewMouse" title="Permalink to this definition">¶</a></dt>
+<dd><p>store a new mouse entry in a referenced file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_text.AHF_DataLogger_text.setDateStr">
+<code class="sig-name descname">setDateStr</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_text.AHF_DataLogger_text.setDateStr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the string corresponding to todays date that is used when making files</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_text.AHF_DataLogger_text.setdown">
+<code class="sig-name descname">setdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_text.AHF_DataLogger_text.setdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes session end and closes log file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_text.AHF_DataLogger_text.setup">
+<code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_text.AHF_DataLogger_text.setup" title="Permalink to this definition">¶</a></dt>
+<dd><dl>
+<dt>copies settings, creates folders for data and stats, creates initial log file and writes start session</dt><dd><blockquote>
+<div><blockquote>
+<div><dl>
+<dt>dataPath          path to data folder</dt><dd><blockquote>
+<div><p>_|_</p>
+</div></blockquote>
+<p>/                 logPath   statsPath      subfolders within data folder</p>
+</dd>
+</dl>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><a href="#id2"><span class="problematic" id="id3">|</span></a></div>
+</div>
+</div></blockquote>
+<p>logFilePath  statsFilePath paths to individual files within corresponding subfolders</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_text.AHF_DataLogger_text.storeConfig">
+<code class="sig-name descname">storeConfig</code><span class="sig-paren">(</span><em class="sig-param">tag</em>, <em class="sig-param">configDict</em>, <em class="sig-param">source=''</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_text.AHF_DataLogger_text.storeConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>saves data to corresponding json text file, overwriting old file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_DataLogger_text.AHF_DataLogger_text.writeToLogFile">
+<code class="sig-name descname">writeToLogFile</code><span class="sig-paren">(</span><em class="sig-param">tag</em>, <em class="sig-param">eventKind</em>, <em class="sig-param">eventDict</em>, <em class="sig-param">timeStamp</em>, <em class="sig-param">toShellOrFile=3</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_text.AHF_DataLogger_text.writeToLogFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes the time and type of each event to a text log file, and also to the shell</p>
+<p>Format of the output string: tag     time_epoch or datetime       event
+The computer-parsable time_epoch is printed to the log file and user-friendly datetime is printed to the shell
+:param tag: the tag of mouse, usually from RFIDTagreader.globalTag
+:param eventKind: the type of event to be printed, entry, exit, reward, etc.
+:param eventDict: a dictionary containing data about the event (may be None if no associated data)
+returns: nothing</p>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 <div class="section" id="module-AHF_HardwareTester">
 <span id="ahf-hardwaretester"></span><h2>AHF_HardwareTester<a class="headerlink" href="#module-AHF_HardwareTester" title="Permalink to this headline">¶</a></h2>
@@ -1969,8 +2246,8 @@ task settings</p>
 <li><a class="reference internal" href="#module-AHF_ContactCheck">AHF_ContactCheck</a></li>
 <li><a class="reference internal" href="#module-AHF_DataLogger_mysql">AHF_DataLogger_mysql</a></li>
 <li><a class="reference internal" href="#module-AHF_DataLogger">AHF_DataLogger</a></li>
-<li><a class="reference internal" href="#ahf-datalogger-textmysql">AHF_DataLogger_textMysql</a></li>
-<li><a class="reference internal" href="#ahf-datalogger-text">AHF_DataLogger_text</a></li>
+<li><a class="reference internal" href="#module-AHF_DataLogger_textMySql">AHF_DataLogger_textMySql</a></li>
+<li><a class="reference internal" href="#module-AHF_DataLogger_text">AHF_DataLogger_text</a></li>
 <li><a class="reference internal" href="#module-AHF_HardwareTester">AHF_HardwareTester</a></li>
 <li><a class="reference internal" href="#module-AHF_HeadFixer_NoFix">AHF_HeadFixer_NoFix</a></li>
 <li><a class="reference internal" href="#module-AHF_HeadFixer_Pistons">AHF_HeadFixer_Pistons</a></li>

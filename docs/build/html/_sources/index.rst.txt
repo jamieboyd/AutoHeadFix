@@ -6,7 +6,7 @@
 Welcome to AutoHeadFix's documentation!
 =======================================
 
-**Installation/Setup**
+**Installation/SetuAHF_p**
 
 To download the main repository `click here  <https://github.com/jamieboyd/AutoHeadFix/tree/lever_config/>`_
 
@@ -73,14 +73,14 @@ AHF_DataLogger
 .. automodule:: AHF_DataLogger
     :members:
 
-AHF_DataLogger_textMysql
+AHF_DataLogger_textMySql
 -------------------------
-.. automodule:: DataLogger_textMySql
+.. automodule:: AHF_DataLogger_textMySql
     :members:
 
 AHF_DataLogger_text
 ----------------------
-.. automodule:: DataLogger_text
+.. automodule:: AHF_DataLogger_text
     :members:
 
 
