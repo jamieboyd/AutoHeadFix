@@ -57,7 +57,7 @@ with open("QuickStats/" + day + ".txt", "w+") as f:
         num_trials = 0
         for line in cur.fetchall():
             dict = literal_eval("{}".format(line[3]))
-            # print(line[1], line[2], line[3], line[6], line[0])
+            #print(line[1], line[2], line[3], line[6], line[0])
             num_trials += 1
             if int(dict['outcome']) > 0:
                 num_success += 1
