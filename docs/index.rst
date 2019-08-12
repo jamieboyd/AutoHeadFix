@@ -12,7 +12,7 @@ To download the main repository `click here  <https://github.com/jamieboyd/AutoH
 
 For instructions on building/setting up `click here <https://github.com/zenenhornstein/AHF_setup>`_
 
-For notes from the developer click here: * :ref:`AHF_Notes`
+For notes from the developer `click here </build/html/AHF_Notes.html>`_
 
 .. automodule:: AHF_Base
     :members:
