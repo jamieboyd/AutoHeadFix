@@ -1278,8 +1278,142 @@ Waits for a mouse to either make contact or leave the chamber</p>
 <dd></dd></dl>
 
 </div>
-<div class="section" id="ahf-lickdetector-mpr">
-<h2>AHF_LickDetector_MPR<a class="headerlink" href="#ahf-lickdetector-mpr" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-AHF_LickDetector_MPR">
+<span id="ahf-lickdetector-mpr"></span><h2>AHF_LickDetector_MPR<a class="headerlink" href="#module-AHF_LickDetector_MPR" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="AHF_LickDetector_MPR.AHF_LickDetector_MPR">
+<em class="property">class </em><code class="sig-name descname">AHF_LickDetector_MPR</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_LickDetector_MPR.AHF_LickDetector_MPR" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lick detector for Auto Head Fix based on MPR121 capacitive touch sensor</p>
+<dl class="method">
+<dt id="AHF_LickDetector_MPR.AHF_LickDetector_MPR.about">
+<em class="property">static </em><code class="sig-name descname">about</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_LickDetector_MPR.AHF_LickDetector_MPR.about" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a brief message describing your sub-class, used when asking user to pick a sub-class of this class</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_LickDetector_MPR.AHF_LickDetector_MPR.clearResultsDict">
+<code class="sig-name descname">clearResultsDict</code><span class="sig-paren">(</span><em class="sig-param">resultsDict</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_LickDetector_MPR.AHF_LickDetector_MPR.clearResultsDict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears values in the results dictionary, for daily totals of licks on all channels. Could be extended to per channel data</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_LickDetector_MPR.AHF_LickDetector_MPR.config_user_get">
+<em class="property">static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_LickDetector_MPR.AHF_LickDetector_MPR.config_user_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>static method that querries user for settings, with default responses from starterDict,
+and returns starterDict with settings as edited by the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_LickDetector_MPR.AHF_LickDetector_MPR.getLickCount">
+<code class="sig-name descname">getLickCount</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_LickDetector_MPR.AHF_LickDetector_MPR.getLickCount" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of licks for each channel in the global array without stopping the count.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_LickDetector_MPR.AHF_LickDetector_MPR.getTouches">
+<code class="sig-name descname">getTouches</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_LickDetector_MPR.AHF_LickDetector_MPR.getTouches" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets touches from mpr121</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_LickDetector_MPR.AHF_LickDetector_MPR.hardwareTest">
+<code class="sig-name descname">hardwareTest</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_LickDetector_MPR.AHF_LickDetector_MPR.hardwareTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests functionality, gives user a chance to change settings.
+:Returns: bool – True if any settings have changed</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_LickDetector_MPR.AHF_LickDetector_MPR.logTouchCallback">
+<em class="property">static </em><code class="sig-name descname">logTouchCallback</code><span class="sig-paren">(</span><em class="sig-param">touchedChannel</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_LickDetector_MPR.AHF_LickDetector_MPR.logTouchCallback" title="Permalink to this definition">¶</a></dt>
+<dd><p>custom callback using global task reference from AHF_Task</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_LickDetector_MPR.AHF_LickDetector_MPR.newResultsDict">
+<code class="sig-name descname">newResultsDict</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_LickDetector_MPR.AHF_LickDetector_MPR.newResultsDict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a dictionary with fields, initialized to 0,</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_LickDetector_MPR.AHF_LickDetector_MPR.resetDetector">
+<code class="sig-name descname">resetDetector</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_LickDetector_MPR.AHF_LickDetector_MPR.resetDetector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls MPR121 reset function. Should rarely need to do this? This could be of use in resetting baseline untouched values.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_LickDetector_MPR.AHF_LickDetector_MPR.resumeLickCount">
+<code class="sig-name descname">resumeLickCount</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_LickDetector_MPR.AHF_LickDetector_MPR.resumeLickCount" title="Permalink to this definition">¶</a></dt>
+<dd><p>Continue the lick counting without zeroing the channels</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_LickDetector_MPR.AHF_LickDetector_MPR.setdown">
+<code class="sig-name descname">setdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_LickDetector_MPR.AHF_LickDetector_MPR.setdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>oppposite of setup. Releases any hardware resouces. can be run before editing settings so GPIO
+pins can be reused, for example. This strategy should be used in hardwareTest method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_LickDetector_MPR.AHF_LickDetector_MPR.setup">
+<code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_LickDetector_MPR.AHF_LickDetector_MPR.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+Run by __init__, or can be run  separately after editing the settingsDict</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>bool – the truth that setup completed without errors</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_LickDetector_MPR.AHF_LickDetector_MPR.startLickCount">
+<code class="sig-name descname">startLickCount</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_LickDetector_MPR.AHF_LickDetector_MPR.startLickCount" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zeros the selected list of channels in the global array of licks per channel that the callback function updates.
+Use it to count licks, by zeroing selected channels, then checking the values in the array</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_LickDetector_MPR.AHF_LickDetector_MPR.startLickTiming">
+<code class="sig-name descname">startLickTiming</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_LickDetector_MPR.AHF_LickDetector_MPR.startLickTiming" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zeros the array that stores lick counts for each channel, and makes sure callback is filling the array for requested channels</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_LickDetector_MPR.AHF_LickDetector_MPR.startLogging">
+<code class="sig-name descname">startLogging</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_LickDetector_MPR.AHF_LickDetector_MPR.startLogging" title="Permalink to this definition">¶</a></dt>
+<dd><p>tells the AHF_LickDetectorCallback to log touches in shell and file (if present)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_LickDetector_MPR.AHF_LickDetector_MPR.stopLickCount">
+<code class="sig-name descname">stopLickCount</code><span class="sig-paren">(</span><em class="sig-param">chanList</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_LickDetector_MPR.AHF_LickDetector_MPR.stopLickCount" title="Permalink to this definition">¶</a></dt>
+<dd><p>takes a list of channels and returns a list where each member is the number of licks for that channel in the global array
+call zeroLickCount, wait a while for some licks, then call getLickCount</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_LickDetector_MPR.AHF_LickDetector_MPR.stopLickTiming">
+<code class="sig-name descname">stopLickTiming</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_LickDetector_MPR.AHF_LickDetector_MPR.stopLickTiming" title="Permalink to this definition">¶</a></dt>
+<dd><p>takes a tuple of channels and returns a list where each member is the number of licks for that channel in the global array
+call zeroLickCount, wait a while for some licks, then call getLickCount</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_LickDetector_MPR.AHF_LickDetector_MPR.stopLogging">
+<code class="sig-name descname">stopLogging</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_LickDetector_MPR.AHF_LickDetector_MPR.stopLogging" title="Permalink to this definition">¶</a></dt>
+<dd><p>tells the AHF_LickDetectorCallback to stop logging touches in shell and file (if present)
+but the callback is still running</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_LickDetector_MPR.AHF_LickDetector_MPR.waitForLick">
+<code class="sig-name descname">waitForLick</code><span class="sig-paren">(</span><em class="sig-param">timeOut_secs</em>, <em class="sig-param">startFromZero=False</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_LickDetector_MPR.AHF_LickDetector_MPR.waitForLick" title="Permalink to this definition">¶</a></dt>
+<dd><p>Waits for a lick on any channel. Returns channel that was touched, or 0 if timeout expires with no touch,
+or -1 if startFromZero was True and the detector was touched for entire time</p>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 <div class="section" id="module-AHF_LickDetector">
 <span id="ahf-lickdetector"></span><h2>AHF_LickDetector<a class="headerlink" href="#module-AHF_LickDetector" title="Permalink to this headline">¶</a></h2>
@@ -2255,7 +2389,7 @@ task settings</p>
 <li><a class="reference internal" href="#ahf-headfixer-pwm-pi">AHF_HeadFixer_PWM_Pi</a></li>
 <li><a class="reference internal" href="#module-AHF_HeadFixer_PWM">AHF_HeadFixer_PWM</a></li>
 <li><a class="reference internal" href="#module-AHF_HeadFixer">AHF_HeadFixer</a></li>
-<li><a class="reference internal" href="#ahf-lickdetector-mpr">AHF_LickDetector_MPR</a></li>
+<li><a class="reference internal" href="#module-AHF_LickDetector_MPR">AHF_LickDetector_MPR</a></li>
 <li><a class="reference internal" href="#module-AHF_LickDetector">AHF_LickDetector</a></li>
 <li><a class="reference internal" href="#module-AHF_Notifier">AHF_Notifier</a></li>
 <li><a class="reference internal" href="#module-AHF_Notifier_Requests">AHF_Notifier_Requests</a></li>
