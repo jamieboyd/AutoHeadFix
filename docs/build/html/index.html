@@ -1149,8 +1149,45 @@ pins can be reused, for example. This strategy should be used in hardwareTest me
 </dd></dl>
 
 </div>
-<div class="section" id="ahf-headfixer-pwm-pca9685">
-<h2>AHF_HeadFixer_PWM_PCA9685<a class="headerlink" href="#ahf-headfixer-pwm-pca9685" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-AHF_HeadFixer_PWM_PCA9685">
+<span id="ahf-headfixer-pwm-pca9685"></span><h2>AHF_HeadFixer_PWM_PCA9685<a class="headerlink" href="#module-AHF_HeadFixer_PWM_PCA9685" title="Permalink to this headline">¶</a></h2>
+<p>uses PCA9685 code from AdaFruit, install as follows
+sudo apt-get install i2c-tools
+sudo apt-get install python3-smbus
+git clone <a class="reference external" href="https://github.com/adafruit/Adafruit_Python_GPIO.git">https://github.com/adafruit/Adafruit_Python_GPIO.git</a>
+git clone <a class="reference external" href="https://github.com/adafruit/Adafruit_Python_PCA9685.git">https://github.com/adafruit/Adafruit_Python_PCA9685.git</a></p>
+<dl class="class">
+<dt id="AHF_HeadFixer_PWM_PCA9685.AHF_HeadFixer_PWM_PCA9685">
+<em class="property">class </em><code class="sig-name descname">AHF_HeadFixer_PWM_PCA9685</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_PWM_PCA9685.AHF_HeadFixer_PWM_PCA9685" title="Permalink to this definition">¶</a></dt>
+<dd><p>inherits from AHF_HeadFixer_PWM</p>
+<dl class="method">
+<dt id="AHF_HeadFixer_PWM_PCA9685.AHF_HeadFixer_PWM_PCA9685.about">
+<em class="property">static </em><code class="sig-name descname">about</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_PWM_PCA9685.AHF_HeadFixer_PWM_PCA9685.about" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a brief message describing your sub-class, used when asking user to pick a sub-class of this class</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_HeadFixer_PWM_PCA9685.AHF_HeadFixer_PWM_PCA9685.config_user_get">
+<em class="property">static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_PWM_PCA9685.AHF_HeadFixer_PWM_PCA9685.config_user_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>static method that querries user for settings, with default responses from starterDict,
+and returns starterDict with settings as edited by the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_HeadFixer_PWM_PCA9685.AHF_HeadFixer_PWM_PCA9685.setdown">
+<code class="sig-name descname">setdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_PWM_PCA9685.AHF_HeadFixer_PWM_PCA9685.setdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>oppposite of setup. Releases any hardware resouces. can be run before editing settings so GPIO
+pins can be reused, for example. This strategy should be used in hardwareTest method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_HeadFixer_PWM_PCA9685.AHF_HeadFixer_PWM_PCA9685.setup">
+<code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_PWM_PCA9685.AHF_HeadFixer_PWM_PCA9685.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets settings from dict, not &#64;abstract because this may be all you nees, as for HeadFixer_NoFix</p>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 <div class="section" id="ahf-headfixer-pwm-pi">
 <h2>AHF_HeadFixer_PWM_Pi<a class="headerlink" href="#ahf-headfixer-pwm-pi" title="Permalink to this headline">¶</a></h2>
@@ -2385,7 +2422,7 @@ task settings</p>
 <li><a class="reference internal" href="#module-AHF_HardwareTester">AHF_HardwareTester</a></li>
 <li><a class="reference internal" href="#module-AHF_HeadFixer_NoFix">AHF_HeadFixer_NoFix</a></li>
 <li><a class="reference internal" href="#module-AHF_HeadFixer_Pistons">AHF_HeadFixer_Pistons</a></li>
-<li><a class="reference internal" href="#ahf-headfixer-pwm-pca9685">AHF_HeadFixer_PWM_PCA9685</a></li>
+<li><a class="reference internal" href="#module-AHF_HeadFixer_PWM_PCA9685">AHF_HeadFixer_PWM_PCA9685</a></li>
 <li><a class="reference internal" href="#ahf-headfixer-pwm-pi">AHF_HeadFixer_PWM_Pi</a></li>
 <li><a class="reference internal" href="#module-AHF_HeadFixer_PWM">AHF_HeadFixer_PWM</a></li>
 <li><a class="reference internal" href="#module-AHF_HeadFixer">AHF_HeadFixer</a></li>
