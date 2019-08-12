@@ -6,13 +6,13 @@
 Welcome to AutoHeadFix's documentation!
 =======================================
 
-**Installation/SetuAHF_p**
+**Installation/Setup**
 
 To download the main repository `click here  <https://github.com/jamieboyd/AutoHeadFix/tree/lever_config/>`_
 
 For instructions on building/setting up `click here <https://github.com/zenenhornstein/AHF_setup>`_
 
-For notes from the developer click here: * :ref:`genindex`
+For notes from the developer click here: * :ref:`AHF_Notes`
 
 .. automodule:: AHF_Base
     :members:
@@ -101,7 +101,7 @@ AHF_HeadFixer_Pistons
     :members:
 
 AHF_HeadFixer_PWM_PCA9685
--------------------------
+--------------------------
 .. automodule:: AHF_HeadFixer_PWM_PCA9685
     :members:
 
