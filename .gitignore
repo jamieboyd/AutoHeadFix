@@ -52,3 +52,5 @@ ehthumbs.db
 
 #Stats Folder
 QuickStats
+#ignore repositories neededfor sphinx import
+dependancies
