@@ -9,7 +9,10 @@ import os
 import pwd
 import grp
 from time import sleep
+from AHF_Task import Task
 
+from AHF_Reader import AHF_Reader
+from AHF_Base import AHF_Base
 class AHF_Subjects_mice (AHF_Subjects):
     """
     class for the mice, as experimental subjects. Contains a dictionary where key id IDtag, and value is a dictionary
@@ -322,7 +325,7 @@ class AHF_Subjects_mice (AHF_Subjects):
             elif event == '2':
                 self.subjectSettings()
         self.setup()
-from AHF_Task import Task
 
-from AHF_Reader import AHF_Reader
-from AHF_Base import AHF_Base
+    def newDay():
+        for mouse in self.miceDict:
+            mouse.get("Rewarder").update({"totalRewardsToday": 0})

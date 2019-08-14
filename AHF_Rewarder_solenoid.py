@@ -48,6 +48,7 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
 
 
     def config_user_subject_get(self,starterDict = {}):
+        starterDict.update({'totalRewardsToday' : 0})
         entrySize = starterDict.get('entrySize', AHF_Rewarder_solenoid.defaultEntry)
         response = input(
             'Enter the valve opening duration, in seconds, for entry rewards. Currently {:.2f}: '.format(entrySize))
@@ -67,6 +68,11 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
         if response != '':
             taskSize = float(response)
         starterDict.update({'taskSize': taskSize})
+        maxEntryRewards = starterDict.get ('maxEntryRewards', AHF_Rewarder_soleoid.maxEntryRewardsDefault)
+        response = input('Enter the maximum number of entry reards given per day')
+        if response != '':
+            maxEntryRewards = int (response)
+        starterDict.update ({'maxEntryRewards' : maxEntryRewards})
         return starterDict
 
     def config_subject_get(self, starterDict={}):
@@ -77,8 +83,11 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
         starterDict.update({'lastEntryTime': 0})
         taskSize = starterDict.get('taskSize', AHF_Rewarder_solenoid.defaultTask)
         starterDict.update({'taskSize': taskSize})
+        maxEntryRewards = starterDict.get('maxEntryRewards', AHF_Rewarder_solenoid.maxEntryRewardsDefault)
+        starterDict.update ({'maxEntryRewards' : maxEntryRewards})
+        starterDict.update({'totalRewardsToday' : 0})
         return starterDict
-
+   
     def results_subject_get (self):
         return self.results
 
@@ -121,14 +130,16 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
             self.threadReward(1)
             return 1
         if rewardName is 'entry':
-            if resultsDict.get ('entry', 0) > settingsDict.get ('maxEntryRewards', self.maxEntryRewards):
-                return 0
-            mouseDict = self.task.Subjects.get(self.task.tag)
             if mouseDict is not None:
+                if mouseDict.get("Rewarder").get("totalRewardsToday") > mouseDict.get('Rewarder').get('maxEntryRewards'):
+                    return 0
+            
+
                 lastTime = mouseDict.get("Rewarder").get("lastEntryTime")
                 if time() - lastTime < mouseDict.get("Rewarder").get('entryDelay'):
                     return 0
                 self.task.Subjects.get(self.task.tag).get("Rewarder").update({"lastEntryTime": time()})
+                mouseDict.get('Rewarder').update({'totalRewards': mouseDict.get('Rewarder').get(totalRewardsToday) + 1})
         if self.task.Subjects.get(self.task.tag) is None:
             sleepTime = 0.4
         else:

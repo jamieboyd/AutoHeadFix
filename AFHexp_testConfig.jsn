@@ -1,6 +1,0 @@
-{"entranceRewardTime": 0.05
-"hasUDP": false
-"maxEntryRewards": 100
-"entryRewardDelay": 0.5
-"propHeadFix": 1
-"camParams": {"format": "h264", "resolution": [640, 480], "framerate": 30, "iso": 200, "whiteBalance": false, "quality": 20, "shutter_speed": 30000, "previewWin": [40, 40, 680, 520]}, "taskRewardTime": 0.1, "skeddadleTime": 0.333, "stimulator": "AHF_Stimulator_Rewards", "hasTextMsg": false, "stimParams": {"nRewards": "5", "rewardInterval": "5"}}
