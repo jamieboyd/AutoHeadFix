@@ -47,6 +47,7 @@ class AHF_HeadFixer_NoFix (AHF_HeadFixer):
 
     def setup(self):
         self.isChecking = False
+        self.task.isFixTrial = False
         super().setup()
 
     def setdown(self):
