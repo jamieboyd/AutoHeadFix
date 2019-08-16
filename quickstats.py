@@ -1,7 +1,7 @@
 import pymysql
 import time
 from ast import literal_eval
-tags = [801010523, 2018121208, 2018121273, 2018121358]
+tags = [2018121341, 2018121208, 2018121273, 2018121358]
 jsonDict = {}
 db = pymysql.connect(host="142.103.107.236", user="slavePi", db="AHF_laser_cage", password="iamapoorslave")
 query_sources = """SELECT DISTINCT `Dictionary_source` FROM `configs` WHERE `Cage` = %s AND `Tag` = %s"""
@@ -57,7 +57,7 @@ with open("QuickStats/" + day + ".txt", "w+") as f:
         num_trials = 0
         for line in cur.fetchall():
             dict = literal_eval("{}".format(line[3]))
-            #print(line[1], line[2], line[3], line[6], line[0])
+            print(line[1], line[2], line[3], line[6], line[0])
             num_trials += 1
             if int(dict['outcome']) > 0:
                 num_success += 1

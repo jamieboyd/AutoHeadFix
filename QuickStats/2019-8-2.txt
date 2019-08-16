@@ -6,58 +6,58 @@ Number of entries: 221
 Number of licks: 575
 Number of rewards: 0
 2018121208
-Number of trials: 62
+Number of trials: 73
 Number of successful trials: 0
-Number of entries: 386
-Number of licks: 893
+Number of entries: 418
+Number of licks: 955
 Number of rewards: 0
 2018121273
-Number of trials: 24
+Number of trials: 41
 Number of successful trials: 0
-Number of entries: 158
-Number of licks: 795
+Number of entries: 173
+Number of licks: 883
 Number of rewards: 0
 2018121358
-Number of trials: 34
+Number of trials: 43
 Number of successful trials: 1
-Number of entries: 188
-Number of licks: 480
+Number of entries: 207
+Number of licks: 528
 Number of rewards: 1
 BrainLightClass: AHF_BrainLight_1GPIO
 BrainLightDict: {'ledPin': 23, 'ledDelay': 3.0}
 CameraClass: AHF_Camera_PiCam
-CameraDict: {'previewWin': [0, 0, 640, 480], 'quality': 20, 'whiteBalance': False, 'framerate': 30, 'resolution': [640, 480], 'format': 'h264', 'shutter_speed': 30000, 'iso': 0}
+CameraDict: {'quality': 20, 'previewWin': [0, 0, 640, 480], 'format': 'h264', 'iso': 200, 'framerate': 30, 'whiteBalance': False, 'shutter_speed': 30000, 'resolution': [640, 480]}
 ContactCheckClass: AHF_ContactCheck_BeamBreak
-ContactCheckDict: {'contactPin': 12, 'contactPUD': 'PUD_UP', 'contactPolarity': 'FALLING'}
+ContactCheckDict: {'contactPin': 12, 'contactPolarity': 'FALLING', 'contactPUD': 'PUD_UP'}
 DataLoggerClass: AHF_DataLogger_mysql
-DataLoggerDict: {'DBuser': 'slavePi', 'DBpwd': 'iamapoorslave', 'DBhost': '142.103.107.236', 'DB': 'AHF_laser_cage', 'cageID': 'cage1'}
+DataLoggerDict: {'cageID': 'cage1', 'DB': 'AHF_laser_cage', 'DBpwd': 'iamapoorslave', 'DBuser': 'slavePi', 'DBhost': '142.103.107.236'}
 HeadFixerClass: AHF_HeadFixer_PWM_PCA9685
-HeadFixerDict: {'servoFixedPosition': 435, 'servoReleasedPosition': 710, 'skeddadleTime': 5.0, 'servoAddress': 64}
+HeadFixerDict: {'servoAddress': 64, 'skeddadleTime': 5.0, 'servoFixedPosition': 435, 'servoReleasedPosition': 710}
 LickDetectorClass: AHF_LickDetector_MPR
-LickDetectorDict: {'unTouchThresh': 4, 'touchThresh': 8, 'IRQpin': 26, 'touchChans': [0, 1, 2, 3], 'mprAddress': 90}
+LickDetectorDict: {'IRQpin': 26, 'touchThresh': 8, 'unTouchThresh': 4, 'mprAddress': 90, 'touchChans': [0, 1, 2, 3]}
 ReaderClass: AHF_Reader_ID
-ReaderDict: {'TIRpin': 21, 'inChamberTimeLimit': 600, 'serialPort': '/dev/serial0'}
+ReaderDict: {'inChamberTimeLimit': 600, 'serialPort': '/dev/serial0', 'TIRpin': 21}
 RewarderClass: AHF_Rewarder_solenoid_rpi
-RewarderDict: {'maxEntryRewards': 1000, 'rewards': {'task': 0.4, 'test': 1.0, 'entry': 0.2}, 'entryRewardDelay': 1.0, 'rewardPin': 13}
+RewarderDict: {'rewards': {'test': 1.0, 'task': 0.4, 'entry': 0.2}, 'rewardPin': 13, 'entryRewardDelay': 1.0, 'maxEntryRewards': 1000}
 StimulatorClass: AHF_Stimulator_LickWithhold
-StimulatorDict: {'speakerPin': 11, 'lickWrongTimeout': 2, 'speakerDuty': 0.8, 'speakerFreq': 300, 'speakerOffForReward': 1.5, 'defaultLevel': 1}
-StimulusClass: AHF_Stimulus_VibMotor
-StimulusDict: {'pulseTime': 0.2, 'motorFreq': 300, 'motorPin': 27, 'motorDuty': 0.8}
+StimulatorDict: {'speakerOffForReward': 1.5, 'defaultLevel': 0, 'speakerDuty': 0.8, 'lickWrongTimeout': 2, 'speakerPin': 11, 'speakerFreq': 300}
+StimulusClass: AHF_Stimulus_None
+StimulusDict: {}
 SubjectsClass: AHF_Subjects_mice
-SubjectsDict: {'jsonName': 'subjects', 'inChamberTimeLimit': 300, 'loadMiceConfigs': 'provide_json'}
+SubjectsDict: {'inChamberTimeLimit': 300, 'jsonName': 'subjects', 'loadMiceConfigs': 'provide_json'}
 801010523: 
-    Stimulator: {'holdEndTime': 2, 'goalStartWidth': 100, 'holdTime': 0.08, 'holdStartTime': 0.08, 'perturbPercent': 0.0, 'goalCenter': 150, 'perturbRampDur': 0.25, 'promoteRate': 0.75, 'goalTrainOn': 0, 'goalWidth': 280, 'holdIncr': 0.1, 'demoteRate': 0.25, 'holdTrainOn': False, 'toGoalTime': 0.5, 'perturbStartRandom': 0, 'perturbForceOffset': 0, 'perturbForceRandom': 400, 'goalEndWidth': 10, 'goalIncr': 5, 'perturbStartTime': 1}
-    Rewarder: {'taskSize': 0.4, 'entrySize': 0.2}
-    HeadFixer: {'headFixTime': 40, 'propHeadFix': 0.75}
+    Stimulator: {'holdEndTime': 2, 'goalIncr': 5, 'goalWidth': 280, 'perturbRampDur': 0.25, 'holdTime': 0.08, 'goalTrainOn': 0, 'perturbForceRandom': 400, 'goalCenter': 150, 'goalEndWidth': 10, 'perturbStartRandom': 0, 'holdTrainOn': False, 'toGoalTime': 0.5, 'holdStartTime': 0.08, 'perturbPercent': 0.0, 'promoteRate': 0.75, 'perturbForceOffset': 0, 'perturbStartTime': 1, 'demoteRate': 0.25, 'goalStartWidth': 100, 'holdIncr': 0.1}
+    Rewarder: {'entrySize': 0.2, 'taskSize': 0.4}
+    HeadFixer: {'propHeadFix': 0.75, 'headFixTime': 40}
 2018121208: 
-    Stimulator: {'holdEndTime': 2, 'goalStartWidth': 100, 'holdTime': 0.08, 'holdStartTime': 0.1, 'perturbPercent': 0.0, 'goalCenter': 150, 'perturbRampDur': 0.25, 'promoteRate': 0.75, 'goalTrainOn': 0, 'goalWidth': 280, 'holdIncr': 0.1, 'demoteRate': 0.25, 'holdTrainOn': False, 'toGoalTime': 0.5, 'perturbStartRandom': 0, 'perturbForceOffset': 0, 'perturbForceRandom': 400, 'goalEndWidth': 10, 'goalIncr': 5, 'perturbStartTime': 1}
-    Rewarder: {'taskSize': 0.4, 'entrySize': 0.2}
-    HeadFixer: {'headFixTime': 40, 'propHeadFix': 0.75}
+    Stimulator: {'holdEndTime': 2, 'goalIncr': 5, 'goalWidth': 280, 'perturbRampDur': 0.25, 'holdTime': 0.08, 'goalTrainOn': 0, 'perturbForceRandom': 400, 'goalCenter': 150, 'goalEndWidth': 10, 'perturbStartRandom': 0, 'holdTrainOn': False, 'toGoalTime': 0.5, 'holdStartTime': 0.1, 'perturbPercent': 0.0, 'promoteRate': 0.75, 'perturbForceOffset': 0, 'perturbStartTime': 1, 'demoteRate': 0.25, 'goalStartWidth': 100, 'holdIncr': 0.1}
+    Rewarder: {'entrySize': 0.2, 'taskSize': 0.4}
+    HeadFixer: {'propHeadFix': 0.75, 'headFixTime': 40}
 2018121273: 
-    Stimulator: {'holdEndTime': 2, 'goalStartWidth': 100, 'holdTime': 0.08, 'holdStartTime': 0.1, 'perturbPercent': 0.0, 'goalCenter': 150, 'perturbRampDur': 0.25, 'promoteRate': 0.75, 'goalTrainOn': 0, 'goalWidth': 280, 'holdIncr': 0.1, 'demoteRate': 0.25, 'holdTrainOn': False, 'toGoalTime': 0.5, 'perturbStartRandom': 0, 'perturbForceOffset': 0, 'perturbForceRandom': 400, 'goalEndWidth': 10, 'goalIncr': 5, 'perturbStartTime': 1}
-    Rewarder: {'taskSize': 0.4, 'entrySize': 0.2}
-    HeadFixer: {'headFixTime': 40, 'propHeadFix': 0.75}
+    Stimulator: {'holdEndTime': 2, 'goalIncr': 5, 'goalWidth': 280, 'perturbRampDur': 0.25, 'holdTime': 0.08, 'goalTrainOn': 0, 'perturbForceRandom': 400, 'goalCenter': 150, 'goalEndWidth': 10, 'perturbStartRandom': 0, 'holdTrainOn': False, 'toGoalTime': 0.5, 'holdStartTime': 0.1, 'perturbPercent': 0.0, 'promoteRate': 0.75, 'perturbForceOffset': 0, 'perturbStartTime': 1, 'demoteRate': 0.25, 'goalStartWidth': 100, 'holdIncr': 0.1}
+    Rewarder: {'entrySize': 0.2, 'taskSize': 0.4}
+    HeadFixer: {'propHeadFix': 0.75, 'headFixTime': 40}
 2018121358: 
-    Stimulator: {'holdEndTime': 2, 'goalStartWidth': 100, 'holdTime': 0.08, 'holdStartTime': 0.1, 'perturbPercent': 0.0, 'goalCenter': 150, 'perturbRampDur': 0.25, 'promoteRate': 0.75, 'goalTrainOn': 0, 'goalWidth': 280, 'holdIncr': 0.1, 'demoteRate': 0.25, 'holdTrainOn': False, 'toGoalTime': 0.5, 'perturbStartRandom': 0, 'perturbForceOffset': 0, 'perturbForceRandom': 400, 'goalEndWidth': 10, 'goalIncr': 5, 'perturbStartTime': 1}
-    Rewarder: {'taskSize': 0.4, 'entrySize': 0.2}
-    HeadFixer: {'headFixTime': 40, 'propHeadFix': 0.75}
+    Stimulator: {'holdEndTime': 2, 'goalIncr': 5, 'goalWidth': 280, 'perturbRampDur': 0.25, 'holdTime': 0.08, 'goalTrainOn': 0, 'perturbForceRandom': 400, 'goalCenter': 150, 'goalEndWidth': 10, 'perturbStartRandom': 0, 'holdTrainOn': False, 'toGoalTime': 0.5, 'holdStartTime': 0.1, 'perturbPercent': 0.0, 'promoteRate': 0.75, 'perturbForceOffset': 0, 'perturbStartTime': 1, 'demoteRate': 0.25, 'goalStartWidth': 100, 'holdIncr': 0.1}
+    Rewarder: {'entrySize': 0.2, 'taskSize': 0.4}
+    HeadFixer: {'propHeadFix': 0.75, 'headFixTime': 40}
