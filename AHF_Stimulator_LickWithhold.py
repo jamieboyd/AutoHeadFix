@@ -320,7 +320,7 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
             timeInterval = self.mouse.get("Stimulator").get("rewardInterval") #- self.rewarder.rewardDict.get ('task')
             self.rewardTimes = []
             self.camera.start_preview()
-            for reward in range(self.nRewards):
+            for reward in range(self.mouse.get("Stimulator").get("nRewards")):
                 self.rewardTimes.append (time())
                 self.rewarder.giveReward('task')
                 sleep(timeInterval)
