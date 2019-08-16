@@ -12,9 +12,10 @@ class AHF_Rewarder(AHF_Base, metaclass = ABCMeta):
     rewardUnits = ''
     testAmount = 0
     maxEntryRewardsDefault =1000
+    maxBreakBeamRewardsDefault = 200
     entryRewardDelayDefault = 1.0
 
-    
+
     @abstractmethod
     def giveReward(self, rewardName, resultsDict={}, settingsDict = {}):
         return 0
@@ -77,4 +78,3 @@ class AHF_Rewarder(AHF_Base, metaclass = ABCMeta):
         inputStr= input ('\nDo you want to run the control program to turn rewarder ON and OFF?(y or n): ')
         if inputStr[0] == 'y' or inputStr[0] == "Y":
             self.rewardControl ()
-        
