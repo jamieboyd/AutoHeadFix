@@ -237,15 +237,15 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
         print('=============== Training Settings ==================')
 
         promoteRate = starterDict.get ('promoteRate', AHF_Stimulator_Lever.defaultPromoteRate)
-        response = input('Enter the performance rate to exceed to be promoted (currently {:d}): '.format (promoteRate))
+        response = input('Enter the performance rate to exceed to be promoted (currently {:.2f}): '.format (promoteRate))
         if response != '':
             promoteRate = float (response)
 
         demoteRate = starterDict.get ('demoteRate', AHF_Stimulator_Lever.defaultDemoteRate)
-        response = input('Enter the performance rate below which to be demoted (currently {:d}): '.format (demoteRate))
+        response = input('Enter the performance rate below which to be demoted (currently {:.2f}): '.format (demoteRate))
         if response != '':
             demoteRate = float (response)
-        starterDict.update({'trainSize': trainSize, 'promoteRate': promoteRate, 'demoteRate': demoteRate})
+        starterDict.update({'promoteRate': promoteRate, 'demoteRate': demoteRate})
 
         goalTrainOn = starterDict.get ('goalTrainOn', AHF_Stimulator_Lever.defaultGoalTrainOn)
         response = input('Enter whether the goal train is on; bit 0 means training, bit 1 means demotion is not allowed, only promotion to next level (currently {:d}): '.format (goalTrainOn))
@@ -268,25 +268,25 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
             goalIncr = int (response)
         starterDict.update({'goalTrainOn': goalTrainOn, 'goalStartWidth': goalStartWidth, 'goalEndWidth': goalEndWidth, 'goalIncr': goalIncr})
 
-        holdTrainOn = starterDict.get ('holdTrainOn', AHF_Stimulator_Lever.defaultHoldsTrainOn)
+        holdTrainOn = starterDict.get ('holdTrainOn', AHF_Stimulator_Lever.defaultHoldTrainOn)
         response = input('Enter whether the hold train is on; bit 0 means training, bit 1 means demotion is not allowed, only promotion to next level (currently {:d}): '.format (holdTrainOn))
         if response != '':
             holdTrainOn = int (response)
 
         holdStartTime = starterDict.get ('holdStartTime', AHF_Stimulator_Lever.defaultHoldStartTime)
-        response = input('Enter starting hold time (currently {:d}): '.format (holdStartTime))
+        response = input('Enter starting hold time (currently {:.2f}): '.format (holdStartTime))
         if response != '':
-            holdStartTime = int (response)
+            holdStartTime = float (response)
 
         holdEndTime = starterDict.get ('holdEndTime', AHF_Stimulator_Lever.defaultHoldEndTime)
-        response = input('Enter ending hold time (currently {:d}): '.format (holdEndTime))
+        response = input('Enter ending hold time (currently {:.2f}): '.format (holdEndTime))
         if response != '':
-            holdEndTime = int (response)
+            holdEndTime = float (response)
 
         holdIncr = starterDict.get ('holdIncr', AHF_Stimulator_Lever.defaultHoldIncr)
-        response = input('Enter amount goal width decreases by, by level (currently {:d}): '.format (holdIncr))
+        response = input('Enter amount hold time decreases by, by level (currently {:.2f}): '.format (holdIncr))
         if response != '':
-            holdIncr = int (response)
+            holdIncr = float (response)
         starterDict.update({'holdTrainOn': holdTrainOn, 'holdStartTime': holdStartTime, 'holdEndTime': holdEndTime, 'holdIncr': holdIncr})
         return starterDict
 

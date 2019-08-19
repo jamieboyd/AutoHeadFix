@@ -37,14 +37,19 @@ class AHF_HeadFixer_NoFix (AHF_HeadFixer):
         return super().config_user_subject_get(starterDict)
 
     @staticmethod
-    def isFixedCheck (object):
+    def isFixedCheck ():
         AHF_HeadFixer_NoFix.isChecking = True
         mouseDict = AHF_Task.gTask.Subjects.get(AHF_Task.gTask.tag)
         lastRewardTime = time()
+        rewardGiven = False
         while AHF_Task.gTask.contact:
             sleep(0.05)
             if time() - lastRewardTime >= mouseDict.get("Rewarder").get("breakBeamDelay"):
-                AHF_Task.gTask.Rewarder.giveRewardCM(object, "breakBeam")
+                if AHF_Task.gTask.Rewarder.giveRewardCM("breakBeam") > 0:
+                    rewardGiven = True
+                    lastRewardTime = time()
+        if rewardGiven:
+            mouseDict.get("Rewarder").update({"lastBreakBeamTime": time()})
         AHF_Task.gTask.Stimulator.stop()
         AHF_HeadFixer_NoFix.isChecking = False
         pass
@@ -63,7 +68,7 @@ class AHF_HeadFixer_NoFix (AHF_HeadFixer):
         """
         if self.task.contact and not AHF_HeadFixer_NoFix.isChecking:
 
-            start_new_thread(self.isFixedCheck, (self))
+            start_new_thread(self.isFixedCheck, ())
             return True
         return False
 
