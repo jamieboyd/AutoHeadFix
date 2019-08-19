@@ -90,7 +90,7 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
             breakBeamDelay = float(response)
         starterDict.update({'breakBeamDelay': breakBeamDelay})
         maxBreakBeamRewards = starterDict.get ('maxBreakBeamRewards', AHF_Rewarder_solenoid.maxBreakBeamRewardsDefault)
-        response = input('Enter the maximum number of entry reards given per day')
+        response = input('Enter the maximum number of break beam reards given per day')
         if response != '':
             maxBreakBeamRewards = int (response)
         starterDict.update ({'maxBreakBeamRewards' : maxBreakBeamRewards})
