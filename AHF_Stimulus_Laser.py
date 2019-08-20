@@ -341,7 +341,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
                     return False
                 next_pos = self.cross_pos + np.array(prod)
                 #Make sure the cross remains within the boundaries given by the overlay
-                if not any((any(next_pos<0),any(next_pos>=np.array(self.overlay_resolution)))):
+                if not any((any(next_pos<0),any(next_pos>=np.flipud(np.array(self.overlay_resolution))))):
                     self.cross_pos = next_pos
                     self.camera.remove_overlay(self.l3)
                     self.make_cross()
