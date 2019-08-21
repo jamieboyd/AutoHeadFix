@@ -214,6 +214,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
         #self.buzzTimes = []
         #self.buzzTypes = []
         #self.lickWithholdTimes = []
+        self.zeroLaser()
         self.rewardTimes = []
 
     def trialPrep(self):
@@ -362,6 +363,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
 
 
     def move(self,x,y,phase,delay,topleft,mp):
+        
         #Main function, which moves stepper motors by x and y.
         if mp == True:
             phase_x,phase_y = phase.get()
@@ -372,8 +374,8 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
                   [0, 0, 1, 0], [0, 0, 1, 1], [0, 0, 0, 1], [1, 0, 0, 1]]
 
         if topleft==True:
-            x-=60
-            y-=60
+            x-=15
+            y-=15
 
         if abs(x)>=abs(y):
             x_steps = np.arange(start=0,stop=abs(x),dtype=int)
@@ -414,9 +416,9 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
             sleep(delay)
 
         if topleft == True:
-            x = 60
-            y = 60
-            for i in np.arange(start=0,stop=30,dtype=int):
+            x = 15
+            y = 15
+            for i in np.arange(start=0,stop=15,dtype=int):
                 next_phase_x = (phase_x + self.get_dir(x)) % len(states)
                 next_phase_y = (phase_y + self.get_dir(y)) % len(states)
                 byte = states[next_phase_x]+states[next_phase_y]
@@ -466,6 +468,10 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
         else:
             print('Duration must be below 1000 ms.')
 
+    def zeroLaser(self):
+        self.move_to([-500, -500], topleft=False)
+        self.pos = np.array([0, 0])
+
 
 #==== High-level Utility functions: Matching of coord systems, target selection and image registration ====
 
@@ -509,8 +515,9 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
             with keyboard.Listener(on_press=self.on_press) as k_listener:
                 k_listener.join()
         finally:
+            print("ending pos", self.pos)
             for point in self.laser_points:
-                self.move_to(point,topleft=True,join=True)
+                self.move_to(np.flipud(point),topleft=True,join=True)
                 sleep(2)
 
             k_listener.stop()
