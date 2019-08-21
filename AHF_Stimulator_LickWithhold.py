@@ -257,7 +257,8 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
 #=================Main functions called from outside===========================
     def run(self, level = -1, resultsDict = {}, settingsDict = {}):
         super().run()
-        super().startVideo()
+        if self.task.Stimulus.videoAllowed():
+            super().startVideo()
         self.tag = self.task.tag
         self.mouse = self.task.Subjects.get(self.tag)
         if level < 0:
@@ -304,7 +305,8 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
                         newRewards = resultsDict.get('rewards', 0) + len (self.rewardTimes)
                         resultsDict.update({'rewards': newRewards})
                         self.task.Stimulus.trialEnd()
-                        super().stopVideo()
+                        if self.task.videoAllowed():
+                            super().stopVideo()
                         return
                 #print ('{:013}\t{:s}\treward'.format(self.mouse.tag, datetime.fromtimestamp (int (time())).isoformat (' ')))
                 self.OffForRewardEnd = time() + self.speakerOffForReward
@@ -315,7 +317,8 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
             resultsDict.update({'rewards': newRewards})
             self.task.Stimulus.trialEnd()
             #self.camera.stop_preview()
-            super().stopVideo()
+            if self.task.Stimulus.videoAllowed():
+                super().stopVideo()
         else:
             timeInterval = self.mouse.get("Stimulator").get("rewardInterval") #- self.rewarder.rewardDict.get ('task')
             self.rewardTimes = []
@@ -324,10 +327,11 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
                 self.rewardTimes.append (time())
                 self.rewarder.giveReward('task')
                 sleep(timeInterval)
-            newRewards = resultsDict.get('rewards', 0) + self.nRewards
+            newRewards = resultsDict.get('rewards', 0) + self.mouse.get("Stimulator").get("nRewards")
             resultsDict.update({'rewards': newRewards})
             #self.camera.stop_preview()
-            super().stopVideo()
+            if self.task.Stimulus.videoAllowed():
+                super().stopVideo()
 
     def setdown (self):
         print ('Withhold stimulator set down')

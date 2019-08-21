@@ -22,3 +22,6 @@ class AHF_Stimulus (AHF_Base, metaclass = ABCMeta):
         Code to be run at end of trial. E.g. moving laser to zero position
         """
         pass
+    
+    def videoAllowed(self):
+        return True

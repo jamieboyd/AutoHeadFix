@@ -227,6 +227,8 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
         self.camera.stop_preview()
         self.move_to(np.array([0,0]),topleft=True,join=False)
 
+    def videoAllowed(self):
+        return False
 #============== Utility functions for the stepper motors and laser =================
 
     def unlock(self):
@@ -304,7 +306,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
             self.kb.press(keyboard.Key.backspace)
             self.kb.release(keyboard.Key.backspace)
             self.image_points.append(np.copy(self.cross_pos))
-            self.laser_points.append(np.copy(np.flip(self.pos,axis=0)))
+            self.laser_points.append(np.copy(np.flip(self.pos, axis =0)))
             print('\n\nPosition saved!\n\n')
         if key == keyboard.Key.esc:
             if len(self.image_points)>=3:
@@ -370,8 +372,8 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
                   [0, 0, 1, 0], [0, 0, 1, 1], [0, 0, 0, 1], [1, 0, 0, 1]]
 
         if topleft==True:
-            x-=30
-            y-=30
+            x-=60
+            y-=60
 
         if abs(x)>=abs(y):
             x_steps = np.arange(start=0,stop=abs(x),dtype=int)
@@ -412,8 +414,8 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
             sleep(delay)
 
         if topleft == True:
-            x = 30
-            y = 30
+            x = 60
+            y = 60
             for i in np.arange(start=0,stop=30,dtype=int):
                 next_phase_x = (phase_x + self.get_dir(x)) % len(states)
                 next_phase_y = (phase_y + self.get_dir(y)) % len(states)
@@ -432,6 +434,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
     def move_to(self,new_pos,topleft=True,join=False):
         #High-level function, which invokes self.move to run on another processor
         steps = np.around(new_pos).astype(int)-self.pos
+        print("move by", steps)
         mp = Process(target=self.move, args=(steps[0],steps[1],self.phase,self.delay,topleft,False,))
         mp.daemon = True
         mp.start()
@@ -506,7 +509,10 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
             with keyboard.Listener(on_press=self.on_press) as k_listener:
                 k_listener.join()
         finally:
-            self.move_to(np.array([0,0]),topleft=True,join=False)
+            for point in self.laser_points:
+                self.move_to(point,topleft=True,join=True)
+                sleep(2)
+
             k_listener.stop()
             mp.terminate() #not necessary
             mp.join(timeout=1.0)
@@ -527,6 +533,8 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
             return np.vstack((np.linalg.solve(a, b1),np.linalg.solve(a, b2)))
         #I don't know why this has to be here, but it does
         print(self.laser_points)
+        print(self.image_points)
+        sleep(1)
         #Average the coefficient matrix obatained by solving all combinations of triplets.
         if len(list(set([x[0] for x in self.laser_points])))>=3:
             self.coeff = []
@@ -535,6 +543,8 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
                 lp = np.array([i[0][1][1],i[1][1][1],i[2][1][1]])
                 self.coeff.append(solver(ip, lp))
             self.coeff = np.mean(np.asarray(self.coeff),axis=0)
+        sleep(1)
+        print(self.coeff)
         print("Center in laser coords:", np.dot(self.coeff, np.asarray([128, 128, 1])))
 
     def get_ref_im(self):
@@ -544,15 +554,16 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
         self.camera.capture(self.mouse.get('ref_im'),'rgb')
 
     def select_targets(self):
+        mice = {}
         if(path.exists(self.hdf_path)):
             with File(self.hdf_path, 'r+') as hdf:
                 for tag, mouse in hdf.items():
-                    tempMouse = self.task.Subjects.get(tag)
+                    tempMouse = {}
                     if(mouse.__contains__('targets')):
                         tempMouse.update({'targets': mouse['targets'][:]})
                     if(mouse.__contains__('ref_im')):
                         tempMouse.update({'ref_im': mouse['ref_im'][:]})
-        mice = self.task.Subjects.get_all()
+                    mice.update({tag:tempMouse})
         #GUI function for the selecting targets
         def manual_annot(img):
             warnings.filterwarnings("ignore",".*GUI is implemented.*")
@@ -568,6 +579,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
             print('Need to perform the matching first before selecting targets')
             return None
         else:
+            inputStr = "0"
             for tag, mouse in mice.items():
                 if 'targets' in mouse:
                     inputStr = input('Certain/All mice already have brain targets.\n0: Select targets for remaining mice\n1: Select targets for all registered mice.\n')
@@ -592,9 +604,10 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
                         print('{0}\t{1}\t{2}'.format('0',mouse.get('targets')[0],mouse.get('targets')[1]))
             with File(self.hdf_path, 'r+') as hdf:
                 for tag, mouse in hdf.items():
-                    tempMouse = self.task.Subjects.get(tag)
+                    tempMouse = mice.get(tag, {})
                     if 'targets' in tempMouse:
-                        del mouse['targets']
+                        if(mouse.__contains__('targets')):
+                            del mouse['targets']
                         mouse.require_dataset('targets',shape=(2,),dtype=np.uint8,data=tempMouse.get('targets'))
     def image_registration(self):
         #Runs at the beginning of a new trial
@@ -618,14 +631,15 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
         #IMPROVE: Could run the registration on a different processor
         warnings.filterwarnings("ignore",".*the returned array has changed*")
         tf = ird.similarity(self.mouse.get('ref_im')[:,:,1],self.mouse.get('trial_image')[:,:,1],numiter=3)
+        print(self.coeff)
         print('scale\tangle\tty\ttx')
         print('{0:.3}\t{1:.3}\t{2:.3}\t{3:.3}'.format(tf['scale'],tf['angle'],tf['tvec'][0],tf['tvec'][1]))
         #Check if results of image registration don't cross boundaries
         if all((abs(tf['angle'])<=self.max_angle,all(np.abs(tf['tvec'])<=self.max_trans),self.max_scale[0]<=tf['scale']<=self.max_scale[1])):
             #Transform the target to new position
             self.R = trans_mat(tf['angle'],tf['tvec'][1],tf['tvec'][0],tf['scale'])
-            cent_targ = self.mouse.get('targets') - np.array([int(self.camera.resolution()[1]/2),int(self.camera.resolution()[0]/2)]) #translate targets to center of image
-            trans_coord = np.dot(self.R,np.append(cent_targ,1))+np.array([int(self.camera.resolution()[1]/2),int(self.camera.resolution()[0]/2)])
+            cent_targ = self.mouse.get('targets') - np.array([int(self.camera.resolution()[0]/2),int(self.camera.resolution()[1]/2)]) #translate targets to center of image
+            trans_coord = np.dot(self.R,np.append(cent_targ,1))+np.array([int(self.camera.resolution()[0]/2),int(self.camera.resolution()[1]/2)])
             targ_pos = np.dot(self.coeff,np.append(trans_coord,1))
             print('TARGET\ttx\tty')
             print('{0}\t{1:.01f}\t{2:.01f}'.format('0',trans_coord[0],trans_coord[1]))
@@ -648,6 +662,11 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
         self.loadH5()
         self.rewardTimes = []
         saved_targ_pos = None
+        print("coeff", self.coeff)
+        print("type of coeff:",  str(type(self.coeff)))
+        if self.coeff is None:
+            print("coeff is None")
+        
         if not 'ref_im' in self.mouse or self.mouse.get('ref_im') is None:
             print('Take reference image')
             self.get_ref_im()
@@ -664,7 +683,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
             self.task.DataLogger.writeToLogFile(self.tag, 'TargetError', {'type': 'no targets selected'}, time())
             #If targets haven't been choosen -> release mouse again
             return False
-        elif self.coeff is None:
+        elif (str(self.coeff) == "None"):
             print("Match laser and camera coordinates")
             return False
         try:
@@ -766,16 +785,16 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
         if continueStr.lower() == "y":
             self.camera.start_preview()
             self.pulse(1000,self.duty_cycle)
-            center = np.dot(self.coeff, np.asarray([self.camera.resolution()[1]/2, self.camera.resolution()[0]/2, 1]))
+            center = np.flipud(np.dot(self.coeff, np.asarray([self.camera.resolution()[0]/2, self.camera.resolution()[1]/2, 1])))
             self.move_to(center, topleft=True,join=True)
             self.accuracyStart = np.empty((self.camera.resolution()[1], self.camera.resolution()[0], 3),dtype=np.uint8)
             self.camera.stop_preview()
             self.camera.capture(self.accuracyStart,'rgb')
             self.pulse(0)
-            for i in range (0, 100):
+            for i in range (0, 50):
                 x = randrange(0, self.camera.resolution()[0])
                 y = randrange(0, self.camera.resolution()[1])
-                self.move_to(np.dot(self.coeff, np.asarray([y, x, 1])), topleft=True,join=True)
+                self.move_to(np.flipud(np.dot(self.coeff, np.asarray([x, y, 1]))), topleft=True,join=True)
             print("Completed, moving to center.")
             self.camera.start_preview()
             self.pulse(1000,self.duty_cycle)
@@ -791,7 +810,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
                         del folder['start']
                     if folder.__contains__('end'):
                         del folder['end']
-                    resolution_shape = ( self.camera.resolution()[0], self.camera.resolution()[1], 3) #rgb layers
+                    resolution_shape = ( self.camera.resolution()[1], self.camera.resolution()[0], 3) #rgb layers
                     ref = folder.require_dataset('start',shape=tuple(resolution_shape),dtype=np.uint8,data=self.accuracyStart)
                     ref.attrs.modify('CLASS', np.string_('IMAGE'))
                     ref.attrs.modify('IMAGE_VERSION', np.string_('1.2'))
@@ -875,7 +894,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
     def h5updater (self):
         with File(self.hdf_path, 'r+') as hdf:
             mouse = hdf.require_group(str(self.tag))
-            resolution_shape = ( self.camera.resolution()[0], self.camera.resolution()[1], 3) #rgb layers
+            resolution_shape = ( self.camera.resolution()[1], self.camera.resolution()[0], 3) #rgb layers
             if 'ref_im' in self.mouse:
                 ref = mouse.require_dataset('ref_im',shape=tuple(resolution_shape),dtype=np.uint8,data=self.mouse.get('ref_im'))
                 ref.attrs.modify('CLASS', np.string_('IMAGE'))
