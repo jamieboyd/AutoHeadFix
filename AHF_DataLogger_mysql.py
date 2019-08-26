@@ -42,12 +42,12 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
     defaultHost = "142.103.107.236"
     defaultUser = "slavePi"
     defaultDatabase = "AHF_laser_cage"
-    defaultPassword = "iamapoorslave"
+    defaultPassword = "*******************"
 
     localHost = 'localhost'
     localUser = 'pi'
     localDatabase = 'raw_data'
-    localPassword = 'AutoHead2015'
+    localPassword = '*********************'
 
 
     @staticmethod

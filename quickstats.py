@@ -1,9 +1,11 @@
 import pymysql
 import time
+import getpass
 from ast import literal_eval
 tags = [2018121341, 2018121208, 2018121273, 2018121358]
 jsonDict = {}
-db = pymysql.connect(host="142.103.107.236", user="slavePi", db="AHF_laser_cage", password="iamapoorslave")
+password = getpass.getpass(prompt= "Please enter the password for the database")
+db = pymysql.connect(host="142.103.107.236", user="slavePi", db="AHF_laser_cage", password=password)
 query_sources = """SELECT DISTINCT `Dictionary_source` FROM `configs` WHERE `Cage` = %s AND `Tag` = %s"""
 cur = db.cursor()
 cur.execute(query_sources, ["cage1", "changed_hardware"])
