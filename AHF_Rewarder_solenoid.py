@@ -65,6 +65,7 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
             entryDelay = float(response)
         starterDict.update({'entryDelay': entryDelay})
         starterDict.update({'lastEntryTime': 0})
+        starterDict.update({'lastBreakBeamTime': 0})
         taskSize = starterDict.get('taskSize', AHF_Rewarder_solenoid.defaultTask)
         response = input(
             'Enter the valve opening duration, in seconds, for task rewards. Currently {:.2f}: '.format(taskSize))
@@ -89,7 +90,7 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
             breakBeamDelay = float(response)
         starterDict.update({'breakBeamDelay': breakBeamDelay})
         maxBreakBeamRewards = starterDict.get ('maxBreakBeamRewards', AHF_Rewarder_solenoid.maxBreakBeamRewardsDefault)
-        response = input('Enter the maximum number of entry reards given per day')
+        response = input('Enter the maximum number of break beam reards given per day')
         if response != '':
             maxBreakBeamRewards = int (response)
         starterDict.update ({'maxBreakBeamRewards' : maxBreakBeamRewards})
@@ -101,6 +102,7 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
         entryDelay = starterDict.get('entryDelay', AHF_Rewarder_solenoid.defaultWait)
         starterDict.update({'entryDelay': entryDelay})
         starterDict.update({'lastEntryTime': 0})
+        starterDict.update({'lastBreakBeamTime': 0})
         taskSize = starterDict.get('taskSize', AHF_Rewarder_solenoid.defaultTask)
         starterDict.update({'taskSize': taskSize})
         maxEntryRewards = starterDict.get('maxEntryRewards', AHF_Rewarder_solenoid.maxEntryRewardsDefault)
@@ -179,7 +181,7 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
     def entryHandling(self):
         mouseDict = self.task.Subjects.get(self.task.tag)
         if mouseDict is not None:
-            if mouseDict.get("Rewarder").get("totalEntryRewardsToday") > mouseDict.get('Rewarder').get('maxEntryRewards'):
+            if mouseDict.get("Rewarder").get("totalEntryRewardsToday") >= mouseDict.get('Rewarder').get('maxEntryRewards'):
                 return 0
             lastTime = mouseDict.get("Rewarder").get("lastEntryTime")
             if time() - lastTime < mouseDict.get("Rewarder").get('entryDelay'):
@@ -191,7 +193,10 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
     def breakBeamHandling(self):
         mouseDict = self.task.Subjects.get(self.task.tag)
         if mouseDict is not None:
-            if mouseDict.get("Rewarder").get("totalBreakBeamRewardsToday") > mouseDict.get('Rewarder').get('maxBreakBeamRewards'):
+            if mouseDict.get("Rewarder").get("totalBreakBeamRewardsToday") >= mouseDict.get('Rewarder').get('maxBreakBeamRewards'):
+                return 0
+            lastTime = mouseDict.get("Rewarder").get("lastBreakBeamTime")
+            if time() - lastTime < mouseDict.get("Rewarder").get('breakBeamDelay'):
                 return 0
             mouseDict.get('Rewarder').update({'totalBreakBeamRewardsToday': mouseDict.get('Rewarder').get("totalBreakBeamRewardsToday") + 1})
         return 1

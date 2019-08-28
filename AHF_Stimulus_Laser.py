@@ -324,7 +324,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
 
     def make_cross(self):
         #Define a simple cross-hair and add it as an overlay to the preview
-        cross = np.zeros((self.overlay_resolution[0],self.overlay_resolution[0],3),dtype=np.uint8)
+        cross = np.zeros((self.overlay_resolution[1],self.overlay_resolution[0],3),dtype=np.uint8)
         cross[self.cross_pos[0],:,:] = 0xff
         cross[:,self.cross_pos[1],:] = 0xff
         self.l3 = self.camera.add_overlay(cross.tobytes(),
@@ -341,7 +341,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
                     return False
                 next_pos = self.cross_pos + np.array(prod)
                 #Make sure the cross remains within the boundaries given by the overlay
-                if not any((any(next_pos<0),any(next_pos>=np.array(self.overlay_resolution)))):
+                if not any((any(next_pos<0),any(next_pos>=np.flipud(np.array(self.overlay_resolution))))):
                     self.cross_pos = next_pos
                     self.camera.remove_overlay(self.l3)
                     self.make_cross()
@@ -539,7 +539,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
 
     def get_ref_im(self):
         #Save a reference image whithin the mouse object
-        self.mouse.update({'ref_im' : np.empty((self.camera.resolution()[0], self.camera.resolution()[1], 3),dtype=np.uint8)})
+        self.mouse.update({'ref_im' : np.empty((self.camera.resolution()[1], self.camera.resolution()[0], 3),dtype=np.uint8)})
         self.mouse.update({'timestamp': time()})
         self.camera.capture(self.mouse.get('ref_im'),'rgb')
 
@@ -609,7 +609,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
             scale_mat = np.array([[scale,1,1],[1,scale,1]])
             return rot_ext*scale_mat
 
-        self.mouse.update({'trial_image' : np.empty((self.camera.resolution()[0], self.camera.resolution()[1], 3),dtype=np.uint8)})
+        self.mouse.update({'trial_image' : np.empty((self.camera.resolution()[1], self.camera.resolution()[0], 3),dtype=np.uint8)})
         self.camera.capture(self.mouse.get('trial_image'),'rgb')
         timestamp = time()
         self.mouse.update({'trial_name': "M" + str(self.tag % 10000) + '_' + str(timestamp)})
@@ -624,8 +624,8 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
         if all((abs(tf['angle'])<=self.max_angle,all(np.abs(tf['tvec'])<=self.max_trans),self.max_scale[0]<=tf['scale']<=self.max_scale[1])):
             #Transform the target to new position
             self.R = trans_mat(tf['angle'],tf['tvec'][1],tf['tvec'][0],tf['scale'])
-            cent_targ = self.mouse.get('targets') - np.array([int(self.camera.resolution()[0]/2),int(self.camera.resolution()[0]/2)]) #translate targets to center of image
-            trans_coord = np.dot(self.R,np.append(cent_targ,1))+np.array([int(self.camera.resolution()[0]/2),int(self.camera.resolution()[0]/2)])
+            cent_targ = self.mouse.get('targets') - np.array([int(self.camera.resolution()[1]/2),int(self.camera.resolution()[0]/2)]) #translate targets to center of image
+            trans_coord = np.dot(self.R,np.append(cent_targ,1))+np.array([int(self.camera.resolution()[1]/2),int(self.camera.resolution()[0]/2)])
             targ_pos = np.dot(self.coeff,np.append(trans_coord,1))
             print('TARGET\ttx\tty')
             print('{0}\t{1:.01f}\t{2:.01f}'.format('0',trans_coord[0],trans_coord[1]))
@@ -681,8 +681,8 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
             if targ_pos is not None:
                 saved_targ_pos = targ_pos
                 print('Moving laser to target and capture image to assert correct laser position')
-                self.move_to(np.flipud(targ_pos),topleft=True,join=True) #Move laser to target and wait until target reached
-                self.mouse.update({'laser_spot': np.empty((self.camera.resolution()[0], self.camera.resolution()[1], 3),dtype=np.uint8)})
+                self.move_to(targ_pos,topleft=True,join=True) #Move laser to target and wait until target reached
+                self.mouse.update({'laser_spot': np.empty((self.camera.resolution()[1], self.camera.resolution()[0], 3),dtype=np.uint8)})
                 self.pulse(self.laser_on_time,self.duty_cycle) #At least 60 ms needed to capture laser spot
                 self.camera.capture(self.mouse.get('laser_spot'),'rgb', video_port=True)
                 timestamp = time()
@@ -766,21 +766,21 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
         if continueStr.lower() == "y":
             self.camera.start_preview()
             self.pulse(1000,self.duty_cycle)
-            print("Center in laser coords:", np.dot(self.coeff, np.asarray([128, 128, 1])))
-            self.move_to(np.flipud(np.dot(self.coeff, np.asarray([128, 128, 1]))), topleft=True,join=True)
-            self.accuracyStart = np.empty((self.camera.resolution()[0], self.camera.resolution()[1], 3),dtype=np.uint8)
+            center = np.dot(self.coeff, np.asarray([self.camera.resolution()[1]/2, self.camera.resolution()[0]/2, 1]))
+            self.move_to(center, topleft=True,join=True)
+            self.accuracyStart = np.empty((self.camera.resolution()[1], self.camera.resolution()[0], 3),dtype=np.uint8)
             self.camera.stop_preview()
             self.camera.capture(self.accuracyStart,'rgb')
             self.pulse(0)
             for i in range (0, 100):
-                x = randrange(0, 256)
-                y = randrange(0, 256)
-                self.move_to(np.flipud(np.dot(self.coeff, np.asarray([x, y, 1]))), topleft=True,join=True)
+                x = randrange(0, self.camera.resolution()[0])
+                y = randrange(0, self.camera.resolution()[1])
+                self.move_to(np.dot(self.coeff, np.asarray([y, x, 1])), topleft=True,join=True)
             print("Completed, moving to center.")
             self.camera.start_preview()
             self.pulse(1000,self.duty_cycle)
-            self.move_to(np.flipud(np.dot(self.coeff, np.asarray([128, 128, 1]))), topleft=True,join=True)
-            self.accuracyEnd = np.empty((self.camera.resolution()[0], self.camera.resolution()[1], 3),dtype=np.uint8)
+            self.move_to(center, topleft=True,join=True)
+            self.accuracyEnd = np.empty((self.camera.resolution()[1], self.camera.resolution()[0], 3),dtype=np.uint8)
             self.camera.stop_preview()
             self.camera.capture(self.accuracyEnd,'rgb')
             self.pulse(0)
