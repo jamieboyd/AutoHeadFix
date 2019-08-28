@@ -85,6 +85,24 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         # update and return dict
         starterDict.update({'cageID': cageID, 'DBhost': DBhost, 'DBuser': DBuser,'DB': DB, 'DBpwd': DBpwd })
 
+        localUser =starterDict.get('localUser', AHF_DataLogger_mysql.localUser)
+        response = input('Enter your local user name for the database (currently {}): '.format(localUser))
+        if response != '':
+            localUser = response
+        # database
+        localDatabase = starterDict.get('localDatabase', AHF_DataLogger_mysql.localDatabase)
+        response = input('Enter the local database you want to connect to (currently {}): '.format(localDatabase))
+        if response != '':
+            localDatabase = response
+        # password
+        localPassword = starterDict.get('localPassword', AHF_DataLogger_mysql.localPassword)
+        response = input('Enter your local user password (currently {}): '.format(DBpwd))
+        if response != '':
+            localPassword = response
+        
+        
+        starterDict.update({'localUser': localUser,'localDatabase': localDatabase, 'localPassword': localPassword })
+
         return starterDict
 
 
@@ -182,6 +200,9 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         self.DBuser = self.settingsDict.get('DBuser')
         self.DB = self.settingsDict.get('DB')
         self.DBpwd = self.settingsDict.get('DBpwd')
+        self.localUser = self.settingsDict.get('localUser')
+        self.localDatabase= self.settingsDict.get('localDatabase')
+        self.localPassword = self.settingsDict.get('localPassword')
         self.makeLogFile()
         self.raw_save_query = """INSERT INTO `raw_data`(`Tag`,`Event`,`Event_dict`,`Timestamp`,`Cage`,`positions`)
         VALUES(%s,%s,%s,FROM_UNIXTIME(%s),%s,%s)"""
