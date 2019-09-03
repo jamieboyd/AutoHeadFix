@@ -188,6 +188,8 @@ class Task(object):
         self.lastFixedTime = 0
         self.entryTime = 0.0
         self.fixAgainTime = float ('inf')
+        self.fixed = False
+        self.isFixTrial = False
         self.inChamberLimitExceeded = False
         self.edited = False
         self.logToFile = True # a flag for writing to the shell only, or to the shall and the log

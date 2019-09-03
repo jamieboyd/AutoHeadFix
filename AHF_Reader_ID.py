@@ -79,12 +79,15 @@ class AHF_Reader_ID (AHF_Reader):
                         self.tagReader.clearBuffer()
                 else:
                     #sleep(AHF_Reader_ID.graceTime)
+                    if self.task.isFixTrial and self.task.fixed:
+                        continue
                     if self.task.tag != 0 and not self.task.contact:
                         AHF_Task.gTask.DataLogger.writeToLogFile(AHF_Task.gTask.tag, 'exit', None, time())
                         AHF_Task.gTask.tag = 0
                         self.tagReader.clearBuffer()
                         AHF_Reader_ID.stillThere = False
             except Exception as e:
+                print(str(e))
                 self.isLogging = False
                 sleep(5) #Wait to check if this was stopped on purpose or should restart
                 if AHF_Reader_ID.isChecking:
@@ -98,7 +101,7 @@ class AHF_Reader_ID (AHF_Reader):
         if AHF_Reader_ID.stillThere:
             stuckMouse = AHF_Task.gTask.tag
             AHF_Task.gTask.inChamberLimitExceeded = True
-            AHF_Task.gTask.headFixer.releaseMouse ()
+            AHF_Task.gTask.HeadFixer.releaseMouse ()
             AHF_Task.gTask.AHF_BrainLight.offForStim ()
             if hasattr (AHF_Task.gTask, 'Notifer'):
                 Notifier = AHF_Task.gTask.Notifier
