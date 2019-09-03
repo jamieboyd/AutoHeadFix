@@ -112,6 +112,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
                 db1 = pymysql.connect(host=self.DBhost, user=self.DBuser, db=self.DB, password=self.DBpwd)
             except:
                 print("Wasn't able to connect to remote database")
+                return False
         else:
             db1 = pymysql.connect(host=self.localHost, user=self.localUser, db=self.localDatabase, password=self.localPassword)
         cur1 = db1.cursor()
@@ -121,17 +122,18 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         except pymysql.Error as e:
             try:
                 print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
-                return None
+                return False
             except IndexError:
                 print("MySQL Error: %s" % str(e))
-                return None
+                return False
         except TypeError as e:
             print("MySQL Error: TypeError: %s" % str(e))
-            return None
+            return False
         except ValueError as e:
             print("MySQL Error: ValueError: %s" % str(e))
-            return None
+            return False
         db1.close()
+        return True
 
     def getFromDatabase(self,query,values,remote):
         if remote == True:
@@ -139,6 +141,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
                 db2 = pymysql.connect(host=self.DBhost, user=self.DBuser, db=self.DB, password=self.DBpwd)
             except:
                 print("Wasn't able to connect to remote database")
+                db2 = pymysql.connect(host=self.localHost, user=self.localUser, db=self.localDatabase, password=self.localPassword)
         else:
             db2 = pymysql.connect(host=self.localHost, user=self.localUser, db=self.localDatabase, password=self.localPassword)
         cur2 = db2.cursor()
@@ -213,18 +216,18 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         showDict = self.task.Show_testable_objects()
 
         self.events.append([0, 'SeshStart', None, time(),self.cageID,None])
-        self.saveToDatabase(self.raw_save_query, self.events, False)
-        self.saveToDatabase(self.raw_save_query, self.events, True)
-        self.events = []
+        if self.saveToDatabase(self.raw_save_query, self.events, True):
+            self.saveToDatabase(self.raw_save_query, self.events, False)
+            self.events = []
 
     def setdown(self):
         """
         Writes session end and closes log file
         """
         self.events.append([0, 'SeshEnd', None, time(),self.cageID,None])
-        self.saveToDatabase(self.raw_save_query,self.events, False)
-        self.saveToDatabase(self.raw_save_query, self.events, True)
-        self.events = []
+        if self.saveToDatabase(self.raw_save_query,self.events, True):
+            self.saveToDatabase(self.raw_save_query, self.events, False)
+            self.events = []
 
 #####################################################################################
     def configGenerator(self,settings):
@@ -288,9 +291,9 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
     def storeConfig(self, tag, configDict,source):
         # store in raw data
         self.events.append([tag, "config_{}".format(source), str(configDict), time(), self.cageID,None])
-        self.saveToDatabase(self.raw_save_query, self.events, False)
-        self.saveToDatabase(self.raw_save_query, self.events, True)
-        self.events = []
+        if self.saveToDatabase(self.raw_save_query, self.events, True):
+            self.saveToDatabase(self.raw_save_query, self.events, False)
+            self.events = []
         # store in the config table
         self.saveToDatabase(self.config_save_query, [[tag, str(configDict), time(), self.cageID, str(source)]], False)
         self.saveToDatabase(self.config_save_query, [[tag, str(configDict), time(), self.cageID, str(source)]], True)
@@ -298,18 +301,18 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
     def saveNewMouse(self,tag,note, dictionary = {}):
         # store new mouse `Timestamp`,`Cage`,`Tag`,`Note`
         self.events.append([tag, 'added_to_cage', str(dict([("Notes",note)])), time(), self.cageID, None])
-        self.saveToDatabase(self.raw_save_query, self.events, False)
-        self.saveToDatabase(self.raw_save_query, self.events, True)
-        self.events = []
+        if self.saveToDatabase(self.raw_save_query, self.events, True):
+            self.saveToDatabase(self.raw_save_query, self.events, False)
+            self.events = []
         self.saveToDatabase(self.add_mouse_query, [[time(), self.cageID, tag,str(note)]], False)
         self.saveToDatabase(self.add_mouse_query, [[time(), self.cageID, tag,str(note)]], True)
 
     def retireMouse(self,tag,reason):
         # update information about a mouse `Timestamp`,`Cage`,`Tag`,`Activity`
-        self.events.append([tag, 'retired', str(dict([("reason", reason)])), time(), self.cageID, None])
-        self.saveToDatabase(self.raw_save_query, self.events, False)
-        self.saveToDatabase(self.raw_save_query, self.events, True)
-        self.events = []
+        self.events.append([tag, 'retired', str(dict([("reason", reason)])), time(), self.cageID, None]) 
+        if self.saveToDatabase(self.raw_save_query, self.events, True):
+            self.saveToDatabase(self.raw_save_query, self.events, False)
+            self.events = []
         delete_mouse_query = """DELETE FROM `mice` WHERE `Tag`=%s"""
         self.saveToDatabase(delete_mouse_query, [[tag]], False)
         self.saveToDatabase(delete_mouse_query, [[tag]], True)
@@ -318,9 +321,9 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
 #######################################################################################
     def newDay(self):
         self.events.append([0, 'NewDay', None, time(),self.cageID,None])
-        self.saveToDatabase(self.raw_save_query, self.events, False)
-        self.saveToDatabase(self.raw_save_query, self.events, True)
-        self.events = []
+        if self.saveToDatabase(self.raw_save_query, self.events, True):
+            self.saveToDatabase(self.raw_save_query, self.events, False)
+            self.events = []
 
     def readFromLogFile(self, index):
         eventQuery = """SELECT `Event` from `raw_data` WHERE 1 ORDER BY `raw_data`.`Timestamp` LIMIT %s-1, 1"""
