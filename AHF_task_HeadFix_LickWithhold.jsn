@@ -21,7 +21,7 @@
 "DataLoggerClass"="AHF_DataLogger_textMySql"
 "DataLoggerDict"={"DB"="AHF_laser_cage"
 "DBhost"="142.103.107.236"
-"DBpwd"="iamapoorslave"
+"DBpwd"="****************"
 "DBuser"="slavePi"
 "cageID"="TEMP_PLEASE_CHANGE"
 "dataPath"="/home/pi/Documents/"
