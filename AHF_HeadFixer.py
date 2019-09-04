@@ -85,6 +85,7 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
         """
         releases mouse from head fixation by relaxing a piston, moving a servomotor, etc
         """
+        self.task.fixed = False
         self.task.fixAgainTime = time() + self.skeddadleTime
         self.task.lastFixedTag = thisTag
 

@@ -104,8 +104,8 @@ def main():
                 # loop through as many trials as this mouse wants to do before leaving chamber
                 while task.tag == thisTag:
                     # Fix mouse - returns True if 'fixed', though that may just be a True contact check if a no-fix trial
-                    fixed = task.HeadFixer.fixMouse (thisTag, resultsDict.get('HeadFixer'), settingsDict.get('HeadFixer'))
-                    if fixed:
+                    task.fixed = task.HeadFixer.fixMouse (thisTag, resultsDict.get('HeadFixer'), settingsDict.get('HeadFixer'))
+                    if task.fixed:
                         if doCountermand:
                             task.Rewarder.countermandReward (resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
                             doCountermand = False
