@@ -19,6 +19,7 @@ class AHF_Rewarder_solenoid_rpi (AHF_Rewarder_solenoid):
 
     @staticmethod
     def rewardThread (sleepTime, rewardPin):
+        tag = AHF_Task.gTask.tag
         GPIO.output(rewardPin, GPIO.HIGH)
         sleep(sleepTime) # not very accurate timing, but good enough
         GPIO.output(rewardPin, GPIO.LOW)
@@ -27,10 +28,11 @@ class AHF_Rewarder_solenoid_rpi (AHF_Rewarder_solenoid):
         lickCount = lickDetect.getLickCount()
         sleep(1) #Change to some other value?
         if lickDetect.getLickCount() > lickCount:
-            AHF_Task.gTask.DataLogger.writeToLogFile(AHF_Task.gTask.tag, "ConsumedReward", {}, time())
+            AHF_Task.gTask.DataLogger.writeToLogFile(tag, "ConsumedReward", {}, time())
 
     @staticmethod
     def rewardCMThread (delayTime, sleepTime, rewardPin):
+        tag = AHF_Task.gTask.tag
         AHF_Rewarder_solenoid_rpi.countermandVal = 1
         sleep(delayTime) # not very accurate timing, but good enough
         if AHF_Rewarder_solenoid_rpi.countermandVal== 1:
@@ -38,6 +40,12 @@ class AHF_Rewarder_solenoid_rpi (AHF_Rewarder_solenoid):
             GPIO.output(rewardPin, GPIO.HIGH)
             sleep(sleepTime) # not very accurate timing, but good enough
             GPIO.output(rewardPin, GPIO.LOW)
+            lickDetect = AHF_Task.gTask.LickDetector
+            lickDetect.resumeLickCount()
+            lickCount = lickDetect.getLickCount()
+            sleep(1) #Change to some other value?
+            if lickDetect.getLickCount() > lickCount:
+                AHF_Task.gTask.DataLogger.writeToLogFile(tag, "ConsumedReward", {}, time())
             AHF_Rewarder_solenoid_rpi.countermandVal =0
 
 
