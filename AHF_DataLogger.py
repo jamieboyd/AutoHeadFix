@@ -19,6 +19,7 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
     TO_SHELL =1
     TO_FILE = 2
     trackingDict = {}
+    isChild = False
     BUFFER_SIZE = 25
 
     @abstractmethod
@@ -97,6 +98,8 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
         For text based methods, event should be a dictionary for more complicated stimulator
         results, so an event can be more easily parsed during data analysis.
         """
+        if self.isChild:
+            return
         eventTracking  = self.trackingDict.get(eventKind, None)
         if eventKind is "ConsumedReward":
             #Special case :/

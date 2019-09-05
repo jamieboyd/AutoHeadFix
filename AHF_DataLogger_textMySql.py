@@ -28,8 +28,10 @@ class AHF_DataLogger_textMySql (AHF_DataLogger):
     def setup(self):
         self.textLogger = AHF_DataLogger_text(self.task, self.settingsDict)
         self.textLogger.setup()
+        self.textLogger.isChild = True
         self.sqlLogger = AHF_DataLogger_mysql(self.task, self.settingsDict)
         self.sqlLogger.setup()
+        self.sqlLogger.isChild = True
         pass
 
 
@@ -62,6 +64,7 @@ class AHF_DataLogger_textMySql (AHF_DataLogger):
         For text based methods, event should be a dictionary for more complicated stimulator
         results, so an event can be more easily parsed during data analysis.
         """
+        super().writeToLogFile(tag, eventKind, eventDict, timeStamp, toShellOrFile)
         self.textLogger.writeToLogFile(tag, eventKind, eventDict, timeStamp, toShellOrFile)
         self.sqlLogger.writeToLogFile(tag, eventKind, eventDict, timeStamp, toShellOrFile)
 
