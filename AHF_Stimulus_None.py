@@ -3,15 +3,15 @@
 from AHF_Stimulus import AHF_Stimulus
 
 class AHF_Stimulus_None (AHF_Stimulus):
-    
+
     @staticmethod
     def about():
         return "Does nothing"
-        
+
     def hardwareTest(self):
         pass
 
-    def trialPrep (self):
+    def trialPrep (self, tag):
         """
         Prepares stimulus for trial: e.g. aligns laser, preps vib. motor, etc
         """
@@ -19,14 +19,14 @@ class AHF_Stimulus_None (AHF_Stimulus):
 
     def stimulate (self):
         pass
-    
+
     @staticmethod
     def config_user_get(starterDict= {}):
         return starterDict
-    
+
     def setup(self):
         pass
-    
+
     def setdown(self):
         pass
 
@@ -35,4 +35,3 @@ class AHF_Stimulus_None (AHF_Stimulus):
         Code to be run at end of trial. E.g. moving laser to zero position
         """
         pass
-

@@ -259,6 +259,8 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
         super().run()
         super().startVideo()
         self.tag = self.task.tag
+        if self.tag <= 0:
+            return
         self.mouse = self.task.Subjects.get(self.tag)
         if level < 0:
             level = self.mouse.get("Stimulator", {}).get("mouseLevel", 0)
@@ -267,10 +269,10 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
         self.laserTimes = []
         n = self.mouse.get('Stimulator', {}).get('nRewards', 5)
         if self.task.isFixTrial:
-            if not self.task.Stimulus.trialPrep():
+            if not self.task.Stimulus.trialPrep(self.tag):
                 self.task.Stimulus.trialEnd()
                 return
-            
+
             #every time lickWithholdtime passes with no licks, make a buzz then give a reward after buzz_lead time.
             self.lickWithholdTimes = []
             self.rewardTimes = []

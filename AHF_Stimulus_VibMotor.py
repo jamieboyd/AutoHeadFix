@@ -9,15 +9,15 @@ class AHF_Stimulus_VibMotor (AHF_Stimulus):
     motorFreq_def = 300    # frequency to drive the motor
     motorDuty_def = 0.8    # duty cycle to drive motor, unbalanced duty cycle gives nasty harmonics
     pulseTime_def = 0.2
-    
+
     @staticmethod
     def about():
         return "Vibrates a motor"
-        
+
     def hardwareTest(self):
         pass
 
-    def trialPrep (self):
+    def trialPrep (self, tag):
         """
         Prepares stimulus for trial: e.g. aligns laser, preps vib. motor, etc
         """
@@ -28,7 +28,7 @@ class AHF_Stimulus_VibMotor (AHF_Stimulus):
         sleep(self.pulseTime)
         self.motor.stop_train()
         pass
-    
+
     @staticmethod
     def config_user_get(starterDict= {}):
         motorPin = starterDict.get ('motorPin', AHF_Stimulus_VibMotor.motorPin_def)
@@ -52,7 +52,7 @@ class AHF_Stimulus_VibMotor (AHF_Stimulus):
             pulseTime = float (tempInput)
         starterDict.update ({'pulseTime' : pulseTime})
         return starterDict
-    
+
     def setup(self):
         self.motorPin=int(self.settingsDict.get ('motorPin', self.motorPin_def))
         self.motorFreq=float(self.settingsDict.get ('motorFreq', self.motorFreq_def))
@@ -60,7 +60,7 @@ class AHF_Stimulus_VibMotor (AHF_Stimulus):
         self.pulseTime = float(self.settingsDict.get ('pulseTime', self.pulseTime_def))
         self.motor=Infinite_train (PTSimpleGPIO.MODE_FREQ, self.motorPin, self.motorFreq, self.motorDuty,  PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
         pass
-    
+
     def setdown(self):
         pass
 
@@ -69,5 +69,3 @@ class AHF_Stimulus_VibMotor (AHF_Stimulus):
         Code to be run at end of trial. E.g. moving laser to zero position
         """
         pass
-
-

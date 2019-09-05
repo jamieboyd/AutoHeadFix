@@ -6,7 +6,7 @@ from AHF_Base import AHF_Base
 class AHF_Stimulus (AHF_Base, metaclass = ABCMeta):
 
     @abstractmethod
-    def trialPrep (self):
+    def trialPrep (self, tag):
         """
         Prepares stimulus for trial: e.g. aligns laser, preps vib. motor, etc
         """

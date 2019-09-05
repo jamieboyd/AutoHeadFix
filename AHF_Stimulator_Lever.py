@@ -360,13 +360,14 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
         self.leverController.setMotorEnable(0)
         time.sleep(0.2)
         self.leverController.setMotorEnable(1)
-        if self.task.tag <= 0:
+        tag = self.task.tag
+        if tag <= 0:
             return
         if hasattr(self.task, 'Camera'):
             super().startVideo()
-        mouseDict = self.task.Subjects.get(self.task.tag).get("Stimulator")
+        mouseDict = self.task.Subjects.get(tag).get("Stimulator")
         self.leverController.setTimeToGoal(mouseDict.get("toGoalTime"))
-        endTime = time.time() + self.task.Subjects.get(self.task.tag).get("HeadFixer", {}).get('headFixTime')
+        endTime = time.time() + self.task.Subjects.get(tag).get("HeadFixer", {}).get('headFixTime')
         while time.time() < endTime:
             print("trial")
             if not self.running:
@@ -390,15 +391,15 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
                 outcome = 1
                 self.task.Rewarder.giveReward('task')
             if self.trialIsCued:
-                self.task.DataLogger.writeToLogFile(self.task.tag, "lever_pull", {'outcome': outcome ,'positions': self.leverController.posBuffer}, time.time())
+                self.task.DataLogger.writeToLogFile(tag, "lever_pull", {'outcome': outcome ,'positions': self.leverController.posBuffer}, time.time())
                 print(self.leverController.posBuffer)
             else:
                 positions = self.leverController.posBuffer
                 circularEnd = self.prePullTime*self.leverController.LEVER_FREQ
                 goalPosition = resultTuple[2]
                 positions = positions[goalPosition:] + positions[:goalPosition]
-                self.task.DataLogger.writeToLogFile(self.task.tag, "lever_pull", {'outcome': outcome ,'positions': self.leverController.posBuffer}, time.time())
-            history = self.task.DataLogger.getTrackedEvent(self.task.tag, 'lever_pull', 'outcome')
+                self.task.DataLogger.writeToLogFile(tag, "lever_pull", {'outcome': outcome ,'positions': self.leverController.posBuffer}, time.time())
+            history = self.task.DataLogger.getTrackedEvent(tag, 'lever_pull', 'outcome')
             average = 0
             self.leverController.zeroLever(1, False)
             if history is None:
@@ -408,7 +409,7 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
             average /= self.trainSize
             if average > mouseDict.get('promoteRate'):
                 print("Promotion")
-                self.task.DataLogger.clearTrackedValues(self.task.tag, 'lever_pull', 'outcome')
+                self.task.DataLogger.clearTrackedValues(tag, 'lever_pull', 'outcome')
                 if mouseDict.get('goalTrainOn'):
                     newWidth = mouseDict.get('goalWidth') - mouseDict.get('goalIncr')
                     if newWidth >= mouseDict.get('goalEndWidth'):
@@ -419,7 +420,7 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
                         mouseDict.update({'hold': newTime})
             elif len(history) == self.trainSize and  average < mouseDict.get('demoteRate'):
                 print("demotion")
-                self.task.DataLogger.clearTrackedValues(self.task.tag, 'lever_pull', 'outcome')
+                self.task.DataLogger.clearTrackedValues(tag, 'lever_pull', 'outcome')
                 if mouseDict.get('goalTrainOn'):
                     newWidth = mouseDict.get('goalWidth') + mouseDict.get('goalIncr')
                     if newWidth <= mouseDict.get('goalStartWidth'):
@@ -441,7 +442,7 @@ class AHF_Stimulator_Lever (AHF_Stimulator):
         """
         if hasattr(self.task, 'Camera'):
             self.task.Camera.stop_recording()
-        pass                
+        pass
 
     def setdown (self):
         print ('Withhold stimulator set down')

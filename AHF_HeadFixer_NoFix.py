@@ -40,6 +40,9 @@ class AHF_HeadFixer_NoFix (AHF_HeadFixer):
     def isFixedCheck ():
         AHF_HeadFixer_NoFix.isChecking = True
         mouseDict = AHF_Task.gTask.Subjects.get(AHF_Task.gTask.tag)
+        if mouseDict is None:
+            AHF_HeadFixer_NoFix.isChecking = False
+            return
         lastRewardTime = time()
         rewardGiven = False
         while AHF_Task.gTask.contact:

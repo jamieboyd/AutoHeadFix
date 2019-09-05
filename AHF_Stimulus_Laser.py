@@ -216,8 +216,8 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
         #self.lickWithholdTimes = []
         self.rewardTimes = []
 
-    def trialPrep(self):
-        return self.align()
+    def trialPrep(self, tag):
+        return self.align(tag)
 
     def stimulate (self):
         self.pulse(self.laser_on_time, self.duty_cycle)
@@ -638,12 +638,12 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
 
 
 #=================Main functions called from outside===========================
-    def align(self, resultsDict = {}, settingsDict = {}):
+    def align(self, tag, resultsDict = {}, settingsDict = {}):
         """
         Aligns laser with reference image and assigned targets.
         Returns True if aligned successfully, False otherwise.
         """
-        self.tag = self.task.tag
+        self.tag = tag
         self.mouse = self.task.Subjects.get(self.tag)
         self.loadH5()
         self.rewardTimes = []

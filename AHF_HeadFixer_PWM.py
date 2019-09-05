@@ -71,6 +71,8 @@ class AHF_HeadFixer_PWM (AHF_HeadFixer, metaclass = ABCMeta):
         return target_pos
 
     def fixMouse(self, thisTag, resultsDict = {}, individualDict= {}):
+        if thisTag == 0:
+            return False
         self.task.isFixTrial = self.task.Subjects.get(thisTag).get("HeadFixer").get("propHeadFix") > random()
         hasContact = False
         if self.task.isFixTrial:
