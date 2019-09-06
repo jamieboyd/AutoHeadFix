@@ -92,7 +92,7 @@ class AHF_Subjects_mice (AHF_Subjects):
                 self.create_fillable_json()
             while self.check_miceDict(self.miceDict) == False:
                 input('could not load json, please edit and try again. Press enter when done')
-            
+
             for tag in self.miceDict.keys():
                 for source in self.miceDict.get(tag):
                     self.task.DataLogger.storeConfig(int(tag), self.miceDict.get(tag).get(source), source)
@@ -111,7 +111,7 @@ class AHF_Subjects_mice (AHF_Subjects):
         input('Please edit the values now. Press enter when done')
         os.system("sudo cp AHF_mice_fillable_" + self.jsonName + ".jsn" + " AHF_mice_" + self.jsonName + ".jsn")
         self.miceDict = CAD.File_to_dict('mice', self.jsonName, '.jsn')
- 
+
 
     def depth(self,d, level=0):
         if not isinstance(d, dict) or not d:
@@ -327,7 +327,7 @@ class AHF_Subjects_mice (AHF_Subjects):
                 self.subjectSettings()
         self.setup()
 
-    def newDay():
+    def newDay(self):
         for mouse in self.miceDict:
             mouse.get("Rewarder").update({"totalEntryRewardsToday": 0})
             mouse.get("Rewarder").update({"totalBreakBeamRewardsToday": 0})
