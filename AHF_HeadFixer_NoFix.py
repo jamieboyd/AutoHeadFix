@@ -6,7 +6,7 @@ import AHF_Task
 from time import sleep, time
 from _thread import start_new_thread
 
-class AHF_HeadFixer_NoFix (AHF_HeadFixer):
+class AHF_HeadFixer_NoFix(AHF_HeadFixer):
     """
     Head Fixer that only checks for contact, does not implement a
     head-fixing mechanism
@@ -19,27 +19,30 @@ class AHF_HeadFixer_NoFix (AHF_HeadFixer):
         return 'Head Fixer that only checks for contact, does not implement a head-fixing mechanism'
 
     @staticmethod
-    def config_user_get (starterDict = {}):
+    def config_user_get(starterDict = {}):
         """
         Querries user returns dictionary
         """
-        skeddadleTime = starterDict.get ('skeddadleTime', AHF_HeadFixer.defaultSkeddadleTime)
-        response = input ('Enter time, in seconds, for mouse to get head off the contacts when session ends, currently {:.2f}: '.format(skeddadleTime))
+        skeddadleTime = starterDict.get('skeddadleTime', AHF_HeadFixer.defaultSkeddadleTime)
+        response = input('Enter time, in seconds, for mouse to get head off the contacts when session ends, currently {:.2f}: '.format(skeddadleTime))
         if response != '':
-            skeddadleTime = float (skeddadleTime)
-        starterDict.update ({'propHeadFix' : 0, 'skeddadleTime' : skeddadleTime})
+            skeddadleTime = float(skeddadleTime)
+        starterDict.update({'propHeadFix' : 0, 'skeddadleTime' : skeddadleTime})
         return starterDict
 
-    def config_subject_get (self, starterDict = {}):
+    def config_subject_get(self, starterDict = {}):
         return super().config_subject_get(starterDict)
 
-    def config_user_subject_get  (self, starterDict = {}):
+    def config_user_subject_get(self, starterDict = {}):
         return super().config_user_subject_get(starterDict)
 
     @staticmethod
-    def isFixedCheck ():
+    def isFixedCheck():
         AHF_HeadFixer_NoFix.isChecking = True
         mouseDict = AHF_Task.gTask.Subjects.get(AHF_Task.gTask.tag)
+        if mouseDict is None:
+            AHF_HeadFixer_NoFix.isChecking = False
+            return
         lastRewardTime = time()
         rewardGiven = False
         while AHF_Task.gTask.contact:
@@ -54,8 +57,8 @@ class AHF_HeadFixer_NoFix (AHF_HeadFixer):
             except Exception as e:
                 AHF_HeadFixer_NoFix.isChecking = False
                 break
-       AHF_Task.gTask.Stimulator.stop()
-       AHF_HeadFixer_NoFix.isChecking = False
+        AHF_Task.gTask.Stimulator.stop()
+        AHF_HeadFixer_NoFix.isChecking = False
 
     def setup(self):
         self.isChecking = False
@@ -70,15 +73,15 @@ class AHF_HeadFixer_NoFix (AHF_HeadFixer):
         Just does contact check with super(), does not fix
         """
         if self.task.contact and not AHF_HeadFixer_NoFix.isChecking:
-            start_new_thread(self.isFixedCheck, ())
+            start_new_thread(self.isFixedCheck,())
             return True
         return False
 
 
 
     def releaseMouse(self, tag, resultsDict = {}, settingsDict = {}):
-        super().releaseMouse (tag, resultsDict, settingsDict)
+        super().releaseMouse(tag, resultsDict, settingsDict)
 
-    def hardwareTest (self):
-        print (self.__class__.about())
-        print ('There is no hardware test for HeadFixer_NoFix')
+    def hardwareTest(self):
+        print(self.__class__.about())
+        print('There is no hardware test for HeadFixer_NoFix')

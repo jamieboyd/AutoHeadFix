@@ -5,16 +5,12 @@ The Stimulator directs and pulses a laser to selected targets for optogenetic
 stimulation/inhibition.
 '''
 
-#AHF-specific moudules
-from PTSimpleGPIO import PTSimpleGPIO, Infinite_train, Train
-from AHF_Rewarder import AHF_Rewarder
+# AHF-specific moudules
 from AHF_Stimulus import AHF_Stimulus
-from AHF_Mouse import Mouse, Mice
 
-#Laser-stimulator modules
+# Laser-stimulator modules
 from pynput import keyboard
 import numpy as np
-import sys
 from os import path
 import matplotlib.pyplot as plt
 from PTPWM import PTPWM
@@ -24,19 +20,17 @@ from threading import Thread
 from multiprocessing import Process, Queue
 from time import sleep, time
 from random import randrange
-from datetime import datetime
-from itertools import combinations,product
+from itertools import combinations
 import imreg_dft as ird
 import warnings
 from h5py import File
 
-#RPi module
+# RPi module
 import RPi.GPIO as GPIO
 
 
-
-class AHF_Stimulus_Laser (AHF_Stimulus):
-    # def __init__ (self, cageSettings, expSettings, rewarder, lickDetector, camera):
+class AHF_Stimulus_Laser(AHF_Stimulus):
+    # def __init__(self, cageSettings, expSettings, rewarder, lickDetector, camera):
     #     super().__init__(cageSettings, expSettings, rewarder, lickDetector, camera)
     #     self.setup()
     @staticmethod
@@ -44,7 +38,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
         return 'stimulates brain with laser, moved with stepper motor stage. MUST BE USED WITH PICAM'
 
     @staticmethod
-    def config_user_get (starterDict = {}):
+    def config_user_get(starterDict = {}):
         defaultMode = 0
         defaultChannel = 2
         defaultDutyCycle = 0
@@ -57,73 +51,73 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
         defaultDelay = 0.03
         defaultH5 = "mice_images.h5"
         #mode
-        PWM_mode = starterDict.get ('PWM_mode', defaultMode)
-        tempInput = input ('Set PWM mode (currently {0}): '.format(PWM_mode))
+        PWM_mode = starterDict.get('PWM_mode', defaultMode)
+        tempInput = input('Set PWM mode(currently {0}): '.format(PWM_mode))
         if tempInput != '':
-            PWM_mode = int (tempInput)
-        starterDict.update ({'PWM_mode' : PWM_mode})
+            PWM_mode = int(tempInput)
+        starterDict.update({'PWM_mode' : PWM_mode})
         #channel
-        PWM_channel = starterDict.get ('PWM_channel', defaultChannel)
-        tempInput = input ('Set PWM channel (currently {0}): '.format(PWM_channel))
+        PWM_channel = starterDict.get('PWM_channel', defaultChannel)
+        tempInput = input('Set PWM channel(currently {0}): '.format(PWM_channel))
         if tempInput != '':
-            PWM_channel = int (tempInput)
-        starterDict.update ({'PWM_channel' : PWM_channel})
+            PWM_channel = int(tempInput)
+        starterDict.update({'PWM_channel' : PWM_channel})
         #duty cycle
-        duty_cycle = starterDict.get ('duty_cycle', defaultDutyCycle)
-        tempInput = input ('Set duty cycle (currently {0}): '.format(duty_cycle))
+        duty_cycle = starterDict.get('duty_cycle', defaultDutyCycle)
+        tempInput = input('Set duty cycle(currently {0}): '.format(duty_cycle))
         if tempInput != '':
-            duty_cycle = int (tempInput)
-        starterDict.update ({'duty_cycle' : duty_cycle})
+            duty_cycle = int(tempInput)
+        starterDict.update({'duty_cycle' : duty_cycle})
         #laser on time
-        laser_on_time = starterDict.get ('laser_on_time', defaultLaserTime)
-        tempInput = input ('Set how long the laser is on for (currently {0}): '.format(laser_on_time))
+        laser_on_time = starterDict.get('laser_on_time', defaultLaserTime)
+        tempInput = input('Set how long the laser is on for(currently {0}): '.format(laser_on_time))
         if tempInput != '':
-            laser_on_time = int (tempInput)
-        starterDict.update ({'laser_on_time' : laser_on_time})
+            laser_on_time = int(tempInput)
+        starterDict.update({'laser_on_time' : laser_on_time})
         #Crosshair Placement
-        coeff_matrix = starterDict.get ('coeff_matrix', defaultCoeff)
-        tempInput = input ('set X,Y coefficients for crosshair (currently {0}): '.format(coeff_matrix))
+        coeff_matrix = starterDict.get('coeff_matrix', defaultCoeff)
+        tempInput = input('set X,Y coefficients for crosshair(currently {0}): '.format(coeff_matrix))
         if tempInput != '':
-            coeff_matrix = tuple (int(x) for x in tempInput.split (','))
-        starterDict.update ({'coeff_matrix' : coeff_matrix})
+            coeff_matrix = tuple(int(x) for x in tempInput.split(','))
+        starterDict.update({'coeff_matrix' : coeff_matrix})
         print('Stepper Motor Settings:')
         print('--->Shift Register Settings:')
-        DS = starterDict.get ('DS', defaultDS)
-        tempInput = input ('Set DS (currently {0}): '.format(DS))
+        DS = starterDict.get('DS', defaultDS)
+        tempInput = input('Set DS(currently {0}): '.format(DS))
         if tempInput != '':
-            DS = int (tempInput)
-        starterDict.update ({'DS' : DS})
-        Q7S = starterDict.get ('Q7S', defaultQ7S)
-        tempInput = input ('Set Q7S (currently {0}): '.format(Q7S))
+            DS = int(tempInput)
+        starterDict.update({'DS' : DS})
+        Q7S = starterDict.get('Q7S', defaultQ7S)
+        tempInput = input('Set Q7S(currently {0}): '.format(Q7S))
         if tempInput != '':
-            Q7S = int (tempInput)
-        starterDict.update ({'Q7S' : Q7S})
-        SHCP = starterDict.get ('SHCP', defaultSHCP)
-        tempInput = input ('Set SHCP (currently {0}): '.format(SHCP))
+            Q7S = int(tempInput)
+        starterDict.update({'Q7S' : Q7S})
+        SHCP = starterDict.get('SHCP', defaultSHCP)
+        tempInput = input('Set SHCP(currently {0}): '.format(SHCP))
         if tempInput != '':
-            SHCP = int (tempInput)
-        starterDict.update ({'SHCP' : SHCP})
-        STCP = starterDict.get ('STCP', defaultSTCP)
-        tempInput = input ('Set STCP (currently {0}): '.format(STCP))
+            SHCP = int(tempInput)
+        starterDict.update({'SHCP' : SHCP})
+        STCP = starterDict.get('STCP', defaultSTCP)
+        tempInput = input('Set STCP(currently {0}): '.format(STCP))
         if tempInput != '':
-            STCP = int (tempInput)
-        starterDict.update ({'STCP' : STCP})
+            STCP = int(tempInput)
+        starterDict.update({'STCP' : STCP})
         #End Shift Register Settings
         print('--->Other Settings:')
-        motor_delay = starterDict.get ('motor_delay', defaultDelay)
-        tempInput = input ('Set motor delay (currently {0}): '.format(motor_delay))
+        motor_delay = starterDict.get('motor_delay', defaultDelay)
+        tempInput = input('Set motor delay(currently {0}): '.format(motor_delay))
         if tempInput != '':
-            motor_delay = float (tempInput)
-        starterDict.update ({'motor_delay' : motor_delay})
+            motor_delay = float(tempInput)
+        starterDict.update({'motor_delay' : motor_delay})
         #h5
-        hdf_path = starterDict.get ('hdf_path', defaultH5)
-        tempInput = input ('Set HDF5 path (currently {0}): '.format(hdf_path))
+        hdf_path = starterDict.get('hdf_path', defaultH5)
+        tempInput = input('Set HDF5 path(currently {0}): '.format(hdf_path))
         if tempInput != '':
-            hdf_path = str (tempInput)
-        starterDict.update ({'hdf_path' : hdf_path})
+            hdf_path = str(tempInput)
+        starterDict.update({'hdf_path' : hdf_path})
         return starterDict
 
-    def setup (self):
+    def setup(self):
         self.camera = self.task.Camera
         #PWM settings
         self.PWM_mode = int(self.settingsDict.get('PWM_mode', 0))
@@ -142,10 +136,10 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
 
         #Cross-hair Overlay settings
         self.overlay_resolution = self.camera.resolution()
-        self.cross_pos = (np.array(self.camera.resolution())/2).astype(int)
+        self.cross_pos =(np.array(self.camera.resolution())/2).astype(int)
         self.cross_step = int(self.camera.resolution()[0]/50)
         self.cross_q = queue(maxsize=0) #Queues the cross-hair changes.
-        self.coeff = np.asarray (self.settingsDict.get ('coeff_matrix', None))
+        self.coeff = np.asarray(self.settingsDict.get('coeff_matrix', None))
         '''
         Info: A cross-hair is used as an overlay to the picamera preview. Commands
         to move the cross-hair are queued in a python queue, which is processed by
@@ -154,19 +148,19 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
 
         '''
         #Buzzer settings == Vibmotor
-        #self.buzz_pulseProb = float (self.configDict.get ('buzz_pulseProb', 1))
-        self.buzz_pin = int(self.configDict.get ('buzz_pin', 27))
-        self.buzz_num = int (self.configDict.get ('buzz_num', 2))
-        self.buzz_len = float (self.configDict.get ('buzz_len', 0.1))
-        self.buzz_period = float (self.configDict.get ('buzz_period', 0.2))
-        self.buzzer=Train (PTSimpleGPIO.MODE_PULSES, self.buzz_pin, 0, self.buzz_len, (self.buzz_period - self.buzz_len), self.buzz_num,PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
+        #self.buzz_pulseProb = float(self.configDict.get('buzz_pulseProb', 1))
+        self.buzz_pin = int(self.configDict.get('buzz_pin', 27))
+        self.buzz_num = int(self.configDict.get('buzz_num', 2))
+        self.buzz_len = float(self.configDict.get('buzz_len', 0.1))
+        self.buzz_period = float(self.configDict.get('buzz_period', 0.2))
+        self.buzzer=Train(PTSimpleGPIO.MODE_PULSES, self.buzz_pin, 0, self.buzz_len,(self.buzz_period - self.buzz_len), self.buzz_num,PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
         print('Debug: passed buzzer')
         #Speaker Settings == Buzzer
-        self.speakerPin=int(self.configDict.get ('speaker_pin', 25))
-        self.speakerFreq=float(self.configDict.get ('speaker_freq', 6000))
-        self.speakerDuty = float(self.configDict.get ('speaker_duty', 0.5))
-        self.speakerOffForReward = float(self.configDict.get ('speaker_OffForReward', 1.5))
-        self.speaker=Infinite_train (PTSimpleGPIO.MODE_FREQ, self.speakerPin, self.speakerFreq, self.speakerDuty,  PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
+        self.speakerPin=int(self.configDict.get('speaker_pin', 25))
+        self.speakerFreq=float(self.configDict.get('speaker_freq', 6000))
+        self.speakerDuty = float(self.configDict.get('speaker_duty', 0.5))
+        self.speakerOffForReward = float(self.configDict.get('speaker_OffForReward', 1.5))
+        self.speaker=Infinite_train(PTSimpleGPIO.MODE_FREQ, self.speakerPin, self.speakerFreq, self.speakerDuty,  PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
         print('Debug: passed speaker')
         '''
 
@@ -195,7 +189,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
         self.max_scale = np.array([0.9,1.1])
         self.max_angle = 15
         '''
-        Info: New stepper commands are queued (self.mot_q) and processed on
+        Info: New stepper commands are queued(self.mot_q) and processed on
         another processor.
         Main program keeps track of the phase of the stepper motors and queues
         (self.phase_queue) the recent phase to make it available for the another
@@ -203,12 +197,12 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
         '''
         self.hdf_path = '/home/pi/Documents/' + self.settingsDict.get('hdf_path')
         #Experiment settings
-        #self.headFixTime = float (self.settingsDict.get ('headFixTime', 30))
-        #self.lickWithholdTime = float (self.settingsDict.get ('lickWithholdTime', 1))
-        #self.afterStimWithholdTime = float(self.settingsDict.get ('after_Stim_Withhold_Time', 0.2))
+        #self.headFixTime = float(self.settingsDict.get('headFixTime', 30))
+        #self.lickWithholdTime = float(self.settingsDict.get('lickWithholdTime', 1))
+        #self.afterStimWithholdTime = float(self.settingsDict.get('after_Stim_Withhold_Time', 0.2))
         super().setup()
-        # self.rewardInterval = float (self.settingsDict.get ('rewardInterval', 2))
-        # self.nRewards = int (self.settingsDict.get('nRewards', 2))
+        # self.rewardInterval = float(self.settingsDict.get('rewardInterval', 2))
+        # self.nRewards = int(self.settingsDict.get('nRewards', 2))
 
         #Mouse scores
         #self.buzzTimes = []
@@ -216,10 +210,10 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
         #self.lickWithholdTimes = []
         self.rewardTimes = []
 
-    def trialPrep(self):
-        return self.align()
+    def trialPrep(self, tag):
+        return self.align(tag)
 
-    def stimulate (self):
+    def stimulate(self):
         self.pulse(self.laser_on_time, self.duty_cycle)
 
     def trialEnd(self):
@@ -382,10 +376,10 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
             #x_steps = np.arange(start=0,stop=abs(x),dtype=int)
             x_steps = np.linspace(start=0,stop=abs(y-1),num=abs(x),endpoint=False,dtype=int)
 
-        for i in (i for i in x_steps if x_steps.size>=y_steps.size):
-            next_phase_x = (phase_x + self.get_dir(x)) % len(states)
+        for i in(i for i in x_steps if x_steps.size>=y_steps.size):
+            next_phase_x =(phase_x + self.get_dir(x)) % len(states)
             if i in y_steps:
-                next_phase_y = (phase_y + self.get_dir(y)) % len(states)
+                next_phase_y =(phase_y + self.get_dir(y)) % len(states)
                 byte = states[next_phase_x]+states[next_phase_y]
                 phase_y = next_phase_y
             else:
@@ -397,10 +391,10 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
             phase_x = next_phase_x
             sleep(delay)
 
-        for i in (i for i in y_steps if y_steps.size>x_steps.size):
-            next_phase_y = (phase_y + self.get_dir(y)) % len(states)
+        for i in(i for i in y_steps if y_steps.size>x_steps.size):
+            next_phase_y =(phase_y + self.get_dir(y)) % len(states)
             if i in x_steps:
-                next_phase_x = (phase_x + self.get_dir(x)) % len(states)
+                next_phase_x =(phase_x + self.get_dir(x)) % len(states)
                 byte = states[next_phase_x]+states[next_phase_y]
                 phase_x = next_phase_x
             else:
@@ -415,8 +409,8 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
             x = 30
             y = 30
             for i in np.arange(start=0,stop=30,dtype=int):
-                next_phase_x = (phase_x + self.get_dir(x)) % len(states)
-                next_phase_y = (phase_y + self.get_dir(y)) % len(states)
+                next_phase_x =(phase_x + self.get_dir(x)) % len(states)
+                next_phase_y =(phase_y + self.get_dir(y)) % len(states)
                 byte = states[next_phase_x]+states[next_phase_y]
                 #Send and execute new byte
                 self.feed_byte(byte)
@@ -576,7 +570,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
                     inputStr = str(1)
             if inputStr == str(0):
                 for tag, mouse in mice.items():
-                    if ( 'targets' not in mouse and 'ref_im' in mouse):
+                    if( 'targets' not in mouse and 'ref_im' in mouse):
                         print('Mouse: ', tag)
                         targets_coords = manual_annot(mouse.get('ref_im'))
                         mouse.update({'targets': np.asarray(targets_coords).astype(int)})
@@ -613,7 +607,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
         self.camera.capture(self.mouse.get('trial_image'),'rgb')
         timestamp = time()
         self.mouse.update({'trial_name': "M" + str(self.tag % 10000) + '_' + str(timestamp)})
-        self.task.DataLogger.writeToLogFile (self.tag, 'Image', {'name': self.mouse.get('trial_name'), 'type': 'trial', 'reference': self.mouse.get('ref_name')}, timestamp)
+        self.task.DataLogger.writeToLogFile(self.tag, 'Image', {'name': self.mouse.get('trial_name'), 'type': 'trial', 'reference': self.mouse.get('ref_name')}, timestamp)
         #Image registration
         #IMPROVE: Could run the registration on a different processor
         warnings.filterwarnings("ignore",".*the returned array has changed*")
@@ -633,17 +627,17 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
             return targ_pos
         else:
             print('No laser stimulation: Image registration failed.')
-            self.task.DataLogger.writeToLogFile (self.tag, 'ImageRegFail', None, time())
+            self.task.DataLogger.writeToLogFile(self.tag, 'ImageRegFail', None, time())
             return None
 
 
 #=================Main functions called from outside===========================
-    def align(self, resultsDict = {}, settingsDict = {}):
+    def align(self, tag, resultsDict = {}, settingsDict = {}):
         """
         Aligns laser with reference image and assigned targets.
         Returns True if aligned successfully, False otherwise.
         """
-        self.tag = self.task.tag
+        self.tag = tag
         self.mouse = self.task.Subjects.get(self.tag)
         self.loadH5()
         self.rewardTimes = []
@@ -655,7 +649,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
             self.mouse.update({'ref_name': "M" + str(self.tag % 10000) + '_' + str(timestamp) + '_R'})
             self.mouse.update({'trial_name': "M" + str(self.tag % 10000) + '_' + str(timestamp) + '_R'})
             self.mouse.update({'trial_image': self.mouse.get('ref_im')})
-            self.task.DataLogger.writeToLogFile (self.tag, 'ReferenceImage', {'name': self.mouse.get('ref_name')}, timestamp)
+            self.task.DataLogger.writeToLogFile(self.tag, 'ReferenceImage', {'name': self.mouse.get('ref_name')}, timestamp)
             self.h5updater()
             self.mouse.pop('ref_im')
             return False
@@ -671,7 +665,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
             # Run this only if headfixed
             # self.rewarder.giveReward('task')
             print('Image registration')
-            # ref_path = self.cageSettings.dataPath+'sample_im/'+datetime.fromtimestamp (int (time())).isoformat ('-')+'_'+str(self.mouse.tag)+'.jpg'
+            # ref_path = self.cageSettings.dataPath+'sample_im/'+datetime.fromtimestamp(int(time())).isoformat('-')+'_'+str(self.mouse.tag)+'.jpg'
             self.mouse.update({'timestamp': time()})
             # self.camera.capture(ref_path)
             targ_pos = self.image_registration()
@@ -687,17 +681,17 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
                 self.camera.capture(self.mouse.get('laser_spot'),'rgb', video_port=True)
                 timestamp = time()
                 self.mouse.update({'laser_name': "M" + str(self.tag % 10000) + '_' + str(timestamp) + '_LS'})
-                self.task.DataLogger.writeToLogFile (self.tag, 'Stimulus', {'image_name': self.mouse.get('laser_name'), 'type': 'LaserSpot', 'coeff_matrix': self.coeff, 'duty_cycle': self.duty_cycle, "laser_on_time": self.laser_on_time, 'laser_targets': targ_pos, 'intended_targets': self.mouse.get('targets'), 'reference': self.mouse.get('ref_name')}, timestamp)
+                self.task.DataLogger.writeToLogFile(self.tag, 'Stimulus', {'image_name': self.mouse.get('laser_name'), 'type': 'LaserSpot', 'coeff_matrix': self.coeff, 'duty_cycle': self.duty_cycle, "laser_on_time": self.laser_on_time, 'laser_targets': targ_pos, 'intended_targets': self.mouse.get('targets'), 'reference': self.mouse.get('ref_name')}, timestamp)
                 sleep(0.1)
             # # Repeatedly give a reward and pulse simultaneously
-            # timeInterval = self.rewardInterval # - self.rewarder.rewardDict.get ('task')
+            # timeInterval = self.rewardInterval # - self.rewarder.rewardDict.get('task')
             # self.rewardTimes = []
             # self.camera.start_preview()
             # for reward in range(self.nRewards):
-            #     self.rewardTimes.append (time())
+            #     self.rewardTimes.append(time())
             #     if targ_pos is not None:
             #         self.pulse(self.laser_on_time,self.duty_cycle)
-            #         self.task.DataLogger.writeToLogFile (self.tag, 'LaserPulse', None, time())
+            #         self.task.DataLogger.writeToLogFile(self.tag, 'LaserPulse', None, time())
             #     self.rewarder.giveReward('task')
             #     sleep(timeInterval)
             # newRewards = resultsDict.get('rewards', 0) + self.nRewards
@@ -722,7 +716,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
         #Tester function called from the hardwareTester. Includes Stimulator
         #specific hardware tester.
         while(True):
-            inputStr = input ('r=reference image, m= matching, t= targets, a = accuracy, v = vib. motor, p= laser tester, c= motor check, a= camera/LED, s= speaker, q= quit: ')
+            inputStr = input('r=reference image, m= matching, t= targets, a = accuracy, v = vib. motor, p= laser tester, c= motor check, a= camera/LED, s= speaker, q= quit: ')
             if inputStr == 'm':
                 self.matcher()
                 self.settingsDict.update({'coeff_matrix' : self.coeff.tolist()})
@@ -735,14 +729,14 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
             elif inputStr == 'p':
                 self.camera.start_preview()
                 self.pulse(1000,self.duty_cycle)
-                input ('adjust Laser: Press any key to quit ')
+                input('adjust Laser: Press any key to quit ')
                 self.camera.stop_preview()
                 self.pulse(0)
             elif inputStr == 'a':
                 #Display preview and turn on LED
                 self.camera.start_preview()
                 self.task.BrainLight.onForStim()
-                input ('adjust camera/LED: Press any key to quit ')
+                input('adjust camera/LED: Press any key to quit ')
                 self.camera.stop_preview()
                 self.task.BrainLight.offForStim()
             elif inputStr == 's':
@@ -762,7 +756,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
         Then, moves to 100 random points, and then back to center, taking another image.
         These images can then be compared to determine the long-term accuracy of the stepper motors.
         """
-        continueStr = input("This may take a while. Are you sure? (Y/N)")
+        continueStr = input("This may take a while. Are you sure?(Y/N)")
         if continueStr.lower() == "y":
             self.camera.start_preview()
             self.pulse(1000,self.duty_cycle)
@@ -772,7 +766,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
             self.camera.stop_preview()
             self.camera.capture(self.accuracyStart,'rgb')
             self.pulse(0)
-            for i in range (0, 100):
+            for i in range(0, 100):
                 x = randrange(0, self.camera.resolution()[0])
                 y = randrange(0, self.camera.resolution()[1])
                 self.move_to(np.dot(self.coeff, np.asarray([y, x, 1])), topleft=True,join=True)
@@ -791,7 +785,7 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
                         del folder['start']
                     if folder.__contains__('end'):
                         del folder['end']
-                    resolution_shape = ( self.camera.resolution()[0], self.camera.resolution()[1], 3) #rgb layers
+                    resolution_shape =( self.camera.resolution()[0], self.camera.resolution()[1], 3) #rgb layers
                     ref = folder.require_dataset('start',shape=tuple(resolution_shape),dtype=np.uint8,data=self.accuracyStart)
                     ref.attrs.modify('CLASS', np.string_('IMAGE'))
                     ref.attrs.modify('IMAGE_VERSION', np.string_('1.2'))
@@ -805,11 +799,11 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
                     ref.attrs.modify('INTERLACE_MODE', np.string_('INTERLACE_PIXEL'))
                     ref.attrs.modify('IMAGE_MINMAXRANGE', [0,255])
 
-    def setdown (self):
+    def setdown(self):
         #Remove portions saved in h5
         super().setdown()
 
-    def loadH5 (self):
+    def loadH5(self):
 
         if(path.exists(self.hdf_path)):
             with File(self.hdf_path, 'r+') as hdf:
@@ -824,12 +818,12 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
         else:
             with File(self.hdf_path, 'w') as hdf:
                 pass
-    def editReference (self):
+    def editReference(self):
         tag = ""
         if(path.exists(self.hdf_path)):
             with File(self.hdf_path, 'r+') as hdf:
-                while (not hdf.__contains__(tag) and tag != "e"):
-                    print('Select a Mouse to edit: (e to exit)', hdf.keys())
+                while(not hdf.__contains__(tag) and tag != "e"):
+                    print('Select a Mouse to edit:(e to exit)', hdf.keys())
                     tag = input('Mouse tag: ')
                 if(tag != 'e'):
                     mouse = hdf[tag]
@@ -837,29 +831,29 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
                     fig = plt.figure(figsize=(10,10))
                     img = mouse['ref_im'][:]
                     imgplot = plt.imshow(img)
-                    plt.title('Reference Image (click to hide)')
+                    plt.title('Reference Image(click to hide)')
                     plt.show(block=False)
                     plt.ginput(n=1,show_clicks=False,timeout=0)
                     while nextInput.lower() != "n" and nextInput.lower() != "y":
-                        nextInput = input('Delete reference image? (Y/N):')
+                        nextInput = input('Delete reference image?(Y/N):')
                     if(nextInput.lower() == "y"):
                         del mouse['ref_im']
                         nextInput = ""
                         confirm = False
                         self.task.DataLogger.writeToLogFile(int(tag), "ReferenceDelete", None, time())
                         while( not confirm):
-                            while (not mouse['trial_image'].__contains__(nextInput) and nextInput != "n"):
-                                print('Select a new reference image: (n for no image) ', mouse['trial_image'].keys())
+                            while(not mouse['trial_image'].__contains__(nextInput) and nextInput != "n"):
+                                print('Select a new reference image:(n for no image) ', mouse['trial_image'].keys())
                                 nextInput = input('Image: ')
                             if(nextInput.lower() != 'n'):
                                 fig = plt.figure(figsize=(10,10))
                                 img = mouse['trial_image/' + nextInput][:]
                                 imgplot = plt.imshow(img)
-                                plt.title('Selected (click to hide):')
+                                plt.title('Selected(click to hide):')
                                 plt.show(block=False)
                                 plt.ginput(n=1,show_clicks=False,timeout=0)
                                 plt.close()
-                                conf = input('Use this? (Y/N)')
+                                conf = input('Use this?(Y/N)')
                                 if(conf.lower() == 'y'):
                                     confirm = True
                             else:
@@ -872,10 +866,10 @@ class AHF_Stimulus_Laser (AHF_Stimulus):
 
 
 
-    def h5updater (self):
+    def h5updater(self):
         with File(self.hdf_path, 'r+') as hdf:
             mouse = hdf.require_group(str(self.tag))
-            resolution_shape = ( self.camera.resolution()[0], self.camera.resolution()[1], 3) #rgb layers
+            resolution_shape =( self.camera.resolution()[0], self.camera.resolution()[1], 3) #rgb layers
             if 'ref_im' in self.mouse:
                 ref = mouse.require_dataset('ref_im',shape=tuple(resolution_shape),dtype=np.uint8,data=self.mouse.get('ref_im'))
                 ref.attrs.modify('CLASS', np.string_('IMAGE'))

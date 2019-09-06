@@ -11,7 +11,7 @@ from abc import ABCMeta, abstractmethod
 #it is creating problems in debugging.
 #import AHF_ClassAndDictUtils as CAD
 
-class AHF_Base (metaclass = ABCMeta):
+class AHF_Base(metaclass = ABCMeta):
     """
     Defines conventions for classes used for accesing hardware and doing subtasks in AutoHeadFix code
     Each class has a static method, config_user_get, to create or edit a settings dictionary, and will be inititialized
@@ -28,7 +28,7 @@ class AHF_Base (metaclass = ABCMeta):
 
     @staticmethod
     @abstractmethod
-    def config_user_get (starterDict = {}):
+    def config_user_get(starterDict = {}):
         """
         static method that querries user for settings, with default responses from starterDict,
         and returns starterDict with settings as edited by the user.
@@ -53,8 +53,8 @@ class AHF_Base (metaclass = ABCMeta):
         Class names need to start with AHF_ and the dictionary must follow convention, named for the class with 'Dict' appended.
 
         Args:
-            taskP (pointer): Task Pointer - points to the global Task object
-            settingsDictP (pointer): Points to the global settings dictionary
+            taskP(pointer): Task Pointer - points to the global Task object
+            settingsDictP(pointer): Points to the global settings dictionary
 
         """
         self.task=taskP
@@ -63,9 +63,9 @@ class AHF_Base (metaclass = ABCMeta):
 
 
     @abstractmethod
-    def setup (self):
+    def setup(self):
         """
-        does hardware initialization with (possibly updated) info in self.settingsDict
+        does hardware initialization with(possibly updated) info in self.settingsDict
         Run by __init__, or can be run  separately after editing the settingsDict
 
         :returns: bool -- the truth that setup completed without errors
@@ -73,26 +73,26 @@ class AHF_Base (metaclass = ABCMeta):
         return True
 
     @abstractmethod
-    def setdown (self):
+    def setdown(self):
         """
         oppposite of setup. Releases any hardware resouces. can be run before editing settings so GPIO
         pins can be reused, for example. This strategy should be used in hardwareTest method.
         """
         pass
 
-    def __del__ (self):
+    def __del__(self):
         """
         For clean up purposes, releases hardware resources with setdown method
         """
         try:
             self.setdown()
         except Exception as e:
-            #In case it has already been set down (__del__ is not predictable)
+            #In case it has already been set down(__del__ is not predictable)
             pass
 
 
     @abstractmethod
-    def hardwareTest (self):
+    def hardwareTest(self):
         """
         Tests functionality, gives user a chance to change settings.
         :Returns: bool -- True if any settings have changed

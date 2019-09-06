@@ -1,14 +1,10 @@
  #! /usr/bin/python
 #-*-coding: utf-8 -*-
 
-from abc import ABCMeta
-from AHF_Base import AHF_Base
-from AHF_Mouse import Mouse, Mice
-from collections import deque
 from AHF_DataLogger_text import AHF_DataLogger_text
 from AHF_DataLogger_mysql import AHF_DataLogger_mysql
 from AHF_DataLogger import AHF_DataLogger
-class AHF_DataLogger_textMySql (AHF_DataLogger):
+class AHF_DataLogger_textMySql(AHF_DataLogger):
 
     """
     Combination of the text data logger and mySQL data logger. Simply does both.
@@ -28,12 +24,14 @@ class AHF_DataLogger_textMySql (AHF_DataLogger):
     def setup(self):
         self.textLogger = AHF_DataLogger_text(self.task, self.settingsDict)
         self.textLogger.setup()
+        self.textLogger.isChild = True
         self.sqlLogger = AHF_DataLogger_mysql(self.task, self.settingsDict)
         self.sqlLogger.setup()
+        self.sqlLogger.isChild = True
         pass
 
 
-    def makeLogFile (self):
+    def makeLogFile(self):
         """
         Makes or opens a text log file, or a datbase, or whatever else needs doing. Called once before
         entering main loop of program. DataLogger may make a new file every day in NewDay function, if desired
@@ -62,11 +60,12 @@ class AHF_DataLogger_textMySql (AHF_DataLogger):
         For text based methods, event should be a dictionary for more complicated stimulator
         results, so an event can be more easily parsed during data analysis.
         """
+        super().writeToLogFile(tag, eventKind, eventDict, timeStamp, toShellOrFile)
         self.textLogger.writeToLogFile(tag, eventKind, eventDict, timeStamp, toShellOrFile)
         self.sqlLogger.writeToLogFile(tag, eventKind, eventDict, timeStamp, toShellOrFile)
 
     @staticmethod
-    def about ():
+    def about():
         return "Combination of text and mysql"
 
     def setdown(self):
@@ -77,7 +76,7 @@ class AHF_DataLogger_textMySql (AHF_DataLogger):
         self.textLogger.hardwareTest()
         self.sqlLogger.hardwareTest()
 
-    def newDay (self, mice):
+    def newDay(self, mice):
         """
         At the start of a new day, it was customary for the text-based data logging to start new text files,
         and to make a precis of the day's results into a a separate text file for easy human reading.
@@ -99,9 +98,9 @@ class AHF_DataLogger_textMySql (AHF_DataLogger):
         pass
 
 
-    def configGenerator (self):
+    def configGenerator(self):
         """
-        generates configuration data for each subject as (IDtag, dictionary) tuples from some kind of permanent storage
+        generates configuration data for each subject as(IDtag, dictionary) tuples from some kind of permanent storage
         such as a JSON file, or a database. Will be called when program is started, or restarted and settings
         need to be reloaded.
         """
@@ -110,7 +109,7 @@ class AHF_DataLogger_textMySql (AHF_DataLogger):
         pass
 
 
-    def getConfigData (self, tag):
+    def getConfigData(self, tag):
         """
         returns a dictionary of data that was saved for this reference tag, in some permanent storage such as a JSON file
         Will be called when program is started, or restarted and settings need to be reloaded
@@ -138,7 +137,7 @@ class AHF_DataLogger_textMySql (AHF_DataLogger):
         pass
 
 
-    def storeConfig (self, tag, dictionary, source = ""):
+    def storeConfig(self, tag, dictionary, source = ""):
         """
         Stores configuration data, given as an IDtag, and dictionary for that tag, in some more permanent storage
         as a JSON text file, or a database or hd5 file, so it can be later retrieved by IDtag
