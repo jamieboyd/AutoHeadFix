@@ -57,8 +57,8 @@ class AHF_HeadFixer_NoFix (AHF_HeadFixer):
             except Exception as e:
                 AHF_HeadFixer_NoFix.isChecking = False
                 break
-       AHF_Task.gTask.Stimulator.stop()
-       AHF_HeadFixer_NoFix.isChecking = False
+        AHF_Task.gTask.Stimulator.stop()
+        AHF_HeadFixer_NoFix.isChecking = False
 
     def setup(self):
         self.isChecking = False
