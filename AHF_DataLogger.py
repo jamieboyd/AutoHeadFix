@@ -1,11 +1,12 @@
- #! /usr/bin/python
-#-*-coding: utf-8 -*-
+#! /usr/bin/python
+# -*-coding: utf-8 -*-
 
 from abc import ABCMeta, abstractmethod
 from AHF_Base import AHF_Base
-from AHF_Mouse import Mouse, Mice
 from collections import deque
-class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
+
+
+class AHF_DataLogger(AHF_Base, metaclass=ABCMeta):
     """
     A Data Logger provides an interface to save task data, and to save
     and load mouse configuration data. This can be either to text files, or to
@@ -13,17 +14,17 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
     should also print status updates to the shell, but these don't need to contain
     as much information. The brain imaging data is saved
     separately, but references to movie files should be saved by data logger.
-    Similarly, other binary data (lever positons, anyone?) can be saved separately,
+    Similarly, other binary data(lever positons, anyone?) can be saved separately,
     by the Stimulator class, but binary file/posiiton can be saved as an event.
     """
-    TO_SHELL =1
+    TO_SHELL = 1
     TO_FILE = 2
     trackingDict = {}
     isChild = False
     BUFFER_SIZE = 25
 
     @abstractmethod
-    def makeLogFile (self):
+    def makeLogFile(self):
         """
         Makes or opens a text log file, or a datbase, or whatever else needs doing. Called once before
         entering main loop of program. DataLogger may make a new file every day in NewDay function, if desired
@@ -120,7 +121,7 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
 
 
     @abstractmethod
-    def newDay (self, mice):
+    def newDay(self, mice):
         """
         At the start of a new day, it was customary for the text-based data logging to start new text files,
         and to make a precis of the day's results into a a separate text file for easy human reading.
@@ -138,16 +139,16 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
         pass
 
     @abstractmethod
-    def configGenerator (self):
+    def configGenerator(self):
         """
-        generates configuration data for each subject as (IDtag, dictionary) tuples from some kind of permanent storage
+        generates configuration data for each subject as(IDtag, dictionary) tuples from some kind of permanent storage
         such as a JSON file, or a database. Will be called when program is started, or restarted and settings
         need to be reloaded.
         """
         pass
 
     @abstractmethod
-    def getConfigData (self, tag):
+    def getConfigData(self, tag):
         """
         returns a dictionary of data that was saved for this reference tag, in some permanent storage such as a JSON file
         Will be called when program is started, or restarted and settings need to be reloaded
@@ -169,7 +170,7 @@ class AHF_DataLogger (AHF_Base, metaclass = ABCMeta):
         pass
 
     @abstractmethod
-    def storeConfig (self, tag, dictionary, source = ""):
+    def storeConfig(self, tag, dictionary, source = ""):
         """
         Stores configuration data, given as an IDtag, and dictionary for that tag, in some more permanent storage
         as a JSON text file, or a database or hd5 file, so it can be later retrieved by IDtag

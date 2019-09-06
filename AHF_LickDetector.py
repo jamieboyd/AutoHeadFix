@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 
 from AHF_Base import AHF_Base
 
-class AHF_LickDetector (AHF_Base, metaclass = ABCMeta):
+class AHF_LickDetector(AHF_Base, metaclass = ABCMeta):
     """
     Base class for lick detetctor. Some kind of touch sensor on water port, capacitive or electrical.
     Should only report touches of the lick port, not un-touches. May have multiple channels. Must be
@@ -12,30 +12,30 @@ class AHF_LickDetector (AHF_Base, metaclass = ABCMeta):
     """
 
     @abstractmethod
-    def getTouches (self):
+    def getTouches(self):
         """
-        returns number (bit-wise per channel lick detetctor has multiple channels) of which channels are currently touched
+        returns number(bit-wise per channel lick detetctor has multiple channels) of which channels are currently touched
         """
         return 0
 
 
     @abstractmethod
-    def startLickCount (self):
+    def startLickCount(self):
         """
         Zeros the array that stores lick counts for each channel, and makes sure callback is filling the array for requested channels
         """
         pass
 
     @abstractmethod
-    def resumeLickCount (self):
+    def resumeLickCount(self):
         pass
 
     @abstractmethod
-    def getLickCount (self):
+    def getLickCount(self):
         pass
 
     @abstractmethod
-    def stopLickCount (self):
+    def stopLickCount(self):
         """
         takes a tuple of channels and returns a list where each member is the number of licks for that channel in the global array
         call zeroLickCount, wait a while for some licks, then call getLickCount
@@ -43,14 +43,14 @@ class AHF_LickDetector (AHF_Base, metaclass = ABCMeta):
         pass
 
     @abstractmethod
-    def startLickTiming (self):
+    def startLickTiming(self):
         """
         Zeros the array that stores lick counts for each channel, and makes sure callback is filling the array for requested channels
         """
         pass
 
     @abstractmethod
-    def stopLickTiming (self):
+    def stopLickTiming(self):
         """
         takes a tuple of channels and returns a list where each member is the number of licks for that channel in the global array
         call zeroLickCount, wait a while for some licks, then call getLickCount
@@ -58,7 +58,7 @@ class AHF_LickDetector (AHF_Base, metaclass = ABCMeta):
         pass
 
     @abstractmethod
-    def startLogging (self):
+    def startLogging(self):
         """
         Starts the datalogger logging licks to the shell, and to a file if one was provided
         """
@@ -66,7 +66,7 @@ class AHF_LickDetector (AHF_Base, metaclass = ABCMeta):
 
 
     @abstractmethod
-    def stopLogging (self):
+    def stopLogging(self):
         """
         Stops the datalogger logging licks to the shell and file
         """
@@ -74,7 +74,7 @@ class AHF_LickDetector (AHF_Base, metaclass = ABCMeta):
 
 
     @abstractmethod
-    def waitForLick (self, timeOut_secs, startFromZero=False):
+    def waitForLick(self, timeOut_secs, startFromZero=False):
         """
         Waits for a lick on any channel. Returns channel that was touched, or 0 if timeout expires with no touch,
         or -1 if startFromZero was True and the detector was touched for entire time

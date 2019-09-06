@@ -6,7 +6,7 @@ from AHF_Rewarder import AHF_Rewarder
 from time import sleep, time
 from collections import deque
 
-class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
+class AHF_Rewarder_solenoid(AHF_Rewarder,metaclass = ABCMeta):
     """
     An abstract base class to use a solenoid to deliver water rewards using 1 GPIO pin, subclasses use different timing methods
     """
@@ -22,31 +22,31 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
 
     @staticmethod
     def config_user_get(starterDict = {}):
-        rewardPin = starterDict.get ('rewardPin', AHF_Rewarder_solenoid.defaultPin)
-        response = input('Enter the GPIO pin used by the water delivery solenoid (currently %d): ' % rewardPin)
+        rewardPin = starterDict.get('rewardPin', AHF_Rewarder_solenoid.defaultPin)
+        response = input('Enter the GPIO pin used by the water delivery solenoid(currently %d): ' % rewardPin)
         if response != '':
-            rewardPin = int (response)
-        rewards = starterDict.get ('rewards', {})
-        entry = rewards.get ('entry', AHF_Rewarder_solenoid.defaultEntry)
-        response = input ('Enter solenoid opening duration, in seconds, for entry rewards, (currently %.2f): ' % AHF_Rewarder_solenoid.defaultEntry)
+            rewardPin = int(response)
+        rewards = starterDict.get('rewards', {})
+        entry = rewards.get('entry', AHF_Rewarder_solenoid.defaultEntry)
+        response = input('Enter solenoid opening duration, in seconds, for entry rewards,(currently %.2f): ' % AHF_Rewarder_solenoid.defaultEntry)
         if response != '':
-            entry = float (response)
-        task = rewards.get ('task', AHF_Rewarder_solenoid.defaultTask)
-        response = input ('Enter solenoid opening duration, in seconds, for task rewards, (currently %.2f): ' % AHF_Rewarder_solenoid.defaultTask)
+            entry = float(response)
+        task = rewards.get('task', AHF_Rewarder_solenoid.defaultTask)
+        response = input('Enter solenoid opening duration, in seconds, for task rewards,(currently %.2f): ' % AHF_Rewarder_solenoid.defaultTask)
         if response != '':
-            task = float (response)
-        maxEntryRewards = starterDict.get ('maxEntryRewards', AHF_Rewarder_solenoid.maxEntryRewardsDefault)
-        response = input('Enter the maximum number of entry reards given per day (currently %d): ' % maxEntryRewards)
+            task = float(response)
+        maxEntryRewards = starterDict.get('maxEntryRewards', AHF_Rewarder_solenoid.maxEntryRewardsDefault)
+        response = input('Enter the maximum number of entry reards given per day(currently %d): ' % maxEntryRewards)
         if response != '':
-            maxEntryRewards = int (response)
-        entryRewardDelay = starterDict.get ('entryRewardDelay', AHF_Rewarder_solenoid.entryRewardDelayDefault)
-        response = input('Enter the delay between entering and getting a reward (currently %.2f): ' % entryRewardDelay)
+            maxEntryRewards = int(response)
+        entryRewardDelay = starterDict.get('entryRewardDelay', AHF_Rewarder_solenoid.entryRewardDelayDefault)
+        response = input('Enter the delay between entering and getting a reward(currently %.2f): ' % entryRewardDelay)
         if response != '':
-            entryRewardDelay = float (response)
+            entryRewardDelay = float(response)
         rewards.update({'entry' : entry, 'task' : task, 'test' : AHF_Rewarder_solenoid.testAmount})
-        starterDict.update ({'rewardPin': rewardPin, 'rewards' : rewards})
-        starterDict.update ({'maxEntryRewards' : maxEntryRewards, 'entryRewardDelay' : entryRewardDelay})
-        return AHF_Rewarder.config_user_get (starterDict)
+        starterDict.update({'rewardPin': rewardPin, 'rewards' : rewards})
+        starterDict.update({'maxEntryRewards' : maxEntryRewards, 'entryRewardDelay' : entryRewardDelay})
+        return AHF_Rewarder.config_user_get(starterDict)
 
 
     def config_user_subject_get(self,starterDict = {}):
@@ -72,11 +72,11 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
         if response != '':
             taskSize = float(response)
         starterDict.update({'taskSize': taskSize})
-        maxEntryRewards = starterDict.get ('maxEntryRewards', AHF_Rewarder_solenoid.maxEntryRewardsDefault)
+        maxEntryRewards = starterDict.get('maxEntryRewards', AHF_Rewarder_solenoid.maxEntryRewardsDefault)
         response = input('Enter the maximum number of entry reards given per day')
         if response != '':
-            maxEntryRewards = int (response)
-        starterDict.update ({'maxEntryRewards' : maxEntryRewards})
+            maxEntryRewards = int(response)
+        starterDict.update({'maxEntryRewards' : maxEntryRewards})
         breakBeamSize = starterDict.get('breakBeamSize', AHF_Rewarder_solenoid.defaultBreakBeam)
         response = input(
             'Enter the valve opening duration, in seconds, for break beam rewards. Currently {:.2f}: '.format(breakBeamSize))
@@ -89,11 +89,11 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
         if response != '':
             breakBeamDelay = float(response)
         starterDict.update({'breakBeamDelay': breakBeamDelay})
-        maxBreakBeamRewards = starterDict.get ('maxBreakBeamRewards', AHF_Rewarder_solenoid.maxBreakBeamRewardsDefault)
+        maxBreakBeamRewards = starterDict.get('maxBreakBeamRewards', AHF_Rewarder_solenoid.maxBreakBeamRewardsDefault)
         response = input('Enter the maximum number of break beam reards given per day')
         if response != '':
-            maxBreakBeamRewards = int (response)
-        starterDict.update ({'maxBreakBeamRewards' : maxBreakBeamRewards})
+            maxBreakBeamRewards = int(response)
+        starterDict.update({'maxBreakBeamRewards' : maxBreakBeamRewards})
         return starterDict
 
     def config_subject_get(self, starterDict={}):
@@ -106,36 +106,36 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
         taskSize = starterDict.get('taskSize', AHF_Rewarder_solenoid.defaultTask)
         starterDict.update({'taskSize': taskSize})
         maxEntryRewards = starterDict.get('maxEntryRewards', AHF_Rewarder_solenoid.maxEntryRewardsDefault)
-        starterDict.update ({'maxEntryRewards' : maxEntryRewards})
+        starterDict.update({'maxEntryRewards' : maxEntryRewards})
         breakBeamSize = starterDict.get('breakBeamSize', AHF_Rewarder_solenoid.defaultBreakBeam)
         starterDict.update({'breakBeamSize': breakBeamSize})
         breakBeamDelay = starterDict.get('breakBeamDelay', AHF_Rewarder_solenoid.defaultBBWait)
         starterDict.update({'breakBeamDelay': breakBeamDelay})
         maxBreakBeamRewards = starterDict.get('maxBreakBeamRewards', AHF_Rewarder_solenoid.maxBreakBeamRewardsDefault)
-        starterDict.update ({'maxBreakBeamRewards' : maxBreakBeamRewards})
+        starterDict.update({'maxBreakBeamRewards' : maxBreakBeamRewards})
         starterDict.update({'totalEntryRewardsToday' : 0})
         starterDict.update({'totalBreakBeamRewardsToday' : 0})
         return starterDict
 
-    def results_subject_get (self):
+    def results_subject_get(self):
         return self.results
 
     @abstractmethod
-    def setup (self):
+    def setup(self):
         self.rewardPin = self.settingsDict.get('rewardPin')
-        self.rewards = self.settingsDict.get ('rewards')
-        self.countermandTime = self.settingsDict.get ('entryRewardDelay')
-        self.maxEntryRewards = self.settingsDict.get ('maxEntryRewards')
+        self.rewards = self.settingsDict.get('rewards')
+        self.countermandTime = self.settingsDict.get('entryRewardDelay')
+        self.maxEntryRewards = self.settingsDict.get('maxEntryRewards')
         self.countermanded = ''
         self.results = deque(maxlen=25)
         self.task.DataLogger.startTracking("Reward", "consumed", "buffer", size=200)
 
-    def newResultsDict (self):
+    def newResultsDict(self):
         """
         Return a dictionary of keys = rewardNames, values = number of rewards given, each mouse will get one of these for reward monitoring each day
         """
         rDict = {}
-        for item in self.settingsDict.get ('rewards').items():
+        for item in self.settingsDict.get('rewards').items():
             itemKey = item [0]
             #itemVal = item [1]
             if itemKey != 'test':
@@ -172,10 +172,10 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
         if sleepTime ==0:
             return 0
         else:
-            resultsDict.update ({rewardName: resultsDict.get (rewardName, 0) + 1})
+            resultsDict.update({rewardName: resultsDict.get(rewardName, 0) + 1})
             self.task.DataLogger.writeToLogFile(self.task.tag, 'Reward', {'kind' : rewardName, 'size' : sleepTime, 'consumed': False}, time())
             print("Rewards so far: ", self.task.DataLogger.getTrackedEvent(self.task.tag, "Reward", "consumed"))
-            self.threadReward (sleepTime)
+            self.threadReward(sleepTime)
             return sleepTime
 
     def entryHandling(self):
@@ -218,29 +218,29 @@ class AHF_Rewarder_solenoid (AHF_Rewarder,metaclass = ABCMeta):
         if sleepTime ==0:
             return 0
         else:
-            resultsDict.update ({rewardName: resultsDict.get (rewardName, 0) + 1})
+            resultsDict.update({rewardName: resultsDict.get(rewardName, 0) + 1})
             self.task.DataLogger.writeToLogFile(self.task.tag, 'Reward', {'kind' : rewardName, 'size' : sleepTime, 'consumed': False}, time())
             self.countermanded = rewardName
-            self.threadCMReward (sleepTime)
+            self.threadCMReward(sleepTime)
             return sleepTime
 
     def countermandReward(self,resultsDict={}, settingsDict = {}):
         """
         Countermands the previously given reward
         """
-        if self.threadCountermand ():
-            resultsDict.update ({self.countermanded: resultsDict.get (self.countermanded, 0) - 1})
+        if self.threadCountermand():
+            resultsDict.update({self.countermanded: resultsDict.get(self.countermanded, 0) - 1})
 
         return 0
 
     @abstractmethod
-    def threadReward (self, sleepTime):
+    def threadReward(self, sleepTime):
         pass
 
     @abstractmethod
-    def threadCMReward (self, sleepTime):
+    def threadCMReward(self, sleepTime):
         pass
 
     @abstractmethod
-    def threadCountermand (self):
+    def threadCountermand(self):
         pass

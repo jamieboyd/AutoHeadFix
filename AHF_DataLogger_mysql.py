@@ -30,7 +30,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
     """
     PSEUDO_MUTEX = 0
     """
-    The class field PSEUDO_MUTEX helps prevent print statements from different places in the code (main vs
+    The class field PSEUDO_MUTEX helps prevent print statements from different places in the code(main vs
     callbacks) from executing at the same time, which leads to garbled output. Unlike a real mutex, execution
     of the thread is not halted while waiting on the PSEUDO_MUTEX, hence the loops with calls to sleep to
     allow the other threads of execution to continue while waiting for the mutex to be free. Also, read/write
@@ -58,49 +58,49 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
     def config_user_get(starterDict={}):
         # cage ID
         cageID = starterDict.get('cageID', AHF_DataLogger_mysql.defaultCage)
-        response = input('Enter a name for the cage ID (currently {}): '.format(cageID))
+        response = input('Enter a name for the cage ID(currently {}): '.format(cageID))
         if response != '':
             cageID = response
         # mysql log
         # host
         DBhost = starterDict.get('DBhost', AHF_DataLogger_mysql.defaultHost)
-        response = input('Enter a host for the database (currently {}): '.format(DBhost))
+        response = input('Enter a host for the database(currently {}): '.format(DBhost))
         if response != '':
             DBhost = response
         # user
         DBuser =starterDict.get('DBuser', AHF_DataLogger_mysql.defaultUser)
-        response = input('Enter your user name for the database (currently {}): '.format(DBuser))
+        response = input('Enter your user name for the database(currently {}): '.format(DBuser))
         if response != '':
             DBuser = response
         # database
         DB = starterDict.get('DB', AHF_DataLogger_mysql.defaultDatabase)
-        response = input('Enter the database you want to connect to (currently {}): '.format(DB))
+        response = input('Enter the database you want to connect to(currently {}): '.format(DB))
         if response != '':
             DB = response
         # password
         DBpwd = starterDict.get('DBpwd', AHF_DataLogger_mysql.defaultPassword)
-        response = input('Enter your user password (currently {}): '.format(DBpwd))
+        response = input('Enter your user password(currently {}): '.format(DBpwd))
         if response != '':
             DBpwd = response
         # update and return dict
         starterDict.update({'cageID': cageID, 'DBhost': DBhost, 'DBuser': DBuser,'DB': DB, 'DBpwd': DBpwd })
 
         localUser =starterDict.get('localUser', AHF_DataLogger_mysql.localUser)
-        response = input('Enter your local user name for the database (currently {}): '.format(localUser))
+        response = input('Enter your local user name for the database(currently {}): '.format(localUser))
         if response != '':
             localUser = response
         # database
         localDatabase = starterDict.get('localDatabase', AHF_DataLogger_mysql.localDatabase)
-        response = input('Enter the local database you want to connect to (currently {}): '.format(localDatabase))
+        response = input('Enter the local database you want to connect to(currently {}): '.format(localDatabase))
         if response != '':
             localDatabase = response
         # password
         localPassword = starterDict.get('localPassword', AHF_DataLogger_mysql.localPassword)
-        response = input('Enter your local user password (currently {}): '.format(DBpwd))
+        response = input('Enter your local user password(currently {}): '.format(DBpwd))
         if response != '':
             localPassword = response
-        
-        
+
+
         starterDict.update({'localUser': localUser,'localDatabase': localDatabase, 'localPassword': localPassword })
 
         return starterDict
@@ -121,7 +121,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
             db1.commit()
         except pymysql.Error as e:
             try:
-                print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                print("MySQL Error [%d]: %s" %(e.args[0], e.args[1]))
                 return False
             except IndexError:
                 print("MySQL Error: %s" % str(e))
@@ -150,7 +150,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
             rows = cur2.fetchall()
         except pymysql.Error as e:
             try:
-                print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                print("MySQL Error [%d]: %s" %(e.args[0], e.args[1]))
                 return None
             except IndexError:
                 print("MySQL Error: %s" % str(e))
@@ -165,26 +165,26 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         return rows
 
 
-    def makeLogFile (self):
+    def makeLogFile(self):
         """
         Initiating database creation
         """
         print("setting up")
-        raw_data_table_generation = """CREATE TABLE IF NOT EXISTS `raw_data` (`ID` int(11) NOT NULL AUTO_INCREMENT,`Tag` varchar(18) NOT NULL,`Event` varchar(50) NOT NULL,
+        raw_data_table_generation = """CREATE TABLE IF NOT EXISTS `raw_data`(`ID` int(11) NOT NULL AUTO_INCREMENT,`Tag` varchar(18) NOT NULL,`Event` varchar(50) NOT NULL,
                                     `Event_dict` varchar(2000) DEFAULT NULL,`Timestamp` timestamp(2) NULL DEFAULT NULL,`Cage` varchar(20) NOT NULL,
-                                     `positions` blob, PRIMARY KEY (`ID`), UNIQUE KEY `Tag` (`Tag`,`Event`,`Timestamp`,`Cage`))
+                                     `positions` blob, PRIMARY KEY(`ID`), UNIQUE KEY `Tag`(`Tag`,`Event`,`Timestamp`,`Cage`))
                                       ENGINE=InnoDB DEFAULT CHARSET=latin1"""
 
-        config_data_table_generation = """CREATE TABLE IF NOT EXISTS `configs` (`ID` int(11) NOT NULL AUTO_INCREMENT,`Tag` varchar(18) NOT NULL,
+        config_data_table_generation = """CREATE TABLE IF NOT EXISTS `configs`(`ID` int(11) NOT NULL AUTO_INCREMENT,`Tag` varchar(18) NOT NULL,
                                         `Config` varchar(2000) NOT NULL,`Timestamp` timestamp(2) NULL DEFAULT NULL,`Cage` varchar(20) NOT NULL,
                                         `Dictionary_source` varchar(50) NOT NULL,
-                                        PRIMARY KEY (`ID`),UNIQUE KEY `Tag` (`Tag`,`Timestamp`,`Cage`,`Dictionary_source`))
+                                        PRIMARY KEY(`ID`),UNIQUE KEY `Tag`(`Tag`,`Timestamp`,`Cage`,`Dictionary_source`))
                                          ENGINE=InnoDB DEFAULT CHARSET=latin1"""
-        hardwaretest_table_generation = """CREATE TABLE IF NOT EXISTS `hardwaretest` (`ID` int(11) NOT NULL AUTO_INCREMENT,
-                                        `Timestamp` timestamp(2) NULL DEFAULT NULL,PRIMARY KEY (`ID`)) ENGINE=InnoDB DEFAULT CHARSET=latin1"""
-        mice_table_generation = """CREATE TABLE IF NOT EXISTS `mice` (`ID` int(11) NOT NULL AUTO_INCREMENT,
+        hardwaretest_table_generation = """CREATE TABLE IF NOT EXISTS `hardwaretest`(`ID` int(11) NOT NULL AUTO_INCREMENT,
+                                        `Timestamp` timestamp(2) NULL DEFAULT NULL,PRIMARY KEY(`ID`)) ENGINE=InnoDB DEFAULT CHARSET=latin1"""
+        mice_table_generation = """CREATE TABLE IF NOT EXISTS `mice`(`ID` int(11) NOT NULL AUTO_INCREMENT,
                                     `Timestamp` timestamp(2) NULL DEFAULT NULL,`Cage` varchar(20) NOT NULL,`Tag` varchar(18) NOT NULL,`Note` varchar(100) NULL DEFAULT NULL,
-                                    PRIMARY KEY (`ID`),UNIQUE KEY `Tag` (`Tag`,`Cage`)) ENGINE=InnoDB DEFAULT CHARSET=latin1"""
+                                    PRIMARY KEY(`ID`),UNIQUE KEY `Tag`(`Tag`,`Cage`)) ENGINE=InnoDB DEFAULT CHARSET=latin1"""
         try:
             self.saveToDatabase(raw_data_table_generation, [[]], True) # create table on remote DB
             self.saveToDatabase(raw_data_table_generation, [[]], False) # create table on local DB
@@ -209,8 +209,8 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         self.makeLogFile()
         self.raw_save_query = """INSERT INTO `raw_data`(`Tag`,`Event`,`Event_dict`,`Timestamp`,`Cage`,`positions`)
         VALUES(%s,%s,%s,FROM_UNIXTIME(%s),%s,%s)"""
-        self.config_save_query = """INSERT INTO `configs` (`Tag`,`Config`,`Timestamp`,`Cage`,`Dictionary_source`) VALUES(%s,%s,FROM_UNIXTIME(%s),%s,%s)"""
-        self.add_mouse_query = """INSERT INTO `mice` (`Timestamp`,`Cage`,`Tag`,`Note`) VALUES(FROM_UNIXTIME(%s),%s,%s,%s)"""
+        self.config_save_query = """INSERT INTO `configs`(`Tag`,`Config`,`Timestamp`,`Cage`,`Dictionary_source`) VALUES(%s,%s,FROM_UNIXTIME(%s),%s,%s)"""
+        self.add_mouse_query = """INSERT INTO `mice`(`Timestamp`,`Cage`,`Tag`,`Note`) VALUES(FROM_UNIXTIME(%s),%s,%s,%s)"""
         self.events = []
         self.water_available = False
         showDict = self.task.Show_testable_objects()
@@ -233,7 +233,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
     def configGenerator(self,settings):
         """
         Each configuration file has config data for a single subject. This function loads data
-        from all of them in turn, and returning each as a a tuple of (tagID, dictionary)
+        from all of them in turn, and returning each as a a tuple of(tagID, dictionary)
         """
         # get the mice first, therefore we need them in the `mice` table, at least their tag number and their cage
         # we will call the mice by their cage which is a class variable
@@ -257,7 +257,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
             for sources in sources_list:
                 mouse, source, dictio = self.getFromDatabase(query_config, ["default_subjects", str(sources)], False)[0]
                 data = {str(source): literal_eval("{}".format(dictio))}
-                yield (data)
+                yield(data)
         if settings == "default_hardware":
             for sources in sources_list:
                 print(sources)
@@ -266,7 +266,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
                     data = {str(source): str(dictio)}
                 else:
                     data = {str(source): literal_eval("{}".format(dictio))}
-                yield (data)
+                yield(data)
         if settings == "changed_hardware":
             for sources in sources_list:
                 mouse, source, dictio = self.getFromDatabase(query_config, ["changed_hardware", str(sources)], False)[0]
@@ -274,7 +274,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
                     data = {str(source): str(dictio)}
                 else:
                     data = {str(source): literal_eval("{}".format(dictio))}
-                yield (data)
+                yield(data)
 
     def getMice(self):
         query_mice = """SELECT `Tag` FROM `mice` WHERE `Cage` = %s"""
@@ -309,7 +309,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
 
     def retireMouse(self,tag,reason):
         # update information about a mouse `Timestamp`,`Cage`,`Tag`,`Activity`
-        self.events.append([tag, 'retired', str(dict([("reason", reason)])), time(), self.cageID, None]) 
+        self.events.append([tag, 'retired', str(dict([("reason", reason)])), time(), self.cageID, None])
         if self.saveToDatabase(self.raw_save_query, self.events, True):
             self.saveToDatabase(self.raw_save_query, self.events, False)
             self.events = []
@@ -330,11 +330,11 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         eventDictQuery = """SELECT `Event_dict` from `raw_data` WHERE 1 ORDER BY `raw_data`.`Timestamp` LIMIT %s-1, 1"""
         event = self.getFromDatabase(eventQuery, [index], False)
         eventDict = self.getFromDatabase(eventDictQuery, [index], False)
-        return (event, eventDict)
+        return(event, eventDict)
 
     def writeToLogFile(self, tag, eventKind, eventDict, timeStamp, toShellOrFile=3):
         super().writeToLogFile(tag, eventKind, eventDict, timeStamp, toShellOrFile)
-        if (toShellOrFile & self.TO_FILE) > 0:
+        if(toShellOrFile & self.TO_FILE) > 0:
             if eventKind == "lever_pull":
                 lever_positions = eventDict.get("positions")
                 lever_positions = list(map(lambda x: str(x), lever_positions))
@@ -348,8 +348,8 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
             self.saveToDatabase(self.raw_save_query, self.events, False)
             self.saveToDatabase(self.raw_save_query, self.events, True)
             self.events = []
-        if (toShellOrFile & self.TO_SHELL) > 0:
-            print('{:013}\t{:s}\t{:s}\t{:s}\t{:s}\n'.format (tag, eventKind, str(eventDict), datetime.fromtimestamp(int(timeStamp)).isoformat(' '), self.cageID))
+        if(toShellOrFile & self.TO_SHELL) > 0:
+            print('{:013}\t{:s}\t{:s}\t{:s}\t{:s}\n'.format(tag, eventKind, str(eventDict), datetime.fromtimestamp(int(timeStamp)).isoformat(' '), self.cageID))
 
     def pingServers(self):
         query_save = """INSERT INTO `hardwaretest`(`Timestamp`)
@@ -375,7 +375,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
             inputStr += 'C to Change Remote server settings and cageID\n'
             inputStr += 'T to Test database connections\n'
             inputStr += 'J to generate a Json file of hardware settings from database\n'
-            event = input (inputStr)
+            event = input(inputStr)
             if event == 'c' or event == 'C':
                 result = input('Enter cageID, currently {:}: '.format(self.cageID))
                 if result != '':
@@ -384,7 +384,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
                 result = input('Enter Database host IP address, currently {:}: '.format(self.DBhost))
                 if result != '':
                     self.settingsDict.update({'DBhost': result})
-                result = input('Enter Database user name (you should make sure that the user has edit rights in the DB), currently {:}: '.format(self.DBuser))
+                result = input('Enter Database user name(you should make sure that the user has edit rights in the DB), currently {:}: '.format(self.DBuser))
                 if result != '':
                     self.settingsDict.update({'DBuser': result})
                 result = input('Enter Database name, currently {:}: '.format(self.DB))

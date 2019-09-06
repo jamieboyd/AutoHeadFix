@@ -7,7 +7,7 @@ import RPi.GPIO as GPIO
 from _thread import start_new_thread
 from time import sleep, time
 
-class AHF_Rewarder_solenoid_rpi (AHF_Rewarder_solenoid):
+class AHF_Rewarder_solenoid_rpi(AHF_Rewarder_solenoid):
     """
     A class to use a solenoid to deliver water rewards using 1 GPIO pin controlled by RPi.GPIO , using sleep for timing
     """
@@ -18,7 +18,7 @@ class AHF_Rewarder_solenoid_rpi (AHF_Rewarder_solenoid):
         return 'water rewards by opening a solenoid using 1 GPIO pin, controlled by RPi.GPIO with sleep for timing'
 
     @staticmethod
-    def rewardThread (sleepTime, rewardPin):
+    def rewardThread(sleepTime, rewardPin):
         tag = AHF_Task.gTask.tag
         GPIO.output(rewardPin, GPIO.HIGH)
         sleep(sleepTime) # not very accurate timing, but good enough
@@ -31,7 +31,7 @@ class AHF_Rewarder_solenoid_rpi (AHF_Rewarder_solenoid):
             AHF_Task.gTask.DataLogger.writeToLogFile(tag, "ConsumedReward", {}, time())
 
     @staticmethod
-    def rewardCMThread (delayTime, sleepTime, rewardPin):
+    def rewardCMThread(delayTime, sleepTime, rewardPin):
         tag = AHF_Task.gTask.tag
         AHF_Rewarder_solenoid_rpi.countermandVal = 1
         sleep(delayTime) # not very accurate timing, but good enough
@@ -49,20 +49,20 @@ class AHF_Rewarder_solenoid_rpi (AHF_Rewarder_solenoid):
             AHF_Rewarder_solenoid_rpi.countermandVal =0
 
 
-    def setup (self):
+    def setup(self):
         super().setup()
         GPIO.setup(self.rewardPin, GPIO.OUT)
         self.counterMand = 0
 
-    def setdown (self):
+    def setdown(self):
         GPIO.cleanup(self.rewardPin)
 
-    def threadReward (self, sleepTime):
-        start_new_thread (self.rewardThread, (sleepTime, self.rewardPin))
+    def threadReward(self, sleepTime):
+        start_new_thread(self.rewardThread,(sleepTime, self.rewardPin))
 
 
     def threadCMReward(self, sleepTime):
-        start_new_thread (self.rewardCMThread, (self.countermandTime, sleepTime, self.rewardPin))
+        start_new_thread(self.rewardCMThread,(self.countermandTime, sleepTime, self.rewardPin))
 
     def threadCountermand(self):
         if AHF_Rewarder_solenoid_rpi.countermandVal == 1:
@@ -71,8 +71,8 @@ class AHF_Rewarder_solenoid_rpi (AHF_Rewarder_solenoid):
         else:
             return False
 
-    def turnON (self):
+    def turnON(self):
         GPIO.output(self.rewardPin, GPIO.HIGH)
 
-    def turnOFF (self):
+    def turnOFF(self):
         GPIO.output(self.rewardPin, GPIO.LOW)

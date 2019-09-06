@@ -17,12 +17,12 @@ $u = _.noConflict();
 /**
  * make the code below compatible with browsers without
  * an installed firebug like debugger
-if (!window.console || !console.firebug) {
+if(!window.console || !console.firebug) {
   var names = ["log", "debug", "info", "warn", "error", "assert", "dir",
     "dirxml", "group", "groupEnd", "time", "timeEnd", "count", "trace",
     "profile", "profileEnd"];
   window.console = {};
-  for (var i = 0; i < names.length; ++i)
+  for(var i = 0; i < names.length; ++i)
     window.console[names[i]] = function() {};
 }
  */
@@ -45,15 +45,15 @@ jQuery.urlencode = encodeURIComponent;
  * it will always return arrays of strings for the value parts.
  */
 jQuery.getQueryParameters = function(s) {
-  if (typeof s === 'undefined')
+  if(typeof s === 'undefined')
     s = document.location.search;
   var parts = s.substr(s.indexOf('?') + 1).split('&');
   var result = {};
-  for (var i = 0; i < parts.length; i++) {
+  for(var i = 0; i < parts.length; i++) {
     var tmp = parts[i].split('=', 2);
     var key = jQuery.urldecode(tmp[0]);
     var value = jQuery.urldecode(tmp[1]);
-    if (key in result)
+    if(key in result)
       result[key].push(value);
     else
       result[key] = [value];
@@ -67,15 +67,15 @@ jQuery.getQueryParameters = function(s) {
  */
 jQuery.fn.highlightText = function(text, className) {
   function highlight(node, addItems) {
-    if (node.nodeType === 3) {
+    if(node.nodeType === 3) {
       var val = node.nodeValue;
       var pos = val.toLowerCase().indexOf(text);
-      if (pos >= 0 &&
+      if(pos >= 0 &&
           !jQuery(node.parentNode).hasClass(className) &&
           !jQuery(node.parentNode).hasClass("nohighlight")) {
         var span;
         var isInSVG = jQuery(node).closest("body, svg, foreignObject").is("svg");
-        if (isInSVG) {
+        if(isInSVG) {
           span = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
         } else {
           span = document.createElement("span");
@@ -86,7 +86,7 @@ jQuery.fn.highlightText = function(text, className) {
           document.createTextNode(val.substr(pos + text.length)),
           node.nextSibling));
         node.nodeValue = val.substr(0, pos);
-        if (isInSVG) {
+        if(isInSVG) {
           var rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
           var bbox = node.parentElement.getBBox();
           rect.x.baseVal.value = bbox.x;
@@ -100,7 +100,7 @@ jQuery.fn.highlightText = function(text, className) {
         }
       }
     }
-    else if (!jQuery(node).is("button, select, textarea")) {
+    else if(!jQuery(node).is("button, select, textarea")) {
       jQuery.each(node.childNodes, function() {
         highlight(this, addItems);
       });
@@ -110,7 +110,7 @@ jQuery.fn.highlightText = function(text, className) {
   var result = this.each(function() {
     highlight(this, addItems);
   });
-  for (var i = 0; i < addItems.length; ++i) {
+  for(var i = 0; i < addItems.length; ++i) {
     jQuery(addItems[i].parent).before(addItems[i].target);
   }
   return result;
@@ -120,14 +120,14 @@ jQuery.fn.highlightText = function(text, className) {
  * backward compatibility for jQuery.browser
  * This will be supported until firefox bug is fixed.
  */
-if (!jQuery.browser) {
+if(!jQuery.browser) {
   jQuery.uaMatch = function(ua) {
     ua = ua.toLowerCase();
 
     var match = /(chrome)[ \/]([\w.]+)/.exec(ua) ||
       /(webkit)[ \/]([\w.]+)/.exec(ua) ||
       /(opera)(?:.*version|)[ \/]([\w.]+)/.exec(ua) ||
-      /(msie) ([\w.]+)/.exec(ua) ||
+      /(msie)([\w.]+)/.exec(ua) ||
       ua.indexOf("compatible") < 0 && /(mozilla)(?:.*? rv:([\w.]+)|)/.exec(ua) ||
       [];
 
@@ -149,7 +149,7 @@ var Documentation = {
     this.fixFirefoxAnchorBug();
     this.highlightSearchWords();
     this.initIndexTable();
-    if (DOCUMENTATION_OPTIONS.NAVIGATION_WITH_KEYS) {
+    if(DOCUMENTATION_OPTIONS.NAVIGATION_WITH_KEYS) {
       this.initOnKeyListeners();
     }
   },
@@ -162,23 +162,23 @@ var Documentation = {
   LOCALE : 'unknown',
 
   // gettext and ngettext don't access this so that the functions
-  // can safely bound to a different name (_ = Documentation.gettext)
+  // can safely bound to a different name(_ = Documentation.gettext)
   gettext : function(string) {
     var translated = Documentation.TRANSLATIONS[string];
-    if (typeof translated === 'undefined')
+    if(typeof translated === 'undefined')
       return string;
-    return (typeof translated === 'string') ? translated : translated[0];
+    return(typeof translated === 'string') ? translated : translated[0];
   },
 
   ngettext : function(singular, plural, n) {
     var translated = Documentation.TRANSLATIONS[singular];
-    if (typeof translated === 'undefined')
-      return (n == 1) ? singular : plural;
+    if(typeof translated === 'undefined')
+      return(n == 1) ? singular : plural;
     return translated[Documentation.PLURALEXPR(n)];
   },
 
   addTranslations : function(catalog) {
-    for (var key in catalog.messages)
+    for(var key in catalog.messages)
       this.TRANSLATIONS[key] = catalog.messages[key];
     this.PLURAL_EXPR = new Function('n', 'return +(' + catalog.plural_expr + ')');
     this.LOCALE = catalog.locale;
@@ -207,7 +207,7 @@ var Documentation = {
    * see: https://bugzilla.mozilla.org/show_bug.cgi?id=645075
    */
   fixFirefoxAnchorBug : function() {
-    if (document.location.hash && $.browser.mozilla)
+    if(document.location.hash && $.browser.mozilla)
       window.setTimeout(function() {
         document.location.href += '';
       }, 10);
@@ -218,10 +218,10 @@ var Documentation = {
    */
   highlightSearchWords : function() {
     var params = $.getQueryParameters();
-    var terms = (params.highlight) ? params.highlight[0].split(/\s+/) : [];
-    if (terms.length) {
+    var terms =(params.highlight) ? params.highlight[0].split(/\s+/) : [];
+    if(terms.length) {
       var body = $('div.body');
-      if (!body.length) {
+      if(!body.length) {
         body = $('body');
       }
       window.setTimeout(function() {
@@ -243,12 +243,12 @@ var Documentation = {
       var src = $(this).attr('src');
       var idnum = $(this).attr('id').substr(7);
       $('tr.cg-' + idnum).toggle();
-      if (src.substr(-9) === 'minus.png')
+      if(src.substr(-9) === 'minus.png')
         $(this).attr('src', src.substr(0, src.length-9) + 'plus.png');
       else
         $(this).attr('src', src.substr(0, src.length-8) + 'minus.png');
     }).css('display', '');
-    if (DOCUMENTATION_OPTIONS.COLLAPSE_INDEX) {
+    if(DOCUMENTATION_OPTIONS.COLLAPSE_INDEX) {
         togglers.click();
     }
   },
@@ -275,7 +275,7 @@ var Documentation = {
     var path = document.location.pathname;
     var parts = path.split(/\//);
     $.each(DOCUMENTATION_OPTIONS.URL_ROOT.split(/\//), function() {
-      if (this === '..')
+      if(this === '..')
         parts.pop();
     });
     var url = parts.join('/');
@@ -286,17 +286,17 @@ var Documentation = {
     $(document).keyup(function(event) {
       var activeElementType = document.activeElement.tagName;
       // don't navigate when in search box or textarea
-      if (activeElementType !== 'TEXTAREA' && activeElementType !== 'INPUT' && activeElementType !== 'SELECT') {
-        switch (event.keyCode) {
+      if(activeElementType !== 'TEXTAREA' && activeElementType !== 'INPUT' && activeElementType !== 'SELECT') {
+        switch(event.keyCode) {
           case 37: // left
             var prevHref = $('link[rel="prev"]').prop('href');
-            if (prevHref) {
+            if(prevHref) {
               window.location.href = prevHref;
               return false;
             }
           case 39: // right
             var nextHref = $('link[rel="next"]').prop('href');
-            if (nextHref) {
+            if(nextHref) {
               window.location.href = nextHref;
               return false;
             }

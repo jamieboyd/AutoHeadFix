@@ -80,7 +80,7 @@ pins can be reused, for example. This strategy should be used in hardwareTest me
 <dl class="method">
 <dt id="AHF_Base.AHF_Base.setup">
 <em class="property">abstract </em><code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Base.AHF_Base.setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+<dd><p>does hardware initialization with(possibly updated) info in self.settingsDict
 Run by __init__, or can be run  separately after editing the settingsDict</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -111,7 +111,7 @@ into a single object called Task</p>
 <em class="property">class </em><code class="sig-name descname">Task</code><span class="sig-paren">(</span><em class="sig-param">fileName=''</em>, <em class="sig-param">object=None</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Task.Task" title="Permalink to this definition">¶</a></dt>
 <dd><p>The plan is to copy all variables from settings, user, into a single object
 The object will have fields for things loaded from hardware config dictionary and experiment config dictionary
-as well as fields for objects created when program runs (headFixer, TagReader, rewarder, camera, stimulator)
+as well as fields for objects created when program runs(headFixer, TagReader, rewarder, camera, stimulator)
 Objects that are created will have a dictionary of their own as an entry in the main dictionay
 Using the same names in the object fields as in the dictionary, and only loading one dictionary from
 a combined settings file, we don’t need a dictionary while thr program is running because the task object can recreate the dict
@@ -231,7 +231,7 @@ and gains for red and green are set to 1.
 <dl class="method">
 <dt id="AHF_Camera_PiCam.AHF_Camera_PiCam.setup">
 <code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Camera_PiCam.AHF_Camera_PiCam.setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+<dd><p>does hardware initialization with(possibly updated) info in self.settingsDict
 Run by __init__, or can be run  separately after editing the settingsDict</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -327,7 +327,7 @@ Run by __init__, or can be run  separately after editing the settingsDict</p>
 <dl class="function">
 <dt id="AHF_ClassAndDictUtils.Class_from_file">
 <code class="sig-name descname">Class_from_file</code><span class="sig-paren">(</span><em class="sig-param">nameTypeStr</em>, <em class="sig-param">nameStr</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_ClassAndDictUtils.Class_from_file" title="Permalink to this definition">¶</a></dt>
-<dd><p>Imports a module from a fileName (stripped of the .py) and returns the class</p>
+<dd><p>Imports a module from a fileName(stripped of the .py) and returns the class</p>
 <p>Assumes the class is named the same as the module. To get</p>
 </dd></dl>
 
@@ -387,7 +387,7 @@ Raises: FileNotFoundError if no nameStr class files found</p>
 <dt id="AHF_ClassAndDictUtils.Show_ordered_dict">
 <code class="sig-name descname">Show_ordered_dict</code><span class="sig-paren">(</span><em class="sig-param">objectDict</em>, <em class="sig-param">longName</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_ClassAndDictUtils.Show_ordered_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Dumps standard dictionary settings into an ordered dictionary, prints settings to screen in a numbered fashion from the ordered dictionary,
-making it easy to select a setting to change. Returns an  ordered dictionary of {number: (key:value),} used by edit_dict function</p>
+making it easy to select a setting to change. Returns an  ordered dictionary of {number:(key:value),} used by edit_dict function</p>
 </dd></dl>
 
 </div>
@@ -446,7 +446,7 @@ pins can be reused, for example. This strategy should be used in hardwareTest me
 <dl class="method">
 <dt id="AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.setup">
 <code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_ContactCheck_Elec.AHF_ContactCheck_Elec.setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+<dd><p>does hardware initialization with(possibly updated) info in self.settingsDict
 Run by __init__, or can be run  separately after editing the settingsDict</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -517,7 +517,7 @@ The file name for each mouse contains RFID tag 0-padded to 13 spaces: AHF_mouse_
 <dl class="attribute">
 <dt id="AHF_DataLogger_mysql.AHF_DataLogger_mysql.PSEUDO_MUTEX">
 <code class="sig-name descname">PSEUDO_MUTEX</code><em class="property"> = 0</em><a class="headerlink" href="#AHF_DataLogger_mysql.AHF_DataLogger_mysql.PSEUDO_MUTEX" title="Permalink to this definition">¶</a></dt>
-<dd><p>The class field PSEUDO_MUTEX helps prevent print statements from different places in the code (main vs
+<dd><p>The class field PSEUDO_MUTEX helps prevent print statements from different places in the code(main vs
 callbacks) from executing at the same time, which leads to garbled output. Unlike a real mutex, execution
 of the thread is not halted while waiting on the PSEUDO_MUTEX, hence the loops with calls to sleep to
 allow the other threads of execution to continue while waiting for the mutex to be free. Also, read/write
@@ -536,7 +536,7 @@ both threads think they have the mutex</p>
 <dt id="AHF_DataLogger_mysql.AHF_DataLogger_mysql.configGenerator">
 <code class="sig-name descname">configGenerator</code><span class="sig-paren">(</span><em class="sig-param">settings</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_mysql.AHF_DataLogger_mysql.configGenerator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Each configuration file has config data for a single subject. This function loads data
-from all of them in turn, and returning each as a a tuple of (tagID, dictionary)</p>
+from all of them in turn, and returning each as a a tuple of(tagID, dictionary)</p>
 </dd></dl>
 
 <dl class="method">
@@ -610,7 +610,7 @@ Returns the event and associated dictionary in a tuple.</p>
 <dl class="method">
 <dt id="AHF_DataLogger_mysql.AHF_DataLogger_mysql.setup">
 <code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_mysql.AHF_DataLogger_mysql.setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+<dd><p>does hardware initialization with(possibly updated) info in self.settingsDict
 Run by __init__, or can be run  separately after editing the settingsDict</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -651,12 +651,12 @@ a database, or hd5 files, or some combination thereof. The data logger
 should also print status updates to the shell, but these don’t need to contain
 as much information. The brain imaging data is saved
 separately, but references to movie files should be saved by data logger.
-Similarly, other binary data (lever positons, anyone?) can be saved separately,
+Similarly, other binary data(lever positons, anyone?) can be saved separately,
 by the Stimulator class, but binary file/posiiton can be saved as an event.</p>
 <dl class="method">
 <dt id="AHF_DataLogger.AHF_DataLogger.configGenerator">
 <em class="property">abstract </em><code class="sig-name descname">configGenerator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.configGenerator" title="Permalink to this definition">¶</a></dt>
-<dd><p>generates configuration data for each subject as (IDtag, dictionary) tuples from some kind of permanent storage
+<dd><p>generates configuration data for each subject as(IDtag, dictionary) tuples from some kind of permanent storage
 such as a JSON file, or a database. Will be called when program is started, or restarted and settings
 need to be reloaded.</p>
 </dd></dl>
@@ -772,7 +772,7 @@ results, so an event can be more easily parsed during data analysis.</p>
 <dl class="method">
 <dt id="AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.configGenerator">
 <code class="sig-name descname">configGenerator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.configGenerator" title="Permalink to this definition">¶</a></dt>
-<dd><p>generates configuration data for each subject as (IDtag, dictionary) tuples from some kind of permanent storage
+<dd><p>generates configuration data for each subject as(IDtag, dictionary) tuples from some kind of permanent storage
 such as a JSON file, or a database. Will be called when program is started, or restarted and settings
 need to be reloaded.</p>
 </dd></dl>
@@ -850,7 +850,7 @@ pins can be reused, for example. This strategy should be used in hardwareTest me
 <dl class="method">
 <dt id="AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.setup">
 <code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+<dd><p>does hardware initialization with(possibly updated) info in self.settingsDict
 Run by __init__, or can be run  separately after editing the settingsDict</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -894,7 +894,7 @@ The file name for each mouse contains RFID tag 0-padded to 13 spaces: AHF_mouse_
 <dl class="attribute">
 <dt id="AHF_DataLogger_text.AHF_DataLogger_text.PSEUDO_MUTEX">
 <code class="sig-name descname">PSEUDO_MUTEX</code><em class="property"> = 0</em><a class="headerlink" href="#AHF_DataLogger_text.AHF_DataLogger_text.PSEUDO_MUTEX" title="Permalink to this definition">¶</a></dt>
-<dd><p>The class field PSEUDO_MUTEX helps prevent print statements from different places in the code (main vs
+<dd><p>The class field PSEUDO_MUTEX helps prevent print statements from different places in the code(main vs
 callbacks) from executing at the same time, which leads to garbled output. Unlike a real mutex, execution
 of the thread is not halted while waiting on the PSEUDO_MUTEX, hence the loops with calls to sleep to
 allow the other threads of execution to continue while waiting for the mutex to be free. Also, read/write
@@ -913,7 +913,7 @@ both threads think they have the mutex</p>
 <dt id="AHF_DataLogger_text.AHF_DataLogger_text.configGenerator">
 <code class="sig-name descname">configGenerator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_text.AHF_DataLogger_text.configGenerator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Each configuration file has config data for a single subject. This function loads data
-from all of them in turn, and returning each as a a tuple of (tagID, dictionary)</p>
+from all of them in turn, and returning each as a a tuple of(tagID, dictionary)</p>
 </dd></dl>
 
 <dl class="method">
@@ -1032,7 +1032,7 @@ Returns the event and associated dictionary in a tuple.</p>
 The computer-parsable time_epoch is printed to the log file and user-friendly datetime is printed to the shell
 :param tag: the tag of mouse, usually from RFIDTagreader.globalTag
 :param eventKind: the type of event to be printed, entry, exit, reward, etc.
-:param eventDict: a dictionary containing data about the event (may be None if no associated data)
+:param eventDict: a dictionary containing data about the event(may be None if no associated data)
 returns: nothing</p>
 </dd></dl>
 
@@ -1393,7 +1393,7 @@ pins can be reused, for example. This strategy should be used in hardwareTest me
 <dl class="method">
 <dt id="AHF_LickDetector_MPR.AHF_LickDetector_MPR.setup">
 <code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_LickDetector_MPR.AHF_LickDetector_MPR.setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+<dd><p>does hardware initialization with(possibly updated) info in self.settingsDict
 Run by __init__, or can be run  separately after editing the settingsDict</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -1418,7 +1418,7 @@ Use it to count licks, by zeroing selected channels, then checking the values in
 <dl class="method">
 <dt id="AHF_LickDetector_MPR.AHF_LickDetector_MPR.startLogging">
 <code class="sig-name descname">startLogging</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_LickDetector_MPR.AHF_LickDetector_MPR.startLogging" title="Permalink to this definition">¶</a></dt>
-<dd><p>tells the AHF_LickDetectorCallback to log touches in shell and file (if present)</p>
+<dd><p>tells the AHF_LickDetectorCallback to log touches in shell and file(if present)</p>
 </dd></dl>
 
 <dl class="method">
@@ -1438,7 +1438,7 @@ call zeroLickCount, wait a while for some licks, then call getLickCount</p>
 <dl class="method">
 <dt id="AHF_LickDetector_MPR.AHF_LickDetector_MPR.stopLogging">
 <code class="sig-name descname">stopLogging</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_LickDetector_MPR.AHF_LickDetector_MPR.stopLogging" title="Permalink to this definition">¶</a></dt>
-<dd><p>tells the AHF_LickDetectorCallback to stop logging touches in shell and file (if present)
+<dd><p>tells the AHF_LickDetectorCallback to stop logging touches in shell and file(if present)
 but the callback is still running</p>
 </dd></dl>
 
@@ -1463,7 +1463,7 @@ able to count licks in an independent thread or via a threaded callback</p>
 <dl class="method">
 <dt id="AHF_LickDetector.AHF_LickDetector.getTouches">
 <em class="property">abstract </em><code class="sig-name descname">getTouches</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_LickDetector.AHF_LickDetector.getTouches" title="Permalink to this definition">¶</a></dt>
-<dd><p>returns number (bit-wise per channel lick detetctor has multiple channels) of which channels are currently touched</p>
+<dd><p>returns number(bit-wise per channel lick detetctor has multiple channels) of which channels are currently touched</p>
 </dd></dl>
 
 <dl class="method">
@@ -1602,7 +1602,7 @@ pins can be reused, for example. This strategy should be used in hardwareTest me
 <dl class="method">
 <dt id="AHF_Notifier_Requests.AHF_Notifier_Requests.setup">
 <code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Notifier_Requests.AHF_Notifier_Requests.setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+<dd><p>does hardware initialization with(possibly updated) info in self.settingsDict
 Run by __init__, or can be run  separately after editing the settingsDict</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -1657,7 +1657,7 @@ pins can be reused, for example. This strategy should be used in hardwareTest me
 <dl class="method">
 <dt id="AHF_Reader_ID.AHF_Reader_ID.setup">
 <code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Reader_ID.AHF_Reader_ID.setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+<dd><p>does hardware initialization with(possibly updated) info in self.settingsDict
 Run by __init__, or can be run  separately after editing the settingsDict</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -1745,7 +1745,7 @@ pins can be reused, for example. This strategy should be used in hardwareTest me
 <dl class="method">
 <dt id="AHF_Rewarder_solenoid_pt.AHF_Rewarder_solenoid_pt.setup">
 <code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Rewarder_solenoid_pt.AHF_Rewarder_solenoid_pt.setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+<dd><p>does hardware initialization with(possibly updated) info in self.settingsDict
 Run by __init__, or can be run  separately after editing the settingsDict</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -1803,7 +1803,7 @@ and returns starterDict with settings as edited by the user.</p>
 <dl class="method">
 <dt id="AHF_Rewarder_solenoid.AHF_Rewarder_solenoid.setup">
 <em class="property">abstract </em><code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Rewarder_solenoid.AHF_Rewarder_solenoid.setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+<dd><p>does hardware initialization with(possibly updated) info in self.settingsDict
 Run by __init__, or can be run  separately after editing the settingsDict</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -1837,7 +1837,7 @@ pins can be reused, for example. This strategy should be used in hardwareTest me
 <dl class="method">
 <dt id="AHF_Rewarder_solenoid_rpi.AHF_Rewarder_solenoid_rpi.setup">
 <code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Rewarder_solenoid_rpi.AHF_Rewarder_solenoid_rpi.setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+<dd><p>does hardware initialization with(possibly updated) info in self.settingsDict
 Run by __init__, or can be run  separately after editing the settingsDict</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -1934,7 +1934,7 @@ and returns starterDict with settings as edited by the user.</p>
 <dl class="method">
 <dt id="AHF_Stimulator_LEDs.AHF_Stimulator_LEDs.setup">
 <code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_LEDs.AHF_Stimulator_LEDs.setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+<dd><p>does hardware initialization with(possibly updated) info in self.settingsDict
 Run by __init__, or can be run  separately after editing the settingsDict</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -1998,8 +1998,8 @@ and returns starterDict with settings as edited by the user.</p>
 <dl class="attribute">
 <dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultMotorDir">
 <code class="sig-name descname">defaultMotorDir</code><em class="property"> = 0</em><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.defaultMotorDir" title="Permalink to this definition">¶</a></dt>
-<dd><p>If MOTOR_DIR_PIN = 0, 16 bit force output (0 - 4095) goes from full counterclockwise force to full clockwise force
-with midpoint (2048) being no force on lever. If MOTOR_DIR_PIN is non-zero, 0-4095 maps from  no force to full force, and
+<dd><p>If MOTOR_DIR_PIN = 0, 16 bit force output(0 - 4095) goes from full counterclockwise force to full clockwise force
+with midpoint(2048) being no force on lever. If MOTOR_DIR_PIN is non-zero, 0-4095 maps from  no force to full force, and
 MOTOR_DIR_PIN is the GPIO pin that controls the direction of the force, clockwise or counter-clockwise.</p>
 </dd></dl>
 
@@ -2053,7 +2053,7 @@ pins can be reused, for example. This strategy should be used in hardwareTest me
 <dl class="method">
 <dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.setup">
 <code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+<dd><p>does hardware initialization with(possibly updated) info in self.settingsDict
 Run by __init__, or can be run  separately after editing the settingsDict</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -2144,7 +2144,7 @@ pins can be reused, for example. This strategy should be used in hardwareTest me
 <dl class="method">
 <dt id="AHF_Stimulator_Rewards.AHF_Stimulator_Rewards.setup">
 <code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Rewards.AHF_Stimulator_Rewards.setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+<dd><p>does hardware initialization with(possibly updated) info in self.settingsDict
 Run by __init__, or can be run  separately after editing the settingsDict</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -2214,7 +2214,7 @@ pins can be reused, for example. This strategy should be used in hardwareTest me
 <dl class="method">
 <dt id="AHF_Stimulus_None.AHF_Stimulus_None.setup">
 <code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_None.AHF_Stimulus_None.setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+<dd><p>does hardware initialization with(possibly updated) info in self.settingsDict
 Run by __init__, or can be run  separately after editing the settingsDict</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -2273,7 +2273,7 @@ pins can be reused, for example. This strategy should be used in hardwareTest me
 <dl class="method">
 <dt id="AHF_Stimulus_VibMotor.AHF_Stimulus_VibMotor.setup">
 <code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_VibMotor.AHF_Stimulus_VibMotor.setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>does hardware initialization with (possibly updated) info in self.settingsDict
+<dd><p>does hardware initialization with(possibly updated) info in self.settingsDict
 Run by __init__, or can be run  separately after editing the settingsDict</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -2358,7 +2358,7 @@ pool, else False</p>
 <dl class="method">
 <dt id="AHF_Subjects.AHF_Subjects.subjectSettings">
 <em class="property">abstract </em><code class="sig-name descname">subjectSettings</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Subjects.AHF_Subjects.subjectSettings" title="Permalink to this definition">¶</a></dt>
-<dd><p>changes the subject specific parameters that are (usually) independent from basic hardware settings
+<dd><p>changes the subject specific parameters that are(usually) independent from basic hardware settings
 e.g. headfix time, headfix tightness, reward size, add or remove a subject to a cage, stimulation specifications,
 task settings</p>
 </dd></dl>
