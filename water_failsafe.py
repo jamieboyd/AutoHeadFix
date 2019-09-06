@@ -9,9 +9,12 @@ query_sources = """SELECT* FROM `configs` WHERE `Cage` = %s AND `Tag` = %s AND
 `Dictionary_source` = "RewarderDict" ORDER BY `Timestamp` DESC LIMIT 1 """
 cur = db.cursor()
 cur.execute(query_sources, ["cage1", "changed_hardware"])
-mouse, source, dictio = cur.fetchall()[0]
+#print(cur.fetchall()[0])
+mouse, source, dictio, _, _ ,_  = cur.fetchall()[0]
 data = {str(source): literal_eval("{}".format(dictio))}
-water_pin = data["rewardPin"]
+print(data)
+water_pin = data["changed_hardware"]["rewardPin"]
+GPIO.setup(water_pin, GPIO.OUT)
 water_on_time = 0.0
 startTime = time()
 while True:
