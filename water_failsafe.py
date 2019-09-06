@@ -21,7 +21,7 @@ while True:
         water_on_time += 0.05
         sleep(0.05)
         if water_on_time >= 5:
-            GPIO.setup(GPIO.OUT, water_pin)
+            GPIO.setup(water_pin, GPIO.OUT)
             GPIO.output(water_pin, GPIO.LOW)
             #send text
             os.system("sudo reboot")
