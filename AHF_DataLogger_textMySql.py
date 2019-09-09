@@ -76,7 +76,7 @@ class AHF_DataLogger_textMySql(AHF_DataLogger):
         self.textLogger.hardwareTest()
         self.sqlLogger.hardwareTest()
 
-    def newDay(self, mice):
+    def newDay(self):
         """
         At the start of a new day, it was customary for the text-based data logging to start new text files,
         and to make a precis of the day's results into a a separate text file for easy human reading.
