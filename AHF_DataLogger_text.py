@@ -156,7 +156,7 @@ class AHF_DataLogger_text(AHF_DataLogger):
         CAD.Remove_file('mouse', '{:013}'.format(int(tag)), '.jsn', dir = self.configPath)
         self.writeToLogFile(tag, "Retirement", {'reason': reason}, time())
 
-    def newDay(self, mice):
+    def newDay(self):
         self.writeToLogFile(0, 'SeshEnd', None, time())
         if self.logFP is not None:
             self.logFP.close()
