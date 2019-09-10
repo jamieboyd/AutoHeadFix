@@ -16,24 +16,24 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
 
     @staticmethod
     @abstractmethod
-    def config_user_get (starterDict = {}):
-        skeddadleTime = starterDict.get ('skeddadleTime', AHF_HeadFixer.defaultSkeddadleTime)
-        response = input ('Enter time, in seconds, for mouse to get head off the contacts when session ends, currently {:.2f}: '.format(skeddadleTime))
+    def config_user_get(starterDict = {}):
+        skeddadleTime = starterDict.get('skeddadleTime', AHF_HeadFixer.defaultSkeddadleTime)
+        response = input('Enter time, in seconds, for mouse to get head off the contacts when session ends, currently {:.2f}: '.format(skeddadleTime))
         if response != '':
-            skeddadleTime = float (skeddadleTime)
-        starterDict.update ({'skeddadleTime' : skeddadleTime})
+            skeddadleTime = float(skeddadleTime)
+        starterDict.update({'skeddadleTime' : skeddadleTime})
         return starterDict
 
     @abstractmethod
     def config_user_subject_get(self,starterDict = {}):
-        headFixTime = starterDict.get ('headFixTime',AHF_HeadFixer.defaultHeadFixTime)
-        tempInput = input ('Set head fixing time,  currently {0}: '.format(headFixTime))
+        headFixTime = starterDict.get('headFixTime',AHF_HeadFixer.defaultHeadFixTime)
+        tempInput = input('Set head fixing time,  currently {0}: '.format(headFixTime))
         if tempInput != '':
-            headFixTime = float (tempInput)
-        starterDict.update ({'headFixTime' : headFixTime})
+            headFixTime = float(tempInput)
+        starterDict.update({'headFixTime' : headFixTime})
         propHeadFix = starterDict.get('propHeadFix', AHF_HeadFixer.defaultPropHeadFix)
         response = input(
-            'Enter proportion (0 to 1) of trials that are head-fixed, currently {:.2f}: '.format(propHeadFix))
+            'Enter proportion(0 to 1) of trials that are head-fixed, currently {:.2f}: '.format(propHeadFix))
         if response != '':
             propHeadFix = float(response)
         starterDict.update({'propHeadFix': propHeadFix})
@@ -41,20 +41,20 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
 
     @abstractmethod
     def config_subject_get(self, starterDict={}):
-        headFixTime = starterDict.get ('headFixTime',AHF_HeadFixer.defaultHeadFixTime)
-        starterDict.update ({'headFixTime' : headFixTime})
+        headFixTime = starterDict.get('headFixTime',AHF_HeadFixer.defaultHeadFixTime)
+        starterDict.update({'headFixTime' : headFixTime})
         propHeadFix = starterDict.get('propHeadFix', AHF_HeadFixer.defaultPropHeadFix)
         starterDict.update({'propHeadFix': propHeadFix})
         return starterDict
 
-    def setup (self):
+    def setup(self):
         """
         gets settings from dict, not @abstract because this may be all you nees, as for HeadFixer_NoFix
         """
-        self.propHeadFix = self.settingsDict.get ('propHeadFix')
-        self.skeddadleTime = self.settingsDict.get ('skeddadleTime')
+        self.propHeadFix = self.settingsDict.get('propHeadFix')
+        self.skeddadleTime = self.settingsDict.get('skeddadleTime')
 
-    def newResultsDict (self, starterDict = {}):
+    def newResultsDict(self, starterDict = {}):
         """
         Returns a dictionary counting number of head fixes, subclasses could track more levels of head fixing, e.g.
         """
@@ -63,11 +63,11 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
 
 
     def clearResultsDict(self, resultsDict):
-        resultsDict.update ({'headFixes' : 0, 'unFixes' : 0})
+        resultsDict.update({'headFixes' : 0, 'unFixes' : 0})
 
 
-    def newSettingsDict (self,starterDict = {}):
-        starterDict.update ({'propHeadFix' : self.propHeadFix})
+    def newSettingsDict(self,starterDict = {}):
+        starterDict.update({'propHeadFix' : self.propHeadFix})
         return starterDict
 
 
@@ -91,7 +91,7 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
 
 
 
-    def waitForMouse (self, thisTag):
+    def waitForMouse(self, thisTag):
         """
         Utility function for head fix subclasses
         Waits for a mouse to either make contact or leave the chamber
@@ -100,14 +100,14 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
         if self.task.lastFixedTag == thisTag:
             # wait on contact checking if skeddadle time is in effect
             while self.task.tag == thisTag and time() < self.task.fixAgainTime:
-                sleep (0.05)
+                sleep(0.05)
         # wait for contact check or mouse leaving chamber
         while self.task.tag == thisTag and not self.task.contact:
-            sleep (0.05)
+            sleep(0.05)
         return self.task.contact # made contact or left chamber
 
 
-    def hasMouseLog (self, hasContact, isFixed, thisTag, resultsDict):
+    def hasMouseLog(self, hasContact, isFixed, thisTag, resultsDict):
         """
         Utility function for head fix subclasses
         Run after head fixing to update common results
@@ -120,27 +120,27 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
         else:
             result = 'unfixed'
         fixTime = time()
-        self.task.DataLogger.writeToLogFile (thisTag, 'Fix', {'result' : result}, fixTime)
+        self.task.DataLogger.writeToLogFile(thisTag, 'Fix', {'result' : result}, fixTime)
         self.task.lastFixedTime = fixTime
         if hasContact:
             if isFixed:
-                newFixes = resultsDict.get ('headFixes', 0) + 1
-                resultsDict.update ({'headFixes' : newFixes})
+                newFixes = resultsDict.get('headFixes', 0) + 1
+                resultsDict.update({'headFixes' : newFixes})
             else:
-                newUnFixes = resultsDict.get ('unFixes', 0) + 1
-                resultsDict.update ({'unFixes' : newUnFixes})
+                newUnFixes = resultsDict.get('unFixes', 0) + 1
+                resultsDict.update({'unFixes' : newUnFixes})
 
 
-    def hardwareTest (self):
-        print (self.__class__.about())
-        print ('Head Fixer head-fixing for 2 sec')
+    def hardwareTest(self):
+        print(self.__class__.about())
+        print('Head Fixer head-fixing for 2 sec')
         self.fixMouse(0, {},{})
-        sleep (2)
-        self.releaseMouse (0, {},{})
-        inputStr=input ('Head-Fixer released.\nDo you want to change the Head-Fixer settings?')
+        sleep(2)
+        self.releaseMouse(0, {},{})
+        inputStr=input('Head-Fixer released.\nDo you want to change the Head-Fixer settings?')
         if inputStr[0] == 'y' or inputStr[0] == "Y":
-            self.setdown ()
-            self.settingsDict = self.config_user_get (self.settingsDict)
+            self.setdown()
+            self.settingsDict = self.config_user_get(self.settingsDict)
             self.setup()
 
 """
@@ -161,7 +161,7 @@ def checkUpLevel(thisMouse, expSettings, stimulator):
     #CHF = Level change due to continuous head fixes.
     if thisMouse.currentContinuousHeadFixes >= expSettings.continuousHeadFixesForLevelUp and thisMouse.headFixationType < 8 and thisMouse.headFixationType > 1:
         thisMouse.headFixationType += 1
-        print("Mouse ", thisMouse.tag, " was leveled up to level (CHF): ", thisMouse.headFixationType)
+        print("Mouse ", thisMouse.tag, " was leveled up to level(CHF): ", thisMouse.headFixationType)
         log_str = "lvlCHF:" + str(thisMouse.headFixationType-1) + "->" + str(thisMouse.headFixationType)
         writeToLogFile(expSettings.logFP, thisMouse, log_str)
         # We reset both to avoid double bias.
@@ -174,7 +174,7 @@ def checkUpLevel(thisMouse, expSettings, stimulator):
 #MHF = Level change due to multiple head fixes.
 elif thisMouse.currentMultipleHeadFixes >= expSettings.multipleHeadFixesForLevelUp and thisMouse.headFixationType < 8 and thisMouse.headFixationType > 1:
     thisMouse.headFixationType += 1
-        print("Mouse ", thisMouse.tag, " was leveled up to level (MHF): ", thisMouse.headFixationType)
+        print("Mouse ", thisMouse.tag, " was leveled up to level(MHF): ", thisMouse.headFixationType)
         log_str = "lvlMHF:" + str(thisMouse.headFixationType-1) + "->" + str(thisMouse.headFixationType)
         writeToLogFile(expSettings.logFP, thisMouse, log_str)
 
@@ -188,10 +188,10 @@ elif thisMouse.currentMultipleHeadFixes >= expSettings.multipleHeadFixesForLevel
 # Max level of the task start increasing trial length instead.
 # ITR = Increase task rewards
 elif thisMouse.timeMaxLevelObtained is not None:
-    if thisMouse.headFixationType == 8 and (time()-thisMouse.timeMaxLevelObtained) >= expSettings.timeToBeginIncreasingTrialLength:
-        if ((thisMouse.currentContinuousHeadFixes >= expSettings.continuousHeadFixesForLevelUp) or
-            (thisMouse.currentMultipleHeadFixes >= expSettings.multipleHeadFixesForLevelUp) and
-            (stimulator.nRewards*expSettings.taskRewardTime <= expSettings.maxTimePerTrial)):
+    if thisMouse.headFixationType == 8 and(time()-thisMouse.timeMaxLevelObtained) >= expSettings.timeToBeginIncreasingTrialLength:
+        if((thisMouse.currentContinuousHeadFixes >= expSettings.continuousHeadFixesForLevelUp) or
+           (thisMouse.currentMultipleHeadFixes >= expSettings.multipleHeadFixesForLevelUp) and
+           (stimulator.nRewards*expSettings.taskRewardTime <= expSettings.maxTimePerTrial)):
 
             thisMouse.extraTaskRewards += 1
                 log_str = "lvlITR:" + str(thisMouse.extraTaskRewards-1) + "->" + str(thisMouse.extraTaskRewards)
@@ -212,7 +212,7 @@ def checkDownLevel(thisMouse, expSettings, stimulator):
     #EHF = Level change due to many entrances.
     if thisMouse.currentEntrancesWithNoHeadFix >= expSettings.entrancesWithNoHeadFixForLevelDown and thisMouse.headFixationType > 1 and thisMouse.extraTaskRewards == 0:
         thisMouse.headFixationType -= 1
-        print("Mouse ", thisMouse.tag, " was leveled down to level (EHF): ", thisMouse.headFixationType)
+        print("Mouse ", thisMouse.tag, " was leveled down to level(EHF): ", thisMouse.headFixationType)
         log_str = "lvlEHF:" + str(thisMouse.headFixationType+1) + "->" + str(thisMouse.headFixationType)
         writeToLogFile(expSettings.logFP, thisMouse, log_str)
 
@@ -222,8 +222,8 @@ def checkDownLevel(thisMouse, expSettings, stimulator):
     # Max level of the task modify trial length instead.
     # DTR = decrease task rewards
     if thisMouse.timeMaxLevelObtained is not None:
-        if thisMouse.headFixationType == 7 and (time()-thisMouse.timeMaxLevelObtained) >= expSettings.timeToBeginIncreasingTrialLength:
-            if (thisMouse.currentEntrancesWithNoHeadFix >= expSettings.entrancesWithNoHeadFixForLevelDown and
+        if thisMouse.headFixationType == 7 and(time()-thisMouse.timeMaxLevelObtained) >= expSettings.timeToBeginIncreasingTrialLength:
+            if(thisMouse.currentEntrancesWithNoHeadFix >= expSettings.entrancesWithNoHeadFixForLevelDown and
                 thisMouse.extraTaskRewards > 0):
 
                 thisMouse.extraTaskRewards -= 1

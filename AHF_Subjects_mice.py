@@ -13,13 +13,13 @@ from AHF_Task import Task
 
 from AHF_Reader import AHF_Reader
 from AHF_Base import AHF_Base
-class AHF_Subjects_mice (AHF_Subjects):
+class AHF_Subjects_mice(AHF_Subjects):
     """
     class for the mice, as experimental subjects. Contains a dictionary where key id IDtag, and value is a dictionary
     of configuration information for corresponding mouse.
     {mouseid1:{settingsDict:{},resultsDict{}}, mouseid2:{settingsDict:{},resultsDict{}}}
     Dictionaries from Stimulator, 1 for results, stimResults, and 1 for parameters, stimParams
-    Dictionary from HeadFixer, either headFix% or headFix type (loose, strong, a scale from 1 -8)
+    Dictionary from HeadFixer, either headFix% or headFix type(loose, strong, a scale from 1 -8)
     Dictionary from Rewarder, task and entry reward size, max entry rewards, daily reward totals
     """
     freshMiceDefault = False
@@ -36,11 +36,11 @@ class AHF_Subjects_mice (AHF_Subjects):
         return 'Contains configuration data and results for a group of mice as experimental subjects in Auto Head Fix'
 
     @staticmethod
-    def config_user_get (starterDict = {}):
+    def config_user_get(starterDict = {}):
 
         loadConfigs =  starterDict.get('loadMiceConfigs', AHF_Subjects_mice.loadConfigsDefault)
         jsonName = starterDict.get("jsonName", AHF_Subjects_mice.jsonNameDefault)
-        tempInput = input ('Getting subject information:\n'
+        tempInput = input('Getting subject information:\n'
                            'type P to provide a correct json file or get help creating a new one\n'
                            'type D in case you have all information in the Database and want to use it\n'
                            ' currently {:}? :'.format(loadConfigs))
@@ -48,21 +48,21 @@ class AHF_Subjects_mice (AHF_Subjects):
             loadConfigs = "database"
         elif tempInput [0] == 'p' or tempInput [0] == 'P':
             loadConfigs = 'provide_json'
-            response = input('Chose a FILENAME. Your file will be automatically named: AHF_mice_FILENAME.json (place it in the working directory) Currently {:}: ' .format(jsonName))
+            response = input('Chose a FILENAME. Your file will be automatically named: AHF_mice_FILENAME.json(place it in the working directory) Currently {:}: ' .format(jsonName))
             if response != '':
                 jsonName = response
-        inChamberTimeLimit = starterDict.get ('inChamberTimeLimit',AHF_Subjects_mice.inChamberTimeLimitDefault)
+        inChamberTimeLimit = starterDict.get('inChamberTimeLimit',AHF_Subjects_mice.inChamberTimeLimitDefault)
         response = input('Enter in-Chamber duration limit, in minutes, before stopping head-fix trials, currently {:.2f}: '.format(inChamberTimeLimit/60))
         if response != '':
             inChamberTimeLimit = int(inChamberTimeLimit * 60)
 
-        starterDict.update ({'loadMiceConfigs' : loadConfigs, 'inChamberTimeLimit' : inChamberTimeLimit, "jsonName": jsonName})
+        starterDict.update({'loadMiceConfigs' : loadConfigs, 'inChamberTimeLimit' : inChamberTimeLimit, "jsonName": jsonName})
         return starterDict
 
     def setup(self):
         # hardware.json subject.json
 
-        self.settingsTuple = ('HeadFixer', 'Rewarder', 'Stimulator')
+        self.settingsTuple =('HeadFixer', 'Rewarder', 'Stimulator')
         self.loadConfigs = self.settingsDict.get('loadMiceConfigs')
         self.jsonName = self.settingsDict.get('jsonName')
         self.inChamberTimeLimit = self.settingsDict.get('inChamberTimeLimit')
@@ -92,7 +92,7 @@ class AHF_Subjects_mice (AHF_Subjects):
                 self.create_fillable_json()
             while self.check_miceDict(self.miceDict) == False:
                 input('could not load json, please edit and try again. Press enter when done')
-            
+
             for tag in self.miceDict.keys():
                 for source in self.miceDict.get(tag):
                     self.task.DataLogger.storeConfig(int(tag), self.miceDict.get(tag).get(source), source)
@@ -107,11 +107,11 @@ class AHF_Subjects_mice (AHF_Subjects):
             if stillmore[0] == "n" or stillmore[0] == "N":
                 moreMice = False
         print(self.miceDict)
-        CAD.Dict_to_file (self.miceDict, "mice_fillable", self.jsonName, ".jsn")
+        CAD.Dict_to_file(self.miceDict, "mice_fillable", self.jsonName, ".jsn")
         input('Please edit the values now. Press enter when done')
         os.system("sudo cp AHF_mice_fillable_" + self.jsonName + ".jsn" + " AHF_mice_" + self.jsonName + ".jsn")
         self.miceDict = CAD.File_to_dict('mice', self.jsonName, '.jsn')
- 
+
 
     def depth(self,d, level=0):
         if not isinstance(d, dict) or not d:
@@ -142,10 +142,10 @@ class AHF_Subjects_mice (AHF_Subjects):
             print("your Json could not be confirmed, please fill out the AHF_fillable_mice_settings.json")
         return check
 
-    def setdown (self):
+    def setdown(self):
         pass
 
-    def show (self, IDnum = 0):
+    def show(self, IDnum = 0):
 
         """
         Prints out attributes for subject with given IDNum. If IDNum is 0, prints attributes for all subjects in pool.
@@ -155,7 +155,7 @@ class AHF_Subjects_mice (AHF_Subjects):
         pass
 
 
-    def check (self, IDnum):
+    def check(self, IDnum):
         """
         returns 1 if IDnum is already in subjects, 0 if IDnum is not in subjects but is elgible to be added, returns -1 if IDnum is not elgible to be added
         """
@@ -190,14 +190,14 @@ class AHF_Subjects_mice (AHF_Subjects):
                 sourceDict = reference.config_user_subject_get(dataDict.get(source,{}))
             dataDict.update({source:sourceDict})
         if not tag in self.miceDict.keys():
-            self.miceDict.update ({tag: dataDict})
+            self.miceDict.update({tag: dataDict})
             note = ''
             print("Saving")
             self.task.DataLogger.saveNewMouse(tag,note, self.miceDict.get(tag))
             print("Successfully added mouse with tag ", tag)
 
 
-    def remove (self, IDnum):
+    def remove(self, IDnum):
         if IDnum in self.miceDict.keys:
             self.miceDict.pop(IDnum)
             self.task.DataLogger.retireMouse(IDnum, "")
@@ -206,16 +206,16 @@ class AHF_Subjects_mice (AHF_Subjects):
             return False
 
 
-    def userEdit (self):
+    def userEdit(self):
         """
         Allows user interaction to add and remove subjects, print out and edit individual configuration
         """
-        CAD.Edit_dict (self.miceDict, 'Mice')
+        CAD.Edit_dict(self.miceDict, 'Mice')
 
 
     def generator(self):
         """
-        A Generator function that generates a (tagID, dictionary) tuple for each of the mice in turn.
+        A Generator function that generates a(tagID, dictionary) tuple for each of the mice in turn.
         Sample function call: for mouse in myMice.generator():
         """
         for item in self.miceDict.items():
@@ -223,19 +223,19 @@ class AHF_Subjects_mice (AHF_Subjects):
 
 
 
-    def individualSettings (self, starterDict={}):
-        starterDict.update ({'propHeadFix' : self.propHeadFix})
+    def individualSettings(self, starterDict={}):
+        starterDict.update({'propHeadFix' : self.propHeadFix})
         # TODO datalogger
 
 
-    def get (self, IDnum):
+    def get(self, IDnum):
         """
         returns a reference to the dictionary for the mouse with given IDtag. if the mouse tag is not found, makes a new dictionary
         if fresh mice can be added, else returns an empty dicitonary if fresh mice are to be ignored
         """
-        return self.miceDict.get (str(IDnum), None)
+        return self.miceDict.get(str(IDnum), None)
 
-    def get_all (self):
+    def get_all(self):
         return self.miceDict
 
     def subjectSettings(self):
@@ -251,7 +251,7 @@ class AHF_Subjects_mice (AHF_Subjects):
             inputStr += 'R to remove a mouse from the list, by RFID Tag\n'
             inputStr += 'J to create a Json file for subject settings from Database\n'
             inputStr += 'E to exit :'
-            event = input (inputStr)
+            event = input(inputStr)
             tag = 0
             if event[0].lower() == 'm':
                 mouse = input("Enter a tag, or leave blank for all mice: ")
@@ -271,9 +271,9 @@ class AHF_Subjects_mice (AHF_Subjects):
                             dict.update({source:sourceDict})
             elif event[0].lower() == 'r': # remove a mouse
                 mice = self.task.DataLogger.getMice()
-                tag = input ('Mice currently known to be in the cage : {}.\n'
+                tag = input('Mice currently known to be in the cage : {}.\n'
                              'Enter the RFID tag of the mouse to be removed: '.format(str(mice)))
-                reason = input('Why do you want to retire the mouse (e.g. participation, window, health, finished): ')
+                reason = input('Why do you want to retire the mouse(e.g. participation, window, health, finished): ')
                 if tag != '' and tag in mice:
                     self.task.DataLogger.retireMouse(tag,reason)
                     mice = self.task.DataLogger.getMice()
@@ -281,7 +281,7 @@ class AHF_Subjects_mice (AHF_Subjects):
                 else:
                     print("wrong tag")
             elif event[0].lower() == 'j':
-                default = input ('Use CURRENT settings for each mouse for Json? (otherwise DEFAULT settings are used')
+                default = input('Use CURRENT settings for each mouse for Json?(otherwise DEFAULT settings are used')
                 if default[0] == 'y' or default[0] == 'Y':
                     settings = "current_subjects"
                 else:
@@ -302,11 +302,11 @@ class AHF_Subjects_mice (AHF_Subjects):
             elif event[0].lower() == 'a' or event[0].lower() == 't': # other two choices are for adding a mouse by RFID Tag, either reading from Tag Reader, or typing it
                 self.task.Reader.stopLogging()
                 self.add(event)
-                CAD.Dict_to_file (self.miceDict, "mice", self.jsonName, ".jsn")
+                CAD.Dict_to_file(self.miceDict, "mice", self.jsonName, ".jsn")
                 self.task.Reader.startLogging()
             else:
                 break
-        response = input('Save changes in settings to a json file, too? (recommended)')
+        response = input('Save changes in settings to a json file, too?(recommended)')
         if response[0] == 'Y' or response[0] == 'y':
             CAD.Dict_to_file(self.miceDict, "mice", self.jsonName, ".jsn")
     def hardwareTest(self):
@@ -327,7 +327,7 @@ class AHF_Subjects_mice (AHF_Subjects):
                 self.subjectSettings()
         self.setup()
 
-    def newDay():
+    def newDay(self):
         for mouse in self.miceDict:
             mouse.get("Rewarder").update({"totalEntryRewardsToday": 0})
             mouse.get("Rewarder").update({"totalBreakBeamRewardsToday": 0})

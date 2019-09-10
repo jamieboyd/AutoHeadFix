@@ -12,9 +12,9 @@ class AHF_Trigger(AHF_Base, metaclass = ABCMeta):
     """
     
     @abstractmethod
-    def doTrigger (self, message):
+    def doTrigger(self, message):
        pass
 
     @abstractmethod
-    def getTrigger (self):
+    def getTrigger(self):
         pass

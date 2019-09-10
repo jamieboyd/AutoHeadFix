@@ -33,7 +33,7 @@ import warnings
 
 
 
-class AHF_Stimulator_LickWithhold (AHF_Stimulator):
+class AHF_Stimulator_LickWithhold(AHF_Stimulator):
     #### default definitions for stimulator configuration that are not defined in superclass
     lickWithholdTime_def = 1  # how long mouse has to go for without licking before getting rewarded
     delayTime_def = 0.5     # laser pulse is this may seconds before reward is given
@@ -52,98 +52,98 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
 
 
     @staticmethod
-    def config_user_get (starterDict = {}):
+    def config_user_get(starterDict = {}):
 
 
-        speakerPin = starterDict.get ('speakerPin', AHF_Stimulator_LickWithhold.speakerPin_def)
-        tempInput = input ('Set speaker pin (currently {0}): '.format(speakerPin))
+        speakerPin = starterDict.get('speakerPin', AHF_Stimulator_LickWithhold.speakerPin_def)
+        tempInput = input('Set speaker pin(currently {0}): '.format(speakerPin))
         if tempInput != '':
-            speakerPin = int (tempInput)
-        starterDict.update ({'speakerPin' : speakerPin})
-        speakerFreq = starterDict.get ('speakerFreq', AHF_Stimulator_LickWithhold.speakerFreq_def)
-        tempInput = input ('Set speaker frequency (currently {0}): '.format(speakerFreq))
+            speakerPin = int(tempInput)
+        starterDict.update({'speakerPin' : speakerPin})
+        speakerFreq = starterDict.get('speakerFreq', AHF_Stimulator_LickWithhold.speakerFreq_def)
+        tempInput = input('Set speaker frequency(currently {0}): '.format(speakerFreq))
         if tempInput != '':
-            speakerFreq = int (tempInput)
-        starterDict.update ({'speakerFreq' : speakerFreq})
-        speakerDuty = starterDict.get ('speakerDuty', AHF_Stimulator_LickWithhold.speakerDuty_def)
-        tempInput = input ('Set speaker duty cycle (currently {0}): '.format(speakerDuty))
+            speakerFreq = int(tempInput)
+        starterDict.update({'speakerFreq' : speakerFreq})
+        speakerDuty = starterDict.get('speakerDuty', AHF_Stimulator_LickWithhold.speakerDuty_def)
+        tempInput = input('Set speaker duty cycle(currently {0}): '.format(speakerDuty))
         if tempInput != '':
-            speakerDuty = float (tempInput)
-        starterDict.update ({'speakerDuty' : speakerDuty})
-        speakerOffForReward = starterDict.get ('speakerOffForReward', AHF_Stimulator_LickWithhold.speakerOffForReward_def)
-        tempInput = input ('Set time to have speaker off while rewarding (currently {0}): '.format(speakerOffForReward))
+            speakerDuty = float(tempInput)
+        starterDict.update({'speakerDuty' : speakerDuty})
+        speakerOffForReward = starterDict.get('speakerOffForReward', AHF_Stimulator_LickWithhold.speakerOffForReward_def)
+        tempInput = input('Set time to have speaker off while rewarding(currently {0}): '.format(speakerOffForReward))
         if tempInput != '':
-            speakerOffForReward = int (tempInput)
-        starterDict.update ({'speakerOffForReward' : speakerOffForReward})
-        lickWrongTimeout = starterDict.get ('lickWrongTimeout', AHF_Stimulator_LickWithhold.lickWrongTimeout_def)
-        tempInput = input ('Set timeout for wrong answer (currently {0}): '.format(lickWrongTimeout))
+            speakerOffForReward = int(tempInput)
+        starterDict.update({'speakerOffForReward' : speakerOffForReward})
+        lickWrongTimeout = starterDict.get('lickWrongTimeout', AHF_Stimulator_LickWithhold.lickWrongTimeout_def)
+        tempInput = input('Set timeout for wrong answer(currently {0}): '.format(lickWrongTimeout))
         if tempInput != '':
-            lickWrongTimeout = int (tempInput)
-        starterDict.update ({'lickWrongTimeout' : lickWrongTimeout})
-        defaultLevel = starterDict.get ('defaultLevel', 0)
-        tempInput = input ('Set default level for mouse (currently {0}): '.format(defaultLevel))
+            lickWrongTimeout = int(tempInput)
+        starterDict.update({'lickWrongTimeout' : lickWrongTimeout})
+        defaultLevel = starterDict.get('defaultLevel', 0)
+        tempInput = input('Set default level for mouse(currently {0}): '.format(defaultLevel))
         if tempInput != '':
-            defaultLevel = int (tempInput)
-        starterDict.update ({'defaultLevel' : defaultLevel})
+            defaultLevel = int(tempInput)
+        starterDict.update({'defaultLevel' : defaultLevel})
 
         return AHF_Stimulator_Rewards.config_user_get(starterDict)
 
     def config_user_subject_get(self,starterDict = {}):
         mouseLevel = starterDict.get('mouseLevel', 0)
-        tempInput = input ('Set default level for mouse (currently {0}): '.format(mouseLevel))
+        tempInput = input('Set default level for mouse(currently {0}): '.format(mouseLevel))
         if tempInput != '':
-            mouseLevel = int (tempInput)
-        starterDict.update ({'mouseLevel' : mouseLevel})
-        lickWithholdTime = starterDict.get ('lickWithholdTime', AHF_Stimulator_LickWithhold.lickWithholdTime_def)
-        tempInput = input ('Set lick withhold time (currently {0}): '.format(lickWithholdTime))
+            mouseLevel = int(tempInput)
+        starterDict.update({'mouseLevel' : mouseLevel})
+        lickWithholdTime = starterDict.get('lickWithholdTime', AHF_Stimulator_LickWithhold.lickWithholdTime_def)
+        tempInput = input('Set lick withhold time(currently {0}): '.format(lickWithholdTime))
         if tempInput != '':
-            lickWithholdTime = float (tempInput)
-        starterDict.update ({'lickWithholdTime' : lickWithholdTime})
-        delayTime = starterDict.get ('delayTime',AHF_Stimulator_LickWithhold.delayTime_def)
-        tempInput = input ('Set delay time, currently {0}: '.format(delayTime))
+            lickWithholdTime = float(tempInput)
+        starterDict.update({'lickWithholdTime' : lickWithholdTime})
+        delayTime = starterDict.get('delayTime',AHF_Stimulator_LickWithhold.delayTime_def)
+        tempInput = input('Set delay time, currently {0}: '.format(delayTime))
         if tempInput != '':
-            delayTime = float (tempInput)
-        starterDict.update ({'delayTime' : delayTime})
-        responseTime = starterDict.get ('responseTime',AHF_Stimulator_LickWithhold.responseTime_def)
-        tempInput = input ('Set response time,  currently {0}: '.format(responseTime))
+            delayTime = float(tempInput)
+        starterDict.update({'delayTime' : delayTime})
+        responseTime = starterDict.get('responseTime',AHF_Stimulator_LickWithhold.responseTime_def)
+        tempInput = input('Set response time,  currently {0}: '.format(responseTime))
         if tempInput != '':
-            responseTime = float (tempInput)
-        starterDict.update ({'responseTime' : responseTime})
-        rewardNoGo = starterDict.get ('rewardNoGo',AHF_Stimulator_LickWithhold.rewardNoGo_def)
-        tempInput = input ('Reward No-Go Trials? (Y/N), currently {0}): '.format(rewardNoGo))
+            responseTime = float(tempInput)
+        starterDict.update({'responseTime' : responseTime})
+        rewardNoGo = starterDict.get('rewardNoGo',AHF_Stimulator_LickWithhold.rewardNoGo_def)
+        tempInput = input('Reward No-Go Trials?(Y/N), currently {0}): '.format(rewardNoGo))
         if str(tempInput).lower() != 'y':
             rewardNoGo = False
-        starterDict.update ({'rewardNoGo' : rewardNoGo})
+        starterDict.update({'rewardNoGo' : rewardNoGo})
         return AHF_Stimulator_Rewards.config_user_subject_get(self, starterDict)
 
     def config_subject_get(self, starterDict={}):
         mouseLevel = starterDict.get('mouseLevel', 0)
-        starterDict.update ({'mouseLevel' : mouseLevel})
-        lickWithholdTime = starterDict.get ('lickWithholdTime', AHF_Stimulator_LickWithhold.lickWithholdTime_def)
-        starterDict.update ({'lickWithholdTime' : lickWithholdTime})
-        delayTime = starterDict.get ('delayTime',AHF_Stimulator_LickWithhold.delayTime_def)
-        starterDict.update ({'delayTime' : delayTime})
-        responseTime = starterDict.get ('responseTime',AHF_Stimulator_LickWithhold.responseTime_def)
-        starterDict.update ({'responseTime' : responseTime})
-        rewardNoGo = starterDict.get ('rewardNoGo',AHF_Stimulator_LickWithhold.rewardNoGo_def)
-        starterDict.update ({'rewardNoGo' : rewardNoGo})
+        starterDict.update({'mouseLevel' : mouseLevel})
+        lickWithholdTime = starterDict.get('lickWithholdTime', AHF_Stimulator_LickWithhold.lickWithholdTime_def)
+        starterDict.update({'lickWithholdTime' : lickWithholdTime})
+        delayTime = starterDict.get('delayTime',AHF_Stimulator_LickWithhold.delayTime_def)
+        starterDict.update({'delayTime' : delayTime})
+        responseTime = starterDict.get('responseTime',AHF_Stimulator_LickWithhold.responseTime_def)
+        starterDict.update({'responseTime' : responseTime})
+        rewardNoGo = starterDict.get('rewardNoGo',AHF_Stimulator_LickWithhold.rewardNoGo_def)
+        starterDict.update({'rewardNoGo' : rewardNoGo})
         return AHF_Stimulator_Rewards.config_subject_get(self, starterDict)
 
 
-    def setup (self):
-        # super() sets up all the laser stuff plus self.headFixTime plus # rewards (not used here)
+    def setup(self):
+        # super() sets up all the laser stuff plus self.headFixTime plus # rewards(not used here)
         super().setup()
         #Lick-withhold settings
         # setting up speaker for negative feedback for licking
-        self.speakerPin=int(self.settingsDict.get ('speakerPin', self.speakerPin_def))
-        self.speakerFreq=float(self.settingsDict.get ('speakerFreq', self.speakerFreq_def))
-        self.speakerDuty = float(self.settingsDict.get ('speakerDuty', self.speakerDuty_def))
-        self.speakerOffForReward = float(self.settingsDict.get ('speakerOffForReward', self.speakerOffForReward_def))
+        self.speakerPin=int(self.settingsDict.get('speakerPin', self.speakerPin_def))
+        self.speakerFreq=float(self.settingsDict.get('speakerFreq', self.speakerFreq_def))
+        self.speakerDuty = float(self.settingsDict.get('speakerDuty', self.speakerDuty_def))
+        self.speakerOffForReward = float(self.settingsDict.get('speakerOffForReward', self.speakerOffForReward_def))
         self.lickWrongTimeout = float(self.settingsDict.get('lickWrongTimeout', self.lickWrongTimeout_def))
         self.defaultLevel = int(self.settingsDict.get('defaultLevel', 0))
-        self.speaker=Infinite_train (PTSimpleGPIO.MODE_FREQ, self.speakerPin, self.speakerFreq, self.speakerDuty,  PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
-        self.nRewards = self.settingsDict.get ('nRewards')
-        self.rewardInterval = self.settingsDict.get ('rewardInterval')
+        self.speaker=Infinite_train(PTSimpleGPIO.MODE_FREQ, self.speakerPin, self.speakerFreq, self.speakerDuty,  PTSimpleGPIO.ACC_MODE_SLEEPS_AND_SPINS)
+        self.nRewards = self.settingsDict.get('nRewards')
+        self.rewardInterval = self.settingsDict.get('rewardInterval')
         self.rewarder = self.task.Rewarder
         self.camera = self.task.Camera
         #Mouse scores
@@ -152,7 +152,7 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
         self.laserTimes = []
         self.task.DataLogger.startTracking("Outcome", "code", "buffer", 200)
 
-    def quitting (self):
+    def quitting(self):
         """
             Called before AutoHEadFix exits. Gives stimulator chance to do any needed cleanup
 
@@ -163,10 +163,10 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
 
     def rewardTask(self):
         self.task.Stimulus.stimulate()
-        self.task.DataLogger.writeToLogFile (self.tag, 'Stimulus', None, time())
+        self.task.DataLogger.writeToLogFile(self.tag, 'Stimulus', None, time())
         # sleep for lead time, then give reward
-        sleep (self.mouse.get("Stimulator").get("delayTime"))
-        self.rewardTimes.append (time())
+        sleep(self.mouse.get("Stimulator").get("delayTime"))
+        self.rewardTimes.append(time())
         self.rewarder.giveReward('task')
         if self.speakerIsOn == True:
             print("turn off")
@@ -174,71 +174,71 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
             self.speakerIsOn = False
 
 
-    def withholdWait (self, endTime):
-        lickWithholdRandom = self.mouse.get("Stimulator").get("lickWithholdTime") + (0.5 - random())
+    def withholdWait(self, endTime):
+        lickWithholdRandom = self.mouse.get("Stimulator").get("lickWithholdTime") +(0.5 - random())
         lickWithholdEnd = time() + lickWithholdRandom
         while time() < lickWithholdEnd and time() < endTime:
-            anyLicks = self.task.LickDetector.waitForLick (0.05)
+            anyLicks = self.task.LickDetector.waitForLick(0.05)
             if anyLicks == 0:
                 if self.speakerIsOn == True:
                     print("turn off")
                     self.speaker.stop_train()
                     self.speakerIsOn = False
             else: # there were licks in withholding period
-                if (self.speakerIsOn == False) and (time() > self.OffForRewardEnd):
+                if(self.speakerIsOn == False) and(time() > self.OffForRewardEnd):
                     print("Speaker on Now")
                     self.speaker.start_train()
                     self.speakerIsOn = True
-                lickWithholdRandom = self.mouse.get("Stimulator").get("lickWithholdTime") + (0.5 - random())
+                lickWithholdRandom = self.mouse.get("Stimulator").get("lickWithholdTime") +(0.5 - random())
                 lickWithholdEnd = time() + lickWithholdRandom
         return anyLicks
 
-    def goTask (self):
+    def goTask(self):
         """
         A GO trial. Mouse must lick before getting a reward.
         """
         self.task.Stimulus.stimulate()
-        self.task.DataLogger.writeToLogFile (self.tag, 'Stimulus', {'trial': "GO"}, time())
+        self.task.DataLogger.writeToLogFile(self.tag, 'Stimulus', {'trial': "GO"}, time())
         delayEnd = time() + self.mouse.get("Stimulator").get("delayTime")
         while time() < delayEnd:
-            anyLicks = self.task.LickDetector.waitForLick (0.05)
+            anyLicks = self.task.LickDetector.waitForLick(0.05)
             if anyLicks:
-                self.task.DataLogger.writeToLogFile (self.tag, 'Outcome', {'code': -4}, time())
+                self.task.DataLogger.writeToLogFile(self.tag, 'Outcome', {'code': -4}, time())
 
                 return
-        anyLicks = self.task.LickDetector.waitForLick (self.mouse.get("Stimulator").get("responseTime"))
+        anyLicks = self.task.LickDetector.waitForLick(self.mouse.get("Stimulator").get("responseTime"))
         if anyLicks is not 0:
-            self.rewardTimes.append (time())
+            self.rewardTimes.append(time())
             self.rewarder.giveReward('task')
-            self.task.DataLogger.writeToLogFile (self.tag, 'Outcome', {'code': 2}, time())
+            self.task.DataLogger.writeToLogFile(self.tag, 'Outcome', {'code': 2}, time())
         else:
             #Wrong, mouse gets a timeout :(
-            self.task.DataLogger.writeToLogFile (self.tag, 'Outcome', {'code': -2}, time())
+            self.task.DataLogger.writeToLogFile(self.tag, 'Outcome', {'code': -2}, time())
             sleep(self.lickWrongTimeout)
 
 
-    def noGoTask (self):
+    def noGoTask(self):
         # TODO: refine noGo signal
         self.task.Stimulus.stimulate()
         sleep(0.2)
         self.task.Stimulus.stimulate()
         delayEnd = time() + self.mouse.get("Stimulator").get("delayTime")
-        self.task.DataLogger.writeToLogFile (self.tag, 'Stimulus', {'trial': "NO-GO"}, time())
+        self.task.DataLogger.writeToLogFile(self.tag, 'Stimulus', {'trial': "NO-GO"}, time())
         while time() < delayEnd:
-            anyLicks = self.task.LickDetector.waitForLick (0.05)
+            anyLicks = self.task.LickDetector.waitForLick(0.05)
             if anyLicks:
-                self.task.DataLogger.writeToLogFile (self.tag, 'Outcome', {'code': -3}, time())
+                self.task.DataLogger.writeToLogFile(self.tag, 'Outcome', {'code': -3}, time())
                 return
-        anyLicks = self.task.LickDetector.waitForLick (self.mouse.get("Stimulator").get("responseTime"))
+        anyLicks = self.task.LickDetector.waitForLick(self.mouse.get("Stimulator").get("responseTime"))
         if anyLicks == 0:
             if self.mouse.get("Stimulator").get("rewardNoGo"):
-                self.rewardTimes.append (time())
+                self.rewardTimes.append(time())
                 self.rewarder.giveReward('task')
-            self.task.DataLogger.writeToLogFile (self.tag, 'Outcome', {'code': 1}, time())
+            self.task.DataLogger.writeToLogFile(self.tag, 'Outcome', {'code': 1}, time())
 
         else:
             #Wrong, mouse gets a timeout :(
-            self.task.DataLogger.writeToLogFile (self.tag, 'Outcome', {'code': -1}, time())
+            self.task.DataLogger.writeToLogFile(self.tag, 'Outcome', {'code': -1}, time())
             sleep(self.lickWrongTimeout)
         pass
 
@@ -259,6 +259,8 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
         super().run()
         super().startVideo()
         self.tag = self.task.tag
+        if self.tag <= 0:
+            return
         self.mouse = self.task.Subjects.get(self.tag)
         if level < 0:
             level = self.mouse.get("Stimulator", {}).get("mouseLevel", 0)
@@ -267,10 +269,10 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
         self.laserTimes = []
         n = self.mouse.get('Stimulator', {}).get('nRewards', 5)
         if self.task.isFixTrial:
-            if not self.task.Stimulus.trialPrep():
+            if not self.task.Stimulus.trialPrep(self.tag):
                 self.task.Stimulus.trialEnd()
                 return
-            
+
             #every time lickWithholdtime passes with no licks, make a buzz then give a reward after buzz_lead time.
             self.lickWithholdTimes = []
             self.rewardTimes = []
@@ -283,7 +285,7 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
                     break
                 # setup to start a trial, withholding licking for lickWithholdRandom secs till buzzer
                 # inner loop keeps resetting lickWithholdEnd time until  a succsful withhold
-                if (level > 0):
+                if(level > 0):
 
                     anyLicks = self.withholdWait(endTime)
                     # inner while loop only exits if trial time is up or lick withholding time passed with no licking
@@ -301,27 +303,27 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
                     sleep(self.mouse.get("Stimulator").get("rewardInterval"))
                     n = n -1
                     if n == 0:
-                        newRewards = resultsDict.get('rewards', 0) + len (self.rewardTimes)
+                        newRewards = resultsDict.get('rewards', 0) + len(self.rewardTimes)
                         resultsDict.update({'rewards': newRewards})
                         self.task.Stimulus.trialEnd()
                         super().stopVideo()
                         return
-                #print ('{:013}\t{:s}\treward'.format(self.mouse.tag, datetime.fromtimestamp (int (time())).isoformat (' ')))
+                #print('{:013}\t{:s}\treward'.format(self.mouse.tag, datetime.fromtimestamp(int(time())).isoformat(' ')))
                 self.OffForRewardEnd = time() + self.speakerOffForReward
             # make sure to turn off buzzer at end of loop when we exit
             if self.speakerIsOn == True:
                 self.speaker.stop_train()
-            newRewards = resultsDict.get('rewards', 0) + len (self.rewardTimes)
+            newRewards = resultsDict.get('rewards', 0) + len(self.rewardTimes)
             resultsDict.update({'rewards': newRewards})
             self.task.Stimulus.trialEnd()
             #self.camera.stop_preview()
             super().stopVideo()
         else:
-            timeInterval = self.mouse.get("Stimulator").get("rewardInterval") #- self.rewarder.rewardDict.get ('task')
+            timeInterval = self.mouse.get("Stimulator").get("rewardInterval") #- self.rewarder.rewardDict.get('task')
             self.rewardTimes = []
             self.camera.start_preview()
             for reward in range(self.mouse.get("Stimulator").get("nRewards")):
-                self.rewardTimes.append (time())
+                self.rewardTimes.append(time())
                 self.rewarder.giveReward('task')
                 sleep(timeInterval)
             newRewards = resultsDict.get('rewards', 0) + self.mouse.get("Stimulator").get("nRewards")
@@ -329,10 +331,10 @@ class AHF_Stimulator_LickWithhold (AHF_Stimulator):
             #self.camera.stop_preview()
             super().stopVideo()
 
-    def setdown (self):
-        print ('Withhold stimulator set down')
+    def setdown(self):
+        print('Withhold stimulator set down')
 
-    def hardwareTest (self):
+    def hardwareTest(self):
         # TODO: Test this
         pass
 

@@ -4,14 +4,14 @@
 from abc import ABCMeta, abstractmethod
 from AHF_Base import AHF_Base
 
-class AHF_Notifier (AHF_Base, metaclass = ABCMeta):
+class AHF_Notifier(AHF_Base, metaclass = ABCMeta):
     """
     Some remote way of notifying somebody, with email or text or something.
     """
 
 
     @abstractmethod
-    def notifyStuck (self, tag, cageID, duration, isStuck):
+    def notifyStuck(self, tag, cageID, duration, isStuck):
         """
         Sends a text message with the given information.
 
@@ -27,7 +27,7 @@ class AHF_Notifier (AHF_Base, metaclass = ABCMeta):
 
 
     @abstractmethod
-    def notify (self, msgStr):
+    def notify(self, msgStr):
         """
         a more general method to send text information
         """
@@ -36,9 +36,9 @@ class AHF_Notifier (AHF_Base, metaclass = ABCMeta):
     def hardwareTest(self):
         msgStr = 'This is a test of the AHF_Notifer system using ' + self.__class__.__name__
         try:
-            self.notify (msgStr)
+            self.notify(msgStr)
         except exception as e:
-            print ('An error occurred:' + str (e))
-        response = input ('Do you wish to change Notifier settings? ')
+            print('An error occurred:' + str(e))
+        response = input('Do you wish to change Notifier settings? ')
         if response [0] =='Y' or response [0] == 'y':
-            self.settingsDict = self.config_user_get (self.settingsDict)
+            self.settingsDict = self.config_user_get(self.settingsDict)
