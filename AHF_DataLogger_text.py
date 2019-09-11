@@ -156,7 +156,7 @@ class AHF_DataLogger_text(AHF_DataLogger):
         CAD.Remove_file('mouse', '{:013}'.format(int(tag)), '.jsn', dir = self.configPath)
         self.writeToLogFile(tag, "Retirement", {'reason': reason}, time())
 
-    def newDay(self, mice):
+    def newDay(self):
         self.writeToLogFile(0, 'SeshEnd', None, time())
         if self.logFP is not None:
             self.logFP.close()
@@ -200,7 +200,7 @@ class AHF_DataLogger_text(AHF_DataLogger):
         print(LogOutputStr)
         AHF_DataLogger_text.PSEUDO_MUTEX = 0
         if getattr(self, 'logFP', None) is not None and self.task.logToFile: # logMouse is set to False for test mice, or unknown mice
-            FileOutputStr = '{:013}\t{:s}\t{:s}\t{:.2f}\n'.format(int(tag), eventKind, str(eventDict), timeStamp)
+            FileOutputStr = '{:013}\t{:s}\t{:s}\t{:s}\t{:s}\n'.format(int(tag), str(timestamp),  eventKind, str(eventDict), datetime.fromtimestamp(int(timestamp)).isoformat (' '))
             self.logFP.write(FileOutputStr)
             self.logFP.flush()
 
