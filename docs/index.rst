@@ -12,7 +12,7 @@ To download the main repository `click here  <https://github.com/jamieboyd/AutoH
 
 For instructions on building/setting up `click here <https://github.com/zenenhornstein/AHF_setup>`_
 
-For notes and structure information from the developer `click here <https://Judge24601.github.io/AutoHeadFix/build/html/AHF_Notes.html>`_
+For notes and structure information from the developer `click here <https://Judge24601.github.io/AutoHeadFix/AHF_Notes.html>`_
 
 .. automodule:: AHF_Base
     :members:

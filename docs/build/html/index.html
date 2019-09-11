@@ -40,7 +40,7 @@
 <p><strong>Installation/Setup</strong></p>
 <p>To download the main repository <a class="reference external" href="https://github.com/jamieboyd/AutoHeadFix/tree/lever_config/">click here</a></p>
 <p>For instructions on building/setting up <a class="reference external" href="https://github.com/zenenhornstein/AHF_setup">click here</a></p>
-<p>For notes from the developer <a class="reference external" href="https://Judge24601.github.io/AutoHeadFix/build/html/AHF_Notes.html">click here</a></p>
+<p>For notes and structure information from the developer <a class="reference external" href="https://Judge24601.github.io/AutoHeadFix/AHF_Notes.html">click here</a></p>
 <span class="target" id="module-AHF_Base"></span><div class="section" id="ahf-base-py">
 <h2>AHF_Base.py<a class="headerlink" href="#ahf-base-py" title="Permalink to this headline">¶</a></h2>
 <p>The base upon which everything else is built</p>
@@ -689,7 +689,7 @@ entering main loop of program. DataLogger may make a new file every day in NewDa
 
 <dl class="method">
 <dt id="AHF_DataLogger.AHF_DataLogger.newDay">
-<em class="property">abstract </em><code class="sig-name descname">newDay</code><span class="sig-paren">(</span><em class="sig-param">mice</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.newDay" title="Permalink to this definition">¶</a></dt>
+<em class="property">abstract </em><code class="sig-name descname">newDay</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger.AHF_DataLogger.newDay" title="Permalink to this definition">¶</a></dt>
 <dd><p>At the start of a new day, it was customary for the text-based data logging to start new text files,
 and to make a precis of the day’s results into a a separate text file for easy human reading.
 This “quickStats” file should contain info for each mouse with rewards, head fixes,
@@ -813,7 +813,7 @@ entering main loop of program. DataLogger may make a new file every day in NewDa
 
 <dl class="method">
 <dt id="AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.newDay">
-<code class="sig-name descname">newDay</code><span class="sig-paren">(</span><em class="sig-param">mice</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.newDay" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">newDay</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_textMySql.AHF_DataLogger_textMySql.newDay" title="Permalink to this definition">¶</a></dt>
 <dd><p>At the start of a new day, it was customary for the text-based data logging to start new text files,
 and to make a precis of the day’s results into a a separate text file for easy human reading.
 This “quickStats” file should contain info for each mouse with rewards, head fixes,
@@ -956,7 +956,7 @@ and returns starterDict with settings as edited by the user.</p>
 
 <dl class="method">
 <dt id="AHF_DataLogger_text.AHF_DataLogger_text.newDay">
-<code class="sig-name descname">newDay</code><span class="sig-paren">(</span><em class="sig-param">mice</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_text.AHF_DataLogger_text.newDay" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">newDay</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_DataLogger_text.AHF_DataLogger_text.newDay" title="Permalink to this definition">¶</a></dt>
 <dd><p>At the start of a new day, it was customary for the text-based data logging to start new text files,
 and to make a precis of the day’s results into a a separate text file for easy human reading.
 This “quickStats” file should contain info for each mouse with rewards, head fixes,
@@ -1849,46 +1849,8 @@ Run by __init__, or can be run  separately after editing the settingsDict</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-AHF_Settings">
-<span id="ahf-settings"></span><h2>AHF_Settings<a class="headerlink" href="#module-AHF_Settings" title="Permalink to this headline">¶</a></h2>
-<p>AHF_Settings provides functions to read, edit, and save settings for the AutoheadFix program</p>
-<dl class="function">
-<dt id="AHF_Settings.config_from_user">
-<code class="sig-name descname">config_from_user</code><span class="sig-paren">(</span><em class="sig-param">task</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Settings.config_from_user" title="Permalink to this definition">¶</a></dt>
-<dd><p>Queries the user for settings. This function may run before a camera or stimulator has been configured</p>
-<p>We need to run static function for stimulator configuration and camera configuration</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="AHF_Settings.edit_from_user">
-<code class="sig-name descname">edit_from_user</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Settings.edit_from_user" title="Permalink to this definition">¶</a></dt>
-<dd><p>Allows user to edit experiment settings, including stimulator settings, but not camera settings</p>
-<p>user can either change the stimulaotr, or reconfigure it, but not both
-:returns: code for mods - bit 0 = 1 is set if stimulator config is changed, bit 1 =2 is set if stimulator is changed</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="AHF_Settings.save">
-<code class="sig-name descname">save</code><span class="sig-paren">(</span><em class="sig-param">task</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Settings.save" title="Permalink to this definition">¶</a></dt>
-<dd><p>Saves current settings to a dictionary and then sends dictionary to a json dictionary file</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="AHF_Settings.show">
-<code class="sig-name descname">show</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Settings.show" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prints the current configuration stored in this AHF_Settings to the console, nicely formatted</p>
-<blockquote>
-<div><dl class="field-list simple">
-<dt class="field-odd">param</dt>
-<dd class="field-odd"><p>none</p>
-</dd>
-<dt class="field-even">returns</dt>
-<dd class="field-even"><p>nothing</p>
-</dd>
-</dl>
-</div></blockquote>
-</dd></dl>
-
+<div class="section" id="ahf-settings">
+<h2>AHF_Settings<a class="headerlink" href="#ahf-settings" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="module-AHF_Stimulator_LEDs">
 <span id="ahf-stimulator-leds"></span><h2>AHF_Stimulator_LEDs<a class="headerlink" href="#module-AHF_Stimulator_LEDs" title="Permalink to this headline">¶</a></h2>
@@ -2169,7 +2131,7 @@ Run by __init__, or can be run  separately after editing the settingsDict</p>
 
 <dl class="method">
 <dt id="AHF_Stimulus.AHF_Stimulus.trialPrep">
-<em class="property">abstract </em><code class="sig-name descname">trialPrep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus.AHF_Stimulus.trialPrep" title="Permalink to this definition">¶</a></dt>
+<em class="property">abstract </em><code class="sig-name descname">trialPrep</code><span class="sig-paren">(</span><em class="sig-param">tag</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus.AHF_Stimulus.trialPrep" title="Permalink to this definition">¶</a></dt>
 <dd><p>Prepares stimulus for trial: e.g. aligns laser, preps vib. motor, etc</p>
 </dd></dl>
 
@@ -2231,7 +2193,7 @@ Run by __init__, or can be run  separately after editing the settingsDict</p>
 
 <dl class="method">
 <dt id="AHF_Stimulus_None.AHF_Stimulus_None.trialPrep">
-<code class="sig-name descname">trialPrep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_None.AHF_Stimulus_None.trialPrep" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">trialPrep</code><span class="sig-paren">(</span><em class="sig-param">tag</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_None.AHF_Stimulus_None.trialPrep" title="Permalink to this definition">¶</a></dt>
 <dd><p>Prepares stimulus for trial: e.g. aligns laser, preps vib. motor, etc</p>
 </dd></dl>
 
@@ -2290,7 +2252,7 @@ Run by __init__, or can be run  separately after editing the settingsDict</p>
 
 <dl class="method">
 <dt id="AHF_Stimulus_VibMotor.AHF_Stimulus_VibMotor.trialPrep">
-<code class="sig-name descname">trialPrep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_VibMotor.AHF_Stimulus_VibMotor.trialPrep" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">trialPrep</code><span class="sig-paren">(</span><em class="sig-param">tag</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_VibMotor.AHF_Stimulus_VibMotor.trialPrep" title="Permalink to this definition">¶</a></dt>
 <dd><p>Prepares stimulus for trial: e.g. aligns laser, preps vib. motor, etc</p>
 </dd></dl>
 
@@ -2436,7 +2398,7 @@ task settings</p>
 <li><a class="reference internal" href="#module-AHF_Rewarder_solenoid_pt">AHF_Rewarder_solenoid_pt</a></li>
 <li><a class="reference internal" href="#module-AHF_Rewarder_solenoid">AHF_Rewarder_solenoid</a></li>
 <li><a class="reference internal" href="#module-AHF_Rewarder_solenoid_rpi">AHF_Rewarder_solenoid_rpi</a></li>
-<li><a class="reference internal" href="#module-AHF_Settings">AHF_Settings</a></li>
+<li><a class="reference internal" href="#ahf-settings">AHF_Settings</a></li>
 <li><a class="reference internal" href="#module-AHF_Stimulator_LEDs">AHF_Stimulator_LEDs</a></li>
 <li><a class="reference internal" href="#module-AHF_Stimulator_Lever">AHF_Stimulator_Lever</a></li>
 <li><a class="reference internal" href="#ahf-stimulator-lickwithhold">AHF_Stimulator_LickWithhold</a></li>
