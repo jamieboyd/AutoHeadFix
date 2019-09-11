@@ -4,11 +4,11 @@
 <title>Auto Head Fix 3</title>
 <META NAME="AUTHOR" CONTENT="Jamie Boyd">
 </head><body>
-<H1>Programming Notes for AHF version 3</H1>
+<H1>Programming and Usage Notes for AHF version 3</H1>
 <h2>AHF_Task - loads settings and holds references to all other objects</h2>
 <p>Cage settings and Experiment settings are no longer be kept in separate files, but are loaded and stored in a single .json file. This file is used to initialize a single object, task, of the class Task, in AHF_Task.py. The Task object initializes the individual obects that provide specific functionality using dictionaries loaded from the .json file. The Task object keeps a reference to each objct it initializes, and each initialized object keeps a reference to the Task object. This way, only one object has to be passed around, and all functionality can be accessed from it.</p>
 
-<p>Some classes that control hardware devices are optional, and all classes are subclassable for different ways of performing the same basic function.  Base classes(AHF_HeadFixer, AHF_Rewarder, AHF_Stimulator, AHF_ContactChecker, and AHF_Camera, e.g.) load no harware specific modules; instead they define the interface that must be provided by the subclasses that are specialized for particular hrdware. The base class defines the functions the subclasses must provide, and contain static functions for getting class names and importing classes, and allowing the user to select one of the subclasses.  These base classes for specific tasks/hardware in turn inherit from AHF_Base, which defines the interface that AHF_Task uses to interact with the objects it will initialize.  For instance, each class will be initialized with a a reference to the Task object, plus dictionary of settings made to its own specifications, and must provide a static function to querry the user for settings to generate a dictionary with those settings. The classes must also specify a test function for use with the hardWare tester.</p>
+<p>Some classes that control hardware devices are optional, and all classes are subclassable for different ways of performing the same basic function.  Base classes(AHF_HeadFixer, AHF_Rewarder, AHF_Stimulator, AHF_ContactChecker, and AHF_Camera, e.g.) load no harware specific modules; instead they define the interface that must be provided by the subclasses that are specialized for particular hrdware. The base class defines the functions the subclasses must provide, and contain static functions for getting class names and importing classes, and allowing the user to select one of the subclasses.  These base classes for specific tasks/hardware in turn inherit from AHF_Base, which defines the interface that AHF_Task uses to interact with the objects it will initialize.  For instance, each class will be initialized with a a reference to the Task object, plus dictionary of settings made to its own specifications, and must provide a static function to querry the user for settings to generate a dictionary with those settings. The classes must also specify a test function for use with the hardware tester.</p>
 <p>
 <table cellspacing = "0" cellpadding = "0" border = 1>
 <caption>Functionality Options for AutoHeadFix Systems</caption>
@@ -18,13 +18,16 @@
 <tr><td>Camera</td><td>Brain imaging camera controlled by Pi</td><td>No</td></tr> 
 <tr><td>Rewarder</td><td>Provides rewards for training, water droplet, e.g.</td><td>Yes</td></tr>
 <tr><td>Stimulator</td><td>Controls task-specific hardware during headfix session</td><td>Yes</td></tr> 
+<tr><td>Stimulus</td><td>Interacts with mouse with either a laser, vib. motor, or nothing</td><td>Yes</td></tr>
 <tr><td>ContactChecker</td><td>Sgnals that mouse is in position for head fixing or interacting</td><td>Yes</td></tr>
 <tr><td>TagReader</td><td>Innovations Design RFID reader with tag-in-range pin</td><td>Yes</td></tr>
 <tr><td>LickDetector</td><td>Touch sensor based on mpr121 connected to lick port</td><td>No</td></tr>
 <tr><td>BrainLight</td><td>Turns On and Off brain illumination during trials</td><td>No</td></tr>
-<tr><td>Notifier</td><td>
+<tr><td>DataLogger</td>Logs all output of system to either text files or SQL database<td><td>Yes</td></tr>
 </tbody>
 </table></p>
+
+
 
 An example snippet of the initialization function for AHF_Task demonstrates how the order imposed by AHF_Task/AHF_Base makes initilaization of tasks as generic as possible. After loading the settings file, this code looks for the HeadFixer class and HeadFixer dictionary in those settings. If not found, the user is querried for the desired headFixer class, and a static function from that class is used to query the user to provide settings that are stored in a dictionary, saved by the Task Object.  A static function, denoted in Python by the @staticmethod decorator, is a function defined in a class that does not refer to an object of the class, and can be caled without first initializing an object of the class. In this case, static functions are used to make dictionaries that are then used to initialize the objects of the corresponding classes. Similar code, changing only the name of the functionality provided, is run for the other functionality. If the the names of the base classes and some basic information for each class were saved beforehand, this snippet, and the others for different functionality, could be replaced with a loop. 
 <pre><code>

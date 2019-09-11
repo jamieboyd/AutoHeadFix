@@ -14,7 +14,7 @@
  * This script saves a per-browser/per-session cookie used to
  * remember the position of the sidebar among the pages.
  * Once the browser is closed the cookie is deleted and the position
- * reset to the default(expanded).
+ * reset to the default (expanded).
  *
  * :copyright: Copyright 2007-2019 by the Sphinx team, see AUTHORS.
  * :license: BSD, see LICENSE for details.
@@ -38,7 +38,7 @@ $(function() {
   var sidebarwrapper = $('.sphinxsidebarwrapper');
 
   // for some reason, the document has no sidebar; do not run into errors
-  if(!sidebar.length) return;
+  if (!sidebar.length) return;
 
   // original margin-left of the bodywrapper and width of the sidebar
   // with the sidebar expanded
@@ -59,7 +59,7 @@ $(function() {
   }
 
   function toggle_sidebar() {
-    if(sidebar_is_collapsed())
+    if (sidebar_is_collapsed())
       expand_sidebar();
     else
       collapse_sidebar();
@@ -105,13 +105,13 @@ $(function() {
     light_color = sidebarbutton.css('background-color');
     // find the height of the viewport to center the '<<' in the page
     var viewport_height;
-    if(window.innerHeight)
+    if (window.innerHeight)
  	  viewport_height = window.innerHeight;
     else
 	  viewport_height = $(window).height();
     sidebarbutton.find('span').css({
         'display': 'block',
-        'margin-top':(viewport_height - sidebar.position().top - 20) / 2
+        'margin-top': (viewport_height - sidebar.position().top - 20) / 2
     });
 
     sidebarbutton.click(toggle_sidebar);
@@ -127,27 +127,27 @@ $(function() {
     });
 
     sidebarbutton.hover(
-      function() {
+      function () {
           $(this).css('background-color', dark_color);
       },
-      function() {
+      function () {
           $(this).css('background-color', light_color);
       }
     );
   }
 
   function set_position_from_cookie() {
-    if(!document.cookie)
+    if (!document.cookie)
       return;
     var items = document.cookie.split(';');
     for(var k=0; k<items.length; k++) {
       var key_val = items[k].split('=');
       var key = key_val[0].replace(/ /, "");  // strip leading spaces
-      if(key == 'sidebar') {
+      if (key == 'sidebar') {
         var value = key_val[1];
-        if((value == 'collapsed') &&(!sidebar_is_collapsed()))
+        if ((value == 'collapsed') && (!sidebar_is_collapsed()))
           collapse_sidebar();
-        else if((value == 'expanded') &&(sidebar_is_collapsed()))
+        else if ((value == 'expanded') && (sidebar_is_collapsed()))
           expand_sidebar();
       }
     }

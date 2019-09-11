@@ -63,13 +63,13 @@ var Stemmer = function() {
   var mgr1 = "^(" + C + ")?" + V + C + V + C;              // [C]VCVC... is m>1
   var s_v   = "^(" + C + ")?" + v;                         // vowel in stem
 
-  this.stemWord = function(w) {
+  this.stemWord = function (w) {
     var stem;
     var suffix;
     var firstch;
     var origword = w;
 
-    if(w.length < 3)
+    if (w.length < 3)
       return w;
 
     var re;
@@ -78,119 +78,119 @@ var Stemmer = function() {
     var re4;
 
     firstch = w.substr(0,1);
-    if(firstch == "y")
+    if (firstch == "y")
       w = firstch.toUpperCase() + w.substr(1);
 
     // Step 1a
     re = /^(.+?)(ss|i)es$/;
     re2 = /^(.+?)([^s])s$/;
 
-    if(re.test(w))
+    if (re.test(w))
       w = w.replace(re,"$1$2");
-    else if(re2.test(w))
+    else if (re2.test(w))
       w = w.replace(re2,"$1$2");
 
     // Step 1b
     re = /^(.+?)eed$/;
     re2 = /^(.+?)(ed|ing)$/;
-    if(re.test(w)) {
+    if (re.test(w)) {
       var fp = re.exec(w);
       re = new RegExp(mgr0);
-      if(re.test(fp[1])) {
+      if (re.test(fp[1])) {
         re = /.$/;
         w = w.replace(re,"");
       }
     }
-    else if(re2.test(w)) {
+    else if (re2.test(w)) {
       var fp = re2.exec(w);
       stem = fp[1];
       re2 = new RegExp(s_v);
-      if(re2.test(stem)) {
+      if (re2.test(stem)) {
         w = stem;
         re2 = /(at|bl|iz)$/;
         re3 = new RegExp("([^aeiouylsz])\\1$");
         re4 = new RegExp("^" + C + v + "[^aeiouwxy]$");
-        if(re2.test(w))
+        if (re2.test(w))
           w = w + "e";
-        else if(re3.test(w)) {
+        else if (re3.test(w)) {
           re = /.$/;
           w = w.replace(re,"");
         }
-        else if(re4.test(w))
+        else if (re4.test(w))
           w = w + "e";
       }
     }
 
     // Step 1c
     re = /^(.+?)y$/;
-    if(re.test(w)) {
+    if (re.test(w)) {
       var fp = re.exec(w);
       stem = fp[1];
       re = new RegExp(s_v);
-      if(re.test(stem))
+      if (re.test(stem))
         w = stem + "i";
     }
 
     // Step 2
     re = /^(.+?)(ational|tional|enci|anci|izer|bli|alli|entli|eli|ousli|ization|ation|ator|alism|iveness|fulness|ousness|aliti|iviti|biliti|logi)$/;
-    if(re.test(w)) {
+    if (re.test(w)) {
       var fp = re.exec(w);
       stem = fp[1];
       suffix = fp[2];
       re = new RegExp(mgr0);
-      if(re.test(stem))
+      if (re.test(stem))
         w = stem + step2list[suffix];
     }
 
     // Step 3
     re = /^(.+?)(icate|ative|alize|iciti|ical|ful|ness)$/;
-    if(re.test(w)) {
+    if (re.test(w)) {
       var fp = re.exec(w);
       stem = fp[1];
       suffix = fp[2];
       re = new RegExp(mgr0);
-      if(re.test(stem))
+      if (re.test(stem))
         w = stem + step3list[suffix];
     }
 
     // Step 4
     re = /^(.+?)(al|ance|ence|er|ic|able|ible|ant|ement|ment|ent|ou|ism|ate|iti|ous|ive|ize)$/;
     re2 = /^(.+?)(s|t)(ion)$/;
-    if(re.test(w)) {
+    if (re.test(w)) {
       var fp = re.exec(w);
       stem = fp[1];
       re = new RegExp(mgr1);
-      if(re.test(stem))
+      if (re.test(stem))
         w = stem;
     }
-    else if(re2.test(w)) {
+    else if (re2.test(w)) {
       var fp = re2.exec(w);
       stem = fp[1] + fp[2];
       re2 = new RegExp(mgr1);
-      if(re2.test(stem))
+      if (re2.test(stem))
         w = stem;
     }
 
     // Step 5
     re = /^(.+?)e$/;
-    if(re.test(w)) {
+    if (re.test(w)) {
       var fp = re.exec(w);
       stem = fp[1];
       re = new RegExp(mgr1);
       re2 = new RegExp(meq1);
       re3 = new RegExp("^" + C + v + "[^aeiouwxy]$");
-      if(re.test(stem) ||(re2.test(stem) && !(re3.test(stem))))
+      if (re.test(stem) || (re2.test(stem) && !(re3.test(stem))))
         w = stem;
     }
     re = /ll$/;
     re2 = new RegExp(mgr1);
-    if(re.test(w) && re2.test(w)) {
+    if (re.test(w) && re2.test(w)) {
       re = /.$/;
       w = w.replace(re,"");
     }
 
     // and turn initial Y back to y
-    if(firstch == "y")
+    if (firstch == "y")
       w = firstch.toLowerCase() + w.substr(1);
     return w;
   }
@@ -200,7 +200,7 @@ var Stemmer = function() {
 
 
 
-var splitChars =(function() {
+var splitChars = (function() {
     var result = {};
     var singles = [96, 180, 187, 191, 215, 247, 749, 885, 903, 907, 909, 930, 1014, 1648,
          1748, 1809, 2416, 2473, 2481, 2526, 2601, 2609, 2612, 2615, 2653, 2702,
@@ -213,7 +213,7 @@ var splitChars =(function() {
          11703, 11711, 11719, 11727, 11735, 12448, 12539, 43010, 43014, 43019, 43587,
          43696, 43713, 64286, 64297, 64311, 64317, 64319, 64322, 64325, 65141];
     var i, j, start, end;
-    for(i = 0; i < singles.length; i++) {
+    for (i = 0; i < singles.length; i++) {
         result[singles[i]] = true;
     }
     var ranges = [[0, 47], [58, 64], [91, 94], [123, 169], [171, 177], [182, 184], [706, 709],
@@ -265,10 +265,10 @@ var splitChars =(function() {
          [64280, 64284], [64434, 64466], [64830, 64847], [64912, 64913], [64968, 65007],
          [65020, 65135], [65277, 65295], [65306, 65312], [65339, 65344], [65371, 65381],
          [65471, 65473], [65480, 65481], [65488, 65489], [65496, 65497]];
-    for(i = 0; i < ranges.length; i++) {
+    for (i = 0; i < ranges.length; i++) {
         start = ranges[i][0];
         end = ranges[i][1];
-        for(j = start; j <= end; j++) {
+        for (j = start; j <= end; j++) {
             result[j] = true;
         }
     }
@@ -278,17 +278,17 @@ var splitChars =(function() {
 function splitQuery(query) {
     var result = [];
     var start = -1;
-    for(var i = 0; i < query.length; i++) {
-        if(splitChars[query.charCodeAt(i)]) {
-            if(start !== -1) {
+    for (var i = 0; i < query.length; i++) {
+        if (splitChars[query.charCodeAt(i)]) {
+            if (start !== -1) {
                 result.push(query.slice(start, i));
                 start = -1;
             }
-        } else if(start === -1) {
+        } else if (start === -1) {
             start = i;
         }
     }
-    if(start !== -1) {
+    if (start !== -1) {
         result.push(query.slice(start));
     }
     return result;
