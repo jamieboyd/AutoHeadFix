@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<HTML>
+<head>
+<title>Auto Head Fix 3</title>
+<META NAME="AUTHOR" CONTENT="Jamie Boyd">
+</head><body>
+<H1>Programming and Usage Notes for AHF version 3</H1>
+<h2>AHF_Task - loads settings and holds references to all other objects</h2>
+<p>Cage settings and Experiment settings are no longer be kept in separate files, but are loaded and stored in a single .json file. This file is used to initialize a single object, task, of the class Task, in AHF_Task.py. The Task object initializes the individual obects that provide specific functionality using dictionaries loaded from the .json file. The Task object keeps a reference to each objct it initializes, and each initialized object keeps a reference to the Task object. This way, only one object has to be passed around, and all functionality can be accessed from it.</p>
+
+<p>Some classes that control hardware devices are optional, and all classes are subclassable for different ways of performing the same basic function.  Base classes(AHF_HeadFixer, AHF_Rewarder, AHF_Stimulator, AHF_ContactChecker, and AHF_Camera, e.g.) load no harware specific modules; instead they define the interface that must be provided by the subclasses that are specialized for particular hrdware. The base class defines the functions the subclasses must provide, and contain static functions for getting class names and importing classes, and allowing the user to select one of the subclasses.  These base classes for specific tasks/hardware in turn inherit from AHF_Base, which defines the interface that AHF_Task uses to interact with the objects it will initialize.  For instance, each class will be initialized with a a reference to the Task object, plus dictionary of settings made to its own specifications, and must provide a static function to querry the user for settings to generate a dictionary with those settings. The classes must also specify a test function for use with the hardware tester.</p>
+<p>
+<table cellspacing = "0" cellpadding = "0" border = 1>
+<caption>Functionality Options for AutoHeadFix Systems</caption>
+<tbody>
+<tr><td>Functionality</td><td>Description</td><td>Is Required?</td></tr>
+<tr><td>HeadFixer</td><td>Stabilizes head for imaging</td><td>No</td></tr>
+<tr><td>Camera</td><td>Brain imaging camera controlled by Pi</td><td>No</td></tr> 
+<tr><td>Rewarder</td><td>Provides rewards for training, water droplet, e.g.</td><td>Yes</td></tr>
+<tr><td>Stimulator</td><td>Controls task-specific hardware during headfix session</td><td>Yes</td></tr> 
+<tr><td>Stimulus</td><td>Interacts with mouse with either a laser, vib. motor, or nothing</td><td>Yes</td></tr>
+<tr><td>ContactChecker</td><td>Sgnals that mouse is in position for head fixing or interacting</td><td>Yes</td></tr>
+<tr><td>TagReader</td><td>Innovations Design RFID reader with tag-in-range pin</td><td>Yes</td></tr>
+<tr><td>LickDetector</td><td>Touch sensor based on mpr121 connected to lick port</td><td>No</td></tr>
+<tr><td>BrainLight</td><td>Turns On and Off brain illumination during trials</td><td>No</td></tr>
+<tr><td>DataLogger</td>Logs all output of system to either text files or SQL database<td><td>Yes</td></tr>
+</tbody>
+</table></p>
+
+
+
+An example snippet of the initialization function for AHF_Task demonstrates how the order imposed by AHF_Task/AHF_Base makes initilaization of tasks as generic as possible. After loading the settings file, this code looks for the HeadFixer class and HeadFixer dictionary in those settings. If not found, the user is querried for the desired headFixer class, and a static function from that class is used to query the user to provide settings that are stored in a dictionary, saved by the Task Object.  A static function, denoted in Python by the @staticmethod decorator, is a function defined in a class that does not refer to an object of the class, and can be caled without first initializing an object of the class. In this case, static functions are used to make dictionaries that are then used to initialize the objects of the corresponding classes. Similar code, changing only the name of the functionality provided, is run for the other functionality. If the the names of the base classes and some basic information for each class were saved beforehand, this snippet, and the others for different functionality, could be replaced with a loop. 
+<pre><code>
+    if not hasattr(self, 'HeadFixerClass') or not hasattr(self, 'HeadFixerDict'):
+        tempInput = input('Does this setup have a head fixing mechanism installed?(Y or N):')
+        if tempInput [0] == 'y' or tempInput [0] == 'Y':
+            self.HeadFixerClass =  CAD.Class_from_file('HeadFixer', CAD.File_from_user('HeadFixer', 'Head Fixer Class', '.py'))
+            self.HeadFixerDict = self.HeadFixerClass.config_user_get()
+</pre></code>
+
+With classes loaded and dictionaries ready, all named with the same format, the setup function for Task is mostly a loop of calling __init__ for each class with the dictionary for each class, plus the Task object itself.  The Task object keeps a reference to the created objets, and each object created should maintain a reference to the task object, making it possible for the various objects to interact, self.task.</p>
+<pre><code>
+    fields = sorted(inspect.getmembers(self))
+    for item in fields:
+        if isinstance(item [1], ABCMeta):
+            baseName = item [0].rstrip('Class')
+            classDict = getattr(self, baseName + 'Dict')
+            setattr(self, baseName, item [1](self, classDict))
+</pre></code>
+
+<h2>AHF_Base: base class for objects referenced from task</h2>
+<p>Every bit of funtionality that needs to save any settings or initialize any data is subclassed from an abstract base class, AHF_Base. An abstract class is one that can not be initialized. In Python, this is indicated by marking one or more(usually empty) methods within the class with the @abstractmethod decorator, provided by the abc module.  The idea is that subclasses will provide their own, non-abstract, version of these methods, with the paramaters and return values defined by the abstract method in the abstract base class. This makes it possible to organize all the code along the same lines for better readibility and to reduce code duplication. If all the classes follow the same conventions, the Task object can manipulate them assured that they will provide the functions defined in AHF_Base. The utility functions found in AHF_ClassAndDictUtils.py for manipulating classes and class/file names, dictionaries, and object fields also rely on this structuring. The code listing for AHF_Base is:</p>
+<pre><code>
+class AHF_Base(metaclass = ABCMeta):
+    Defines conventions for classes used for accesing hardware and doing subtasks in AutoHeadFix code 
+
+    @staticmethod/@abstractmethod
+    def about():
+        Returns a brief message describing your sub-class, used when asking user to pick a sub-class of this class
+
+    @staticmethod/@abstractmethod
+    def config_user_get(starterDict = {}):
+        Each class has a static method, config_user_get, to create or edit a settings dictionary, querrying the user for settings, 
+        with default responses from starterDict, and returns starterDict with settings as edited by the user.
+        return starterDict
+    
+    def newResultsDict(self, starterDict = {}):
+        Returns a dictionary with fields, initialized from starterDict, or set to 0, for storing results from actions of the object, used e.g., by head fixer, 
+        stimulator, or rewarder. Not all sub classes may need to return results, so newResultsDict is not an abstract function
+        return starterDict
+
+    def clearResultsDict(self, resultsDict):
+        Clears values in the results dictionary, useful when you want daily totals Not all classes may store results, so not an abstract function
+
+    def newSettingsDict(self, starterDict = {}):
+        Returns starterDict, after adding fields filled with default values that can be modified for individual subjects Not all classes may have individualizabe 
+        settings, so individualSettings is not an abstract function
+        return starterDict
+
+    def __init__(self, taskP, settingsDictP):
+        Each class will be inititialized with a reference to the Task Object, and a settings dictionary. Initialization of a subclass object may be just making a 
+        reference to the Task object and the settings dict,and running the class's setup function. Thus, this does not need to be an abtract function - your
+        class can use this __init__ as is. Class names need to start with AHF_ and the dictionary must follow convention, named for the class with 'Dict' appended.
+        self.task=taskP
+        self.settingsDict = settingsDictP
+        self.setup()
+
+    @abstractmethod
+        def setup(self):
+        Does hardware initialization with(possibly updated) info in self.settingsDict Run by __init__, or can be run  separately after editing the settingsDict
+
+    @abstractmethod
+        def setdown(self):
+        oppposite of setup. Releases any hardware resouces. can be run before editing settings so GPIO pins can be reused, for example. 
+        This strategy should be used in hardwareTest method, after making changes
+
+    def __del__(self):
+        For clean up purposes, releases hardware resources with setdown method. Not abstract, as setdown may be all your class needs to do.
+        self.setdown()
+
+    @abstractmethod
+    def hardwareTest(self):
+        Tests functionality, gives user a chance to change settings. Not restricted to classes that use hardware. Can be used to test any kind of functionality or 
+        adjust any kind of settings</pre></code>
+
+<p>Information that is passed around between objects in the code but that is not attached to the task object is almost always passed as dictionaries.  The objects that collect the information define the dictionaries that store that information, so, for example, the HeadFixer defines headFixes and Un-fixes(for unfixed trials) in a dictionary returned for newResultsDict. For individuation,  each subject can request a results dictionary for each object that wants to collect data, and many object methods will have such a dictionary as a parameter. Settings, as distinct from results, can also be similarly individuated. The starter Dictionary for a class should be loaded from defaults  defined in the class. The settings dictionary for a subject will be passed to class methods that need individual settings.</p>
+
+<p>Even the simple blue light to illuminate the brain has been made into a class and subclassed. It serves as a good example of what is involved in subclassing functionality. The abstract base class for functionality to control illumination for imaging is AHF_BrainLight, which inherits from AHF_Base:</p>
+<pre><code>
+class AHF_BrainLight(AHF_Base, metaclass = ABCMeta):
+
+    defaultDelay = 3.0
+
+    @staticmethod/@abstractmethod
+    def config_user_get(starterDict = {}):
+        ledDelay = starterDict.get('ledDelay', AHF_BrainLight.defaultDelay)
+        response = input('Delay in seconds before turning on\after turning off lights(currently %.2f): ' % ledDelay)
+        if response != '':
+            ledDelay = float(response)
+        starterDict.update({'ledDelay' :  ledDelay})
+        return starterDict
+
+    @abstractmethod
+    def onForStim(self):
+        Runs when headFixing starts, illuminating the brain or whatever needs illuminating
+
+    @abstractmethod
+	def offForStim(self):
+        Runs when headFixing ends, turning off whatever was turned on
+
+    def hardwareTest(self):
+        generic hardware tester for brain illumination, turns on, waits 2 seconds, turns off. Subclasses may override this
+        saveDelay = self.ledDelay
+        self.ledDelay =0
+        self.onForStim()
+        print('Turning brain illumination ON for two seconds....')
+        sleep(2)
+        print('Turning brain illumination OFF.')
+        self.offForStim()
+        self.ledDelay = saveDelay
+        result = input('Do you wish to edit brain light settings?')
+        if result [0] == 'y' or result [0] == 'Y':
+            self.setdown()
+            self.settingsDict.update(self.config_user_get(self.settingsDict))
+            self.setup()
+</pre></code>
+<p>The only functions that need to be added to AHF_BrainLight are those that deal explicitly with the job of AHF_BrainLight, namely, turning on and off lights for illumination. Subclasses of AHF_BrainLight will still need to provide setup, hardwareTest, and other functions, and these must follow the signatures of those described in AHF_Base and AHF_BrainLight. Some code from a functional </p>
+<pre><code>
+class AHF_BrainLight_1GPIO(AHF_BrainLight):
+
+    defaultPin = 23 # default GPIO pin number
+
+    @staticmethod
+    def about():
+        return 'Simplest brain illumination, toggles a single GPIO pin controlling an LED current driver.'
+    
+	    @staticmethod
+	    def config_user_get(starterDict = {}):
+	        AHF_BrainLight.config_user_get(starterDict)
+	        ledPin = starterDict.get('ledPin', AHF_BrainLight_1GPIO.defaultPin)
+	        result = input('Enter the GPIO pin connected to the blue LED for brain camera illumination, currently %d:' % ledPin)
+	        if result != '':
+	            ledPin = int(result)
+	        starterDict.update({'ledPin':ledPin})
+	        return starterDict
+
+	    def setup(self):
+	        """
+	        does hardware initialization of a brain lighter with(possibly updated) info in self.settingsDict
+	        """
+	        self.ledPin = self.settingsDict.get('ledPin')
+	        self.ledDelay = self.settingsDict.get('ledDelay')
+	        GPIO.setup(self.ledPin, GPIO.OUT)
+</pre></code>
+<p>The other classes are organized similarly, with an __init__ that just copies the dictionary, the setup function that initializes object fields from the dicitonary and that does GPIO hardware init, etc. , the config_user_get function that can create a settings dictionary before an object is initialized, and a hardwareTest function that tests the hardware and gives the user a chance to edit the object's settings dictionary, and then runs the setup function. Note that the settings dictionary is created in the Task object, and passed to the __init__ function, which uses the passed in dictionary, not making a fresh copy.  That way, editing the settings through the hardwareTest, for instance, will edit the dictionary that is kept by the Task object. </p>
+
+<H2>Head Fixer Classes</H2>
+<p>AHF_HeadFIxer is the base class for all head fixing classes. 
+</p>
+
+<p>What experiment information needs to be separate for each mouse? The Stimulator class will define a lot of task specific stuff, each mouse will have an entry for a stimulator dictionary containing information specific to that mouse. Other things:
+Reward sizes
+number of entry rewards
+head-fix proportions
+Maybe keep these things in experiment settings as defaults, so if a Mouse is created without these values, it gets the global ones as defaults.</p>
+<p>need better management of mouse data within the program, will want to add images, lever position arrays, other non-text data to mouse. pickle or some other serializer thing. Where and how is this data stored? </p>
+
+
+<h2>Program Flow Description</h2>
+<p>COnfigutation file is loaded or created, task object is created, hardware is initializaed, files for saving data are created. Program enters the top-level loop, waiting on the global variable globalTag to switch from 0. Mouse enters the tube. The tagReader callback reads the tag, and changes global variable globalTag from 0 to the mouse's id. 
+	
+<H2>Remote control of AHF program using watchdog(pip3 install watchdog) ?</H2>
+</body>
+</html>
