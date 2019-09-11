@@ -58,6 +58,7 @@ class AHF_Stimulator(AHF_Base, metaclass = ABCMeta):
                 self.task.DataLogger.writeToLogFile(thisTag, 'BrainLEDON', None, time())
             else: # turn on the blue light and start the movie
                 self.task.BrainLight.onForStim()
+                self.task.DataLogger.writeToLogFile(thisTag, 'BrainLEDON', None, time())
                 camera.start_recording(video_name_path)
         except Exception as anError:
             camera.stop_recording()
@@ -87,6 +88,7 @@ class AHF_Stimulator(AHF_Base, metaclass = ABCMeta):
         else:
             camera.stop_recording()
             self.task.BrainLight.offForStim() # turn off the blue LED
+            self.task.DataLogger.writeToLogFile(thisTag, 'BrainLEDOFF', None, time())
         self.task.DataLogger.writeToLogFile(thisTag, 'VideoEnd', None, time())
         uid = getpwnam('pi').pw_uid
         gid = getgrnam('pi').gr_gid
