@@ -11,10 +11,10 @@ cur = db.cursor()
 cur.execute(query_sources, ["cage1", "changed_hardware"])
 
 sources_list = [i[0] for i in cur.fetchall()]
-query_config = """SELECT `Tag`,`Dictionary_source`,`Config` FROM `configs` WHERE `Tag` = %s
+query_config = """SELECT `Tag`,`Dictionary_source`,`Config` FROM `configs` WHERE `Tag` = %s AND `Cage` = %s
                                 AND `Dictionary_source` = %s ORDER BY `Timestamp` DESC LIMIT 1"""
 for sources in sources_list:
-    cur.execute(query_config, ["changed_hardware", str(sources)])
+    cur.execute(query_config, ["changed_hardware", "cage1", str(sources)])
     mouse, source, dictio = cur.fetchall()[0]
     if "Class" in str(source):
         data = {str(source): str(dictio)}
@@ -30,7 +30,7 @@ for tag in tags:
 
     sources_list = [i[0] for i in cur.fetchall()]
     for sources in sources_list:
-        cur.execute(query_config, [tag, str(sources)])
+        cur.execute(query_config, [tag, "cage1", str(sources)])
         mouse, source, dictio = cur.fetchall()[0]
         if "Class" in str(source):
             data = {str(source): str(dictio)}
@@ -40,13 +40,13 @@ for tag in tags:
     miceDicts.update({tag: tempDict})
 
 query_trial = """SELECT * FROM raw_data WHERE `Timestamp` >= %s AND `Tag` =  %s
-    AND `Event` = 'lever_pull'"""
+    AND `Timestamp` <= %s AND `Event` = 'lever_pull'"""
 query_entry = """SELECT * FROM raw_data WHERE `Timestamp` >= %s AND `Tag` =  %s
-    AND `Event` = 'entry'"""
+    AND `Timestamp` <= %s AND `Event` = 'entry'"""
 query_licks = """SELECT * FROM raw_data WHERE `Timestamp` >= %s AND `Tag` =  %s
-    AND `Event` = 'lick'"""
+    AND `Timestamp` <= %s AND `Event` = 'lick'"""
 query_reward = """SELECT * FROM raw_data WHERE `Timestamp` >= %s AND `Tag` =  %s
-    AND `Event` = 'reward'"""
+    AND `Timestamp` <= %s AND `Event` = 'reward'"""
 day = time.localtime(time.time())
 day = str(day[0]) + "-" + str(day[1]) + "-" + str(day[2])
 yesterday = time.localtime(time.time() - 60*60*24)
@@ -54,7 +54,8 @@ yesterday = str(yesterday[0]) + "-" + str(yesterday[1]) + "-" + str(yesterday[2]
 with open("QuickStats/" + day + ".txt", "w+") as f:
     f.write("Quick Stats for " + yesterday + " to " + day + "-12:00:00\n")
     for tag in tags:
-        cur.execute(query_trial, [yesterday, tag])
+        day = day + "-12:00:00"
+        cur.execute(query_trial, [yesterday, tag, day])
         num_success = 0
         num_trials = 0
         for line in cur.fetchall():
@@ -63,11 +64,12 @@ with open("QuickStats/" + day + ".txt", "w+") as f:
             num_trials += 1
             if int(dict['outcome']) > 0:
                 num_success += 1
-        cur.execute(query_entry, [yesterday, tag])
+
+        cur.execute(query_entry, [yesterday, tag, day])
         num_entries = len(cur.fetchall())
-        cur.execute(query_licks, [yesterday, tag])
+        cur.execute(query_licks, [yesterday, tag, day])
         num_licks = len(cur.fetchall())
-        cur.execute(query_reward, [yesterday, tag])
+        cur.execute(query_reward, [yesterday, tag, day])
         num_rewards = len(cur.fetchall())
         f.write(str(tag) + "\n")
         f.write("Number of trials: " + str(num_trials) + "\n")
