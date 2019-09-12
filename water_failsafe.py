@@ -4,11 +4,27 @@ from ast import literal_eval
 from time import sleep, time
 import os
 GPIO.setmode(GPIO.BCM)
-db = pymysql.connect(host="localhost", user="pi", db="raw_data", password="AutoHead2015")
+cageID = ""
+user = ""
+pwd = ""
+db = ""
+with open("config.txt", "r") as file:
+    configs = file.readlines()
+    for config in configs:
+        config = config.split("=")
+        if config[0] == "cageID":
+            cageID = config[1].rstrip("\n")
+        if config[0] == "user":
+            user = config[1].rstrip("\n")
+        if config[0] == "pwd":
+            pwd = config[1].rstrip("\n")
+        if config[0] == "db":
+            db = config[1].rstrip("\n")
+db = pymysql.connect(host="localhost", user=user, db=db, password=pwd)
 query_sources = """SELECT* FROM `configs` WHERE `Cage` = %s AND `Tag` = %s AND
 `Dictionary_source` = "RewarderDict" ORDER BY `Timestamp` DESC LIMIT 1 """
 cur = db.cursor()
-cur.execute(query_sources, ["cage1", "changed_hardware"])
+cur.execute(query_sources, [cageID, "changed_hardware"])
 #print(cur.fetchall()[0])
 mouse, source, dictio, _, _ ,_  = cur.fetchall()[0]
 data = {str(source): literal_eval("{}".format(dictio))}
