@@ -1,0 +1,5 @@
+cageID=TEMP_PLEASE_CHANGE
+path=/home/pi/AHF_setup/AutoHeadFixSetup/AutoHeadFix/
+db=raw_data
+user=pi
+pwd=***********

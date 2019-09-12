@@ -250,8 +250,8 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
                     except:
                         mouse, source, dictio = self.getFromDatabase(query_config, ["default_subjects", str(sources)], False)[0]
                         mouse = mice
-                    s.update({str(source): literal_eval("{}".format(dictio))})
-                data = {int(mouse): s}
+                    sources.update({str(source): literal_eval("{}".format(dictio))})
+                data = {int(mouse): sources}
                 yield(data)
         if settings == "default_subjects":
             for sources in sources_list:

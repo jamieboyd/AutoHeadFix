@@ -4,6 +4,7 @@
 from AHF_HeadFixer import AHF_HeadFixer
 import RPi.GPIO as GPIO
 from time import sleep
+from random import random
 
 class AHF_HeadFixer_Pistons(AHF_HeadFixer):
     """
@@ -65,11 +66,11 @@ class AHF_HeadFixer_Pistons(AHF_HeadFixer):
                 hasContact = self.task.contact
                 if not hasContact: # tried to fix and failed
                     GPIO.output(self.pistonsPin, GPIO.LOW)
-                self.hasMouseLog(hasContact, isFixTrial, resultsDict, settingsDict)
+                self.hasMouseLog(hasContact, self.task.isFixTrial, resultsDict, settingsDict)
         else: # noFix trial, wait for contact and return
             hasContact = self.waitForMouse()
             if hasContact:
-                self.hasMouseLog(True, isFixTrial, resultsDict, settingsDict)
+                self.hasMouseLog(True, self.task.isFixTrial, resultsDict, settingsDict)
         return hasContact
 
 

@@ -22,7 +22,7 @@ class AHF_Stimulator_LEDs(AHF_Stimulator_Rewards):
         right_led_pin = int(input('Enter the number of GPIO pin used for right LED:'))
 
         configDict.update({'left_led_pin' : left_led_pin, 'center_led_pin' : center_led_pin, 'right_led_pin' : right_led_pin})
-        configDict.update({'led_on_time' : led_on_time, 'led_off_time' : led_off_time, 'train_time' : train_time})
+
         return configDict
 
     def config_user_subject_get(self,starterDict = {}):
