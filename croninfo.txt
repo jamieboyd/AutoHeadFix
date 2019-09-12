@@ -1,0 +1,1 @@
+0 * * * * /bin/bash /home/pi/AutoHeadFix/auto_start_script.sh

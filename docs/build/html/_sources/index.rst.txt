@@ -14,6 +14,14 @@ For instructions on building/setting up `click here <https://github.com/zenenhor
 
 For notes and structure information from the developer `click here <https://Judge24601.github.io/AutoHeadFix/AHF_Notes.html>`_
 
+.. raw:: html
+
+   <video width="640" height="480" controls>
+       <source src="AutoHeadFixGuide.mp4">
+           type="video/mp4">
+           Your browser does not support this video type.
+   </video>
+
 .. automodule:: AHF_Base
     :members:
 
