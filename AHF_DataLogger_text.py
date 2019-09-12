@@ -162,7 +162,6 @@ class AHF_DataLogger_text(AHF_DataLogger):
             self.logFP.close()
         self.setDateStr()
         self.makeLogFile()
-        self.makeQuickStatsFile(mice)
 
 
     def makeLogFile(self):

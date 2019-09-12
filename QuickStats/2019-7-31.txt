@@ -1,4 +1,5 @@
-Quick Stats for 2019-7-30-12:00:00 to 2019-7-31-12:00:00801010523
+Quick Stats for 2019-7-30-12:00:00 to 2019-7-31-12:00:00
+801010523
 Number of trials: 0
 Number of successful trials: 0
 Number of entries: 115
@@ -44,19 +45,19 @@ StimulusClass: AHF_Stimulus_None
 StimulusDict: {}
 SubjectsClass: AHF_Subjects_mice
 SubjectsDict: {'loadMiceConfigs': 'provide_json', 'jsonName': 'subjects', 'inChamberTimeLimit': 300}
-801010523: 
+801010523:
     Stimulator: {'holdIncr': 0.1, 'holdTrainOn': False, 'toGoalTime': 0.25, 'perturbRampDur': 0.25, 'goalStartWidth': 100, 'goalEndWidth': 10, 'goalIncr': 5, 'holdEndTime': 2, 'perturbPercent': 0.0, 'holdTime': 0.2, 'perturbForceOffset': 0, 'goalTrainOn': 0, 'goalCenter': 200, 'holdStartTime': 0.1, 'demoteRate': 0.25, 'perturbForceRandom': 400, 'perturbStartRandom': 0, 'goalWidth': 200, 'promoteRate': 0.75, 'perturbStartTime': 1}
     Rewarder: {'taskSize': 0.4, 'entrySize': 0.2}
     HeadFixer: {'headFixTime': 40, 'propHeadFix': 0.75}
-2018121208: 
+2018121208:
     Stimulator: {'holdIncr': 0.1, 'holdTrainOn': False, 'toGoalTime': 0.25, 'perturbRampDur': 0.25, 'goalStartWidth': 100, 'goalEndWidth': 10, 'goalIncr': 5, 'holdEndTime': 2, 'perturbPercent': 0.0, 'holdTime': 0.2, 'perturbForceOffset': 0, 'goalTrainOn': 0, 'goalCenter': 200, 'holdStartTime': 0.1, 'demoteRate': 0.25, 'perturbForceRandom': 400, 'perturbStartRandom': 0, 'goalWidth': 200, 'promoteRate': 0.75, 'perturbStartTime': 1}
     Rewarder: {'taskSize': 0.4, 'entrySize': 0.2}
     HeadFixer: {'headFixTime': 40, 'propHeadFix': 0.75}
-2018121273: 
+2018121273:
     Stimulator: {'holdIncr': 0.1, 'holdTrainOn': False, 'toGoalTime': 0.25, 'perturbRampDur': 0.25, 'goalStartWidth': 100, 'goalEndWidth': 10, 'goalIncr': 5, 'holdEndTime': 2, 'perturbPercent': 0.0, 'holdTime': 0.2, 'perturbForceOffset': 0, 'goalTrainOn': 0, 'goalCenter': 200, 'holdStartTime': 0.1, 'demoteRate': 0.25, 'perturbForceRandom': 400, 'perturbStartRandom': 0, 'goalWidth': 200, 'promoteRate': 0.75, 'perturbStartTime': 1}
     Rewarder: {'taskSize': 0.4, 'entrySize': 0.2}
     HeadFixer: {'headFixTime': 40, 'propHeadFix': 0.75}
-2018121358: 
+2018121358:
     Stimulator: {'holdIncr': 0.1, 'holdTrainOn': False, 'toGoalTime': 0.25, 'perturbRampDur': 0.25, 'goalStartWidth': 100, 'goalEndWidth': 10, 'goalIncr': 5, 'holdEndTime': 2, 'perturbPercent': 0.0, 'holdTime': 0.2, 'perturbForceOffset': 0, 'goalTrainOn': 0, 'goalCenter': 200, 'holdStartTime': 0.1, 'demoteRate': 0.25, 'perturbForceRandom': 400, 'perturbStartRandom': 0, 'goalWidth': 200, 'promoteRate': 0.75, 'perturbStartTime': 1}
     Rewarder: {'taskSize': 0.4, 'entrySize': 0.2}
     HeadFixer: {'headFixTime': 40, 'propHeadFix': 0.75}

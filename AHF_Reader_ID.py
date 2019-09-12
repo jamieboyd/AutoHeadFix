@@ -105,12 +105,12 @@ class AHF_Reader_ID(AHF_Reader):
             AHF_Task.gTask.AHF_BrainLight.offForStim()
             if hasattr(AHF_Task.gTask, 'Notifer'):
                 Notifier = AHF_Task.gTask.Notifier
-                Notifier.notifyStuck(stuckMouse, cageID,(time() - AHF_Task.gTask.entryTime), True)
+                Notifier.notifyStuck(stuckMouse, AHF_Task.gTask.cageID, (time() - AHF_Task.gTask.entryTime), True)
                 # wait for mouse to leave chamber
                 while AHF_Task.gTask.tag == stuckMouse:
                     sleep(0.1)
                 if hasattr(AHF_Task.gTask, 'Notifer'):
-                    Notifier.notifyStuck(stuckMouse, cageID,(time() - AHF_Task.gTask.entryTime), False)
+                    Notifier.notifyStuck(stuckMouse, AHF_Task.gTask.cageID, (time() - AHF_Task.gTask.entryTime), False)
                 AHF_Task.gTask.inChamberLimitExceeded = False
 
 
