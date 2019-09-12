@@ -186,16 +186,24 @@ def Show_ordered_dict(objectDict, longName):
     return showDict
 
 
-def Show_ordered_object(anObject, longName):
+def Show_ordered_object(anObject, longName, isTaskConfig = False):
     print('\n*************** Current %s Settings *******************' % longName)
     showDict = OrderedDict()
     itemDict = {}
     nP = 0
     fields = sorted(inspect.getmembers(anObject))
+    # To simplify main menu, ignore the below classes. None of these have more
+    # one option.
+    task_blacklist = ["BrainLightClass", "CameraClass", "LickDetectorClass",
+        "NotifierClass", "ReaderClass", "SubjectsClass"]
     for item in fields:
        if not(inspect.isroutine(item [1]) or isinstance(item[1],  AHF_Base) or item[0].startswith('_')):
+            if isTaskConfig and "Class" not in item[0] and "Dict" not in item[0]:
+                continue
+            elif isTaskConfig and item[0] in task_blacklist:
+                continue
             showDict.update({nP:{item [0]: item [1]}})
-            nP +=1
+            nP += 1
     # print to screen
     for ii in range(0, nP):
         itemDict.update(showDict.get(ii))
@@ -205,10 +213,10 @@ def Show_ordered_object(anObject, longName):
     return showDict
 
 
-def Edit_Obj_fields(anObject, longName):
+def Edit_Obj_fields(anObject, longName, isTaskConfig = False):
     changes = False
     while True:
-        showDict = Show_ordered_object(anObject, longName)
+        showDict = Show_ordered_object(anObject, longName, isTaskConfig)
         inputStr = input('Enter number of setting to edit, or 0 to exit:')
         try:
             inputNum = int(inputStr)

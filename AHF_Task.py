@@ -108,7 +108,7 @@ class Task(object):
             if object is not None:
                 self.cameraClass = None
                 self.cameraDict = None
-            else:    
+            else:
                 tempInput = input('Does this system have a main camera installed(Y or N):')
                 if tempInput [0] == 'y' or tempInput [0] == 'Y':
                     self.CameraClass = CAD.Class_from_file('Camera', CAD.File_from_user('Camera', 'main camera', '.py'))
@@ -257,16 +257,9 @@ class Task(object):
             self.fileName = newConfig
         CAD.Obj_fields_to_file(self, 'task', newConfig, '.jsn')
 
-    def showSettings(self):
-        """
-        Prints settings to screen in a numbered fashion from an ordered dictionary, making it easy to select a setting to
-        change. Returns the ordered dictionary, used by editSettings function
-        """
-        return CAD.Show_ordered_object(self, 'Auto Head Fix Task')
-
 
     def editSettings(self):
-        if(CAD.Edit_Obj_fields(self,  'Auto Head Fix Task')):
+        if(CAD.Edit_Obj_fields(self,  'Auto Head Fix Task', isTaskConfig=True)):
             response = input('Save changes in settings to a file?')
             if response [0] == 'Y' or response [0] == 'y':
                 self.saveSettings()
