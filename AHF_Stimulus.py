@@ -4,6 +4,11 @@ from abc import ABCMeta, abstractmethod
 from AHF_Base import AHF_Base
 
 class AHF_Stimulus(AHF_Base, metaclass = ABCMeta):
+    """
+    Generic "Stimulus" for use in Stimulators. Interacts with the mouse in
+    some defined method based on the type of stimulus. Examples include a
+    vibration motor, laser pulse in a specific brain region, or nothing.
+    """
 
     @abstractmethod
     def trialPrep(self, tag):

@@ -30,6 +30,11 @@ import RPi.GPIO as GPIO
 
 
 class AHF_Stimulus_Laser(AHF_Stimulus):
+    """
+    Stimulates a specified region of the mouse's brain with a laser,
+    controlled via a stepper motor stage. Requires a camera - if using,
+    cannot record video of the trial with overhead camera (used for aligning)
+    """
     # def __init__(self, cageSettings, expSettings, rewarder, lickDetector, camera):
     #     super().__init__(cageSettings, expSettings, rewarder, lickDetector, camera)
     #     self.setup()

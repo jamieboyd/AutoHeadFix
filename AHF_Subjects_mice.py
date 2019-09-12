@@ -17,10 +17,9 @@ class AHF_Subjects_mice(AHF_Subjects):
     """
     class for the mice, as experimental subjects. Contains a dictionary where key id IDtag, and value is a dictionary
     of configuration information for corresponding mouse.
-    {mouseid1:{settingsDict:{},resultsDict{}}, mouseid2:{settingsDict:{},resultsDict{}}}
-    Dictionaries from Stimulator, 1 for results, stimResults, and 1 for parameters, stimParams
-    Dictionary from HeadFixer, either headFix% or headFix type(loose, strong, a scale from 1 -8)
-    Dictionary from Rewarder, task and entry reward size, max entry rewards, daily reward totals
+    {mouseid1:{HeadFixer:{}, Stimulator: {}, Rewarder: {}}, mouseid2:...}
+    Dictionaries from Stimulator, HeadFixer, Rewarder are configured with
+    the config_user_subject_get methods in their respective classes.
     """
     freshMiceDefault = False
     loadConfigsDefault = 'provide_json'

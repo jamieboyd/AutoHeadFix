@@ -3,7 +3,9 @@
 from AHF_Stimulus import AHF_Stimulus
 
 class AHF_Stimulus_None(AHF_Stimulus):
-
+    """
+    Does nothing.
+    """
     @staticmethod
     def about():
         return "Does nothing"
