@@ -17,7 +17,7 @@ For notes and structure information from the developer `click here <https://Judg
 .. raw:: html
 
    <video width="640" height="480" controls>
-       <source src="AutoHeadFixGuide.mp4">
+       <source src="../../AutoHeadFixGuide.mp4">
            type="video/mp4">
            Your browser does not support this video type.
    </video>
