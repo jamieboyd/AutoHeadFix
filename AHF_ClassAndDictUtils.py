@@ -194,8 +194,7 @@ def Show_ordered_object(anObject, longName, isTaskConfig = False):
     fields = sorted(inspect.getmembers(anObject))
     # To simplify main menu, ignore the below classes. None of these have more
     # one option.
-    task_blacklist = ["BrainLightClass", "CameraClass", "LickDetectorClass",
-        "NotifierClass", "ReaderClass", "SubjectsClass"]
+    task_blacklist = ["BrainLightClass", "CameraClass", "LickDetectorClass", "ReaderClass", "SubjectsClass"]
     for item in fields:
        if not(inspect.isroutine(item [1]) or isinstance(item[1],  AHF_Base) or item[0].startswith('_')):
             if isTaskConfig and "Class" not in item[0] and "Dict" not in item[0]:
