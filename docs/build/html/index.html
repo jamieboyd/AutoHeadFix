@@ -2067,39 +2067,38 @@ Run by __init__, or can be run  separately after editing the settingsDict</p>
 </div>
 <div class="section" id="module-AHF_Stimulator_LickWithhold">
 <span id="ahf-stimulator-lickwithhold"></span><h2>AHF_Stimulator_LickWithhold<a class="headerlink" href="#module-AHF_Stimulator_LickWithhold" title="Permalink to this headline">¶</a></h2>
-<p>This Stimulator combines LaserStimulation with LickWithholdSpeaker.
-It captures a reference image for each mouse and includes a user interface to select targets on reference images.
-The Stimulator directs and pulses a laser to selected targets for optogenetic
-stimulation/inhibition.
-The laser is pulsed whenever the mouse goes for a set amount of time without licking,</p>
 <dl class="class">
 <dt id="AHF_Stimulator_LickWithhold.AHF_Stimulator_LickWithhold">
 <em class="property">class </em><code class="sig-name descname">AHF_Stimulator_LickWithhold</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_LickWithhold.AHF_Stimulator_LickWithhold" title="Permalink to this definition">¶</a></dt>
-<dd><p>AHF_Stimulator_LickWithhold gives mice rewards based on their “level”
-within the program. These rewards are given based on the mouse’s response
-to a defined stimulus. Levels are as follows:</p>
-<p>Level 0: Mouse gets periodic rewards paired with a stimulus. No input
-required from the mouse at this stage.
-Level 1: Mouse gets periodic rewards, again paired with a stimulus. The
-mouse must refrain from licking for a defined withhold time before another
-reward is given. If they lick within the withhold time, a buzzer sounds.
-Level 2: Mouse must lick after a given delay time from the stimulus, and
-within a defined response time, in order to receive a reward. In brief,
-this is the “GO” task.
-Level 3: Mouse must differentiate between two stimuluses, either one pulse
-for “GO” or two successive pulses for “NO-GO”. In either case, they must
-wait for the delay time before responding, and then within the response
-time decide to either lick or not lick. “NO-GO” trials can be rewarded
-with water or not if desired.
-For levels 2 and 3, the outcome of the task is recorded as follows:
-“GO”:
--4: licked within delay time, failure
--2: did not lick, failure
-+2: waited until response time to lick and then licked, success
-“NO-GO”:
--3: licked within delay time, failure
--1: waited until response time to lick and then licked, failure
-+1: did not lick, success</p>
+<dd><div class="line-block">
+<div class="line">AHF_Stimulator_LickWithhold gives mice rewards based on their “level”</div>
+<div class="line">within the program. These rewards are given based on the mouse’s response</div>
+<div class="line">to a defined stimulus. Levels are as follows:</div>
+</div>
+<div class="line-block">
+<div class="line">Level 0: Mouse gets periodic rewards paired with a stimulus. No input</div>
+<div class="line">required from the mouse at this stage.</div>
+<div class="line">Level 1: Mouse gets periodic rewards, again paired with a stimulus. The</div>
+<div class="line">mouse must refrain from licking for a defined withhold time before another</div>
+<div class="line">reward is given. If they lick within the withhold time, a buzzer sounds.</div>
+<div class="line">Level 2: Mouse must lick after a given delay time from the stimulus, and</div>
+<div class="line">within a defined response time, in order to receive a reward. In brief,</div>
+<div class="line">this is the “GO” task.</div>
+<div class="line">Level 3: Mouse must differentiate between two stimuluses, either one pulse</div>
+<div class="line">for “GO” or two successive pulses for “NO-GO”. In either case, they must</div>
+<div class="line">wait for the delay time before responding, and then within the response</div>
+<div class="line">time decide to either lick or not lick. “NO-GO” trials can be rewarded</div>
+<div class="line">with water or not if desired.</div>
+<div class="line">For levels 2 and 3, the outcome of the task is recorded as follows:</div>
+<div class="line">“GO”:</div>
+<div class="line">-4: licked within delay time, failure</div>
+<div class="line">-2: did not lick, failure</div>
+<div class="line">+2: waited until response time to lick and then licked, success</div>
+<div class="line">“NO-GO”:</div>
+<div class="line">-3: licked within delay time, failure</div>
+<div class="line">-1: waited until response time to lick and then licked, failure</div>
+<div class="line">+1: did not lick, success</div>
+</div>
 <dl class="method">
 <dt id="AHF_Stimulator_LickWithhold.AHF_Stimulator_LickWithhold.about">
 <em class="property">static </em><code class="sig-name descname">about</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_LickWithhold.AHF_Stimulator_LickWithhold.about" title="Permalink to this definition">¶</a></dt>
