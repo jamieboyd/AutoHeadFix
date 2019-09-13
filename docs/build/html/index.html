@@ -2065,8 +2065,106 @@ Run by __init__, or can be run  separately after editing the settingsDict</p>
 <dd></dd></dl>
 
 </div>
-<div class="section" id="ahf-stimulator-lickwithhold">
-<h2>AHF_Stimulator_LickWithhold<a class="headerlink" href="#ahf-stimulator-lickwithhold" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-AHF_Stimulator_LickWithhold">
+<span id="ahf-stimulator-lickwithhold"></span><h2>AHF_Stimulator_LickWithhold<a class="headerlink" href="#module-AHF_Stimulator_LickWithhold" title="Permalink to this headline">¶</a></h2>
+<p>This Stimulator combines LaserStimulation with LickWithholdSpeaker.
+It captures a reference image for each mouse and includes a user interface to select targets on reference images.
+The Stimulator directs and pulses a laser to selected targets for optogenetic
+stimulation/inhibition.
+The laser is pulsed whenever the mouse goes for a set amount of time without licking,</p>
+<dl class="class">
+<dt id="AHF_Stimulator_LickWithhold.AHF_Stimulator_LickWithhold">
+<em class="property">class </em><code class="sig-name descname">AHF_Stimulator_LickWithhold</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_LickWithhold.AHF_Stimulator_LickWithhold" title="Permalink to this definition">¶</a></dt>
+<dd><p>AHF_Stimulator_LickWithhold gives mice rewards based on their “level”
+within the program. These rewards are given based on the mouse’s response
+to a defined stimulus. Levels are as follows:</p>
+<p>Level 0: Mouse gets periodic rewards paired with a stimulus. No input
+required from the mouse at this stage.
+Level 1: Mouse gets periodic rewards, again paired with a stimulus. The
+mouse must refrain from licking for a defined withhold time before another
+reward is given. If they lick within the withhold time, a buzzer sounds.
+Level 2: Mouse must lick after a given delay time from the stimulus, and
+within a defined response time, in order to receive a reward. In brief,
+this is the “GO” task.
+Level 3: Mouse must differentiate between two stimuluses, either one pulse
+for “GO” or two successive pulses for “NO-GO”. In either case, they must
+wait for the delay time before responding, and then within the response
+time decide to either lick or not lick. “NO-GO” trials can be rewarded
+with water or not if desired.
+For levels 2 and 3, the outcome of the task is recorded as follows:
+“GO”:
+-4: licked within delay time, failure
+-2: did not lick, failure
++2: waited until response time to lick and then licked, success
+“NO-GO”:
+-3: licked within delay time, failure
+-1: waited until response time to lick and then licked, failure
++1: did not lick, success</p>
+<dl class="method">
+<dt id="AHF_Stimulator_LickWithhold.AHF_Stimulator_LickWithhold.about">
+<em class="property">static </em><code class="sig-name descname">about</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_LickWithhold.AHF_Stimulator_LickWithhold.about" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a brief message describing your sub-class, used when asking user to pick a sub-class of this class</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_LickWithhold.AHF_Stimulator_LickWithhold.config_user_get">
+<em class="property">static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_LickWithhold.AHF_Stimulator_LickWithhold.config_user_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>static method that querries user for settings, with default responses from starterDict,
+and returns starterDict with settings as edited by the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_LickWithhold.AHF_Stimulator_LickWithhold.goTask">
+<code class="sig-name descname">goTask</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_LickWithhold.AHF_Stimulator_LickWithhold.goTask" title="Permalink to this definition">¶</a></dt>
+<dd><p>A GO trial. Mouse must lick before getting a reward.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_LickWithhold.AHF_Stimulator_LickWithhold.hardwareTest">
+<code class="sig-name descname">hardwareTest</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_LickWithhold.AHF_Stimulator_LickWithhold.hardwareTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests functionality, gives user a chance to change settings.
+:Returns: bool – True if any settings have changed</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_LickWithhold.AHF_Stimulator_LickWithhold.quitting">
+<code class="sig-name descname">quitting</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_LickWithhold.AHF_Stimulator_LickWithhold.quitting" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called before AutoHEadFix exits. Gives stimulator chance to do any needed cleanup</p>
+<p>A stimulator may, e.g., open files and wish to close them before exiting, or use hardware that needs to be cleaned up</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_LickWithhold.AHF_Stimulator_LickWithhold.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">level=-1</em>, <em class="sig-param">resultsDict={}</em>, <em class="sig-param">settingsDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_LickWithhold.AHF_Stimulator_LickWithhold.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called at start of each head fix. Does whatever</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_LickWithhold.AHF_Stimulator_LickWithhold.setdown">
+<code class="sig-name descname">setdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_LickWithhold.AHF_Stimulator_LickWithhold.setdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>oppposite of setup. Releases any hardware resouces. can be run before editing settings so GPIO
+pins can be reused, for example. This strategy should be used in hardwareTest method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_LickWithhold.AHF_Stimulator_LickWithhold.setup">
+<code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_LickWithhold.AHF_Stimulator_LickWithhold.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>does hardware initialization with(possibly updated) info in self.settingsDict
+Run by __init__, or can be run  separately after editing the settingsDict</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>bool – the truth that setup completed without errors</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="AHF_Stimulator_LickWithhold.random">
+<code class="sig-name descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; x in the interval [0, 1).<a class="headerlink" href="#AHF_Stimulator_LickWithhold.random" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </div>
 <div class="section" id="module-AHF_Stimulator">
 <span id="ahf-stimulator"></span><h2>AHF_Stimulator<a class="headerlink" href="#module-AHF_Stimulator" title="Permalink to this headline">¶</a></h2>
@@ -2174,8 +2272,86 @@ vibration motor, laser pulse in a specific brain region, or nothing.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="ahf-stimulus-laser">
-<h2>AHF_Stimulus_Laser<a class="headerlink" href="#ahf-stimulus-laser" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-AHF_Stimulus_Laser">
+<span id="ahf-stimulus-laser"></span><h2>AHF_Stimulus_Laser<a class="headerlink" href="#module-AHF_Stimulus_Laser" title="Permalink to this headline">¶</a></h2>
+<p>This Stimulator is subclassed from Rewards. It captures a reference image for each
+mouse and includes a user interface to select targets on reference images.
+The Stimulator directs and pulses a laser to selected targets for optogenetic
+stimulation/inhibition.</p>
+<dl class="class">
+<dt id="AHF_Stimulus_Laser.AHF_Stimulus_Laser">
+<em class="property">class </em><code class="sig-name descname">AHF_Stimulus_Laser</code><span class="sig-paren">(</span><em class="sig-param">taskP</em>, <em class="sig-param">settingsDictP</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_Laser.AHF_Stimulus_Laser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stimulates a specified region of the mouse’s brain with a laser,
+controlled via a stepper motor stage. Requires a camera - if using,
+cannot record video of the trial with overhead camera (used for aligning)</p>
+<dl class="method">
+<dt id="AHF_Stimulus_Laser.AHF_Stimulus_Laser.about">
+<em class="property">static </em><code class="sig-name descname">about</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_Laser.AHF_Stimulus_Laser.about" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a brief message describing your sub-class, used when asking user to pick a sub-class of this class</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulus_Laser.AHF_Stimulus_Laser.accuracyTest">
+<code class="sig-name descname">accuracyTest</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_Laser.AHF_Stimulus_Laser.accuracyTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>For the given coefficient matrix, moves the laser to the center, then takes an image.
+Then, moves to 100 random points, and then back to center, taking another image.
+These images can then be compared to determine the long-term accuracy of the stepper motors.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulus_Laser.AHF_Stimulus_Laser.align">
+<code class="sig-name descname">align</code><span class="sig-paren">(</span><em class="sig-param">tag</em>, <em class="sig-param">resultsDict={}</em>, <em class="sig-param">settingsDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_Laser.AHF_Stimulus_Laser.align" title="Permalink to this definition">¶</a></dt>
+<dd><p>Aligns laser with reference image and assigned targets.
+Returns True if aligned successfully, False otherwise.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulus_Laser.AHF_Stimulus_Laser.config_user_get">
+<em class="property">static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_Laser.AHF_Stimulus_Laser.config_user_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>static method that querries user for settings, with default responses from starterDict,
+and returns starterDict with settings as edited by the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulus_Laser.AHF_Stimulus_Laser.hardwareTest">
+<code class="sig-name descname">hardwareTest</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_Laser.AHF_Stimulus_Laser.hardwareTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests functionality, gives user a chance to change settings.
+:Returns: bool – True if any settings have changed</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulus_Laser.AHF_Stimulus_Laser.setdown">
+<code class="sig-name descname">setdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_Laser.AHF_Stimulus_Laser.setdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>oppposite of setup. Releases any hardware resouces. can be run before editing settings so GPIO
+pins can be reused, for example. This strategy should be used in hardwareTest method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulus_Laser.AHF_Stimulus_Laser.setup">
+<code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_Laser.AHF_Stimulus_Laser.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>does hardware initialization with(possibly updated) info in self.settingsDict
+Run by __init__, or can be run  separately after editing the settingsDict</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>bool – the truth that setup completed without errors</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulus_Laser.AHF_Stimulus_Laser.trialEnd">
+<code class="sig-name descname">trialEnd</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_Laser.AHF_Stimulus_Laser.trialEnd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Code to be run at end of trial. E.g. moving laser to zero position</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulus_Laser.AHF_Stimulus_Laser.trialPrep">
+<code class="sig-name descname">trialPrep</code><span class="sig-paren">(</span><em class="sig-param">tag</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulus_Laser.AHF_Stimulus_Laser.trialPrep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepares stimulus for trial: e.g. aligns laser, preps vib. motor, etc</p>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 <div class="section" id="module-AHF_Stimulus_None">
 <span id="ahf-stimulus-none"></span><h2>AHF_Stimulus_None<a class="headerlink" href="#module-AHF_Stimulus_None" title="Permalink to this headline">¶</a></h2>
@@ -2439,11 +2615,11 @@ task settings</p>
 <li><a class="reference internal" href="#ahf-settings">AHF_Settings</a></li>
 <li><a class="reference internal" href="#module-AHF_Stimulator_LEDs">AHF_Stimulator_LEDs</a></li>
 <li><a class="reference internal" href="#module-AHF_Stimulator_Lever">AHF_Stimulator_Lever</a></li>
-<li><a class="reference internal" href="#ahf-stimulator-lickwithhold">AHF_Stimulator_LickWithhold</a></li>
+<li><a class="reference internal" href="#module-AHF_Stimulator_LickWithhold">AHF_Stimulator_LickWithhold</a></li>
 <li><a class="reference internal" href="#module-AHF_Stimulator">AHF_Stimulator</a></li>
 <li><a class="reference internal" href="#module-AHF_Stimulator_Rewards">AHF_Stimulator_Rewards</a></li>
 <li><a class="reference internal" href="#module-AHF_Stimulus">AHF_Stimulus</a></li>
-<li><a class="reference internal" href="#ahf-stimulus-laser">AHF_Stimulus_Laser</a></li>
+<li><a class="reference internal" href="#module-AHF_Stimulus_Laser">AHF_Stimulus_Laser</a></li>
 <li><a class="reference internal" href="#module-AHF_Stimulus_None">AHF_Stimulus_None</a></li>
 <li><a class="reference internal" href="#module-AHF_Stimulus_VibMotor">AHF_Stimulus_VibMotor</a></li>
 <li><a class="reference internal" href="#module-AHF_Subjects">AHF_Subjects</a></li>
@@ -2489,7 +2665,7 @@ task settings</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2019, Jamie Boyd, Braeden Jury, David Bierbrauer.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
     </div>
   </body>
 </html>

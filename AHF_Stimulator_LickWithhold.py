@@ -36,6 +36,7 @@ class AHF_Stimulator_LickWithhold(AHF_Stimulator):
     AHF_Stimulator_LickWithhold gives mice rewards based on their "level"
     within the program. These rewards are given based on the mouse's response
     to a defined stimulus. Levels are as follows:
+   
     Level 0: Mouse gets periodic rewards paired with a stimulus. No input
     required from the mouse at this stage.
     Level 1: Mouse gets periodic rewards, again paired with a stimulus. The
@@ -51,14 +52,15 @@ class AHF_Stimulator_LickWithhold(AHF_Stimulator):
     with water or not if desired.
     For levels 2 and 3, the outcome of the task is recorded as follows:
     "GO":
-        -4: licked within delay time, failure
-        -2: did not lick, failure
-        +2: waited until response time to lick and then licked, success
+    -4: licked within delay time, failure
+    -2: did not lick, failure
+    +2: waited until response time to lick and then licked, success
     "NO-GO":
-        -3: licked within delay time, failure
-        -1: waited until response time to lick and then licked, failure
-        +1: did not lick, success
+    -3: licked within delay time, failure
+    -1: waited until response time to lick and then licked, failure
+    +1: did not lick, success
     """
+   
     #### default definitions for stimulator configuration that are not defined in superclass
     lickWithholdTime_def = 1  # how long mouse has to go for without licking before getting rewarded
     delayTime_def = 0.5     # laser pulse is this may seconds before reward is given
