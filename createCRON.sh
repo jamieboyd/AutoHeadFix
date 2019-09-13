@@ -1,7 +1,12 @@
 #!/bin/bash
 
 #******************************************************************
-# This script searches for auto_start_script, if found will create a cronjob as root that opens auto start script every hour
+# This script searches for path of AutoiHeadFix folder
+# if found will create  A)  cronjob as root that opens auto start script every hour
+#			B) cronjob that runs water_failsafe.py every 30minutes
+#			C) Cronjob that runs auto restart upon reboot of the pi
+##################
+#VERY IMPORTANT:YOU CANNOT HAVE MORE THAN ONE AutoHeadFix FOLDER ON YOUR MACHINE 
 #*******************************************************************
 mypath=$(sudo find / -type d -name "AutoHeadFix" | grep "AutoHeadFix";)
 
