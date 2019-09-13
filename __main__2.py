@@ -38,12 +38,12 @@ def main():
     faulthandler.enable()
     try:
         configFile = ''
-        if argv.__len__() > 1:
+        if argv.__len__() > 2 and argv[1] == "--temp":
             jsonDict = {}
             db = pymysql.connect(host="localhost", user="pi", db="raw_data", password="AutoHead2015")
             query_sources = """SELECT DISTINCT `Dictionary_source` FROM `configs` WHERE `Cage` = %s AND `Tag` = %s"""
             cur  = db.cursor()
-            cur.execute(query_sources, ["cage1", "changed_hardware"])
+            cur.execute(query_sources, [argv[2], "changed_hardware"])
 
             sources_list =  [i[0] for i in cur.fetchall()]
             query_config = """SELECT `Tag`,`Dictionary_source`,`Config` FROM `configs` WHERE `Tag` = %s
@@ -58,6 +58,7 @@ def main():
                     data = {str(source): literal_eval("{}".format(dictio))}
                 jsonDict.update(data)
             jsonDict.update({"filename": "temp"})
+            print(jsonDict)
             task = Task(object = jsonDict)
             db.close()
         else:

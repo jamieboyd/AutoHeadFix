@@ -25,7 +25,7 @@ class AHF_Notifier_Requests(AHF_Notifier):
         response = input('Enter phone numbers to receive text messages, currently %s :' % str(phoneList))
         if response != '':
             phoneList =tuple(response.split(','))
-        textBeltKey = starterDict.get('textBeltKey', '') # no useful default values for phonelist or textbelt key
+        textBeltKey = starterDict.get('textBeltKey', 'c67968bac99c6c6a5ab4d0007efa6b876b54e228IoOQ7gTnT6hAJDRKPnt6Cwc9b') # no useful default values for phonelist or textbelt key
         response = input('Enter the textBelt code, currently %s: ' % textBeltKey)
         if response != '':
             textBeltKey = response
@@ -70,5 +70,5 @@ class AHF_Notifier_Requests(AHF_Notifier):
 
 if __name__ == '__main__':
     import requests
-    notifier=AHF_Notifier(18,(17789535102, 16043512437,16047904623), 'c67968bac99c6c6a5ab4d0007efa6b876b54e228IoOQ7gTnT6hAJDRKPnt6Cwc9b')
+    notifier=AHF_Notifier(18,(12507399587), 'c67968bac99c6c6a5ab4d0007efa6b876b54e228IoOQ7gTnT6hAJDRKPnt6Cwc9b')
     notifier.notify(44, 60, 0)
