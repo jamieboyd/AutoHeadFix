@@ -14,6 +14,9 @@ For instructions on building/setting up `click here <https://github.com/zenenhor
 
 For notes and structure information from the developer `click here <https://Judge24601.github.io/AutoHeadFix/AHF_Notes.html>`_
 
+A config.txt file will be included in the repository, you must change the variables (eg path, password) to your installation specific details.
+*NOTE: All cageID's must be unique.*
+
 .. raw:: html
 
    <video width="640" height="480" controls>
