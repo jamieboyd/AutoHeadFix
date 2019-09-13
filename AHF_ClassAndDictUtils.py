@@ -176,6 +176,7 @@ def Show_ordered_dict(objectDict, longName):
     nP = 0
     for key in sorted(objectDict) :
         value = objectDict.get(key)
+        print(value)
         showDict.update({nP:{key: value}})
         nP += 1
     for ii in range(0, nP):
