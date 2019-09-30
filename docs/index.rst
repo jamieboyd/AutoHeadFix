@@ -43,6 +43,15 @@ A config.txt file will be included in the repository, you must change the variab
            Your browser does not support this video type.
         </video>
 
+        <h4>Training Difficulty</h4>
+        <video width="640" height="480" controls>
+        <source src="../../training.mp4">
+           type="video/mp4">
+           Your browser does not support this video type.
+        </video>
+
+
+
 .. automodule:: AHF_Base
     :members:
 
