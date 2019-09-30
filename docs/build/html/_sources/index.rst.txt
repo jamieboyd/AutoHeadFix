@@ -19,12 +19,29 @@ A config.txt file will be included in the repository, you must change the variab
 *NOTE: All cageID's must be unique.*
 
 .. raw:: html
-
-   <video width="640" height="480" controls>
-       <source src="../../AutoHeadFixGuide.mp4">
+        
+        <h4>Generic Usage Guide</h4>
+        <video width="640" height="480" controls>
+        <source src="../../AutoHeadFixGuide.mp4">
            type="video/mp4">
            Your browser does not support this video type.
-   </video>
+        </video>
+
+
+        <h4>Cron Creation</h4>
+        <video width="640" height="480" controls>
+        <source src="../../cronSetup.mp4">
+           type="video/mp4">
+           Your browser does not support this video type.
+        </video>
+
+
+        <h4>Changing Mouse Specific Var</h4>
+        <video width="640" height="480" controls>
+        <source src="../../changeMouseSpecificVar.mp4">
+           type="video/mp4">
+           Your browser does not support this video type.
+        </video>
 
 .. automodule:: AHF_Base
     :members:
