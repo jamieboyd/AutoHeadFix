@@ -11,8 +11,12 @@ Welcome to AutoHeadFix's documentation!
 To download the main repository `click here  <https://github.com/jamieboyd/AutoHeadFix/tree/lever_config/>`_
 
 For instructions on building/setting up `click here <https://github.com/zenenhornstein/AHF_setup>`_
+**Important**: Having multiple installations can cause things to break if this is not your first time running this script in the trash make sure to delete all old folders and empty your trash
 
 For notes and structure information from the developer `click here <https://Judge24601.github.io/AutoHeadFix/AHF_Notes.html>`_
+
+A config.txt file will be included in the repository, you must change the variables (eg path, password) to your installation specific details.
+*NOTE: All cageID's must be unique.*
 
 .. raw:: html
 
