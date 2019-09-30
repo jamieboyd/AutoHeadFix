@@ -138,7 +138,7 @@ class AHF_Stimulus_Laser(AHF_Stimulus):
         pulse-width modulator to change the laser intensity. Read PWM Thread documentation
         for further information.
         '''
-
+        self.laser_step = 1
         #Cross-hair Overlay settings
         self.overlay_resolution = self.camera.resolution()
         self.cross_pos =(np.array(self.camera.resolution())/2).astype(int)
@@ -268,18 +268,23 @@ class AHF_Stimulus_Laser(AHF_Stimulus):
 
     def get_arrow_dir(self,key):
         # return direction of stepper motor step and cross-hair step.
+        if key == keyboard.Key.shift:
+            if self.laser_step == 1:
+                self.laser_step = 50
+            else:
+                self.laser_step = 1
         if hasattr(key,'char'):
             self.kb.press(keyboard.Key.backspace)
             self.kb.release(keyboard.Key.backspace)
             return 0,0,0,0
         elif key == keyboard.Key.right:
-            return 1,0,0,0
+            return self.laser_step,0,0,0
         elif key == keyboard.Key.left:
-            return -1,0,0,0
+            return -self.laser_step,0,0,0
         elif key == keyboard.Key.down:
-            return 0,1,0,0
+            return 0,self.laser_step,0,0
         elif key == keyboard.Key.up:
-            return 0,-1,0,0
+            return 0,-self.laser_step,0,0
         elif key == keyboard.Key.delete:
             return 0,0,0,-self.cross_step
         elif key == keyboard.Key.page_down:
@@ -473,8 +478,11 @@ class AHF_Stimulus_Laser(AHF_Stimulus):
         print('---------------------------------------')
         print('Keys:\tarrow keys\tdelete home end page-down\n')
         print('1.: Move the laser and the cross hairs to at least 3 different points and hit the space key to save a point.')
-        print('2.: To exit, hit the esc key.\n\n')
+        print('2.: Tap Shift to switch between coarse and fine laser resolution')
+        print('3.: To exit, hit the esc key.\n\n')
 
+        #self.move_to((10000,10000), join=True)
+        #self.move_to((0,0), join=True)
         self.laser_points = []
         self.image_points = []
 
