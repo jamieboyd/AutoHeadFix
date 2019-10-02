@@ -39,14 +39,39 @@
 <h1>Welcome to AutoHeadFix’s documentation!<a class="headerlink" href="#welcome-to-autoheadfix-s-documentation" title="Permalink to this headline">¶</a></h1>
 <p><strong>Installation/Setup</strong></p>
 <p>To download the main repository <a class="reference external" href="https://github.com/jamieboyd/AutoHeadFix/tree/lever_config/">click here</a></p>
-<p>For instructions on building/setting up <a class="reference external" href="https://github.com/zenenhornstein/AHF_setup">click here</a></p>
+<p>For instructions on building/setting up <a class="reference external" href="https://github.com/zenenhornstein/AHF_setup">click here</a>
+<strong>Important</strong>: Having multiple installations can cause things to break if this is not your first time running this script in the trash make sure to delete all old folders and empty your trash</p>
 <p>For notes and structure information from the developer <a class="reference external" href="https://Judge24601.github.io/AutoHeadFix/AHF_Notes.html">click here</a></p>
 <p>A config.txt file will be included in the repository, you must change the variables (eg path, password) to your installation specific details.
 <em>NOTE: All cageID’s must be unique.</em></p>
+<h4>Generic Usage Guide</h4>
 <video width="640" height="480" controls>
-    <source src="../../AutoHeadFixGuide.mp4">
-        type="video/mp4">
-        Your browser does not support this video type.
+<source src="../../AutoHeadFixGuide.mp4">
+   type="video/mp4">
+   Your browser does not support this video type.
+</video>
+
+
+<h4>Cron Creation</h4>
+<video width="640" height="480" controls>
+<source src="../../cronSetup.mp4">
+   type="video/mp4">
+   Your browser does not support this video type.
+</video>
+
+
+<h4>Changing Mouse Specific Var</h4>
+<video width="640" height="480" controls>
+<source src="../../changeMouseSpecificVar.mp4">
+   type="video/mp4">
+   Your browser does not support this video type.
+</video>
+
+<h4>Training Difficulty</h4>
+<video width="640" height="480" controls>
+<source src="../../training.mp4">
+   type="video/mp4">
+   Your browser does not support this video type.
 </video><span class="target" id="module-AHF_Base"></span><div class="section" id="ahf-base-py">
 <h2>AHF_Base.py<a class="headerlink" href="#ahf-base-py" title="Permalink to this headline">¶</a></h2>
 <p>The base upon which everything else is built</p>
@@ -63,10 +88,28 @@ with a settings dictionary. The setup function does hardware initialization, or 
 </dd></dl>
 
 <dl class="method">
+<dt id="AHF_Base.AHF_Base.config_subject_get">
+<code class="sig-name descname">config_subject_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Base.AHF_Base.config_subject_get" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>dict – the default dictionary for individualized parameters</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="AHF_Base.AHF_Base.config_user_get">
 <em class="property">abstract static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Base.AHF_Base.config_user_get" title="Permalink to this definition">¶</a></dt>
 <dd><p>static method that querries user for settings, with default responses from starterDict,
 and returns starterDict with settings as edited by the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Base.AHF_Base.config_user_subject_get">
+<code class="sig-name descname">config_user_subject_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Base.AHF_Base.config_user_subject_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prompts the user for individualized parameters, with default responses
+from starterDict, and returns starterDict with settings
+as edited by the user.</p>
 </dd></dl>
 
 <dl class="method">
@@ -91,16 +134,6 @@ Run by __init__, or can be run  separately after editing the settingsDict</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>bool – the truth that setup completed without errors</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_Base.AHF_Base.subject_user_get">
-<em class="property">static </em><code class="sig-name descname">subject_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Base.AHF_Base.subject_user_get" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>dict – an updated dictionary after asking the user for subject related and maybe individualized parameters</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1061,9 +1094,27 @@ head-fixing mechanism</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.config_subject_get">
+<code class="sig-name descname">config_subject_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.config_subject_get" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>dict – the default dictionary for individualized parameters</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.config_user_get">
 <em class="property">static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.config_user_get" title="Permalink to this definition">¶</a></dt>
 <dd><p>Querries user returns dictionary</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.config_user_subject_get">
+<code class="sig-name descname">config_user_subject_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_NoFix.AHF_HeadFixer_NoFix.config_user_subject_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prompts the user for individualized parameters, with default responses
+from starterDict, and returns starterDict with settings
+as edited by the user.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1115,9 +1166,27 @@ a single GPIO output triggers a driver of some kind to energize solenoids</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="AHF_HeadFixer_Pistons.AHF_HeadFixer_Pistons.config_subject_get">
+<code class="sig-name descname">config_subject_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_Pistons.AHF_HeadFixer_Pistons.config_subject_get" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>dict – the default dictionary for individualized parameters</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="AHF_HeadFixer_Pistons.AHF_HeadFixer_Pistons.config_user_get">
 <em class="property">static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_Pistons.AHF_HeadFixer_Pistons.config_user_get" title="Permalink to this definition">¶</a></dt>
 <dd><p>Querries user for pin number for piston, returns dictionary</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_HeadFixer_Pistons.AHF_HeadFixer_Pistons.config_user_subject_get">
+<code class="sig-name descname">config_user_subject_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_Pistons.AHF_HeadFixer_Pistons.config_user_subject_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prompts the user for individualized parameters, with default responses
+from starterDict, and returns starterDict with settings
+as edited by the user.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1235,10 +1304,28 @@ pins can be reused, for example. This strategy should be used in hardwareTest me
 <dd><p>Abstract class for PWM-based head fixers for servo motors. As long as your subclass maps your PWM range onto
 the appropriate pulse width for the servo, you should be good to go.</p>
 <dl class="method">
+<dt id="AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.config_subject_get">
+<code class="sig-name descname">config_subject_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.config_subject_get" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>dict – the default dictionary for individualized parameters</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.config_user_get">
 <em class="property">abstract static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.config_user_get" title="Permalink to this definition">¶</a></dt>
 <dd><p>static method that querries user for settings, with default responses from starterDict,
 and returns starterDict with settings as edited by the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.config_user_subject_get">
+<code class="sig-name descname">config_user_subject_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer_PWM.AHF_HeadFixer_PWM.config_user_subject_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prompts the user for individualized parameters, with default responses
+from starterDict, and returns starterDict with settings
+as edited by the user.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1290,10 +1377,28 @@ TO DO: add multiple headfixing levels, maybe progression based on resdults</p>
 <dd><p>Base class for all head fix classs. Other head fixers subclass from this, or from one of its subclasses
 boolean for settability of headFixing levels, default is False. Can be used for incremental learning</p>
 <dl class="method">
+<dt id="AHF_HeadFixer.AHF_HeadFixer.config_subject_get">
+<em class="property">abstract </em><code class="sig-name descname">config_subject_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer.AHF_HeadFixer.config_subject_get" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>dict – the default dictionary for individualized parameters</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="AHF_HeadFixer.AHF_HeadFixer.config_user_get">
 <em class="property">abstract static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer.AHF_HeadFixer.config_user_get" title="Permalink to this definition">¶</a></dt>
 <dd><p>static method that querries user for settings, with default responses from starterDict,
 and returns starterDict with settings as edited by the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_HeadFixer.AHF_HeadFixer.config_user_subject_get">
+<em class="property">abstract </em><code class="sig-name descname">config_user_subject_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_HeadFixer.AHF_HeadFixer.config_user_subject_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prompts the user for individualized parameters, with default responses
+from starterDict, and returns starterDict with settings
+as edited by the user.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1805,10 +1910,28 @@ Run by __init__, or can be run  separately after editing the settingsDict</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="AHF_Rewarder_solenoid.AHF_Rewarder_solenoid.config_subject_get">
+<code class="sig-name descname">config_subject_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Rewarder_solenoid.AHF_Rewarder_solenoid.config_subject_get" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>dict – the default dictionary for individualized parameters</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="AHF_Rewarder_solenoid.AHF_Rewarder_solenoid.config_user_get">
 <em class="property">static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Rewarder_solenoid.AHF_Rewarder_solenoid.config_user_get" title="Permalink to this definition">¶</a></dt>
 <dd><p>static method that querries user for settings, with default responses from starterDict,
 and returns starterDict with settings as edited by the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Rewarder_solenoid.AHF_Rewarder_solenoid.config_user_subject_get">
+<code class="sig-name descname">config_user_subject_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Rewarder_solenoid.AHF_Rewarder_solenoid.config_user_subject_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prompts the user for individualized parameters, with default responses
+from starterDict, and returns starterDict with settings
+as edited by the user.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1899,10 +2022,28 @@ Run by __init__, or can be run  separately after editing the settingsDict</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="AHF_Stimulator_LEDs.AHF_Stimulator_LEDs.config_subject_get">
+<code class="sig-name descname">config_subject_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_LEDs.AHF_Stimulator_LEDs.config_subject_get" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>dict – the default dictionary for individualized parameters</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="AHF_Stimulator_LEDs.AHF_Stimulator_LEDs.config_user_get">
 <em class="property">static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_LEDs.AHF_Stimulator_LEDs.config_user_get" title="Permalink to this definition">¶</a></dt>
 <dd><p>static method that querries user for settings, with default responses from starterDict,
 and returns starterDict with settings as edited by the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_LEDs.AHF_Stimulator_LEDs.config_user_subject_get">
+<code class="sig-name descname">config_user_subject_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_LEDs.AHF_Stimulator_LEDs.config_user_subject_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prompts the user for individualized parameters, with default responses
+from starterDict, and returns starterDict with settings
+as edited by the user.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1968,10 +2109,28 @@ Things that do not vary on a per mouse basis, these inlcude hardware settings, s
 </dd></dl>
 
 <dl class="method">
+<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.config_subject_get">
+<code class="sig-name descname">config_subject_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.config_subject_get" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>dict – the default dictionary for individualized parameters</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.config_user_get">
 <em class="property">static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.config_user_get" title="Permalink to this definition">¶</a></dt>
 <dd><p>static method that querries user for settings, with default responses from starterDict,
 and returns starterDict with settings as edited by the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_Lever.AHF_Stimulator_Lever.config_user_subject_get">
+<code class="sig-name descname">config_user_subject_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Lever.AHF_Stimulator_Lever.config_user_subject_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prompts the user for individualized parameters, with default responses
+from starterDict, and returns starterDict with settings
+as edited by the user.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -2108,10 +2267,28 @@ Run by __init__, or can be run  separately after editing the settingsDict</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="AHF_Stimulator_LickWithhold.AHF_Stimulator_LickWithhold.config_subject_get">
+<code class="sig-name descname">config_subject_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_LickWithhold.AHF_Stimulator_LickWithhold.config_subject_get" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>dict – the default dictionary for individualized parameters</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="AHF_Stimulator_LickWithhold.AHF_Stimulator_LickWithhold.config_user_get">
 <em class="property">static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_LickWithhold.AHF_Stimulator_LickWithhold.config_user_get" title="Permalink to this definition">¶</a></dt>
 <dd><p>static method that querries user for settings, with default responses from starterDict,
 and returns starterDict with settings as edited by the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_LickWithhold.AHF_Stimulator_LickWithhold.config_user_subject_get">
+<code class="sig-name descname">config_user_subject_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_LickWithhold.AHF_Stimulator_LickWithhold.config_user_subject_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prompts the user for individualized parameters, with default responses
+from starterDict, and returns starterDict with settings
+as edited by the user.</p>
 </dd></dl>
 
 <dl class="method">
@@ -2195,10 +2372,28 @@ All events and their timings in a head fix, including rewards, are controlled by
 </dd></dl>
 
 <dl class="method">
+<dt id="AHF_Stimulator_Rewards.AHF_Stimulator_Rewards.config_subject_get">
+<code class="sig-name descname">config_subject_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Rewards.AHF_Stimulator_Rewards.config_subject_get" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>dict – the default dictionary for individualized parameters</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="AHF_Stimulator_Rewards.AHF_Stimulator_Rewards.config_user_get">
 <em class="property">static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Rewards.AHF_Stimulator_Rewards.config_user_get" title="Permalink to this definition">¶</a></dt>
 <dd><p>static method that querries user for settings, with default responses from starterDict,
 and returns starterDict with settings as edited by the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Stimulator_Rewards.AHF_Stimulator_Rewards.config_user_subject_get">
+<code class="sig-name descname">config_user_subject_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Stimulator_Rewards.AHF_Stimulator_Rewards.config_user_subject_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prompts the user for individualized parameters, with default responses
+from starterDict, and returns starterDict with settings
+as edited by the user.</p>
 </dd></dl>
 
 <dl class="method">
