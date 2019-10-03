@@ -53,10 +53,28 @@ with a settings dictionary. The setup function does hardware initialization, or 
 </dd></dl>
 
 <dl class="method">
+<dt id="AHF_Base.AHF_Base.config_subject_get">
+<code class="sig-name descname">config_subject_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Base.AHF_Base.config_subject_get" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>dict – the default dictionary for individualized parameters</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="AHF_Base.AHF_Base.config_user_get">
 <em class="property">abstract static </em><code class="sig-name descname">config_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Base.AHF_Base.config_user_get" title="Permalink to this definition">¶</a></dt>
 <dd><p>static method that querries user for settings, with default responses from starterDict,
 and returns starterDict with settings as edited by the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="AHF_Base.AHF_Base.config_user_subject_get">
+<code class="sig-name descname">config_user_subject_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Base.AHF_Base.config_user_subject_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prompts the user for individualized parameters, with default responses
+from starterDict, and returns starterDict with settings
+as edited by the user.</p>
 </dd></dl>
 
 <dl class="method">
@@ -81,16 +99,6 @@ Run by __init__, or can be run  separately after editing the settingsDict</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>bool – the truth that setup completed without errors</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="AHF_Base.AHF_Base.subject_user_get">
-<em class="property">static </em><code class="sig-name descname">subject_user_get</code><span class="sig-paren">(</span><em class="sig-param">starterDict={}</em><span class="sig-paren">)</span><a class="headerlink" href="#AHF_Base.AHF_Base.subject_user_get" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>dict – an updated dictionary after asking the user for subject related and maybe individualized parameters</p>
 </dd>
 </dl>
 </dd></dl>
@@ -151,7 +159,7 @@ into a single object called Task</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2019, Jamie Boyd, Braeden Jury, David Bierbrauer.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
     </div>
   </body>
 </html>

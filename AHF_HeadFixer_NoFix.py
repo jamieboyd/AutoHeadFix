@@ -30,11 +30,18 @@ class AHF_HeadFixer_NoFix(AHF_HeadFixer):
         starterDict.update({'propHeadFix' : 0, 'skeddadleTime' : skeddadleTime})
         return starterDict
 
-    def config_subject_get(self, starterDict = {}):
-        return super().config_subject_get(starterDict)
-
     def config_user_subject_get(self, starterDict = {}):
-        return super().config_user_subject_get(starterDict)
+        headFixTime = starterDict.get('headFixTime',AHF_HeadFixer.defaultHeadFixTime)
+        tempInput = input('Set allowed time in chamber for lick withhold trials,  currently {0}: '.format(headFixTime))
+        if tempInput != '':
+            headFixTime = float(tempInput)
+        starterDict.update({'headFixTime' : headFixTime})
+        return starterDict
+
+    def config_subject_get(self, starterDict = {}):
+        headFixTime = starterDict.get('headFixTime',AHF_HeadFixer.defaultHeadFixTime)
+        starterDict.update({'headFixTime' : headFixTime})
+        return starterDict
 
     @staticmethod
     def isFixedCheck():

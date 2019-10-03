@@ -1,11 +1,3 @@
-'''
-This Stimulator combines LaserStimulation with LickWithholdSpeaker.
-It captures a reference image for each mouse and includes a user interface to select targets on reference images.
-The Stimulator directs and pulses a laser to selected targets for optogenetic
-stimulation/inhibition.
-The laser is pulsed whenever the mouse goes for a set amount of time without licking,
-'''
-
 #AHF-specific moudules
 
 from AHF_Stimulus_Laser import AHF_Stimulus_Laser
@@ -33,32 +25,34 @@ import warnings
 
 class AHF_Stimulator_LickWithhold(AHF_Stimulator):
     """
-    AHF_Stimulator_LickWithhold gives mice rewards based on their "level"
-    within the program. These rewards are given based on the mouse's response
-    to a defined stimulus. Levels are as follows:
-    Level 0: Mouse gets periodic rewards paired with a stimulus. No input
-    required from the mouse at this stage.
-    Level 1: Mouse gets periodic rewards, again paired with a stimulus. The
-    mouse must refrain from licking for a defined withhold time before another
-    reward is given. If they lick within the withhold time, a buzzer sounds.
-    Level 2: Mouse must lick after a given delay time from the stimulus, and
-    within a defined response time, in order to receive a reward. In brief,
-    this is the "GO" task.
-    Level 3: Mouse must differentiate between two stimuluses, either one pulse
-    for "GO" or two successive pulses for "NO-GO". In either case, they must
-    wait for the delay time before responding, and then within the response
-    time decide to either lick or not lick. "NO-GO" trials can be rewarded
-    with water or not if desired.
-    For levels 2 and 3, the outcome of the task is recorded as follows:
-    "GO":
-        -4: licked within delay time, failure
-        -2: did not lick, failure
-        +2: waited until response time to lick and then licked, success
-    "NO-GO":
-        -3: licked within delay time, failure
-        -1: waited until response time to lick and then licked, failure
-        +1: did not lick, success
+    | AHF_Stimulator_LickWithhold gives mice rewards based on their "level"
+    | within the program. These rewards are given based on the mouse's response
+    | to a defined stimulus. Levels are as follows:
+   
+    | Level 0: Mouse gets periodic rewards paired with a stimulus. No input
+    | required from the mouse at this stage.
+    | Level 1: Mouse gets periodic rewards, again paired with a stimulus. The
+    | mouse must refrain from licking for a defined withhold time before another
+    | reward is given. If they lick within the withhold time, a buzzer sounds.
+    | Level 2: Mouse must lick after a given delay time from the stimulus, and
+    | within a defined response time, in order to receive a reward. In brief,
+    | this is the "GO" task.
+    | Level 3: Mouse must differentiate between two stimuluses, either one pulse
+    | for "GO" or two successive pulses for "NO-GO". In either case, they must
+    | wait for the delay time before responding, and then within the response
+    | time decide to either lick or not lick. "NO-GO" trials can be rewarded
+    | with water or not if desired.
+    | For levels 2 and 3, the outcome of the task is recorded as follows:
+    | "GO":
+    | -4: licked within delay time, failure
+    | -2: did not lick, failure
+    | +2: waited until response time to lick and then licked, success
+    | "NO-GO":
+    | -3: licked within delay time, failure
+    | -1: waited until response time to lick and then licked, failure
+    | +1: did not lick, success
     """
+   
     #### default definitions for stimulator configuration that are not defined in superclass
     lickWithholdTime_def = 1  # how long mouse has to go for without licking before getting rewarded
     delayTime_def = 0.5     # laser pulse is this may seconds before reward is given

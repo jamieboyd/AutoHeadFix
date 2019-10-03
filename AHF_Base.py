@@ -36,14 +36,19 @@ class AHF_Base(metaclass = ABCMeta):
         """
         return starterDict
 
-    @staticmethod
-    def subject_user_get(starterDict = {}):
+    def config_subject_get(self, starterDict = {}):
         """
-        :returns: dict -- an updated dictionary after asking the user for subject related and maybe individualized parameters
+        :returns: dict -- the default dictionary for individualized parameters
         """
         return starterDict
 
-
+    def config_user_subject_get(self, starterDict = {}):
+        """
+        Prompts the user for individualized parameters, with default responses
+        from starterDict, and returns starterDict with settings
+        as edited by the user.
+        """
+        return starterDict
 
     def __init__(self, taskP, settingsDictP):
         """

@@ -11,16 +11,46 @@ Welcome to AutoHeadFix's documentation!
 To download the main repository `click here  <https://github.com/jamieboyd/AutoHeadFix/tree/lever_config/>`_
 
 For instructions on building/setting up `click here <https://github.com/zenenhornstein/AHF_setup>`_
+**Important**: Having multiple installations can cause things to break if this is not your first time running this script in the trash make sure to delete all old folders and empty your trash
 
 For notes and structure information from the developer `click here <https://Judge24601.github.io/AutoHeadFix/AHF_Notes.html>`_
 
-.. raw:: html
+A config.txt file will be included in the repository, you must change the variables (eg path, password) to your installation specific details.
+*NOTE: All cageID's must be unique.*
 
-   <video width="640" height="480" controls>
-       <source src="../../AutoHeadFixGuide.mp4">
+.. raw:: html
+        
+        <h4>Generic Usage Guide</h4>
+        <video width="640" height="480" controls>
+        <source src="../../AutoHeadFixGuide.mp4">
            type="video/mp4">
            Your browser does not support this video type.
-   </video>
+        </video>
+
+
+        <h4>Cron Creation</h4>
+        <video width="640" height="480" controls>
+        <source src="../../cronSetup.mp4">
+           type="video/mp4">
+           Your browser does not support this video type.
+        </video>
+
+
+        <h4>Changing Mouse Specific Var</h4>
+        <video width="640" height="480" controls>
+        <source src="../../changeMouseSpecificVar.mp4">
+           type="video/mp4">
+           Your browser does not support this video type.
+        </video>
+
+        <h4>Training Difficulty</h4>
+        <video width="640" height="480" controls>
+        <source src="../../training.mp4">
+           type="video/mp4">
+           Your browser does not support this video type.
+        </video>
+
+
 
 .. automodule:: AHF_Base
     :members:
