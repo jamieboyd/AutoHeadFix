@@ -213,6 +213,7 @@ class Task(object):
                 baseName =(item [0], item[0][:-5])[item[0].endswith('Class')]
                 classDict = getattr(self, baseName + 'Dict')
                 setattr(self, baseName, item [1](self, classDict))
+                print(hex(id(getattr(self, baseName))), baseName)
         global gTask
         gTask = self
         default = False
