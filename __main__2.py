@@ -157,10 +157,11 @@ def main():
                             if hasattr(task, 'LickDetector'):
                                 task.LickDetector.setdown()
                             task.editSettings()
-                            response = input('Save edited settings to file?')
-                            if response [0] == 'Y' or response [0] == 'y':
-                                task.saveSettings()
+                            #response = input('Save edited settings to file?')
+                            #if response [0] == 'Y' or response [0] == 'y':
+                             #   task.saveSettings()
                             task.setup()
+                            print("hello")
                         elif event == 'S' or event == 's':
                             task.Stimulator.settingsDict = task.Stimulator.config_user_get(task.Stimulator.settingsDict)
                             task.Stimulator.setup()

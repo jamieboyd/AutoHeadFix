@@ -94,6 +94,7 @@ class AHF_Base(metaclass = ABCMeta):
             self.setdown()
         except Exception as e:
             #In case it has already been set down(__del__ is not predictable)
+            print(str(e))
             pass
 
 
