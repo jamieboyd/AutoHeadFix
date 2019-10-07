@@ -90,9 +90,14 @@ class AHF_Base(metaclass = ABCMeta):
         For clean up purposes, releases hardware resources with setdown method
         """
         try:
+            print(hex(id(self)))
+            print(self.__name__, " deleted")
             self.setdown()
         except Exception as e:
             #In case it has already been set down(__del__ is not predictable)
+            print(str(e))
+        finally:
+            del(self)
             pass
 
 

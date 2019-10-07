@@ -114,6 +114,7 @@ class AHF_DataLogger_text(AHF_DataLogger):
         if getattr(self, 'logFP', None) is not None:
             self.writeToLogFile(0, 'SeshEnd', None, time())
             self.logFP.close()
+            self.logFP = None
         mice = self.task.Subjects.get_all()
         for tag, mouse in mice.items():
             self.storeConfig(tag, mouse)
@@ -235,5 +236,4 @@ class AHF_DataLogger_text(AHF_DataLogger):
             chown(self.statsFilePath, uid, gid)
 
     def __del__(self):
-        self.writeToLogFile(0, 'SeshEnd', None, time())
         self.setdown()

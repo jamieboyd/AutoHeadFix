@@ -101,7 +101,7 @@ class AHF_Reader_ID(AHF_Reader):
         if AHF_Reader_ID.stillThere:
             stuckMouse = AHF_Task.gTask.tag
             AHF_Task.gTask.inChamberLimitExceeded = True
-            AHF_Task.gTask.HeadFixer.releaseMouse()
+            AHF_Task.gTask.HeadFixer.releaseMouse(stuckMouse)
             AHF_Task.gTask.AHF_BrainLight.offForStim()
             if hasattr(AHF_Task.gTask, 'Notifer'):
                 Notifier = AHF_Task.gTask.Notifier
