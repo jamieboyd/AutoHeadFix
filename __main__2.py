@@ -115,11 +115,11 @@ def main():
                         task.HeadFixer.releaseMouse(thisTag)
                 if doCountermand:
                     task.Rewarder.countermandReward(resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
-                task.ContactCheck.stopLogging()
             except KeyboardInterrupt:
                     # tag, eventKind, eventDict, timeStamp, toShellOrFile
                     task.Stimulator.quitting()
                     task.HeadFixer.releaseMouse(task.tag)
+                    task.DataLogger.setdown()
                     task.ContactCheck.stopLogging()
                     if hasattr(task, 'LickDetector'):
                         task.LickDetector.stopLogging()
