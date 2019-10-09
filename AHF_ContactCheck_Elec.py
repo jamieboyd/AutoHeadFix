@@ -120,11 +120,12 @@ class AHF_ContactCheck_Elec(AHF_ContactCheck):
 
     def startLogging(self):
         try:
+            self.stopLogging()
             GPIO.add_event_detect(self.contactPin, GPIO.BOTH)
-            GPIO.add_event_callback(self.contactPin, self.contactCheckCallback)
         except Exception as e:
             self.setup()
             GPIO.add_event_detect(self.contactPin, GPIO.BOTH)
+        finally:
             GPIO.add_event_callback(self.contactPin, self.contactCheckCallback)
 
 
