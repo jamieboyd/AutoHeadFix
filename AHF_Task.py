@@ -213,7 +213,6 @@ class Task(object):
                 baseName =(item [0], item[0][:-5])[item[0].endswith('Class')]
                 classDict = getattr(self, baseName + 'Dict')
                 setattr(self, baseName, item [1](self, classDict))
-                print(hex(id(getattr(self, baseName))), baseName)
         global gTask
         gTask = self
         default = False
@@ -223,7 +222,6 @@ class Task(object):
                 default = True
             for item in fields:
                 if isinstance(item [1],  ABCMeta):
-                    print("storing config")
                     baseName =(item [0], item[0][:-5])[item[0].endswith('Class')]
                     classDict = getattr(self, baseName + 'Dict')
                     self.DataLogger.storeConfig("changed_hardware", item[1].__name__, baseName + "Class")
@@ -231,7 +229,6 @@ class Task(object):
                     if default:
                         self.DataLogger.storeConfig("default_hardware", item[1].__name__, baseName + "Class")
                         self.DataLogger.storeConfig("default_hardware", classDict, baseName + "Dict")
-            print("setup complete")
 
     def saveSettings(self):
         """

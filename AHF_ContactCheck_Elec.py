@@ -119,8 +119,14 @@ class AHF_ContactCheck_Elec(AHF_ContactCheck):
             return True
 
     def startLogging(self):
-        GPIO.add_event_detect(self.contactPin, GPIO.BOTH)
-        GPIO.add_event_callback(self.contactPin, self.contactCheckCallback)
+        try:
+            GPIO.add_event_detect(self.contactPin, GPIO.BOTH)
+            GPIO.add_event_callback(self.contactPin, self.contactCheckCallback)
+        except Exception as e:
+            self.setup()
+            GPIO.add_event_detect(self.contactPin, GPIO.BOTH)
+            GPIO.add_event_callback(self.contactPin, self.contactCheckCallback)
+
 
     def stopLogging(self):
         GPIO.remove_event_detect(self.contactPin)

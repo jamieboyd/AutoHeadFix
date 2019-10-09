@@ -243,7 +243,7 @@ def Edit_Obj_fields(anObject, longName, isTaskConfig = False):
                 #newDict = newClass.config_user_get()
                 setattr(anObject, baseName + 'Dict', newClass.config_user_get())
             elif itemKey.endswith('Dict') and(itemValue is None or type(itemValue) is dict):
-                baseName = itemKey.rstrip('Dict')
+                baseName = itemKey[:-4]
                 theClass = getattr(anObject, baseName + 'Class')
                 if theClass is None:
                     #newClassName = File_from_user(baseName, baseName, '.py')

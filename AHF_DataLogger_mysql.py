@@ -169,7 +169,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         """
         Initiating database creation
         """
-        print("setting up")
+        print("setting up... ")
         raw_data_table_generation = """CREATE TABLE IF NOT EXISTS `raw_data`(`ID` int(11) NOT NULL AUTO_INCREMENT,`Tag` varchar(18) NOT NULL,`Event` varchar(50) NOT NULL,
                                     `Event_dict` varchar(2000) DEFAULT NULL,`Timestamp` timestamp(2) NULL DEFAULT NULL,`Cage` varchar(20) NOT NULL,
                                      `positions` blob, PRIMARY KEY(`ID`), UNIQUE KEY `Tag`(`Tag`,`Event`,`Timestamp`,`Cage`))
