@@ -38,12 +38,27 @@ def main():
     faulthandler.enable()
     try:
         configFile = ''
-        if argv.__len__() > 2 and argv[1] == "--temp":
+        if argv.__len__() > 1 and argv[1] == "--temp":
             jsonDict = {}
-            db = pymysql.connect(host="localhost", user="pi", db="raw_data", password="AutoHead2015")
+            with open("/home/pi/config.txt", "r") as file:
+                configs = file.readlines()
+                for config in configs:
+                    config = config.split("=")
+                    if config[0] == "cageID":
+                        cageID = config[1].rstrip("\n")
+                    if config[0] == "user":
+                        user = config[1].rstrip("\n")
+                    if config[0] == "pwd":
+                        pwd = config[1].rstrip("\n")
+                    if config[0] == "db":
+                        db = config[1].rstrip("\n")
+
+            db = pymysql.connect(host="localhost", user=user, db=db, password=pwd)
             query_sources = """SELECT DISTINCT `Dictionary_source` FROM `configs` WHERE `Cage` = %s AND `Tag` = %s"""
             cur  = db.cursor()
-            cur.execute(query_sources, [argv[2], "changed_hardware"])
+            if argv.__len__ > 2:
+                cageID = argv[2]
+            cur.execute(query_sources, [cageID, "changed_hardware"])
 
             sources_list =  [i[0] for i in cur.fetchall()]
             query_config = """SELECT `Tag`,`Dictionary_source`,`Config` FROM `configs` WHERE `Tag` = %s
