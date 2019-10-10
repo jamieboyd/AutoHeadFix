@@ -213,7 +213,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
         self.add_mouse_query = """INSERT INTO `mice`(`Timestamp`,`Cage`,`Tag`,`Note`) VALUES(FROM_UNIXTIME(%s),%s,%s,%s)"""
         self.events = []
         self.water_available = False
-        showDict = self.task.Show_testable_objects()
+        #showDict = self.task.Show_testable_objects()
 
         self.events.append([0, 'SeshStart', None, time(),self.cageID,None])
         if self.saveToDatabase(self.raw_save_query, self.events, True):

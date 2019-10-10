@@ -75,10 +75,8 @@ class AHF_Subjects_mice(AHF_Subjects):
         elif self.loadConfigs == "provide_json":  #check file, if not existing or not correct provide a fillable json, then update miceDict when user is ready
             try:
                 direc = ''
-                print(os.getcwd())
                 if os.getcwd() == "/root":
                     direc = "/home/pi/Desktop/AHF_setup/AutoHeadFixSetup/AutoHeadFix/"
-                print(self.jsonName)
                 self.miceDict = CAD.File_to_dict('mice', self.jsonName, '.jsn', direc)
                 if self.check_miceDict(self.miceDict) == False:
                     raise Exception('Could not confirm dictionary')
