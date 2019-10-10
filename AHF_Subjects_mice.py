@@ -76,7 +76,12 @@ class AHF_Subjects_mice(AHF_Subjects):
             try:
                 direc = ''
                 if os.getcwd() == "/root":
-                    direc = "/home/pi/Desktop/AHF_setup/AutoHeadFixSetup/AutoHeadFix/"
+                    with open("/home/pi/config.txt", "r") as file:
+                         configs = file.readlines()
+                         for config in configs:
+                             config = config.split("=")
+                             if config[0] == "path":
+                                 direc = config[1].rstrip("\n")
                 self.miceDict = CAD.File_to_dict('mice', self.jsonName, '.jsn', direc)
                 if self.check_miceDict(self.miceDict) == False:
                     raise Exception('Could not confirm dictionary')

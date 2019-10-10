@@ -8,7 +8,7 @@ cageID = ""
 user = ""
 pwd = ""
 db = ""
-with open("config.txt", "r") as file:
+with open("/home/pi/config.txt", "r") as file:
     configs = file.readlines()
     for config in configs:
         config = config.split("=")
