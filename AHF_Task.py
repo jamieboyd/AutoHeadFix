@@ -230,7 +230,6 @@ class Task(object):
                         self.DataLogger.storeConfig("default_hardware", item[1].__name__, baseName + "Class")
                         self.DataLogger.storeConfig("default_hardware", classDict, baseName + "Dict")
 
-
     def saveSettings(self):
         """
         Saves current configuration stored in the task object into AHF_task_*.jsn

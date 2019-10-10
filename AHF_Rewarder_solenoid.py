@@ -188,7 +188,8 @@ class AHF_Rewarder_solenoid(AHF_Rewarder,metaclass = ABCMeta):
                 return 0
             self.task.Subjects.get(self.task.tag).get("Rewarder").update({"lastEntryTime": time()})
             mouseDict.get('Rewarder').update({'totalEntryRewardsToday': mouseDict.get('Rewarder').get("totalEntryRewardsToday") + 1})
-        return 1
+            return 1
+        return 0
 
     def breakBeamHandling(self):
         mouseDict = self.task.Subjects.get(self.task.tag)
@@ -199,7 +200,8 @@ class AHF_Rewarder_solenoid(AHF_Rewarder,metaclass = ABCMeta):
             if time() - lastTime < mouseDict.get("Rewarder").get('breakBeamDelay'):
                 return 0
             mouseDict.get('Rewarder').update({'totalBreakBeamRewardsToday': mouseDict.get('Rewarder').get("totalBreakBeamRewardsToday") + 1})
-        return 1
+            return 1
+        return 0
 
     def giveRewardCM(self, rewardName, resultsDict={}, settingsDict = {}):
         """
