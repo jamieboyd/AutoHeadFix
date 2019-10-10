@@ -1,7 +1,8 @@
 #!/bin/bash
-DISPLAY=":0.0"
-export DISPLAY
-mypath=$(sudo find / -type d -name "AutoHeadFix" | grep "AutoHeadFix";)
+#DISPLAY=":0.0"
+#export DISPLAY
+#mypath=$(sudo find / -type d -name "AutoHeadFix" | grep "AutoHeadFix";)
+mypath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 if [[ ! $(pgrep -f __main__2.py ) ]]; then
 	echo "start script" > /home/pi/tmp.txt
