@@ -4,6 +4,7 @@
 from abc import ABCMeta, abstractmethod
 from AHF_HeadFixer import AHF_HeadFixer
 from time import sleep
+from _thread import start_new_thread
 from random import random
 
 class AHF_HeadFixer_PWM(AHF_HeadFixer, metaclass = ABCMeta):
@@ -84,9 +85,10 @@ class AHF_HeadFixer_PWM(AHF_HeadFixer, metaclass = ABCMeta):
                     self.setPWM(self.servoReleasedPosition)
                 self.hasMouseLog(hasContact, self.task.isFixTrial, thisTag, resultsDict)
         else: # noFix trial, wait for contact and return
-            hasContact = self.waitForMouse(thisTag)
-            if hasContact:
-                self.hasMouseLog(True, self.task.isFixTrial, thisTag, resultsDict)
+            if self.task.contact and not AHF_HeadFixer.isChecking:
+                start_new_thread(self.isFixedCheck,())
+                return True
+            return False
         return hasContact
     # TODO get rid of resultsdict
 

@@ -43,32 +43,9 @@ class AHF_HeadFixer_NoFix(AHF_HeadFixer):
         starterDict.update({'headFixTime' : headFixTime})
         return starterDict
 
-    @staticmethod
-    def isFixedCheck():
-        AHF_HeadFixer_NoFix.isChecking = True
-        mouseDict = AHF_Task.gTask.Subjects.get(AHF_Task.gTask.tag)
-        if mouseDict is None:
-            AHF_HeadFixer_NoFix.isChecking = False
-            return
-        lastRewardTime = time()
-        rewardGiven = False
-        while AHF_Task.gTask.contact:
-            try:
-                sleep(0.05)
-                if time() - lastRewardTime >= mouseDict.get("Rewarder").get("breakBeamDelay"):
-                    if AHF_Task.gTask.Rewarder.giveRewardCM("breakBeam") > 0:
-                        rewardGiven = True
-                        lastRewardTime = time()
-                if rewardGiven:
-                    mouseDict.get("Rewarder").update({"lastBreakBeamTime": time()})
-            except Exception as e:
-                AHF_HeadFixer_NoFix.isChecking = False
-                break
-        AHF_Task.gTask.Stimulator.stop()
-        AHF_HeadFixer_NoFix.isChecking = False
 
     def setup(self):
-        self.isChecking = False
+        AHF_HeadFixer.isChecking = False
         self.task.isFixTrial = False
         super().setup()
 
@@ -79,7 +56,7 @@ class AHF_HeadFixer_NoFix(AHF_HeadFixer):
         """
         Just does contact check with super(), does not fix
         """
-        if self.task.contact and not AHF_HeadFixer_NoFix.isChecking:
+        if self.task.contact and not AHF_HeadFixer.isChecking:
             start_new_thread(self.isFixedCheck,())
             return True
         return False
