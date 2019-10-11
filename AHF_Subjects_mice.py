@@ -75,19 +75,19 @@ class AHF_Subjects_mice(AHF_Subjects):
         elif self.loadConfigs == "provide_json":  #check file, if not existing or not correct provide a fillable json, then update miceDict when user is ready
             try:
                 direc = ''
-                print(os.getcwd())
                 if os.getcwd() == "/root":
-                    direc = "/home/pi/Desktop/AHF_setup/AutoHeadFixSetup/AutoHeadFix/"
-                print(self.jsonName)
+                    with open("/home/pi/config.txt", "r") as file:
+                         configs = file.readlines()
+                         for config in configs:
+                             config = config.split("=")
+                             if config[0] == "path":
+                                 direc = config[1].rstrip("\n")
                 self.miceDict = CAD.File_to_dict('mice', self.jsonName, '.jsn', direc)
                 if self.check_miceDict(self.miceDict) == False:
                     raise Exception('Could not confirm dictionary')
             except Exception as e:
-                print(str(e))
                 print('Unable to open and fully load subjects configuration, we will create a fillable json for you.\n'
-                      'This file will be named according to the task configuration file. After entering the mice,\n'
-                      'edit the contents to your liking, then COPY the file to your filename. DO NOT rename.')
-                self.miceDict = {}
+                      'This file will be named AHF_mice_fillable' +  self.jsonName + ".jsn\n")
                 self.create_fillable_json()
             while self.check_miceDict(self.miceDict) == False:
                 input('could not load json, please edit and try again. Press enter when done')
@@ -96,18 +96,32 @@ class AHF_Subjects_mice(AHF_Subjects):
                 for source in self.miceDict.get(tag):
                     self.task.DataLogger.storeConfig(int(tag), self.miceDict.get(tag).get(source), source)
     def create_fillable_json(self):
-        tempInput = input('Add the mice for your task.\n'
-                          'Type A for adding a mouse with the tag number \n'
-                          'Type T for using the RFID Tag reader ')
-        moreMice =True
-        while moreMice:
-            self.add(tempInput[0])
-            stillmore = input('add another mouse? Y or N')
-            if stillmore[0] == "n" or stillmore[0] == "N":
-                moreMice = False
+        tags = self.miceDict.keys()
+        self.miceDict = {}
+        useOld = ""
+        if len(tags) > 0:
+            useOld = input("You have the following tags in your JSON: " + str(tags) + " Would you like to use these?")
+        addMore = True
+        if len(useOld) > 0 and useOld[0].lower()  == 'y':
+            for tag in tags:
+                self.add(int(tag))
+            addMore = input("Add any more mice?")
+            if len(addMore) >0  and addMore[0].lower() == 'n':
+                addMore = False
+        if addMore:
+            tempInput = input('Add the mice for your task.\n'
+                              'Type A for adding a mouse with the tag number \n'
+                              'Type T for using the RFID Tag reader ')
+            moreMice =True
+            while moreMice:
+                self.add(tempInput[0])
+                stillmore = input('add another mouse? Y or N')
+                if stillmore[0] == "n" or stillmore[0] == "N":
+                    moreMice = False
         print(self.miceDict)
         CAD.Dict_to_file(self.miceDict, "mice_fillable", self.jsonName, ".jsn")
-        input('Please edit the values now. Press enter when done')
+        input("Please edit the values in AHF_mice_fillable_" + self.jsonName + '.jsn now. Do not modify the structure.\n' +
+              "Press enter when done")
         os.system("sudo cp AHF_mice_fillable_" + self.jsonName + ".jsn" + " AHF_mice_" + self.jsonName + ".jsn")
         self.miceDict = CAD.File_to_dict('mice', self.jsonName, '.jsn')
 
@@ -137,8 +151,6 @@ class AHF_Subjects_mice(AHF_Subjects):
                     check = False
         else:
             check = False
-        if check == False:
-            print("your Json could not be confirmed, please fill out the AHF_fillable_mice_settings.json")
         return check
 
     def setdown(self):

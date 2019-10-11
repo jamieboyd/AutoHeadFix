@@ -1,3 +1,4 @@
+
 #! /usr/bin/python3
 #-*-coding: utf-8 -*-
 
@@ -38,12 +39,29 @@ def main():
     faulthandler.enable()
     try:
         configFile = ''
-        if argv.__len__() > 2 and argv[1] == "--temp":
+        if argv.__len__() > 1 and argv[1] == "--temp":
             jsonDict = {}
-            db = pymysql.connect(host="localhost", user="pi", db="raw_data", password="AutoHead2015")
+            cageID, user, pwd, db = '', '', '', ''
+            with open("/home/pi/config.txt", "r") as file:
+                configs = file.readlines()
+                print(configs)
+                for config in configs:
+                    config = config.split("=")
+                    if config[0] == "cageID":
+                        cageID = config[1].rstrip("\n")
+                    if config[0] == "user":
+                        user = config[1].rstrip("\n")
+                    if config[0] == "pwd":
+                        pwd = config[1].rstrip("\n")
+                    if config[0] == "db":
+                        db = config[1].rstrip("\n")
+            print(cageID, user, pwd, db)
+            db = pymysql.connect(host="localhost", user=user, db=db, password=pwd)
             query_sources = """SELECT DISTINCT `Dictionary_source` FROM `configs` WHERE `Cage` = %s AND `Tag` = %s"""
             cur  = db.cursor()
-            cur.execute(query_sources, [argv[2], "changed_hardware"])
+            if argv.__len__() > 2:
+                cageID = argv[2]
+            cur.execute(query_sources, [cageID, "changed_hardware"])
 
             sources_list =  [i[0] for i in cur.fetchall()]
             query_config = """SELECT `Tag`,`Dictionary_source`,`Config` FROM `configs` WHERE `Tag` = %s
@@ -81,6 +99,7 @@ def main():
         resultsDict = {"HeadFixer": {}, "Rewarder": {}, "Stimulator": {}}
         while True:
             try:
+
                 print('Waiting for a mouse....')
                 task.ContactCheck.startLogging()
                 # loop with a brief sleep, waiting for a tag to be read, or a new day to dawn
@@ -115,11 +134,12 @@ def main():
                         task.HeadFixer.releaseMouse(thisTag)
                 if doCountermand:
                     task.Rewarder.countermandReward(resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
-                task.ContactCheck.stopLogging()
+                   
             except KeyboardInterrupt:
                     # tag, eventKind, eventDict, timeStamp, toShellOrFile
                     task.Stimulator.quitting()
                     task.HeadFixer.releaseMouse(task.tag)
+                    task.DataLogger.setdown()
                     task.ContactCheck.stopLogging()
                     if hasattr(task, 'LickDetector'):
                         task.LickDetector.stopLogging()
@@ -157,10 +177,11 @@ def main():
                             if hasattr(task, 'LickDetector'):
                                 task.LickDetector.setdown()
                             task.editSettings()
-                            response = input('Save edited settings to file?')
-                            if response [0] == 'Y' or response [0] == 'y':
-                                task.saveSettings()
+                            #response = input('Save edited settings to file?')
+                            #if response [0] == 'Y' or response [0] == 'y':
+                             #   task.saveSettings()
                             task.setup()
+                            print("hello")
                         elif event == 'S' or event == 's':
                             task.Stimulator.settingsDict = task.Stimulator.config_user_get(task.Stimulator.settingsDict)
                             task.Stimulator.setup()
