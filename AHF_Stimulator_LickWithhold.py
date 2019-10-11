@@ -343,7 +343,7 @@ class AHF_Stimulator_LickWithhold(AHF_Stimulator):
             self.rewardTimes = []
             self.camera.start_preview()
             for reward in range(self.mouse.get("Stimulator").get("nRewards")):
-                if not self.running:
+                if not self.running or self.task.tag == 0:
                     print("break")
                     break
                 self.rewardTimes.append(time())

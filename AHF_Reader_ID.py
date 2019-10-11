@@ -64,7 +64,7 @@ class AHF_Reader_ID(AHF_Reader):
                 if GPIO.input(channel) == GPIO.HIGH:
                     try:
                         tag = self.readTag()
-                        if AHF_Task.gTask.Subjects.get(tag) is not None:
+                        if AHF_Task.gTask.Subjects.get(tag) is not None and AHF_Task.gTask.tag != tag:
                             print("new boi")
                             AHF_Task.gTask.tag = tag
                             AHF_Task.gTask.DataLogger.writeToLogFile(AHF_Task.gTask.tag, 'entry', None, time())

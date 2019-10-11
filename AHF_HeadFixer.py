@@ -11,6 +11,7 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
     boolean for settability of headFixing levels, default is False. Can be used for incremental learning
     """
     hasLevels = False
+    isChecking = False
     defaultPropHeadFix = 0.75
     defaultSkeddadleTime = 5
     defaultHeadFixTime = 40
@@ -53,6 +54,7 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
         gets settings from dict, not @abstract because this may be all you nees, as for HeadFixer_NoFix
         """
         self.propHeadFix = self.settingsDict.get('propHeadFix')
+        self.isChecking = False
         self.skeddadleTime = self.settingsDict.get('skeddadleTime')
 
     def newResultsDict(self, starterDict = {}):

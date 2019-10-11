@@ -25,7 +25,7 @@ class AHF_Stimulator(AHF_Base, metaclass = ABCMeta):
 
     @abstractmethod
     def quitting(self):
-        pass
+        self.running = False
 
     def stop(self):
         self.running = False
