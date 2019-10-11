@@ -99,6 +99,7 @@ def main():
         resultsDict = {"HeadFixer": {}, "Rewarder": {}, "Stimulator": {}}
         while True:
             try:
+
                 print('Waiting for a mouse....')
                 task.ContactCheck.startLogging()
                 # loop with a brief sleep, waiting for a tag to be read, or a new day to dawn
@@ -133,6 +134,7 @@ def main():
                         task.HeadFixer.releaseMouse(thisTag)
                 if doCountermand:
                     task.Rewarder.countermandReward(resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
+                   
             except KeyboardInterrupt:
                     # tag, eventKind, eventDict, timeStamp, toShellOrFile
                     task.Stimulator.quitting()

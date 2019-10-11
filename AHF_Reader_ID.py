@@ -31,7 +31,6 @@ class AHF_Reader_ID(AHF_Reader):
         also logs entries in TagReader results dict for the mouse the tag corresponds to
         """
         if GPIO.input(channel) == GPIO.HIGH: # tag just entered
-            print("hello")
             try:
                 tag = RFIDTagReader.globalReader.readTag()
                 print(tag)
@@ -61,10 +60,12 @@ class AHF_Reader_ID(AHF_Reader):
     def constantCheck(self, channel):
         while AHF_Reader_ID.isChecking:
             try:
+                sleep(0.1)
                 if GPIO.input(channel) == GPIO.HIGH:
                     try:
                         tag = self.readTag()
                         if AHF_Task.gTask.Subjects.get(tag) is not None:
+                            print("new boi")
                             AHF_Task.gTask.tag = tag
                             AHF_Task.gTask.DataLogger.writeToLogFile(AHF_Task.gTask.tag, 'entry', None, time())
                             AHF_Task.gTask.entryTime = time()
@@ -82,6 +83,7 @@ class AHF_Reader_ID(AHF_Reader):
                     if self.task.isFixTrial and self.task.fixed:
                         continue
                     if self.task.tag != 0 and not self.task.contact:
+                        self.task.Stimulator.stop()
                         AHF_Task.gTask.DataLogger.writeToLogFile(AHF_Task.gTask.tag, 'exit', None, time())
                         AHF_Task.gTask.tag = 0
                         self.tagReader.clearBuffer()
