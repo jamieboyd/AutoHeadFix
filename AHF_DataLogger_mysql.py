@@ -5,6 +5,7 @@ from datetime import datetime
 import pymysql
 from ast import literal_eval
 from AHF_Task import Task
+from threading import Thread
 import AHF_ClassAndDictUtils as CAD
 from AHF_DataLogger import AHF_DataLogger
 import json
@@ -344,9 +345,8 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
             else:
                 self.events.append([tag, eventKind, str(eventDict), timeStamp, self.cageID, None])
         if eventKind == "exit" and toShellOrFile & self.TO_FILE:
-            print("Exited")
-            self.saveToDatabase(self.raw_save_query, self.events, False)
-            self.saveToDatabase(self.raw_save_query, self.events, True)
+            Thread(target=self.saveToDatabase, args=(self.raw_save_query, self.events, False)).start()
+            Thread(target=self.saveToDatabase, args=(self.raw_save_query, self.events, True)).start()
             self.events = []
         if(toShellOrFile & self.TO_SHELL) > 0:
             print('{:013}\t{:s}\t{:s}\t{:s}\t{:s}\n'.format(tag, eventKind, str(eventDict), datetime.fromtimestamp(int(timeStamp)).isoformat(' '), self.cageID))
