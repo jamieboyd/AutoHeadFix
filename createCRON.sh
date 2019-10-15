@@ -8,7 +8,11 @@
 ##################
 #VERY IMPORTANT:YOU CANNOT HAVE MORE THAN ONE AutoHeadFix FOLDER ON YOUR MACHINE 
 #*******************************************************************
-mypath=$(sudo find / -type d -name "AutoHeadFix" | grep "AutoHeadFix";)
+
+#mypath=$(sudo find / -type d -name "AutoHeadFix" | grep "AutoHeadFix";)
+configpath="/home/pi"
+
+mypath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 if [ $? -eq 0 ];
 	        then
