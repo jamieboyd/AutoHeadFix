@@ -3,6 +3,7 @@
 from time import time, sleep
 from abc import ABCMeta, abstractmethod
 from AHF_Base import AHF_Base
+import AHF_Task
 from random import random
 class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
     """
@@ -10,6 +11,7 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
     boolean for settability of headFixing levels, default is False. Can be used for incremental learning
     """
     hasLevels = False
+    isChecking = False
     defaultPropHeadFix = 0.75
     defaultSkeddadleTime = 5
     defaultHeadFixTime = 40
@@ -52,6 +54,7 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
         gets settings from dict, not @abstract because this may be all you nees, as for HeadFixer_NoFix
         """
         self.propHeadFix = self.settingsDict.get('propHeadFix')
+        self.isChecking = False
         self.skeddadleTime = self.settingsDict.get('skeddadleTime')
 
     def newResultsDict(self, starterDict = {}):
@@ -90,6 +93,29 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
         self.task.lastFixedTag = thisTag
 
 
+    @staticmethod
+    def isFixedCheck():
+        AHF_HeadFixer.isChecking = True
+        mouseDict = AHF_Task.gTask.Subjects.get(AHF_Task.gTask.tag)
+        if mouseDict is None:
+            AHF_HeadFixer.isChecking = False
+            return
+        lastRewardTime = time()
+        rewardGiven = False
+        while AHF_Task.gTask.contact:
+            try:
+                sleep(0.05)
+                if time() - lastRewardTime >= mouseDict.get("Rewarder").get("breakBeamDelay"):
+                    if AHF_Task.gTask.Rewarder.giveRewardCM("breakBeam") > 0:
+                        rewardGiven = True
+                        lastRewardTime = time()
+                if rewardGiven:
+                    mouseDict.get("Rewarder").update({"lastBreakBeamTime": time()})
+            except Exception as e:
+                AHF_HeadFixer.isChecking = False
+                break
+        AHF_Task.gTask.Stimulator.stop()
+        AHF_HeadFixer.isChecking = False
 
     def waitForMouse(self, thisTag):
         """

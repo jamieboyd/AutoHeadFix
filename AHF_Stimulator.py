@@ -25,7 +25,7 @@ class AHF_Stimulator(AHF_Base, metaclass = ABCMeta):
 
     @abstractmethod
     def quitting(self):
-        pass
+        self.running = False
 
     def stop(self):
         self.running = False
@@ -42,6 +42,8 @@ class AHF_Stimulator(AHF_Base, metaclass = ABCMeta):
             else:
                 extension = 'h264'
             self.lastTime =  time()
+            print(hex(id(self)), 'start')
+            print(self.lastTime)
             video_name = str(thisTag)  + "_" + '%d' % self.lastTime + '.' + extension
             video_name_path = '/home/pi/Documents/' + "M" + video_name
             #writeToLogFile(expSettings.logFP, thisMouse, "video:" + video_name)
@@ -76,7 +78,10 @@ class AHF_Stimulator(AHF_Base, metaclass = ABCMeta):
             extension = 'raw'
         else:
             extension = 'h264'
-
+        print(hex(id(self)), 'stop')
+        if self.lastTime is None:
+            print("no last")
+            return 
         video_name = str(thisTag)  + "_" + '%d' % self.lastTime + '.' + extension
         video_name_path = '/home/pi/Documents/' + "M" + video_name
         if hasattr(self.task, 'Trigger'):
@@ -89,7 +94,10 @@ class AHF_Stimulator(AHF_Base, metaclass = ABCMeta):
             camera.stop_recording()
             self.task.BrainLight.offForStim() # turn off the blue LED
             self.task.DataLogger.writeToLogFile(thisTag, 'BrainLEDOFF', None, time())
+        print("turned off")
+        camera.stop_preview()
         self.task.DataLogger.writeToLogFile(thisTag, 'VideoEnd', None, time())
         uid = getpwnam('pi').pw_uid
         gid = getgrnam('pi').gr_gid
+        self.lastTime = None
         chown(video_name_path, uid, gid) # we run AutoheadFix as root if using pi PWM, so we expicitly set ownership to pi

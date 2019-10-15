@@ -1,3 +1,4 @@
+
 #! /usr/bin/python3
 #-*-coding: utf-8 -*-
 
@@ -40,8 +41,10 @@ def main():
         configFile = ''
         if argv.__len__() > 1 and argv[1] == "--temp":
             jsonDict = {}
+            cageID, user, pwd, db = '', '', '', ''
             with open("/home/pi/config.txt", "r") as file:
                 configs = file.readlines()
+                print(configs)
                 for config in configs:
                     config = config.split("=")
                     if config[0] == "cageID":
@@ -52,11 +55,11 @@ def main():
                         pwd = config[1].rstrip("\n")
                     if config[0] == "db":
                         db = config[1].rstrip("\n")
-
+            print(cageID, user, pwd, db)
             db = pymysql.connect(host="localhost", user=user, db=db, password=pwd)
             query_sources = """SELECT DISTINCT `Dictionary_source` FROM `configs` WHERE `Cage` = %s AND `Tag` = %s"""
             cur  = db.cursor()
-            if argv.__len__ > 2:
+            if argv.__len__() > 2:
                 cageID = argv[2]
             cur.execute(query_sources, [cageID, "changed_hardware"])
 
@@ -96,6 +99,7 @@ def main():
         resultsDict = {"HeadFixer": {}, "Rewarder": {}, "Stimulator": {}}
         while True:
             try:
+
                 print('Waiting for a mouse....')
                 task.ContactCheck.startLogging()
                 # loop with a brief sleep, waiting for a tag to be read, or a new day to dawn
@@ -130,6 +134,7 @@ def main():
                         task.HeadFixer.releaseMouse(thisTag)
                 if doCountermand:
                     task.Rewarder.countermandReward(resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
+                   
             except KeyboardInterrupt:
                     # tag, eventKind, eventDict, timeStamp, toShellOrFile
                     task.Stimulator.quitting()

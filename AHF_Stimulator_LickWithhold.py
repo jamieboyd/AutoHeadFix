@@ -279,6 +279,7 @@ class AHF_Stimulator_LickWithhold(AHF_Stimulator):
         super().startVideo()
         self.tag = self.task.tag
         if self.tag <= 0:
+            super().stopVideo()
             return
         self.mouse = self.task.Subjects.get(self.tag)
         if level < 0:
@@ -342,6 +343,9 @@ class AHF_Stimulator_LickWithhold(AHF_Stimulator):
             self.rewardTimes = []
             self.camera.start_preview()
             for reward in range(self.mouse.get("Stimulator").get("nRewards")):
+                if not self.running or self.task.tag == 0:
+                    print("break")
+                    break
                 self.rewardTimes.append(time())
                 self.rewarder.giveReward('task')
                 sleep(timeInterval)

@@ -62,7 +62,7 @@ class AHF_DataLogger_textMySql(AHF_DataLogger):
         """
         super().writeToLogFile(tag, eventKind, eventDict, timeStamp, toShellOrFile)
         self.textLogger.writeToLogFile(tag, eventKind, eventDict, timeStamp, toShellOrFile)
-        self.sqlLogger.writeToLogFile(tag, eventKind, eventDict, timeStamp, toShellOrFile)
+        self.sqlLogger.writeToLogFile(tag, eventKind, eventDict, timeStamp, 2)
 
     @staticmethod
     def about():
