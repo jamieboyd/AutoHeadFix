@@ -49,12 +49,14 @@ class AHF_BrainLight_1GPIO(AHF_BrainLight):
 
 
     def onForStim(self):
+        super().onForStim()
         if self.ledDelay > 0:
             start_new_thread(self.onThread,(self.ledDelay,self.ledPin))
         else:
             GPIO.output(self.ledPin, GPIO.HIGH)
 
     def offForStim(self):
+        super().offForStim()
         if self.ledDelay > 0:
             sleep(self.ledDelay)
         GPIO.output(self.ledPin, GPIO.LOW)

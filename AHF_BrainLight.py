@@ -25,6 +25,8 @@ class AHF_BrainLight(AHF_Base, metaclass = ABCMeta):
         """
         Runs when headFixing starts, illuminating the brain or whatever needs illuminating
         """
+        if self.task.isFixTrial:
+            self.task.ContactCheck.turnOff()
         pass
 
     @abstractmethod
@@ -32,6 +34,7 @@ class AHF_BrainLight(AHF_Base, metaclass = ABCMeta):
         """
         Runs when headFixing ends, turning off whatever was turned on
         """
+        self.task.ContactCheck.turnOn()
         pass
 
     def hardwareTest(self):
