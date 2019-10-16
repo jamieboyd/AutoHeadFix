@@ -2,6 +2,7 @@
 #-*-coding: utf-8 -*-
 
 from AHF_ContactCheck_Elec import AHF_ContactCheck_Elec
+import RPi.GPIO as GPIO
 
 class AHF_ContactCheck_BeamBreak(AHF_ContactCheck_Elec):
     defaultPin = 12
@@ -17,8 +18,8 @@ class AHF_ContactCheck_BeamBreak(AHF_ContactCheck_Elec):
         response = input('Enter the GPIO pin connected to the IR beam-breaker, currently %d:' % contactPin)
         if response != '':
             contactPin = int(response)
-        ledPin = starterDict.get('contactPin', AHF_ContactCheck_BeamBreak.defaultLEDPin)
-        response = input('Enter the GPIO pin connected to the IR beam-breaker, currently %d:' % ledPin)
+        ledPin = starterDict.get('ledPin', AHF_ContactCheck_BeamBreak.defaultLEDPin)
+        response = input('Enter the GPIO pin connected to the IR LED, currently %d:' % ledPin)
         if response != '':
             ledPin = int(response)
         starterDict.update({'contactPin': contactPin, 'contactPolarity' : 'FALLING', 'contactPUD' : 'PUD_UP', 'ledPin': ledPin})

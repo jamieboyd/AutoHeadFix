@@ -17,7 +17,8 @@
 "ContactCheckClass"="AHF_ContactCheck_BeamBreak"
 "ContactCheckDict"={"contactPUD"="PUD_UP"
 "contactPin"=12
-"contactPolarity"="FALLING"}
+"contactPolarity"="FALLING"
+"ledPin"=24}
 "DataLoggerClass"="AHF_DataLogger_textMySql"
 "DataLoggerDict"={"DB"="AHF_laser_cage"
 "DBhost"="142.103.107.236"
@@ -59,7 +60,8 @@
 "speakerDuty"=0.8
 "speakerFreq"=300
 "speakerOffForReward"=1.5
-"speakerPin"=25}
+"speakerPin"=25
+"videoPath"=""}
 "StimulusClass"="AHF_Stimulus_VibMotor"
 "StimulusDict"={"motorDuty"=0.8
 "motorFreq"=300
@@ -77,7 +79,9 @@
 "entryTime"=0.0
 "fileName"="HeadFix_LickWithhold"
 "fixAgainTime"=Infinity
+"fixed"=false
 "inChamberLimitExceeded"=false
+"isFixTrial"=false
 "lastFixedTag"=0
 "lastFixedTime"=0
 "logToFile"=true

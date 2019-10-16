@@ -97,7 +97,7 @@ class AHF_DataLogger_mysql(AHF_DataLogger):
             localDatabase = response
         # password
         localPassword = starterDict.get('localPassword', AHF_DataLogger_mysql.localPassword)
-        response = input('Enter your local user password(currently {}): '.format(DBpwd))
+        response = input('Enter your local user password(currently {}): '.format(localPassword))
         if response != '':
             localPassword = response
 
