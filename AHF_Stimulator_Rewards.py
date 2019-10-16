@@ -17,7 +17,7 @@ class AHF_Stimulator_Rewards(AHF_Stimulator):
 
     @staticmethod
     def config_user_get(starterDict = {}):
-        return starterDict
+        return AHF_Stimulator.config_user_get(starterDict)
 
     def config_user_subject_get(self,starterDict = {}):
         nRewards = starterDict.get('nRewards', AHF_Stimulator_Rewards.defaultRewards)
@@ -40,6 +40,7 @@ class AHF_Stimulator_Rewards(AHF_Stimulator):
 
     def setup(self):
         self.rewarder = self.task.Rewarder
+        super().setup()
 
 
     def setdown(self):

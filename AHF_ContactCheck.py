@@ -19,6 +19,12 @@ class AHF_ContactCheck(AHF_Base, metaclass = ABCMeta):
     def waitForNoContact(self, timeoutSecs):
         return False
 
+    def turnOn (self):
+        pass
+
+    def turnOff (self):
+        pass
+
     @abstractmethod
     def startLogging(self):
         """

@@ -175,7 +175,7 @@ class AHF_Stimulator_Lever(AHF_Stimulator):
                 prePullTime = float(response)
             starterDict.update({'prePullTime': prePullTime})
 
-        return starterDict
+        return AHF_Stimulator.config_user_get(starterDict)
 
     def config_user_subject_get(self, starterDict={}):
         print('=============== Default Pull Difficulty Settings ==================')
@@ -324,6 +324,7 @@ class AHF_Stimulator_Lever(AHF_Stimulator):
         return starterDict
 
     def setup(self):
+        super().setup()
         self.recordingTime = self.settingsDict.get('recordingTime')
         self.leverIsReversed = self.settingsDict.get('leverIsReversed')
         self.goalCuePin = self.settingsDict.get('goalCuePin')

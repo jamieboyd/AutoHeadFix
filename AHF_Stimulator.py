@@ -15,6 +15,13 @@ class AHF_Stimulator(AHF_Base, metaclass = ABCMeta):
     All events and their timings in a head fix, including rewards, are controlled by a Stimulator.
 
     """
+    @staticmethod
+    def config_user_get(starterDict = {}):
+        videoPath = starterDict.get("videoPath", "/home/pi/Documents")
+        videoPath = input("Enter the path for videos to be saved under, currently " + videoPath)
+        starterDict.update({"videoPath": videoPath})
+        return starterDict
+ 
     @abstractmethod
     def run(self, level = 0, resultsDict = {}, settingsDict = {}):
         """
@@ -29,6 +36,9 @@ class AHF_Stimulator(AHF_Base, metaclass = ABCMeta):
 
     def stop(self):
         self.running = False
+
+    def setup(self):
+        self.videoPath = self.settingsDict.get("videoPath")
 
     def startVideo(self):
 
@@ -45,7 +55,7 @@ class AHF_Stimulator(AHF_Base, metaclass = ABCMeta):
             print(hex(id(self)), 'start')
             print(self.lastTime)
             video_name = str(thisTag)  + "_" + '%d' % self.lastTime + '.' + extension
-            video_name_path = '/home/pi/Documents/' + "M" + video_name
+            video_name_path = self.videoPath + "M" + video_name
             #writeToLogFile(expSettings.logFP, thisMouse, "video:" + video_name)
             # send socket message to start behavioural camera
             self.task.DataLogger.writeToLogFile(thisTag, 'VideoStart', {'name': video_name}, time())
@@ -83,7 +93,7 @@ class AHF_Stimulator(AHF_Base, metaclass = ABCMeta):
             print("no last")
             return 
         video_name = str(thisTag)  + "_" + '%d' % self.lastTime + '.' + extension
-        video_name_path = '/home/pi/Documents/' + "M" + video_name
+        video_name_path = self.videoPath + "M" + video_name
         if hasattr(self.task, 'Trigger'):
             self.task.BrainLight.offForStim() # turn off the blue LED
             self.task.DataLogger.writeToLogFile(thisTag, 'BrainLEDOFF', None, time())
