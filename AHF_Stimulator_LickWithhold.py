@@ -225,7 +225,9 @@ class AHF_Stimulator_LickWithhold(AHF_Stimulator):
                 self.task.DataLogger.writeToLogFile(self.tag, 'Outcome', {'code': -4}, time())
 
                 return
+        responseEnd = self.mouse.get("Stimulator").get("responseTime") + time()
         anyLicks = self.task.LickDetector.waitForLick(self.mouse.get("Stimulator").get("responseTime"))
+        sleep(max(responseEnd - time(), 0))
         if anyLicks is not 0:
             self.rewardTimes.append(time())
             self.rewarder.giveReward('task')
@@ -248,7 +250,9 @@ class AHF_Stimulator_LickWithhold(AHF_Stimulator):
             if anyLicks:
                 self.task.DataLogger.writeToLogFile(self.tag, 'Outcome', {'code': -3}, time())
                 return
+        responseEnd = self.mouse.get("Stimulator").get("responseTime") + time()
         anyLicks = self.task.LickDetector.waitForLick(self.mouse.get("Stimulator").get("responseTime"))
+        sleep(max(responseEnd - time(), 0))
         if anyLicks == 0:
             if self.mouse.get("Stimulator").get("rewardNoGo"):
                 self.rewardTimes.append(time())
