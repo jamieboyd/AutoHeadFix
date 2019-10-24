@@ -56,6 +56,7 @@ class AHF_HeadFixer_NoFix(AHF_HeadFixer):
         """
         Just does contact check with super(), does not fix
         """
+        self.hasMouseLog(False, self.task.isFixTrial, tag, resultsDict)
         if self.task.contact and not AHF_HeadFixer.isChecking:
             start_new_thread(self.isFixedCheck,())
             return True

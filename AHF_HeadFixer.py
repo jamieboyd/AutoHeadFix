@@ -144,7 +144,7 @@ class AHF_HeadFixer(AHF_Base, metaclass= ABCMeta):
             else:
                 result = 'check-'
         else:
-            result = 'unfixed'
+            result = 'check No Fix Trial'
         fixTime = time()
         self.task.DataLogger.writeToLogFile(thisTag, 'Fix', {'result' : result}, fixTime)
         self.task.lastFixedTime = fixTime

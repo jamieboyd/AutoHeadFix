@@ -43,6 +43,14 @@ class AHF_DataLogger_text(AHF_DataLogger):
 
         if response != '':
             cageID = response
+        #old style
+        oldVersion = starterDict.get("oldVersion", False)
+        response = input("Do you want to save the text files in the old style (no event dict)? (y/n) Currently %s" % oldVersion)
+        if response != '':
+            if response[0].lower() == 'y':
+                oldVersion = True
+            else:
+                oldVersion = False
         # data path
         dataPath = starterDict.get('dataPath', AHF_DataLogger_text.defaultDataPath)
         response = input('Enter the path to the directory where the data will be saved(currently %s): ' % dataPath)
@@ -56,7 +64,7 @@ class AHF_DataLogger_text(AHF_DataLogger):
         if response != '':
             configPath = response
         # update and return dict
-        starterDict.update({'cageID' : cageID, 'dataPath' : dataPath, 'mouseConfigPath' : configPath})
+        starterDict.update({'cageID' : cageID, 'dataPath' : dataPath, 'mouseConfigPath' : configPath, 'oldVersion': oldVersion})
         return starterDict
 
     def setup(self):
@@ -70,6 +78,8 @@ class AHF_DataLogger_text(AHF_DataLogger):
              logFilePath  statsFilePath paths to individual files within corresponding subfolders
         """
         self.cageID = self.settingsDict.get('cageID')
+        self.oldVersion = self.settingsDict.get('oldVersion')
+        self.lastStim = None
         self.dataPath = self.settingsDict.get('dataPath')
         self.configPath = self.settingsDict.get('mouseConfigPath')
         self.logFP = None # reference to log file that will be created
@@ -200,7 +210,33 @@ class AHF_DataLogger_text(AHF_DataLogger):
         print(LogOutputStr)
         AHF_DataLogger_text.PSEUDO_MUTEX = 0
         if getattr(self, 'logFP', None) is not None and self.task.logToFile: # logMouse is set to False for test mice, or unknown mice
-            FileOutputStr = '{:013}\t{:s}\t{:s}\t{:s}\t{:s}\n'.format(int(tag), str(timeStamp),  eventKind, str(eventDict), datetime.fromtimestamp(int(timeStamp)).isoformat (' '))
+            if self.oldVersion:
+               if eventKind == 'Reward':
+                   if eventDict['kind'] == 'entry':
+                       eventKind = 'entryReward'
+                   else:
+                       eventKind = 'reward'
+               elif eventKind == 'Fix':
+                   eventKind = eventDict["result"]
+               elif eventKind == 'lick':
+                   eventKind += ":" + str(eventDict['chan'])
+               elif eventKind == 'VideoStart':
+                   eventKind = "video:" +  eventDict["name"]
+               elif eventKind == 'Stimulus':
+                   self.lastStim = timeStamp
+                   self.stimKind = None
+                   if eventDict is not None:
+                       self.stimKind = eventDict['trial']
+                   return
+               elif eventKind == 'Outcome':
+                    N = 1
+                    if self.stimKind == "NO-GO":
+                       N = 2
+                    eventKind = 'lickWitholdTime={:.2f},Buzz:N={:.2f},length={:2f},period={:.2f},{:s}={:s}'.format(timeStamp - self.lastStim, N, self.task.Stimulus.length(), self.task.Stimulus.period(), self.stimKind, str(eventDict['code']))
+                    timeStamp = self.lastStim
+               FileOutputStr = '{:013}\t{:s}\t{:s}\t{:s}\t{:s}\n'.format(int(tag), str(timeStamp),  eventKind, datetime.fromtimestamp(int(timeStamp)).isoformat (' '), str(eventDict))
+            else:
+                FileOutputStr = '{:013}\t{:s}\t{:s}\t{:s}\t{:s}\n'.format(int(tag), str(timeStamp),  eventKind, str(eventDict), datetime.fromtimestamp(int(timeStamp)).isoformat (' '))
             self.logFP.write(FileOutputStr)
             self.logFP.flush()
 

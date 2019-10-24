@@ -32,6 +32,12 @@ class AHF_Stimulus_VibMotor(AHF_Stimulus):
         self.motor.stop_train()
         pass
 
+    def length(self):
+        return self.pulseTime
+
+    def period(self):
+        return 1/self.motorFreq
+
     @staticmethod
     def config_user_get(starterDict= {}):
         motorPin = starterDict.get('motorPin', AHF_Stimulus_VibMotor.motorPin_def)

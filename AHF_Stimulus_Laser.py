@@ -221,6 +221,13 @@ class AHF_Stimulus_Laser(AHF_Stimulus):
     def stimulate(self):
         self.pulse(self.laser_on_time, self.duty_cycle)
 
+    def length(self):
+        return self.laser_on_time
+
+    def period(self):
+        #tbd, currently frequency is hardcoded at 1kHz
+        return 0.001
+
     def trialEnd(self):
         #Move laser back to zero position at the end of the trial
         self.camera.stop_preview()

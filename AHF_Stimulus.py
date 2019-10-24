@@ -27,3 +27,17 @@ class AHF_Stimulus(AHF_Base, metaclass = ABCMeta):
         Code to be run at end of trial. E.g. moving laser to zero position
         """
         pass
+
+    @abstractmethod
+    def length(self):
+        """
+        Return length of stimulus (e.g. pulse duration)
+        """
+        pass
+
+    @abstractmethod
+    def period(self):
+        """
+        Return period of stimulus (1/frequency for motor/laser)
+        """
+        pass

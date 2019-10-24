@@ -313,7 +313,7 @@ class AHF_Stimulator_LickWithhold(AHF_Stimulator):
                 anyLicks = self.withholdWait(endTime)
                 # inner while loop only exits if trial time is up or lick withholding time passed with no licking
                 if anyLicks > 0:
-                    break
+                    continue
                 # at this point, mouse has just witheld licking for lickWithholdTime
             levels = {
                 0: self.rewardTask,
