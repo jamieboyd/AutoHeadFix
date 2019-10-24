@@ -232,7 +232,7 @@ class AHF_DataLogger_text(AHF_DataLogger):
                     N = 1
                     if self.stimKind == "NO-GO":
                        N = 2
-                    eventKind = 'lickWitholdTime={:.2f},Buzz:N={:.2f},length={:2f},period={:.2f},{:s}={:s}'.format(timeStamp - self.lastStim, N, self.task.Stimulus.length(), self.task.Stimulus.period(), self.stimKind, str(eventDict['code']))
+                    eventKind = 'lickWitholdTime={:.2f},Buzz:N={:.2f},length={:2f},period={:.2f},{:s}={:s}'.format(eventDict["withholdTime"], N, self.task.Stimulus.length(), self.task.Stimulus.period(), self.stimKind, str(eventDict['code']))
                     timeStamp = self.lastStim
                FileOutputStr = '{:013}\t{:s}\t{:s}\t{:s}\t{:s}\n'.format(int(tag), str(timeStamp),  eventKind, datetime.fromtimestamp(int(timeStamp)).isoformat (' '), str(eventDict))
             else:

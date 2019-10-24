@@ -194,8 +194,8 @@ class AHF_Stimulator_LickWithhold(AHF_Stimulator):
 
 
     def withholdWait(self, endTime):
-        lickWithholdRandom = self.mouse.get("Stimulator").get("lickWithholdTime") +(0.5 - random())
-        lickWithholdEnd = time() + lickWithholdRandom
+        self.lickWithholdRandom = self.mouse.get("Stimulator").get("lickWithholdTime") +(0.5 - random())
+        lickWithholdEnd = time() + self.lickWithholdRandom
         self.task.LickDetector.startLickCount()
         anyLicks = 0
         while time() < lickWithholdEnd and time() < endTime:
@@ -212,8 +212,8 @@ class AHF_Stimulator_LickWithhold(AHF_Stimulator):
                     print("Speaker on Now")
                     self.speaker.start_train()
                     self.speakerIsOn = True
-                lickWithholdRandom = self.mouse.get("Stimulator").get("lickWithholdTime") +(0.5 - random())
-                lickWithholdEnd = time() + lickWithholdRandom
+                self.lickWithholdRandom = self.mouse.get("Stimulator").get("lickWithholdTime") +(0.5 - random())
+                lickWithholdEnd = time() + self.lickWithholdRandom
                 self.task.LickDetector.startLickCount()
                 anyLicks = 0
         return anyLicks
@@ -232,7 +232,7 @@ class AHF_Stimulator_LickWithhold(AHF_Stimulator):
             for x in self.task.LickDetector.getLickCount():
                 anyLicks += x[1]
             if anyLicks:
-                self.task.DataLogger.writeToLogFile(self.tag, 'Outcome', {'code': -4}, time())
+                self.task.DataLogger.writeToLogFile(self.tag, 'Outcome', {'code': -4, 'withholdTime': self.lickWithholdRandom}, time())
                 return
         responseEnd = self.mouse.get("Stimulator").get("responseTime") + time()
         self.task.LickDetector.startLickCount()
@@ -242,7 +242,7 @@ class AHF_Stimulator_LickWithhold(AHF_Stimulator):
             for x in self.task.LickDetector.getLickCount():
                 anyLicks += x[1]
             if anyLicks:
-                self.task.DataLogger.writeToLogFile(self.tag, 'Outcome', {'code': 2}, time())
+                self.task.DataLogger.writeToLogFile(self.tag, 'Outcome', {'code': 2, 'withholdTime': self.lickWithholdRandom}, time())
                 sleep(max(0, responseEnd - time()))
 
         if anyLicks is not 0:
@@ -250,7 +250,7 @@ class AHF_Stimulator_LickWithhold(AHF_Stimulator):
             self.rewarder.giveReward('task')
         else:
             #Wrong, mouse gets a timeout :(
-            self.task.DataLogger.writeToLogFile(self.tag, 'Outcome', {'code': -2}, time())
+            self.task.DataLogger.writeToLogFile(self.tag, 'Outcome', {'code': -2, 'withholdTime': self.lickWithholdRandom}, time())
             sleep(self.lickWrongTimeout)
 
 
@@ -268,7 +268,7 @@ class AHF_Stimulator_LickWithhold(AHF_Stimulator):
             for x in self.task.LickDetector.getLickCount():
                 anyLicks += x[1]
             if anyLicks:
-                self.task.DataLogger.writeToLogFile(self.tag, 'Outcome', {'code': -3}, time())
+                self.task.DataLogger.writeToLogFile(self.tag, 'Outcome', {'code': -3, 'withholdTime': self.lickWithholdRandom}, time())
                 return
         responseEnd = self.mouse.get("Stimulator").get("responseTime") + time()
         self.task.LickDetector.startLickCount()
@@ -278,13 +278,13 @@ class AHF_Stimulator_LickWithhold(AHF_Stimulator):
             for x in self.task.LickDetector.getLickCount():
                 anyLicks += x[1]
             if anyLicks:
-                self.task.DataLogger.writeToLogFile(self.tag, 'Outcome', {'code': -1}, time())
+                self.task.DataLogger.writeToLogFile(self.tag, 'Outcome', {'code': -1, 'withholdTime': self.lickWithholdRandom}, time())
                 sleep(max(0, responseEnd - time()))
         if anyLicks == 0:
             if self.mouse.get("Stimulator").get("rewardNoGo"):
                 self.rewardTimes.append(time())
                 self.rewarder.giveReward('task')
-            self.task.DataLogger.writeToLogFile(self.tag, 'Outcome', {'code': 1}, time())
+            self.task.DataLogger.writeToLogFile(self.tag, 'Outcome', {'code': 1, 'withholdTime': self.lickWithholdRandom}, time())
         else:
             #Wrong, mouse gets a timeout :(
             sleep(self.lickWrongTimeout)
