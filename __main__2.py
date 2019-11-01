@@ -89,7 +89,9 @@ def main():
     assert(hasattr(task, 'BrainLight')) # quick debug check that task got loaded and setup ran
     # calculate time for saving files for each day
     now = datetime.fromtimestamp(int(time()))
-    nextDay = datetime(now.year, now.month, now.day, kDAYSTARTHOUR,0,0) + timedelta(hours=24)
+    nextDay = datetime(now.year, now.month, now.day, kDAYSTARTHOUR,0,0)
+    if now >= nextDay:
+        nextDay = nextDay + timedelta(hours=24)
     # start TagReader and Lick Detector, the two background task things, logging
     task.Reader.startLogging()
     if hasattr(task, 'LickDetector'):
@@ -134,7 +136,7 @@ def main():
                         task.HeadFixer.releaseMouse(thisTag)
                 if doCountermand:
                     task.Rewarder.countermandReward(resultsDict.get('Rewarder'), settingsDict.get('Rewarder'))
-                   
+
             except KeyboardInterrupt:
                     # tag, eventKind, eventDict, timeStamp, toShellOrFile
                     task.Stimulator.quitting()
