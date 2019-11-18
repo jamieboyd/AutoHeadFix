@@ -22,6 +22,12 @@ class AHF_Stimulus_None(AHF_Stimulus):
     def stimulate(self):
         pass
 
+    def length(self):
+        return 0
+
+    def period(self):
+        return 0
+
     @staticmethod
     def config_user_get(starterDict= {}):
         return starterDict
