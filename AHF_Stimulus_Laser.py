@@ -9,7 +9,10 @@ stimulation/inhibition.
 from AHF_Stimulus import AHF_Stimulus
 
 # Laser-stimulator modules
-from pynput import keyboard
+try:
+    from pynput import keyboard
+except ImportError:
+    keyboard = None
 import numpy as np
 from os import path
 import matplotlib.pyplot as plt
@@ -479,7 +482,8 @@ class AHF_Stimulus_Laser(AHF_Stimulus):
 
     def matcher(self):
         #GUI to select three points using the matching aid tool.
-
+        if keyboard is None:
+            return
         print('\nINSTRUCTION\n')
         print('Move:\tLaser\t\tcross hairs')
         print('---------------------------------------')
