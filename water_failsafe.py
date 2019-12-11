@@ -1,3 +1,12 @@
+##############################################################################
+############ This program is used by AHF to monitor the water valve. #########
+############ If at any point, the water valve malfunctions and stays #########
+############  open for more then 5 seconds the pi will reboot and    #########
+############  restart autoheadfix                                    #########
+##############################################################################
+##############################################################################
+
+
 import RPi.GPIO as GPIO
 import pymysql
 from ast import literal_eval
